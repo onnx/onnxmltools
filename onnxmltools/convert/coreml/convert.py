@@ -37,7 +37,7 @@ def convert(model, name=None, doc_string=''):
     :param model: A CoreML model (https://apple.github.io/coremltools/coremlspecification/sections/Model.html#model) or
     a CoreML MLModel object
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
-    :param doc_string: A string attached onto the produced ONNX model
+    :param doc_string: (optional) Override existing CoreML model shortDescription
     :return: A ONNX model (type: ModelProto) which is equivalent to the input CoreML model
     '''
     if isinstance(model, coremltools.models.MLModel):
@@ -84,7 +84,18 @@ def convert(model, name=None, doc_string=''):
     for output in outputs:
         output.name = context.get_onnx_name(output.name)
 
-    mb = ModelBuilder(name, doc_string)
+    # Convert CoreML description, author and license
+    metadata = spec.description.metadata
+    metadata_props = []
+    if metadata:
+        if not doc_string and metadata.shortDescription:
+            doc_string = metadata.shortDescription
+        if metadata.author:
+            metadata_props.append(model_util.make_string_string_entry('author', metadata.author))
+        if metadata.license:
+            metadata_props.append(model_util.make_string_string_entry('license', metadata.license))
+
+    mb = ModelBuilder(name, doc_string, metadata_props)
     mb.add_inputs(inputs)
     mb.add_outputs(outputs)
     for node in nodes:
