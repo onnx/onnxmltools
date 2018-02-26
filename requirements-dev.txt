@@ -3,5 +3,6 @@ pandas
 pytest
 scikit-learn
 scipy
+xgboost
 
 
