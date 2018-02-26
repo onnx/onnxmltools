@@ -1,5 +1,10 @@
 <p align="center"><img width="40%" src="docs/ONNXMLTools_logo_main.png" /></p>
 
+[![TravisCI](https://travis-ci.org/xadupre/onnxmltools.svg)](ttps://travis-ci.org/xadupre/onnxmltools)
+[![CircleCI](https://circleci.com/gh/xadupre/onnxmltools.svg?style=svg)](https://circleci.com/gh/xadupre/onnxmltools)
+[![Build status](https://ci.appveyor.com/api/projects/status/d1xav3amubypje4n?svg=true)](https://ci.appveyor.com/project/xadupre/onnxmltools)
+
+
 # Introduction 
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
 * Apple CoreML

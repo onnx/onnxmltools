@@ -28,7 +28,6 @@ test_script:
     - "%PYTHON%\\python -m pytest tests/baseline"
     - "%PYTHON%\\python -m pytest tests/common"
     - "%PYTHON%\\python -m pytest tests/coreml"
-    - "%PYTHON%\\python -m pytest tests/data"
     - "%PYTHON%\\python -m pytest tests/sklearn"
     - "%PYTHON%\\python -m pytest tests/utils"
 

@@ -10,6 +10,5 @@ script:
     - python -m pytest tests/baseline
     - python -m pytest tests/common
     - python -m pytest tests/coreml
-    - python -m pytest tests/data
     - python -m pytest tests/sklearn
     - python -m pytest tests/utils
