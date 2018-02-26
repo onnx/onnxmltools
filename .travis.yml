@@ -7,4 +7,9 @@ install:
     - pip install -r requirements.txt
     - pip install -r requirements-dev.txt
 script:
-    - python -m pytest tests
+    - python -m pytest tests/baseline
+    - python -m pytest tests/common
+    - python -m pytest tests/coreml
+    - python -m pytest tests/data
+    - python -m pytest tests/sklearn
+    - python -m pytest tests/util

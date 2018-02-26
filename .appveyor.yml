@@ -8,31 +8,34 @@ environment:
 
   matrix:
 
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5.x"
-      PYTHON_ARCH: "64"
     - PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6.x"
       PYTHON_ARCH: "64"
 
 init:
-  - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
+    - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
 
 install:
-  - "%PYTHON%\\python -m pip install --upgrade pip"
-  - "%PYTHON%\\Scripts\\pip install -r requirements.txt"
-  - "%PYTHON%\\Scripts\\pip install git+https://github.com/apple/coremltools"
-  - "%PYTHON%\\Scripts\\pip install -r requirements-dev.txt"
+    - "%PYTHON%\\python -m pip install --upgrade pip"
+    - "%PYTHON%\\Scripts\\pip install -r requirements.txt"
+    - "%PYTHON%\\Scripts\\pip install git+https://github.com/apple/coremltools"
+    - "%PYTHON%\\Scripts\\pip install https://github.com/xadupre/xgboost/releases/download/0.7/xgboost-0.7-cp36-cp36m-win_amd64.whl"
+    - "%PYTHON%\\Scripts\\pip install -r requirements-dev.txt"
 
 build: off
 
 test_script:
-  - "%PYTHON%\\python -m pytest tests"
+    - "%PYTHON%\\python -m pytest tests\baseline"
+    - "%PYTHON%\\python -m pytest tests\common"
+    - "%PYTHON%\\python -m pytest tests\coreml"
+    - "%PYTHON%\\python -m pytest tests\data"
+    - "%PYTHON%\\python -m pytest tests\sklearn"
+    - "%PYTHON%\\python -m pytest tests\util"
 
 after_test:
-  - "%PYTHON%\\python -u setup.py bdist_wheel"
+    - "%PYTHON%\\python -u setup.py bdist_wheel"
 
 artifacts:
-  - path: dist
-    name: onnxmltools
+    - path: dist
+      name: onnxmltools
     
