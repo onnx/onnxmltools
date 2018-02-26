@@ -3,6 +3,7 @@ pandas
 pytest
 scikit-learn
 scipy
+wheel
 xgboost
 
 

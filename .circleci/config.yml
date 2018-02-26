@@ -1,0 +1,78 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6.2
+    
+    working_directory: ~/repo
+    
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          - v1-dependencies-
+
+      - run:
+          name: Install pandoc
+          command: |
+                    sudo apt-get update 
+                    wget https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb
+                    sudo dpkg -i pandoc-1.19.2.1-1-amd64.deb
+          
+      - run:
+          name: Install tex
+          command: |
+                    sudo apt-get install -y texlive
+                    sudo apt-get install -y texlive-latex-extra
+          
+      - run:
+          name: Install 7z, unrar
+          command: |
+                    sudo apt-get install -y p7zip-full
+          
+      - run:
+          name: Install InkScape
+          command: |
+                    sudo apt-get install -y inkscape
+          
+      - run:
+          name: Install graphviz
+          command: |
+                    sudo apt-get install -y graphviz
+          
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            pip install -r requirements-dev.txt
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements-dev.txt" }}
+        
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            python -m pytest tests/baseline
+            python -m pytest tests/common
+            python -m pytest tests/coreml
+            python -m pytest tests/data
+            python -m pytest tests/sklearn
+            python -m pytest tests/utils
+            
+      - run:
+          name: wheel
+          command: |
+            . venv/bin/activate
+            python setup.py bdist_wheel
+            mkdir -p test-reports/dist
+            cp dist/*.whl test-reports/dist
+            
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports

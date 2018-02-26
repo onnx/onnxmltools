@@ -25,12 +25,12 @@ install:
 build: off
 
 test_script:
-    - "%PYTHON%\\python -m pytest tests\baseline"
-    - "%PYTHON%\\python -m pytest tests\common"
-    - "%PYTHON%\\python -m pytest tests\coreml"
-    - "%PYTHON%\\python -m pytest tests\data"
-    - "%PYTHON%\\python -m pytest tests\sklearn"
-    - "%PYTHON%\\python -m pytest tests\util"
+    - "%PYTHON%\\python -m pytest tests/baseline"
+    - "%PYTHON%\\python -m pytest tests/common"
+    - "%PYTHON%\\python -m pytest tests/coreml"
+    - "%PYTHON%\\python -m pytest tests/data"
+    - "%PYTHON%\\python -m pytest tests/sklearn"
+    - "%PYTHON%\\python -m pytest tests/utils"
 
 after_test:
     - "%PYTHON%\\python -u setup.py bdist_wheel"

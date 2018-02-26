@@ -12,4 +12,4 @@ script:
     - python -m pytest tests/coreml
     - python -m pytest tests/data
     - python -m pytest tests/sklearn
-    - python -m pytest tests/util
+    - python -m pytest tests/utils
