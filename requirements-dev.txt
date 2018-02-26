@@ -1,3 +1,5 @@
 coremltools
+pandas
 pytest
+scikit-learn
 
