@@ -95,6 +95,14 @@ def make_model(name, ir_version, producer, producer_version, domain, model_versi
     model.doc_string = doc_string
     if len(metadata_props) > 0:
         model.metadata_props.extend(metadata_props)
+    # Neural network operators' version
+    opset = model.opset_import.add()
+    opset.domain = ''
+    opset.version = 3
+    # Traditional ML operators' version
+    opset = model.opset_import.add()
+    opset.domain = 'ai.onnx.ml'
+    opset.version = 1
     graph = model.graph
     graph.name = name
     graph.node.extend(nodes)
