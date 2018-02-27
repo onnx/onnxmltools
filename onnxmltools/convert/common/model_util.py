@@ -90,6 +90,14 @@ def make_model(name, ir_version, producer, producer_version, domain, model_versi
     model.domain = domain
     model.model_version = model_version
     model.doc_string = doc_string
+    # Neural network operators' version
+    opset = model.opset_import.add()
+    opset.domain = ''
+    opset.version = 3
+    # Traditional ML operators' version
+    opset = model.opset_import.add()
+    opset.domain = 'ai.onnx.ml'
+    opset.version = 1
     graph = model.graph
     graph.name = name
     graph.node.extend(nodes)
