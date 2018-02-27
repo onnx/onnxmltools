@@ -1,13 +1,10 @@
 
-.. image:: https://...../docs/ONNXMLTools_logo_main.png
+.. image:: https://github.com/onnx/onnxmltools/blob/master/docs/ONNXMLTools_logo_main.png
 
-.. image:: https://travis-ci.org/xadupre/onnxmltools.svg
-    :target: https://travis-ci.org/xadupre/onnxmltools
+.. image:: https://travis-ci.org/onnx/onnxmltools.svg?branch=master
+    :target: https://travis-ci.org/onnx/onnxmltools
     :alt: Build status
     
-.. image:: https://circleci.com/gh/xadupre/onnxmltools?style=svg
-    :target: https://circleci.com/gh/xadupre/onnxmltools
-   
 .. image:: https://ci.appveyor.com/api/projects/status/d1xav3amubypje4n?svg=true
     :target: https://ci.appveyor.com/project/onnx/onnxmltools
     :alt: Build Status Windows
@@ -41,7 +38,6 @@ Example
 =======
 
 Here is a simple example to convert a CoreML model:
-
 
 ::
 
