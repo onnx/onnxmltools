@@ -23,7 +23,7 @@ class ModelBuilder:
         self._nodes = []
         self._initializers = []
         self._values = []
-        self._op_sets = set()
+        self._operator_domain_version_pairs = set()
 
     def add_inputs(self, inputs):
         self._inputs.extend(inputs)
@@ -40,8 +40,8 @@ class ModelBuilder:
     def add_values(self, values):
         self._values.extend(values)
 
-    def add_op_set(self, op_set):
-        self._op_sets.add(op_set)
+    def add_domain_version_pair(self, pair):
+        self._operator_domain_version_pairs.add(pair)
 
     def make_model(self):
         return model_util.make_model(self._name,
@@ -51,7 +51,7 @@ class ModelBuilder:
                                      __domain__,
                                      __model_version__,
                                      self._doc_string,
-                                     self._op_sets,
+                                     self._operator_domain_version_pairs,
                                      self._nodes,
                                      self._inputs,
                                      self._outputs,

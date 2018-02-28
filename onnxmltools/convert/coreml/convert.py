@@ -91,7 +91,7 @@ def convert(model, name=None, doc_string=''):
         mb.add_nodes([node.onnx_node])
         mb.add_initializers(node.initializers)
         mb.add_values(node.values)
-        mb.add_op_set(node.op_set)
+        mb.add_domain_version_pair(node.domain_version_pair)
 
     return mb.make_model()
 

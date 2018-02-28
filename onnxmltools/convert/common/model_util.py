@@ -82,7 +82,7 @@ def make_map_value_info(name, key_type, value_type):
 
 
 def make_model(name, ir_version, producer, producer_version, domain, model_version, doc_string,
-               op_sets, nodes, inputs, outputs, values, initializer=list()):
+               operator_domain_version_pairs, nodes, inputs, outputs, values, initializer=list()):
     model = onnx_proto.ModelProto()
     model.ir_version = ir_version
     model.producer_name = producer
@@ -90,9 +90,10 @@ def make_model(name, ir_version, producer, producer_version, domain, model_versi
     model.domain = domain
     model.model_version = model_version
     model.doc_string = doc_string
-    for op_set in op_sets:
-        op_set_added = model.opset_import.add()
-        op_set_added.CopyFrom(op_set)
+    for op_domain, op_version in operator_domain_version_pairs:
+        op_set = model.opset_import.add()
+        op_set.domain = op_domain
+        op_set.version = op_version
     graph = model.graph
     graph.name = name
     graph.node.extend(nodes)
@@ -108,7 +109,8 @@ def make_tensor(name, data_type, dims, vals, raw=False):
 
 
 def make_node(op_type, inputs, outputs, name=None, op_domain='', **kwargs):
-    node = helper.make_node(op_type, inputs, outputs, name, doc_string='', domain=op_domain, **kwargs)
+    node = helper.make_node(op_type, inputs, outputs, name, doc_string='', **kwargs)
+    node.domain = op_domain
     return node
 
 

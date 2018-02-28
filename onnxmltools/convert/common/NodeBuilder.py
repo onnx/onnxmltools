@@ -98,15 +98,12 @@ class NodeBuilder:
                                          self._name,
                                          self._op_domain,
                                          **self._attributes)
-        # Add the operator set of this operator
-        op_set = onnx_proto.OperatorSetIdProto()
-        op_set.domain = self._op_domain
-        op_set.version = self._op_version
         # Pass a high-level node upon the ONNX node we just created
         node = Node(onnx_node,
                     self._inputs,
                     self._outputs,
                     self._initializers,
                     self._values,
-                    op_set)
+                    self._op_domain,
+                    self._op_version)
         return node
