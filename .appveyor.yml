@@ -26,7 +26,7 @@ install:
 build: off
 
 test_script:
-    - "%PYTHON%\\Scripts\\python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests"
+    - "%PYTHON%\\python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests"
 
 after_test:
     - "%PYTHON%\\python -u setup.py bdist_wheel"
