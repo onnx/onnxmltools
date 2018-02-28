@@ -45,7 +45,7 @@ def convert(context, cm_node, inputs, outputs, prefix):
     zipmap_node = None
     if prefix == "class":
         # Set up things for tree-based classifiers
-        nb = NodeBuilder(context, 'TreeEnsembleClassifier')
+        nb = NodeBuilder(context, 'TreeEnsembleClassifier', op_domain='ai.onnx.ml')
         nodes = cm_node.treeEnsembleClassifier.treeEnsemble.nodes
         nb.add_attribute('base_values', cm_node.treeEnsembleClassifier.treeEnsemble.basePredictionValue)
         post_transform = get_onnx_tree_post_transform(cm_node.treeEnsembleClassifier.postEvaluationTransform)
@@ -78,7 +78,7 @@ def convert(context, cm_node, inputs, outputs, prefix):
                                                       predicted_probability_name, class_labels)
     elif prefix == "target":
         # Set up things for tree-based regressors
-        nb = NodeBuilder(context, 'TreeEnsembleRegressor')
+        nb = NodeBuilder(context, 'TreeEnsembleRegressor', op_domain='ai.onnx.ml')
         nb.extend_outputs(outputs)
         nodes = cm_node.treeEnsembleRegressor.treeEnsemble.nodes
         nb.add_attribute('base_values', cm_node.treeEnsembleRegressor.treeEnsemble.basePredictionValue)

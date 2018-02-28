@@ -23,6 +23,7 @@ class ModelBuilder:
         self._nodes = []
         self._initializers = []
         self._values = []
+        self._op_sets = set()
 
     def add_inputs(self, inputs):
         self._inputs.extend(inputs)
@@ -39,6 +40,9 @@ class ModelBuilder:
     def add_values(self, values):
         self._values.extend(values)
 
+    def add_op_set(self, op_set):
+        self._op_sets.add(op_set)
+
     def make_model(self):
         return model_util.make_model(self._name,
                                      onnx_proto.IR_VERSION,
@@ -47,6 +51,7 @@ class ModelBuilder:
                                      __domain__,
                                      __model_version__,
                                      self._doc_string,
+                                     self._op_sets,
                                      self._nodes,
                                      self._inputs,
                                      self._outputs,

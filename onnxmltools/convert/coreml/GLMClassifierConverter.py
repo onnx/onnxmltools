@@ -67,7 +67,7 @@ class GLMClassifierConverter:
     @staticmethod
     def convert(context, cm_node, inputs, outputs):
         glm = cm_node.glmClassifier
-        nb = NodeBuilder(context, 'LinearClassifier')
+        nb = NodeBuilder(context, 'LinearClassifier', op_domain='ai.onnx.ml')
         nb.extend_inputs(inputs)
 
         transform_table = {GLMClassifier.Logit: 'LOGISTIC', GLMClassifier.Probit: 'PROBIT'}
@@ -122,7 +122,7 @@ class GLMClassifierConverter:
         # probabilities is 1
         normalizer_builder = None
         if len(class_labels) > 2 and glm.postEvaluationTransform == GLMClassifier.Logit:
-            normalizer_builder = NodeBuilder(context, 'Normalizer')
+            normalizer_builder = NodeBuilder(context, 'Normalizer', op_domain='ai.onnx.ml')
             normalizer_builder.add_attribute('norm', 'L1')
             normalizer_builder.add_input(probability_tensor_name)
             # Change the name stored in probability_tensor_name so that subsequent operators can access the fixed tensor

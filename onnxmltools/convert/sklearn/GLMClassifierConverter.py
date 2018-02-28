@@ -43,7 +43,7 @@ class GLMClassifierConverter:
             else:
                 multi_class = 2
 
-        nb = NodeBuilder(context, 'LinearClassifier')
+        nb = NodeBuilder(context, 'LinearClassifier', op_domain='ai.onnx.ml')
         nb.add_attribute('coefficients', coefficients)
         nb.add_attribute('intercepts', intercepts)
         nb.add_attribute('multi_class', multi_class == 2)
@@ -83,7 +83,7 @@ class GLMClassifierConverter:
         if len(classes) > 2 or sk_node.__class__.__name__ != 'LinearSVC':
             appended_node_zipmap = add_zipmap(output_name, output_type, class_labels, context)
         else:
-            score_selector = NodeBuilder(context, 'Slice')
+            score_selector = NodeBuilder(context, 'Slice', op_version=2)
             score_selector.add_input(output_name)
             select_output = context.get_unique_name(output_name)
             score_selector.add_output(select_output)

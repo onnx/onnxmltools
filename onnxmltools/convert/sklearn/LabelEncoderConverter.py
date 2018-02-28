@@ -23,7 +23,7 @@ class LabelEncoderConverter:
 
     @staticmethod
     def convert(context, sk_node, inputs):
-        nb = NodeBuilder(context, "LabelEncoder")
+        nb = NodeBuilder(context, "LabelEncoder", op_domain='ai.onnx.ml')
         nb.add_attribute('classes_strings', [str(c) for c in sk_node.classes_])
         nb.extend_inputs(inputs)
         try:

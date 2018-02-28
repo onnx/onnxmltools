@@ -24,7 +24,7 @@ class NormalizerConverter:
         Converts a CoreML Normalizer to ONNX
         """
         norms = ['MAX', 'L1', 'L2']
-        nb = NodeBuilder(context, 'Normalizer')
+        nb = NodeBuilder(context, 'Normalizer', op_domain='ai.onnx.ml')
         if cm_node.normalizer.normType in range(3):
             nb.add_attribute('norm', norms[cm_node.normalizer.normType])
         else:

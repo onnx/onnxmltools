@@ -22,7 +22,7 @@ class BinarizerConverter:
 
     @staticmethod
     def convert(context, sk_node, inputs):
-        nb = NodeBuilder(context, "Binarizer")
+        nb = NodeBuilder(context, "Binarizer", op_domain='ai.onnx.ml')
         if isinstance(sk_node.threshold, list):
             raise ValueError(
                 "Model which we try to convert contains multiple thresholds in Binarizer"
