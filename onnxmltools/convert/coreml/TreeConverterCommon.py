@@ -84,7 +84,7 @@ def convert(context, cm_node, inputs, outputs, prefix):
         nb.add_attribute('base_values', cm_node.treeEnsembleRegressor.treeEnsemble.basePredictionValue)
         post_transform = get_onnx_tree_post_transform(cm_node.treeEnsembleRegressor.postEvaluationTransform)
     else:
-        assert (False, "Unknown tree type!")
+        raise TypeError("Unknown tree type: prefix='{0}'".format(prefix))
 
     leaf_treeids = [node.treeId for node in nodes if 6 == node.nodeBehavior for weight in node.evaluationInfo]
     leaf_nodeids = [node.nodeId for node in nodes if 6 == node.nodeBehavior for weight in node.evaluationInfo]
