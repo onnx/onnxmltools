@@ -4,3 +4,6 @@
 tests/utils/models/coreml_OneHotEncoder_BikeSharing_new.json
 tests/utils/models/coreml_OneHotEncoder_BikeSharing2.onnx
 tests/baseline/outmodels
+dist
+htmlcov
+

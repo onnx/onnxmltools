@@ -7,8 +7,5 @@ install:
     - pip install -r requirements.txt
     - pip install -r requirements-dev.txt
 script:
-    - python -m pytest tests/baseline
-    - python -m pytest tests/common
-    - python -m pytest tests/coreml
-    - python -m pytest tests/sklearn
-    - python -m pytest tests/utils
+    - py.test --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
+

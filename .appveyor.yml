@@ -25,14 +25,15 @@ install:
 build: off
 
 test_script:
-    - "%PYTHON%\\python -m pytest tests/baseline"
-    - "%PYTHON%\\python -m pytest tests/common"
-    - "%PYTHON%\\python -m pytest tests/coreml"
-    - "%PYTHON%\\python -m pytest tests/sklearn"
-    - "%PYTHON%\\python -m pytest tests/utils"
+    - py.test --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
 
 after_test:
     - "%PYTHON%\\python -u setup.py bdist_wheel"
+    - if not exist dist mkdir dist
+    - if not exist dist\htmlcov mkdir dist\htmlcov
+    - xcopy htmlcov dist\htmlcov
+    - copy *.xml dist\htmlcov
+    - if %APPVEYOR_ACCOUNT_NAME%==xadupre codecov -f coverage.xml -t 2c916354-0f91-46b4-a577-f80b0031c941
 
 artifacts:
     - path: dist
