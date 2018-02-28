@@ -6,4 +6,5 @@ tests/utils/models/coreml_OneHotEncoder_BikeSharing2.onnx
 tests/baseline/outmodels
 dist
 htmlcov
+coverage.xml
 
