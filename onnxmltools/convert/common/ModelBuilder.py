@@ -15,9 +15,10 @@ from ... import __model_version__
 
 
 class ModelBuilder:
-    def __init__(self, name=None, doc_string=''):
+    def __init__(self, name=None, doc_string='', metadata_props=[]):
         self._name = str(uuid4().hex) if name is None else name
         self._doc_string = doc_string
+        self._metadata_props = metadata_props
         self._inputs = []
         self._outputs = []
         self._nodes = []
@@ -47,6 +48,7 @@ class ModelBuilder:
                                      __domain__,
                                      __model_version__,
                                      self._doc_string,
+                                     self._metadata_props,
                                      self._nodes,
                                      self._inputs,
                                      self._outputs,
