@@ -21,6 +21,7 @@ install:
     - "%PYTHON%\\Scripts\\pip install git+https://github.com/apple/coremltools"
     - "%PYTHON%\\Scripts\\pip install https://github.com/xadupre/xgboost/releases/download/0.7/xgboost-0.7-cp36-cp36m-win_amd64.whl"
     - "%PYTHON%\\Scripts\\pip install -r requirements-dev.txt"
+    - set PYTHONPATH=%~dp0
 
 build: off
 
