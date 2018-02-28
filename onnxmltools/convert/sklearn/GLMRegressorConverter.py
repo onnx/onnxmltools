@@ -30,7 +30,7 @@ class GLMRegressorConverter:
         if not isinstance(intercepts, np.ndarray):
             intercepts = [intercepts]
 
-        nb = NodeBuilder(context, 'LinearRegressor')
+        nb = NodeBuilder(context, 'LinearRegressor', op_domain='ai.onnx.ml')
         nb.add_attribute('coefficients', coefficients)
         nb.add_attribute('intercepts', intercepts)
 

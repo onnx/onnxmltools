@@ -26,7 +26,7 @@ class SliceLayerConverter:
     def convert(context, cm_node, inputs, outputs):
         extend_inputs_from_2d_to_4d(context, inputs)
 
-        nb = NodeBuilder(context, 'Slice')
+        nb = NodeBuilder(context, 'Slice', op_version=2)
         params = cm_node.slice
 
         axis_map = {Params.CHANNEL_AXIS: 0, Params.HEIGHT_AXIS: 1, Params.WIDTH_AXIS: 2}

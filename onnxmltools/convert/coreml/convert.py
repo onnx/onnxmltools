@@ -102,6 +102,7 @@ def convert(model, name=None, doc_string=''):
         mb.add_nodes([node.onnx_node])
         mb.add_initializers(node.initializers)
         mb.add_values(node.values)
+        mb.add_domain_version_pair(node.domain_version_pair)
 
     return mb.make_model()
 
@@ -154,7 +155,7 @@ def _create_post_processing_nodes(context, coreml_nn, default_proba_tensor_name,
     nodes.append(id_extractor_builder.make_node())
 
     # Extract the best label
-    label_extractor_builder = NodeBuilder(context, 'ArrayFeatureExtractor')
+    label_extractor_builder = NodeBuilder(context, 'ArrayFeatureExtractor', op_domain='ai.onnx.ml')
     label_extractor_builder.add_input(label_buf_name)
     label_extractor_builder.add_input(extracted_id)
     label_extractor_builder.add_output(reserved_label_name)
@@ -169,7 +170,7 @@ def _create_post_processing_nodes(context, coreml_nn, default_proba_tensor_name,
         if o.name == coreml_proba_name:
             proba_type = o.type.WhichOneof('Type')
     if coreml_proba_name != '':
-        map_constructor_builder = NodeBuilder(context, 'ZipMap')
+        map_constructor_builder = NodeBuilder(context, 'ZipMap', op_domain='ai.onnx.ml')
         map_constructor_builder.add_input(proba_tensor_name)
         map_constructor_builder.add_output(reserved_proba_dict_name)
         if label_type == 'stringType':

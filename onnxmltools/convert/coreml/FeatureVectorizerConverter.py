@@ -49,7 +49,7 @@ class FeatureVectorizerConverter:
                 input_col.append(inputs[idx])
                 input_dim.append(int(input_val.inputDimensions))
 
-        nb = NodeBuilder(context, 'FeatureVectorizer')
+        nb = NodeBuilder(context, 'FeatureVectorizer', op_domain='ai.onnx.ml')
         nb.add_attribute('inputdimensions', input_dim)
 
         nb.extend_inputs(input_col)

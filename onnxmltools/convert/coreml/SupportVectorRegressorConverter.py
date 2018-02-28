@@ -52,7 +52,7 @@ class SupportVectorRegressorConverter:
         else:
             svr_rho = [-cm_node.supportVectorRegressor.rho]
 
-        nb = NodeBuilder(context, 'SVMRegressor')
+        nb = NodeBuilder(context, 'SVMRegressor', op_domain='ai.onnx.ml')
         nb.add_attribute('kernel_type', svr_kernel)
         nb.add_attribute('kernel_params', svr_kernel_params)
         nb.add_attribute('support_vectors', support_vectors)

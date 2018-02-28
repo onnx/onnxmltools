@@ -25,7 +25,7 @@ class DictVectorizerConverter:
         Converts a CoreML DictVectorizer to ONNX
         """
 
-        nb = NodeBuilder(context, 'DictVectorizer')
+        nb = NodeBuilder(context, 'DictVectorizer', op_domain='ai.onnx.ml')
         if cm_node.dictVectorizer.HasField('stringToIndex'):
             nb.add_attribute('string_vocabulary', cm_node.dictVectorizer.stringToIndex.vector)
         else:

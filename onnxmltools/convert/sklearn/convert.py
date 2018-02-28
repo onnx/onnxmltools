@@ -112,6 +112,7 @@ def convert(model, name=None, input_features=None):
         mb.add_nodes([node.onnx_node])
         mb.add_initializers(node.initializers)
         mb.add_values(node.values)
+        mb.add_domain_version_pair(node.domain_version_pair)
 
     mb.add_inputs(model_inputs)
 

@@ -26,7 +26,7 @@ def add_normalizer(input_name, output_type, norm, context):
 
 
 def create_scaler(input, output_name, scale, offset, context):
-    nb = NodeBuilder(context, "Scaler")
+    nb = NodeBuilder(context, "Scaler", op_domain='ai.onnx.ml')
     nb.add_attribute('scale', [scale])
     nb.add_attribute('offset', [offset])
 
