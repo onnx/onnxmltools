@@ -1,5 +1,5 @@
 ir_version: 3
-producer_name: "winmltools"
+producer_name: "test_producer_name"
 producer_version: "0.1.0.0000"
 doc_string: ""
 graph {

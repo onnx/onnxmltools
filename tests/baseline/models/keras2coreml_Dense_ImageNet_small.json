@@ -41,7 +41,7 @@ graph {
       i: 1
     }
   }
-  name: "winmltools"
+  name: "test_model_name"
   initializer {
     dims: 2
     dims: 27
