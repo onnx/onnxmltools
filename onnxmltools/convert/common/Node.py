@@ -10,13 +10,15 @@ class Node:
                  inputs,
                  outputs,
                  initializers,
-                 values):
+                 values,
+                 op_set):
 
         self._onnx_node = onnx_node
         self._inputs = inputs
         self._outputs = outputs
         self._initializers = initializers
         self._values = values
+        self._op_set = op_set
 
     @property
     def name(self):
@@ -62,3 +64,6 @@ class Node:
     def onnx_node(self):
         return self._onnx_node
 
+    @property
+    def op_set(self):
+        return self._op_set

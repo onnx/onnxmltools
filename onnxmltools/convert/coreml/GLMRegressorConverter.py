@@ -29,7 +29,7 @@ class GLMRegressorConverter:
     @staticmethod
     def convert(context, cm_node, inputs, outputs):
         glm = cm_node.glmRegressor
-        nb = NodeBuilder(context, 'LinearRegressor')
+        nb = NodeBuilder(context, 'LinearRegressor', op_domain='ai.onnx.ml')
         nb.extend_inputs(inputs)
         nb.extend_outputs(outputs)
 

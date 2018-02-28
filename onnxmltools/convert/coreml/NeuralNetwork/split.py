@@ -25,7 +25,7 @@ class SplitLayerConverter:
         # ONNX Split may evenly divide the input along the specified axis if "split" attribute is not specified.
         # Also, CoreML always evenly split the input. Consequently, we only need to specify the axis and make sure the
         # number of outputs in ONNX matches that in CoreML.
-        nb = NodeBuilder(context, 'Split')
+        nb = NodeBuilder(context, 'Split', op_version=2)
         # CoreML's SplitLayer only works on the C-axis, so the axis index to cut is always 1.
         nb.add_attribute('axis', 1)
         nb.extend_inputs(inputs)

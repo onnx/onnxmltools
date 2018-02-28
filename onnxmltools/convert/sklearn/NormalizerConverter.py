@@ -23,7 +23,7 @@ class NormalizerConverter:
 
     @staticmethod
     def convert(context, sk_node, inputs):
-        nb = NodeBuilder(context, "Normalizer")
+        nb = NodeBuilder(context, "Normalizer", op_domain='ai.onnx.ml')
         norm_enum = {'max': 'MAX', 'l1': 'L1', 'l2': 'L2'}
         if sk_node.norm in norm_enum.keys():
             nb.add_attribute('norm', norm_enum[sk_node.norm])

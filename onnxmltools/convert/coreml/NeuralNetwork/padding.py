@@ -27,7 +27,7 @@ class PaddingLayerConverter:
 
         params = cm_node.padding
 
-        nb = NodeBuilder(context, 'Pad')
+        nb = NodeBuilder(context, 'Pad', op_version=2)
 
         pad_table = {'constant': 'constant',
                      'reflection': 'reflect',

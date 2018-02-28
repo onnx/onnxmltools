@@ -14,137 +14,6 @@ from ...proto import helper
 onnx_integer_types = [onnx_proto.TensorProto.UINT8, onnx_proto.TensorProto.INT8, onnx_proto.TensorProto.UINT16,
                       onnx_proto.TensorProto.INT16, onnx_proto.TensorProto.INT32, onnx_proto.TensorProto.INT64]
 
-onnx_operator_version_info = {
-    # Traditional machine learning operators
-    'ArrayFeatureExtractor': ('ai.onnx.ml', 1),
-    'Binarizer': ('ai.onnx.ml', 1),
-    'CastMap': ('ai.onnx.ml', 1),
-    'CategoryMapper': ('ai.onnx.ml', 1),
-    'DictVectorizer': ('ai.onnx.ml', 1),
-    'FeatureVectorizer': ('ai.onnx.ml', 1),
-    'Imputer': ('ai.onnx.ml', 1),
-    'LabelEncoder': ('ai.onnx.ml', 1),
-    'LinearClassifier': ('ai.onnx.ml', 1),
-    'LinearRegressor': ('ai.onnx.ml', 1),
-    'Normalizer': ('ai.onnx.ml', 1),
-    'OneHotEncoder': ('ai.onnx.ml', 1),
-    'SVMClassifier': ('ai.onnx.ml', 1),
-    'SVMRegressor': ('ai.onnx.ml', 1),
-    'Scaler': ('ai.onnx.ml', 1),
-    'TreeEnsembleClassifier': ('ai.onnx.ml', 1),
-    'TreeEnsembleRegressor': ('ai.onnx.ml', 1),
-    'ZipMap': ('ai.onnx.ml', 1),
-    # Neural network operators
-    'Abs': ('', 1),
-    'Add': ('', 1),
-    'And': ('', 1),
-    'ArgMax': ('', 1),
-    'ArgMin': ('', 1),
-    'AveragePool': ('', 1),
-    'BatchNormalization': ('', 1),
-    'Cast': ('', 1),
-    'Ceil': ('', 1),
-    'Clip': ('', 1),
-    'Concat': ('', 4),
-    'Constant': ('', 1),
-    'Conv': ('', 1),
-    'ConvTranspose': ('', 1),
-    'DepthToSpace': ('', 1),
-    'Div': ('', 1),
-    'Dropout': ('', 1),
-    'Elu': ('', 1),
-    'Equal': ('', 1),
-    'Exp': ('', 1),
-    'Flatten': ('', 1),
-    'Floor': ('', 1),
-    'GRU': ('', 3),
-    'Gather': ('', 1),
-    'Gemm': ('', 1),
-    'GlobalAveragePool': ('', 1),
-    'GlobalLpPool': ('', 2),
-    'GlobalMaxPool': ('', 1),
-    'Greater': ('', 1),
-    'HardSigmoid': ('', 1),
-    'Hardmax': ('', 1),
-    'InstanceNormalization': ('', 1),
-    'LRN': ('', 1),
-    'LSTM': ('', 1),
-    'LeakyRelu': ('', 1),
-    'Less': ('', 1),
-    'Log': ('', 1),
-    'LogSoftmax': ('', 1),
-    'LpNormalization': ('', 1),
-    'LpPool': ('', 2),
-    'MatMul': ('', 1),
-    'Max': ('', 1),
-    'MaxPool': ('', 1),
-    'MaxRoiPool': ('', 1),
-    'Mean': ('', 1),
-    'Min': ('', 1),
-    'Mul': ('', 1),
-    'Neg': ('', 1),
-    'Not': ('', 1),
-    'Or': ('', 1),
-    'PRelu': ('', 1),
-    'Pad': ('', 2),
-    'Pow': ('', 1),
-    'RNN': ('', 1),
-    'RandomNormal': ('', 1),
-    'RandomNormalLike': ('', 1),
-    'RandomUniform': ('', 1),
-    'RandomUniformLike': ('', 1),
-    'Reciprocal': ('', 1),
-    'ReduceL1': ('', 1),
-    'ReduceL2': ('', 1),
-    'ReduceLogSum': ('', 1),
-    'ReduceLogSumExp': ('', 1),
-    'ReduceMax': ('', 1),
-    'ReduceMean': ('', 1),
-    'ReduceMin': ('', 1),
-    'ReduceProd': ('', 1),
-    'ReduceSum': ('', 1),
-    'ReduceSumSquare': ('', 1),
-    'Relu': ('', 1),
-    'Reshape': ('', 1),
-    'Selu': ('', 1),
-    'Shape': ('', 1),
-    'Sigmoid': ('', 1),
-    'Size': ('', 1),
-    'Slice': ('', 1),
-    'Softmax': ('', 1),
-    'Softplus': ('', 1),
-    'Softsign': ('', 1),
-    'SpaceToDepth': ('', 1),
-    'Split': ('', 2),
-    'Sqrt': ('', 1),
-    'Squeeze': ('', 1),
-    'Sub': ('', 1),
-    'Sum': ('', 1),
-    'Tanh': ('', 1),
-    'Tile': ('', 1),
-    'TopK': ('', 1),
-    'Transpose': ('', 1),
-    'Unsqueeze': ('', 1),
-    'Xor': ('', 1),
-    'ATen': ('', 1),
-    'Affine': ('', 1),
-    'ConstantFill': ('', 1),
-    'Crop': ('', 1),
-    'FC': ('', 1),
-    'GRUUnit': ('', 1),
-    'GivenTensorFill': ('', 1),
-    'Identity': ('', 1),
-    'If': ('', 1),
-    'ImageScaler': ('', 1),
-    'Loop': ('', 1),
-    'LoopIndexTensor': ('', 1),
-    'MeanVarianceNormalization': ('', 1),
-    'ParametricSoftplus': ('', 1),
-    'Scale': ('', 1),
-    'ScaledTanh': ('', 1),
-    'ThresholdedRelu': ('', 1),
-    'Upsample': ('', 1)}
-
 
 def make_tensor_value_info(name, elem_type=None, shape=None, doc_string=''):
     """
@@ -216,7 +85,7 @@ def make_map_value_info(name, key_type, value_type, doc_string=''):
 
 
 def make_model(name, ir_version, producer, producer_version, domain, model_version, doc_string, metadata_props,
-               nodes, inputs, outputs, values, initializer=list()):
+               op_sets, nodes, inputs, outputs, values, initializer=list()):
     model = onnx_proto.ModelProto()
     model.ir_version = ir_version
     model.producer_name = producer
@@ -226,10 +95,9 @@ def make_model(name, ir_version, producer, producer_version, domain, model_versi
     model.doc_string = doc_string
     if len(metadata_props) > 0:
         model.metadata_props.extend(metadata_props)
-    for opset_domain, opset_version in set(onnx_operator_version_info[node.op_type] for node in nodes):
-        opset = model.opset_import.add()
-        opset.domain = opset_domain
-        opset.version = opset_version
+    for op_set in op_sets:
+        op_set_added = model.opset_import.add()
+        op_set_added.CopyFrom(op_set)
     graph = model.graph
     graph.name = name
     graph.node.extend(nodes)
@@ -244,15 +112,8 @@ def make_tensor(name, data_type, dims, vals, raw=False):
     return helper.make_tensor(name, data_type, dims, vals, raw)
 
 
-def make_node(op_type, inputs, outputs, name=None, **kwargs):
-    onnx_ml_ops = ["ArrayFeatureExtractor", "Binarizer", "CastMap", "CategoryMapper", "DictVectorizer", "Imputer",
-                   "FeatureVectorizer", "LabelEncoder", "LinearClassifier", "LinearRegressor", "Normalizer",
-                   "OneHotEncoder", "Scaler", "SVMClassifier", "SVMRegressor", "TreeEnsembleClassifier",
-                   "TreeEnsembleRegressor", "ZipMap"]
-
-    node = helper.make_node(op_type, inputs, outputs, name, doc_string='', **kwargs)
-    if op_type in onnx_ml_ops:
-        node.domain = 'ai.onnx.ml'
+def make_node(op_type, inputs, outputs, name=None, op_domain='', **kwargs):
+    node = helper.make_node(op_type, inputs, outputs, name, doc_string='', domain=op_domain, **kwargs)
     return node
 
 
@@ -265,7 +126,7 @@ def make_zipmap_node(context, input, output, class_labels):
     Helper function to construct a ZipMap node
     '''
     from ..common import NodeBuilder
-    nb = NodeBuilder(context, "ZipMap")
+    nb = NodeBuilder(context, "ZipMap", op_domain='ai.onnx.ml')
     if utils.is_string_type(class_labels):
         nb.add_attribute('classlabels_strings', class_labels)
     else:
@@ -281,7 +142,7 @@ def make_normalizer_node(context, input, output, norm):
     Helper function to construct a normalizer node
     '''
     from ..common import NodeBuilder
-    nb = NodeBuilder(context, "Normalizer")
+    nb = NodeBuilder(context, "Normalizer", op_domain='ai.onnx.ml')
     nb.add_attribute('norm', norm)
     nb.add_input(input)
     nb.add_output(output)
@@ -301,7 +162,7 @@ tensorproto_typemap = get_tensorproto_typemap()
 
 
 def create_feature_extractor(input, output_name, indices, context):
-    nb = NodeBuilder(context, 'ArrayFeatureExtractor')
+    nb = NodeBuilder(context, 'ArrayFeatureExtractor', op_domain='ai.onnx.ml')
     nb.add_input(input)
 
     tensor_dim = [1] if len(indices) == 1 else [1, len(indices)]
@@ -328,7 +189,7 @@ def create_feature_vector(inputs, output_name, context):
         input_dims.append(feature_count)
         num_features += feature_count
 
-    nb = NodeBuilder(context, 'FeatureVectorizer')
+    nb = NodeBuilder(context, 'FeatureVectorizer', op_domain='ai.onnx.ml')
     nb.add_attribute('inputlist', input_names)
     nb.add_attribute('inputdimensions', input_dims)
     nb.extend_inputs(inputs)
@@ -339,7 +200,7 @@ def create_feature_vector(inputs, output_name, context):
 
 
 def create_ohe(input, output_name, categories, context):
-    nb = NodeBuilder(context, 'OneHotEncoder')
+    nb = NodeBuilder(context, 'OneHotEncoder', op_domain='ai.onnx.ml')
     nb.add_attribute('cats_int64s', categories)
     nb.add_input(input)
     output = make_tensor_value_info(context.get_unique_name(output_name),
@@ -350,7 +211,7 @@ def create_ohe(input, output_name, categories, context):
 
 
 def create_scaler(input, output_name, scale, offset, context):
-    nb = NodeBuilder(context, "Scaler")
+    nb = NodeBuilder(context, "Scaler", op_domain='ai.onnx.ml')
     nb.add_attribute('scale', [scale])
     nb.add_attribute('offset', [offset])
 

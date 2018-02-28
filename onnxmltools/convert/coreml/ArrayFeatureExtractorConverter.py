@@ -22,7 +22,7 @@ class ArrayFeatureExtractorConverter:
 
     @staticmethod
     def convert(context, cm_node, inputs, outputs):
-        nb = NodeBuilder(context, 'ArrayFeatureExtractor')
+        nb = NodeBuilder(context, 'ArrayFeatureExtractor', op_domain='ai.onnx.ml')
         nb.extend_inputs(inputs)
         target_index = cm_node.arrayFeatureExtractor.extractIndex
         index_tensor = model_util.make_tensor('TargetIndex', onnx_proto.TensorProto.INT64, [len(target_index)], target_index)

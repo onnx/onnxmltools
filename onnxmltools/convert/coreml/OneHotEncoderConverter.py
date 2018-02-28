@@ -23,7 +23,7 @@ class OneHotEncoderConverter:
         """
         Converts a CoreML OneHotEncoder to ONNX
         """
-        nb = NodeBuilder(context, 'OneHotEncoder')
+        nb = NodeBuilder(context, 'OneHotEncoder', op_domain='ai.onnx.ml')
         nb.extend_inputs(inputs)
         nb.extend_outputs(outputs)
 

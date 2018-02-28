@@ -80,7 +80,7 @@ class SupportVectorClassifierConverter:
         svc_coefficients = chain_coef
         svc_rho = [-x for x in cm_node.supportVectorClassifier.rho]
 
-        nb = NodeBuilder(context, 'SVMClassifier')
+        nb = NodeBuilder(context, 'SVMClassifier', op_domain='ai.onnx.ml')
         nb.add_attribute('kernel_type', svc_kernel)
         nb.add_attribute('kernel_params', svc_kernel_params)
         if prob_a:
