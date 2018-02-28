@@ -1,6 +1,4 @@
 
-.. image:: https://github.com/onnx/onnxmltools/blob/master/docs/ONNXMLTools_logo_main.png
-
 .. image:: https://travis-ci.org/onnx/onnxmltools.svg?branch=master
     :target: https://travis-ci.org/onnx/onnxmltools
     :alt: Build status
@@ -8,6 +6,9 @@
 .. image:: https://ci.appveyor.com/api/projects/status/d1xav3amubypje4n?svg=true
     :target: https://ci.appveyor.com/project/onnx/onnxmltools
     :alt: Build Status Windows
+
+.. image:: https://codecov.io/gh/onnx/onnxmltools/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/onnx/onnxmltools
 
 Introduction 
 ============

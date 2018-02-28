@@ -34,7 +34,7 @@ after_test:
     - if not exist dist\htmlcov mkdir dist\htmlcov
     - xcopy htmlcov dist\htmlcov
     - copy *.xml dist\htmlcov
-    - if %APPVEYOR_ACCOUNT_NAME%==xadupre codecov -f coverage.xml -t 2c916354-0f91-46b4-a577-f80b0031c941
+    - if %APPVEYOR_ACCOUNT_NAME%==xadupre %PYTHON%\Scripts\codecov -f coverage.xml -t 2c916354-0f91-46b4-a577-f80b0031c941
 
 artifacts:
     - path: dist
