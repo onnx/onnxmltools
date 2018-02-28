@@ -1,4 +1,5 @@
 .pytest_cache
+.cache
 *.bat
 *.pyc
 tests/utils/models/coreml_OneHotEncoder_BikeSharing_new.json
@@ -7,4 +8,4 @@ tests/baseline/outmodels
 dist
 htmlcov
 coverage.xml
-
+.coverage
