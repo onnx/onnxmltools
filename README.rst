@@ -1,5 +1,5 @@
 
-.. image:: https://...../docs/ONNXMLTools_logo_main.png
+.. image:: https://github.com/onnx/onnxmltools/blob/master/docs/ONNXMLTools_logo_main.png
     
 Introduction 
 ============
@@ -17,7 +17,7 @@ Install
 
 ::
 
-    pip install git+https://github.com/onnx/onnxmltools
+    pip install onnxmltools
 
 Dependancies
 ============

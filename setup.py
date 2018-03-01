@@ -30,7 +30,7 @@ setup(
     license='MIT License',
     author='Microsoft Corporation',
     author_email='onnx@microsoft.com',
-    url='https://onnx.ai/',
+    url='https://github.com/onnx/onnxmltools',
     packages=packages,
     include_package_data=True,
     install_requires=requirements,
