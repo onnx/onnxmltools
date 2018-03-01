@@ -1,6 +1,8 @@
 ir_version: 3
-producer_name: "test_producer_name"
+producer_name: "OnnxMLTools"
 producer_version: "0.1.0.0000"
+domain: "onnxml"
+model_version: 0
 doc_string: ""
 graph {
   node {
@@ -400,7 +402,7 @@ graph {
     }
     domain: "ai.onnx.ml"
   }
-  name: "65df0238ccae4f9fb7528bf541501e69"
+  name: "e29a78efcc8341a992cfc72e0e6f5260"
   initializer {
     dims: 1
     data_type: INT64
@@ -458,9 +460,6 @@ graph {
           dim {
             dim_value: 1
           }
-          dim {
-            dim_value: 1
-          }
         }
       }
     }
@@ -471,9 +470,6 @@ graph {
       tensor_type {
         elem_type: INT64
         shape {
-          dim {
-            dim_value: 1
-          }
           dim {
             dim_value: 1
           }
@@ -490,9 +486,6 @@ graph {
           dim {
             dim_value: 1
           }
-          dim {
-            dim_value: 1
-          }
         }
       }
     }
@@ -503,9 +496,6 @@ graph {
       tensor_type {
         elem_type: INT64
         shape {
-          dim {
-            dim_value: 1
-          }
           dim {
             dim_value: 1
           }
@@ -522,9 +512,6 @@ graph {
           dim {
             dim_value: 1
           }
-          dim {
-            dim_value: 1
-          }
         }
       }
     }
@@ -535,9 +522,6 @@ graph {
       tensor_type {
         elem_type: INT64
         shape {
-          dim {
-            dim_value: 1
-          }
           dim {
             dim_value: 1
           }
@@ -554,9 +538,6 @@ graph {
           dim {
             dim_value: 1
           }
-          dim {
-            dim_value: 1
-          }
         }
       }
     }
@@ -570,9 +551,6 @@ graph {
           dim {
             dim_value: 1
           }
-          dim {
-            dim_value: 1
-          }
         }
       }
     }
@@ -581,7 +559,7 @@ graph {
     name: "transformed_features"
     type {
       tensor_type {
-        elem_type: DOUBLE
+        elem_type: FLOAT
         shape {
           dim {
             dim_value: 1
@@ -593,4 +571,8 @@ graph {
       }
     }
   }
+}
+opset_import {
+  domain: "ai.onnx.ml"
+  version: 1
 }

@@ -17,7 +17,7 @@ Install
 
 ::
 
-    pip install git+https://github.com/onnx/onnxmltools
+    pip install onnxmltools
 
 Dependancies
 ============

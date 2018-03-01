@@ -144,7 +144,7 @@ class DecisionTreeClassifierConverter:
             output_type = onnx_proto.TensorProto.STRING
 
         _add_tree_to_attribute_pairs(attr_pairs, True, sk_node.tree_, 0, 1., 0, True)
-        nb = NodeBuilder(context, "TreeEnsembleClassifier")
+        nb = NodeBuilder(context, "TreeEnsembleClassifier", op_domain='ai.onnx.ml')
 
         for k, v in attr_pairs.items():
             if isinstance(v, list) and len(v) == 0:
@@ -183,7 +183,7 @@ class DecisionTreeRegressorConverter:
 
         _add_tree_to_attribute_pairs(attr_pairs, False, sk_node.tree_, 0, 1., 0, False)
 
-        nb = NodeBuilder(context, "TreeEnsembleRegressor")
+        nb = NodeBuilder(context, "TreeEnsembleRegressor", op_domain='ai.onnx.ml')
 
         for k, v in attr_pairs.items():
             nb.add_attribute(k, v)
@@ -226,7 +226,7 @@ class RandomForestClassifierConverter:
             tree_id = i
             _add_tree_to_attribute_pairs(attr_pairs, True, tree, tree_id, tree_weight, 0, True)
 
-        nb = NodeBuilder(context, "TreeEnsembleClassifier")
+        nb = NodeBuilder(context, "TreeEnsembleClassifier", op_domain='ai.onnx.ml')
 
         for k, v in attr_pairs.items():
             if isinstance(v, list) and len(v) == 0:
@@ -270,7 +270,7 @@ class RandomForestRegressorConverter:
             tree_id = i
             _add_tree_to_attribute_pairs(attr_pairs, False, tree, tree_id, tree_weight, 0, False)
 
-        nb = NodeBuilder(context, "TreeEnsembleRegressor")
+        nb = NodeBuilder(context, "TreeEnsembleRegressor", op_domain='ai.onnx.ml')
 
         for k, v in attr_pairs.items():
             nb.add_attribute(k, v)
@@ -330,7 +330,7 @@ class GradientBoostingClassifierConverter:
                     tree = sk_node.estimators_[i][c].tree_
                     _add_tree_to_attribute_pairs(attr_pairs, True, tree, tree_id, tree_weight, c, False)
 
-        nb = NodeBuilder(context, "TreeEnsembleClassifier")
+        nb = NodeBuilder(context, "TreeEnsembleClassifier", op_domain='ai.onnx.ml')
 
         for k, v in attr_pairs.items():
             if isinstance(v, list) and len(v) == 0:
@@ -373,7 +373,7 @@ class GradientBoostingRegressorConverter:
             tree_id = i
             _add_tree_to_attribute_pairs(attr_pairs, False, tree, tree_id, tree_weight, 0, False)
 
-        nb = NodeBuilder(context, "TreeEnsembleRegressor")
+        nb = NodeBuilder(context, "TreeEnsembleRegressor", op_domain='ai.onnx.ml')
 
         for k, v in attr_pairs.items():
             nb.add_attribute(k, v)

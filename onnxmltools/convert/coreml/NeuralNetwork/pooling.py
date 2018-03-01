@@ -87,9 +87,11 @@ class PoolingLayerConverter:
             if params.type not in pooling_table:
                 raise ValueError('Unsupported pooling type: {}'.format(params.type))
 
-            nb = NodeBuilder(context, pooling_table[params.type])
             if params.type == Params.L2:
+                nb = NodeBuilder(context, pooling_table[params.type], op_version=2)
                 nb.add_attribute('p', 2)
+            else:
+                nb = NodeBuilder(context, pooling_table[params.type])
 
             nb.extend_inputs(inputs)
             nb.extend_outputs(outputs)
@@ -113,7 +115,7 @@ class PoolingLayerConverter:
             nb.add_attribute('kernel_shape', kernel_shape)
             nb.add_attribute('strides', strides)
         elif params.type == Params.L2:
-            nb = NodeBuilder(context, 'LpPool')
+            nb = NodeBuilder(context, 'LpPool', op_version=2)
             nb.add_attribute('kernel_shape', kernel_shape)
             nb.add_attribute('strides', strides)
             nb.add_attribute('p', 2)
@@ -174,7 +176,7 @@ class PoolingLayerConverter:
             scaler_builder.add_output(constant_tensor_name)
             builders.append(scaler_builder)
 
-            lp_pool_builder = NodeBuilder(context, 'LpPool')
+            lp_pool_builder = NodeBuilder(context, 'LpPool', op_version=2)
             lp_pool_builder.add_attribute('kernel_shape', kernel_shape)
             lp_pool_builder.add_attribute('strides', strides)
             lp_pool_builder.add_attribute('p', 1)

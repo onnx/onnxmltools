@@ -37,7 +37,7 @@ def convert(model, name=None, doc_string=''):
     :param model: A CoreML model (https://apple.github.io/coremltools/coremlspecification/sections/Model.html#model) or
     a CoreML MLModel object
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
-    :param doc_string: A string attached onto the produced ONNX model
+    :param doc_string: (optional) Override existing CoreML model shortDescription
     :return: A ONNX model (type: ModelProto) which is equivalent to the input CoreML model
     '''
     if isinstance(model, coremltools.models.MLModel):
@@ -84,13 +84,25 @@ def convert(model, name=None, doc_string=''):
     for output in outputs:
         output.name = context.get_onnx_name(output.name)
 
-    mb = ModelBuilder(name, doc_string)
+    # Convert CoreML description, author and license
+    metadata = spec.description.metadata
+    metadata_props = []
+    if metadata:
+        if not doc_string and metadata.shortDescription:
+            doc_string = metadata.shortDescription
+        if metadata.author:
+            metadata_props.append(model_util.make_string_string_entry('author', metadata.author))
+        if metadata.license:
+            metadata_props.append(model_util.make_string_string_entry('license', metadata.license))
+
+    mb = ModelBuilder(name, doc_string, metadata_props)
     mb.add_inputs(inputs)
     mb.add_outputs(outputs)
     for node in nodes:
         mb.add_nodes([node.onnx_node])
         mb.add_initializers(node.initializers)
         mb.add_values(node.values)
+        mb.add_domain_version_pair(node.domain_version_pair)
 
     return mb.make_model()
 
@@ -143,7 +155,7 @@ def _create_post_processing_nodes(context, coreml_nn, default_proba_tensor_name,
     nodes.append(id_extractor_builder.make_node())
 
     # Extract the best label
-    label_extractor_builder = NodeBuilder(context, 'ArrayFeatureExtractor')
+    label_extractor_builder = NodeBuilder(context, 'ArrayFeatureExtractor', op_domain='ai.onnx.ml')
     label_extractor_builder.add_input(label_buf_name)
     label_extractor_builder.add_input(extracted_id)
     label_extractor_builder.add_output(reserved_label_name)
@@ -158,7 +170,7 @@ def _create_post_processing_nodes(context, coreml_nn, default_proba_tensor_name,
         if o.name == coreml_proba_name:
             proba_type = o.type.WhichOneof('Type')
     if coreml_proba_name != '':
-        map_constructor_builder = NodeBuilder(context, 'ZipMap')
+        map_constructor_builder = NodeBuilder(context, 'ZipMap', op_domain='ai.onnx.ml')
         map_constructor_builder.add_input(proba_tensor_name)
         map_constructor_builder.add_output(reserved_proba_dict_name)
         if label_type == 'stringType':

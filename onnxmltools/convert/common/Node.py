@@ -10,13 +10,17 @@ class Node:
                  inputs,
                  outputs,
                  initializers,
-                 values):
+                 values,
+                 op_domain,
+                 op_version):
 
         self._onnx_node = onnx_node
         self._inputs = inputs
         self._outputs = outputs
         self._initializers = initializers
         self._values = values
+        self._domain = op_domain
+        self._version = op_version
 
     @property
     def name(self):
@@ -61,4 +65,8 @@ class Node:
     @property
     def onnx_node(self):
         return self._onnx_node
+
+    @property
+    def domain_version_pair(self):
+        return (self._domain, self._version)
 

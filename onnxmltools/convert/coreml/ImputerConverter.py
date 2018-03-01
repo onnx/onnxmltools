@@ -25,7 +25,7 @@ class ImputerConverter:
         """
         Converts a CoreML Imputer to ONNX
         """
-        nb = NodeBuilder(context, 'Imputer')
+        nb = NodeBuilder(context, 'Imputer', op_domain='ai.onnx.ml')
 
         if cm_node.imputer.HasField('replaceDoubleValue'):
             nb.add_attribute('replaced_value_float',

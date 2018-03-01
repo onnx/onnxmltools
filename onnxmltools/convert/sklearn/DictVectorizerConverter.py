@@ -26,7 +26,7 @@ class DictVectorizerConverter:
         string_vocabulary = []
         int64_vocabulary = []
         key_type = value_type = None
-        nb = NodeBuilder(context, 'DictVectorizer')
+        nb = NodeBuilder(context, 'DictVectorizer', op_domain='ai.onnx.ml')
         for feature_name in sk_node.feature_names_:
             if utils.is_string_type(feature_name):
                 string_vocabulary.append(feature_name)

@@ -8,8 +8,9 @@ from . import utils
 from ...proto import onnx_proto
 from .Node import Node
 
+
 class NodeBuilder:
-    def __init__(self, context, op_type):
+    def __init__(self, context, op_type, op_domain='', op_version=1):
         self._op_type = op_type
         self._name = context.get_unique_name(op_type)
         self._attributes = {}
@@ -20,6 +21,8 @@ class NodeBuilder:
         self._initializers = []
         self._values = []
         self._context = context
+        self._op_domain = op_domain
+        self._op_version = op_version
 
     @property
     def name(self):
@@ -88,15 +91,19 @@ class NodeBuilder:
 
     def make_node(self):
         from . import model_util
+        # Create a ONNX node based on the information we have
         onnx_node = model_util.make_node(self._op_type,
-                                self._input_names,
-                                self._output_names,
-                                self._name,
-                                **self._attributes)
-
+                                         self._input_names,
+                                         self._output_names,
+                                         self._name,
+                                         self._op_domain,
+                                         **self._attributes)
+        # Pass a high-level node upon the ONNX node we just created
         node = Node(onnx_node,
                     self._inputs,
                     self._outputs,
                     self._initializers,
-                    self._values)
+                    self._values,
+                    self._op_domain,
+                    self._op_version)
         return node

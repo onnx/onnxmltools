@@ -1,6 +1,9 @@
-ir_version: 1
+ir_version: 3
 producer_name: "OnnxMLTools"
 producer_version: "0.1.0.0000"
+domain: "onnxml"
+model_version: 0
+doc_string: ""
 graph {
   node {
     input: "input1"
@@ -13,6 +16,7 @@ graph {
       ints: 2
       ints: 3
       ints: 1
+      type: INTS
     }
   }
   node {
@@ -23,6 +27,7 @@ graph {
     attribute {
       name: "axis"
       i: 1
+      type: INT
     }
   }
   node {
@@ -35,13 +40,15 @@ graph {
     attribute {
       name: "axis"
       i: 1
+      type: INT
     }
     attribute {
       name: "axis_w"
       i: 1
+      type: INT
     }
   }
-  name: "test_model_name"
+  name: "1473999ee74f4db1b7d88c2dc6a64a0d"
   initializer {
     dims: 2
     dims: 27
@@ -113,10 +120,10 @@ graph {
     name: "input1"
     type {
       tensor_type {
-        elem_type: DOUBLE
+        elem_type: FLOAT
         shape {
           dim {
-            dim_value: 1
+            dim_param: "None"
           }
           dim {
             dim_value: 3
@@ -135,10 +142,10 @@ graph {
     name: "output1"
     type {
       tensor_type {
-        elem_type: DOUBLE
+        elem_type: FLOAT
         shape {
           dim {
-            dim_value: 1
+            dim_param: "None"
           }
           dim {
             dim_value: 2

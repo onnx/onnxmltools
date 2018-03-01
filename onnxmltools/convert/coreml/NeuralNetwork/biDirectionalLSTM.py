@@ -402,7 +402,7 @@ class BiDirectionalLSTMLayerConverter:
                 Y_h_reshaped_name = context.get_unique_name('Y_h_reshaped')
                 post_nb2.add_output(Y_h_reshaped_name)
 
-                post_nb3 = NodeBuilder(context, 'Split')
+                post_nb3 = NodeBuilder(context, 'Split', op_version=2)
                 builder_list.append(post_nb3)
                 post_nb3.add_attribute('split', [1, 1])
                 post_nb3.add_attribute('axis', 0)
@@ -432,7 +432,7 @@ class BiDirectionalLSTMLayerConverter:
                 Y_h_reshaped_name = context.get_unique_name('Y_h_reshaped')
                 post_nb2.add_output(Y_h_reshaped_name)
 
-                post_nb3 = NodeBuilder(context, 'Split')
+                post_nb3 = NodeBuilder(context, 'Split', op_version=2)
                 builder_list.append(post_nb3)
                 post_nb3.add_attribute('split', [1, 1])
                 post_nb3.add_attribute('axis', 0)
@@ -450,7 +450,7 @@ class BiDirectionalLSTMLayerConverter:
             Y_c_reshaped_name = context.get_unique_name('Y_c_reshaped')
             post_nb4.add_output(Y_c_reshaped_name)
 
-            post_nb5 = NodeBuilder(context, 'Split')
+            post_nb5 = NodeBuilder(context, 'Split', op_version=2)
             builder_list.append(post_nb5)
             post_nb5.add_attribute('split', [1, 1])
             post_nb5.add_attribute('axis', 0)
