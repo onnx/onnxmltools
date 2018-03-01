@@ -1,10 +1,5 @@
 <p align="center"><img width="40%" src="docs/ONNXMLTools_logo_main.png" /></p>
 
-[![TravisCI](https://travis-ci.org/xadupre/onnxmltools.svg)](ttps://travis-ci.org/xadupre/onnxmltools)
-[![Build status](https://ci.appveyor.com/api/projects/status/d1xav3amubypje4n?svg=true)](https://ci.appveyor.com/project/xadupre/onnxmltools)
-[![codecov](https://codecov.io/gh/onnx/onnxmltools/branch/master/graph/badge.svg)](https://codecov.io/gh/onnx/onnxmltools)
-
-
 
 # Introduction 
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:

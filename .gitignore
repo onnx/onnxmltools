@@ -1,11 +1,31 @@
+# Visual Studio Code files
+.vscode
+
+# IPython notebook checkpoints
+.ipynb_checkpoints
+
+# Compiled python
+*.pyc
+
+# setup.py intermediates
+.eggs
+dist
+
+# PyCharm files
+.idea
+
+# OSX dir files
+.DS_Store
+
+# Windows
+*.bat
+
+# test generated files
 .pytest_cache
 .cache
-*.bat
-*.pyc
 tests/utils/models/coreml_OneHotEncoder_BikeSharing_new.json
 tests/utils/models/coreml_OneHotEncoder_BikeSharing2.onnx
 tests/baseline/outmodels
-dist
 htmlcov
 coverage.xml
 .coverage
