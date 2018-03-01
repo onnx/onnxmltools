@@ -402,7 +402,7 @@ graph {
     }
     domain: "ai.onnx.ml"
   }
-  name: "b9e2fc3b57da4b62a1cf21e13a22331f"
+  name: "e29a78efcc8341a992cfc72e0e6f5260"
   initializer {
     dims: 1
     data_type: INT64
@@ -571,4 +571,8 @@ graph {
       }
     }
   }
+}
+opset_import {
+  domain: "ai.onnx.ml"
+  version: 1
 }
