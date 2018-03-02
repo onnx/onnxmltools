@@ -11,6 +11,8 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * Apple CoreML
 * scikit-learn (subset of models convertible to ONNX)
 
+(To convert ONNX model to CoreML, see [onnx-coreml](https://github.com/onnx/onnx-coreml))
+
 # Getting Started
 Clone this repository on your local machine.
 
