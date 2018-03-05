@@ -12,7 +12,7 @@ __producer__ = "OnnxMLTools"
 __producer_version__ = __version__
 __domain__ = "onnxml"
 __model_version__ = 0
-__operator_set_version__ = 0
+
 
 from .convert import convert_coreml
 from .convert import convert_sklearn
@@ -20,3 +20,4 @@ from .convert import convert_sklearn
 from .utils import load_model
 from .utils import save_model
 from .utils import save_text
+
