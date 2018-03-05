@@ -41,7 +41,7 @@ class ImputerConverter:
                 imputer_inputs.append(inp)
             num_features += model_util.get_feature_count(imputer_inputs[-1])
 
-        nb = NodeBuilder(context, 'Imputer')
+        nb = NodeBuilder(context, 'Imputer', op_domain='ai.onnx.ml')
         nb.add_attribute('imputed_value_floats', sk_node.statistics_)
 
         replaced_value = 0.0

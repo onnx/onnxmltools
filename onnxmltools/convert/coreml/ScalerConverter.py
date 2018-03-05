@@ -23,7 +23,7 @@ class ScalerConverter:
         scale = [x for x in cm_node.scaler.scaleValue]
         offset = [-x for x in cm_node.scaler.shiftValue]
 
-        nb = NodeBuilder(context, 'Scaler')
+        nb = NodeBuilder(context, 'Scaler', op_domain='ai.onnx.ml')
         nb.add_attribute('scale', scale)
         nb.add_attribute('offset', offset)
 

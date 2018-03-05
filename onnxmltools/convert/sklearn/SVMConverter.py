@@ -45,7 +45,7 @@ class SVMConverter:
                      support_vectors=support_vectors, coefficients=coef,
                      rho=intercept)
 
-        nb = NodeBuilder(context, model_name)
+        nb = NodeBuilder(context, model_name, op_domain='ai.onnx.ml')
         for k, v in attrs.items():
             nb.add_attribute(k, v)
 

@@ -94,12 +94,15 @@ def make_sequence_value_info(name, elem_type, doc_string=''):
     return value_info_proto
 
 
-def make_map_value_info(name, key_type, value_type):
+def make_map_value_info(name, key_type, value_type, doc_string=''):
     """
     Makes a TypeProto based on the key/value types.
     """
     value_info_proto = onnx_proto.ValueInfoProto()
     value_info_proto.name = name
+
+    if doc_string:
+        value_info_proto.doc_string = doc_string
 
     map_type_proto = value_info_proto.type.map_type
     map_type_proto.key_type = key_type
@@ -113,8 +116,8 @@ def make_map_value_info(name, key_type, value_type):
     return value_info_proto
 
 
-def make_model(name, ir_version, producer, producer_version, domain, model_version, doc_string,
-               nodes, inputs, outputs, values, initializer=list()):
+def make_model(name, ir_version, producer, producer_version, domain, model_version, doc_string, metadata_props,
+               operator_domain_version_pairs, nodes, inputs, outputs, values, initializer=list()):
     model = onnx_proto.ModelProto()
     model.ir_version = ir_version
     model.producer_name = producer
@@ -122,6 +125,12 @@ def make_model(name, ir_version, producer, producer_version, domain, model_versi
     model.domain = domain
     model.model_version = model_version
     model.doc_string = doc_string
+    if len(metadata_props) > 0:
+        model.metadata_props.extend(metadata_props)
+    for op_domain, op_version in operator_domain_version_pairs:
+        op_set = model.opset_import.add()
+        op_set.domain = op_domain
+        op_set.version = op_version
     graph = model.graph
     graph.name = name
     graph.node.extend(nodes)
@@ -136,15 +145,9 @@ def make_tensor(name, data_type, dims, vals, raw=False):
     return helper.make_tensor(name, data_type, dims, vals, raw)
 
 
-def make_node(op_type, inputs, outputs, name=None, **kwargs):
-    onnx_ml_ops = ["ArrayFeatureExtractor", "Binarizer", "CastMap", "CategoryMapper", "DictVectorizer", "Imputer",
-                   "FeatureVectorizer", "LabelEncoder", "LinearClassifier", "LinearRegressor", "Normalizer",
-                   "OneHotEncoder", "Scaler", "SVMClassifier", "SVMRegressor", "TreeEnsembleClassifier",
-                   "TreeEnsembleRegressor", "ZipMap"]
-
+def make_node(op_type, inputs, outputs, name=None, op_domain='', **kwargs):
     node = helper.make_node(op_type, inputs, outputs, name, doc_string='', **kwargs)
-    if op_type in onnx_ml_ops:
-        node.domain = 'ai.onnx.ml'
+    node.domain = op_domain
     return node
 
 
@@ -157,7 +160,7 @@ def make_zipmap_node(context, input, output, class_labels):
     Helper function to construct a ZipMap node
     '''
     from ..common import NodeBuilder
-    nb = NodeBuilder(context, "ZipMap")
+    nb = NodeBuilder(context, "ZipMap", op_domain='ai.onnx.ml')
     if utils.is_string_type(class_labels):
         nb.add_attribute('classlabels_strings', class_labels)
     else:
@@ -173,7 +176,7 @@ def make_normalizer_node(context, input, output, norm):
     Helper function to construct a normalizer node
     '''
     from ..common import NodeBuilder
-    nb = NodeBuilder(context, "Normalizer")
+    nb = NodeBuilder(context, "Normalizer", op_domain='ai.onnx.ml')
     nb.add_attribute('norm', norm)
     nb.add_input(input)
     nb.add_output(output)
@@ -193,7 +196,7 @@ tensorproto_typemap = get_tensorproto_typemap()
 
 
 def create_feature_extractor(input, output_name, indices, context):
-    nb = NodeBuilder(context, 'ArrayFeatureExtractor')
+    nb = NodeBuilder(context, 'ArrayFeatureExtractor', op_domain='ai.onnx.ml')
     nb.add_input(input)
 
     tensor_dim = [1] if len(indices) == 1 else [1, len(indices)]
@@ -220,7 +223,7 @@ def create_feature_vector(inputs, output_name, context):
         input_dims.append(feature_count)
         num_features += feature_count
 
-    nb = NodeBuilder(context, 'FeatureVectorizer')
+    nb = NodeBuilder(context, 'FeatureVectorizer', op_domain='ai.onnx.ml')
     nb.add_attribute('inputlist', input_names)
     nb.add_attribute('inputdimensions', input_dims)
     nb.extend_inputs(inputs)
@@ -231,7 +234,7 @@ def create_feature_vector(inputs, output_name, context):
 
 
 def create_ohe(input, output_name, categories, context):
-    nb = NodeBuilder(context, 'OneHotEncoder')
+    nb = NodeBuilder(context, 'OneHotEncoder', op_domain='ai.onnx.ml')
     nb.add_attribute('cats_int64s', categories)
     nb.add_input(input)
     output = make_tensor_value_info(context.get_unique_name(output_name),
@@ -242,7 +245,7 @@ def create_ohe(input, output_name, categories, context):
 
 
 def create_scaler(input, output_name, scale, offset, context):
-    nb = NodeBuilder(context, "Scaler")
+    nb = NodeBuilder(context, "Scaler", op_domain='ai.onnx.ml')
     nb.add_attribute('scale', [scale])
     nb.add_attribute('offset', [offset])
 
@@ -253,3 +256,11 @@ def create_scaler(input, output_name, scale, offset, context):
     output = make_tensor_value_info(context.get_unique_name(output_name), onnx_proto.TensorProto.FLOAT, output_shape)
     nb.add_output(output)
     return nb.make_node()
+
+
+def make_string_string_entry(key, value):
+    entry = onnx_proto.StringStringEntryProto()
+    entry.key = key
+    entry.value = value
+    return entry
+

@@ -1,6 +1,17 @@
 
-.. image:: https://...../docs/ONNXMLTools_logo_main.png
-    
+.. image:: https://github.com/onnx/onnxmltools/blob/master/docs/ONNXMLTools_logo_main.png
+
+.. list-table::
+   :widths: 4 4
+   :header-rows: 0
+   
+   * - .. image:: https://travis-ci.org/onnx/onnxmltools.svg?branch=master
+            :target: https://travis-ci.org/onnx/onnxmltools
+            :alt: Build Status Linux
+     - .. image:: https://ci.appveyor.com/api/projects/status/d1xav3amubypje4n?svg=true
+            :target: https://ci.appveyor.com/project/xadupre/onnxmltools
+            :alt: Build Status Windows
+
 Introduction 
 ============
 
@@ -17,7 +28,7 @@ Install
 
 ::
 
-    pip install git+https://github.com/onnx/onnxmltools
+    pip install onnxmltools
 
 Dependancies
 ============
@@ -30,7 +41,6 @@ Example
 =======
 
 Here is a simple example to convert a CoreML model:
-
 
 ::
 

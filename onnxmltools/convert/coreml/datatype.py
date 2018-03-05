@@ -42,44 +42,46 @@ def _convert(cm_type):
     return COREML_TYPE_TO_ONNX_TYPE[cm_type]
 
 
-def _handle_scalar_feature(cm_value):
+def _handle_scalar_feature(cm_value, doc_string=''):
     which_type = cm_value.type.WhichOneof('Type')
     onnx_type = _convert(which_type)
     onnx_shape = [1]
-    return model_util.make_tensor_value_info(cm_value.name, onnx_type, onnx_shape)
+    return model_util.make_tensor_value_info(cm_value.name, onnx_type, onnx_shape, doc_string)
 
 
-def _handle_multi_array_feature(cm_value, batch_size=1):
+def _handle_multi_array_feature(cm_value, batch_size=1, doc_string=''):
     data_type = cm_value.type.multiArrayType.dataType
     onnx_type = _convert(data_type)
     onnx_shape = [batch_size]
     for shape_val in cm_value.type.multiArrayType.shape:
         onnx_shape.append(shape_val)
-    return model_util.make_tensor_value_info(cm_value.name, onnx_type, onnx_shape)
+    return model_util.make_tensor_value_info(cm_value.name, onnx_type, onnx_shape, doc_string)
 
 
-def _handle_dictionary_feature(cm_value):
+def _handle_dictionary_feature(cm_value, doc_string=''):
     key_type = cm_value.type.dictionaryType.WhichOneof('KeyType')
     onnx_key_type = _convert(key_type)
     onnx_value_type = onnx_proto.TensorProto.FLOAT
-    map_type = model_util.make_map_value_info(cm_value.name, onnx_key_type, onnx_value_type)
+    map_type = model_util.make_map_value_info(cm_value.name, onnx_key_type, onnx_value_type, doc_string)
     return map_type
 
 
-def _handle_image_feature(cm_value, batch_size=1):
+def _handle_image_feature(cm_value, batch_size=1, doc_string=''):
     # ONNX currently doesn't have image type, so we use tensor as images' representations.
     # One issue is that we are not able to add side information such as color space.
     onnx_type = onnx_proto.TensorProto.FLOAT
+    if len(doc_string) > 0:
+        doc_string = doc_string + (' ' if doc_string.endswith('.') else '. ')
     if cm_value.type.imageType.colorSpace == 10:
         onnx_shape = [batch_size, 1]
-        doc_string = 'Image(s) in gray scale. If there are N images, it is a 4-D tensor with shape [N, 1, H, W]'
+        doc_string = doc_string + 'Image(s) in gray scale. If there are N images, it is a 4-D tensor with shape [N, 1, H, W].'
     elif cm_value.type.imageType.colorSpace == 20:
         onnx_shape = [batch_size, 3]
-        doc_string = 'Image(s) in RGB format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
+        doc_string = doc_string + 'Image(s) in RGB format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
                      'C-axis are red, green, and blue channels, respectively.'
     elif cm_value.type.imageType.colorSpace == 30:
         onnx_shape = [batch_size, 3]
-        doc_string = 'Image(s) in BGR format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
+        doc_string = doc_string + 'Image(s) in BGR format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
                      'C-axis are blue, green, and red channels, respectively.'
     else:
         raise ValueError('Unsupported color space')
@@ -96,14 +98,16 @@ def make_value_info(value, batch_size=1):
     except Exception:
         raise Exception("Not a valid CoreML type")
 
+    doc_string = value.shortDescription
+
     if which_type in scalar_feature_types:
-        return _handle_scalar_feature(value)
+        return _handle_scalar_feature(value, doc_string)
     elif which_type == 'multiArrayType':
-        return _handle_multi_array_feature(value, batch_size)
+        return _handle_multi_array_feature(value, batch_size, doc_string)
     elif which_type == 'dictionaryType':
-        return _handle_dictionary_feature(value)
+        return _handle_dictionary_feature(value, doc_string)
     elif which_type == 'imageType':
-        return _handle_image_feature(value, batch_size)
+        return _handle_image_feature(value, batch_size, doc_string)
 
 
 def get_onnx_tree_mode(cm_tree_behavior):
