@@ -1,3 +1,4 @@
+
 <p align="center"><img width="40%" src="docs/ONNXMLTools_logo_main.png" /></p>
 
 | Linux | Windows |
@@ -9,6 +10,8 @@
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
 * Apple CoreML
 * scikit-learn (subset of models convertible to ONNX)
+
+(To convert ONNX model to CoreML, see [onnx-coreml](https://github.com/onnx/onnx-coreml))
 
 # Getting Started
 Clone this repository on your local machine.

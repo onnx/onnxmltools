@@ -8,11 +8,6 @@ import sys
 from uuid import uuid4
 from ..common import model_util
 from ...proto import onnx_proto
-from ... import __domain__
-from ... import __producer__
-from ... import __producer_version__
-from ... import __model_version__
-
 
 class ModelBuilder:
     def __init__(self, name=None, doc_string='', metadata_props=[]):
@@ -47,10 +42,10 @@ class ModelBuilder:
     def make_model(self):
         return model_util.make_model(self._name,
                                      onnx_proto.IR_VERSION,
-                                     __producer__,
-                                     __producer_version__,
-                                     __domain__,
-                                     __model_version__,
+                                     model_util.get_producer(),
+                                     model_util.get_producer_version(),
+                                     model_util.get_domain(),
+                                     model_util.get_model_version(),
                                      self._doc_string,
                                      self._metadata_props,
                                      self._operator_domain_version_pairs,

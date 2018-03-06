@@ -11,13 +11,13 @@ graph {
     name: "Scaler"
     op_type: "Scaler"
     attribute {
-      name: "offset"
-      floats: 0.0
+      name: "scale"
+      floats: 1.0
       type: FLOATS
     }
     attribute {
-      name: "scale"
-      floats: 1.0
+      name: "offset"
+      floats: 0.0
       type: FLOATS
     }
     domain: "ai.onnx.ml"
@@ -28,13 +28,13 @@ graph {
     name: "Scaler.1"
     op_type: "Scaler"
     attribute {
-      name: "offset"
-      floats: 0.0
+      name: "scale"
+      floats: 1.0
       type: FLOATS
     }
     attribute {
-      name: "scale"
-      floats: 1.0
+      name: "offset"
+      floats: 0.0
       type: FLOATS
     }
     domain: "ai.onnx.ml"
@@ -45,13 +45,13 @@ graph {
     name: "Scaler.2"
     op_type: "Scaler"
     attribute {
-      name: "offset"
-      floats: 0.0
+      name: "scale"
+      floats: 1.0
       type: FLOATS
     }
     attribute {
-      name: "scale"
-      floats: 1.0
+      name: "offset"
+      floats: 0.0
       type: FLOATS
     }
     domain: "ai.onnx.ml"
@@ -62,13 +62,13 @@ graph {
     name: "Scaler.3"
     op_type: "Scaler"
     attribute {
-      name: "offset"
-      floats: 0.0
+      name: "scale"
+      floats: 1.0
       type: FLOATS
     }
     attribute {
-      name: "scale"
-      floats: 1.0
+      name: "offset"
+      floats: 0.0
       type: FLOATS
     }
     domain: "ai.onnx.ml"
@@ -79,13 +79,13 @@ graph {
     name: "Scaler.4"
     op_type: "Scaler"
     attribute {
-      name: "offset"
-      floats: 0.0
+      name: "scale"
+      floats: 1.0
       type: FLOATS
     }
     attribute {
-      name: "scale"
-      floats: 1.0
+      name: "offset"
+      floats: 0.0
       type: FLOATS
     }
     domain: "ai.onnx.ml"
@@ -96,13 +96,13 @@ graph {
     name: "Scaler.5"
     op_type: "Scaler"
     attribute {
-      name: "offset"
-      floats: 0.0
+      name: "scale"
+      floats: 1.0
       type: FLOATS
     }
     attribute {
-      name: "scale"
-      floats: 1.0
+      name: "offset"
+      floats: 0.0
       type: FLOATS
     }
     domain: "ai.onnx.ml"
@@ -113,13 +113,13 @@ graph {
     name: "Scaler.6"
     op_type: "Scaler"
     attribute {
-      name: "offset"
-      floats: 0.0
+      name: "scale"
+      floats: 1.0
       type: FLOATS
     }
     attribute {
-      name: "scale"
-      floats: 1.0
+      name: "offset"
+      floats: 0.0
       type: FLOATS
     }
     domain: "ai.onnx.ml"
@@ -130,13 +130,13 @@ graph {
     name: "Scaler.7"
     op_type: "Scaler"
     attribute {
-      name: "offset"
-      floats: 0.0
+      name: "scale"
+      floats: 1.0
       type: FLOATS
     }
     attribute {
-      name: "scale"
-      floats: 1.0
+      name: "offset"
+      floats: 0.0
       type: FLOATS
     }
     domain: "ai.onnx.ml"
@@ -402,7 +402,7 @@ graph {
     }
     domain: "ai.onnx.ml"
   }
-  name: "e29a78efcc8341a992cfc72e0e6f5260"
+  name: "coreml_OneHotEncoder_BikeSharing"
   initializer {
     dims: 1
     data_type: INT64

@@ -18,6 +18,7 @@ graph {
       ints: 1
       type: INTS
     }
+    domain: ""
   }
   node {
     input: "Transpose"
@@ -29,6 +30,7 @@ graph {
       i: 1
       type: INT
     }
+    domain: ""
   }
   node {
     input: "flatten_1_output"
@@ -47,8 +49,9 @@ graph {
       i: 1
       type: INT
     }
+    domain: ""
   }
-  name: "1473999ee74f4db1b7d88c2dc6a64a0d"
+  name: "keras2coreml_Dense_ImageNet_small"
   initializer {
     dims: 2
     dims: 27
@@ -155,3 +158,8 @@ graph {
     }
   }
 }
+opset_import {
+  domain: ""
+  version: 1
+}
+
