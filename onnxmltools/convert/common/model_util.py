@@ -9,37 +9,37 @@ from .NodeBuilder import NodeBuilder
 from ...proto import onnx_proto
 from ...proto import helper
 
-
-
 # Includes basic ONNX data types only, advanced data types will be supported later.
 # This list is used to convert integers to floats.
 onnx_integer_types = [onnx_proto.TensorProto.UINT8, onnx_proto.TensorProto.INT8, onnx_proto.TensorProto.UINT16,
                       onnx_proto.TensorProto.INT16, onnx_proto.TensorProto.INT32, onnx_proto.TensorProto.INT64]
 
 
-def producer():
+def get_producer():
     """
     Internal helper function to return the producer
     """
     from ... import __producer__
     return __producer__
 
-def producer_version():
+
+def get_producer_version():
     """
     Internal helper function to return the producer version
     """
     from ... import __producer_version__
     return __producer_version__
 
-def domain():
+
+def get_domain():
     """
     Internal helper function to return the model domain
-    :return:
     """
     from ... import __domain__
     return __domain__
 
-def model_version():
+
+def get_model_version():
     """
     Internal helper function to return the model version
     """
