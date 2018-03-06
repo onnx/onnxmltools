@@ -39,7 +39,11 @@ class TestUtils(unittest.TestCase):
         json_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.json")
         json_file_new = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing_new.json")
         save_text(onnx_model, json_file_new)
-        filecmp.clear_cache()
+        try:
+            filecmp.clear_cache()
+        except AttributeError:
+            # Only available in Python 3
+            pass
         content1 = self._parseEOL(json_file)
         content2 = self._parseEOL(json_file_new)
         self.assertTrue(content1 == content2,

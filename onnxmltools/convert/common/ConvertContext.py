@@ -59,4 +59,4 @@ class ExtendedConvertContext(ConvertContext):
         self._outputs.append(output)
 
     def clear_outputs(self):
-        self._outputs.clear()
+        del self._outputs[:]

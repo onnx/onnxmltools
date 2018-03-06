@@ -8,10 +8,6 @@ environment:
 
   matrix:
 
-    - PYTHON: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7.x"
-      PYTHON_ARCH: "64"
-
     - PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6.x"
       PYTHON_ARCH: "64"
@@ -23,7 +19,7 @@ install:
     - "%PYTHON%\\python -m pip install --upgrade pip"
     - "%PYTHON%\\Scripts\\pip install -r requirements.txt"
     - "%PYTHON%\\Scripts\\pip install git+https://github.com/apple/coremltools"
-    - "%PYTHON%\\Scripts\\pip install https://github.com/xadupre/xgboost/releases/download/0.7/xgboost-0.7-cp36-cp36m-win_amd64.whl"
+    - if %%PYTHON%==C:\\Python36-x64 "%PYTHON%\\Scripts\\pip install https://github.com/xadupre/xgboost/releases/download/0.7/xgboost-0.7-cp36-cp36m-win_amd64.whl"
     - "%PYTHON%\\Scripts\\pip install -r requirements-dev.txt"
     - set PYTHONPATH=%~dp0
 
@@ -38,7 +34,6 @@ after_test:
     - if not exist dist\htmlcov mkdir dist\htmlcov
     - xcopy htmlcov dist\htmlcov
     - copy *.xml dist\htmlcov
-    - if %APPVEYOR_ACCOUNT_NAME%==xadupre %PYTHON%\Scripts\codecov -f coverage.xml -t 2c916354-0f91-46b4-a577-f80b0031c941
 
 artifacts:
     - path: dist
