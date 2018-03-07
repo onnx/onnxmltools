@@ -27,7 +27,7 @@ pip install git+https://github.com/onnx/onnxmltools
 ```
 
 ## Dependencies
-This package uses NumPy as well as ProtoBuf. Also If you are converting a model from Scikit-learn or Apple CoreML you need the following packages installed respectively:
+This package uses NumPy as well as ProtoBuf. Also If you are converting a model from scikit-learn or Apple Core ML you need the following packages installed respectively:
 1. scikit-learn
 2. CoreMLTools
 
