@@ -1,5 +1,5 @@
 
-.. image:: https://github.com/onnx/onnxmltools/blob/master/docs/ONNXMLTools_logo_main.png
+.. image:: https://github.com/onnx/onnxmltools/raw/master/docs/ONNXMLTools_logo_main.png
 
 .. list-table::
    :widths: 4 4
@@ -30,7 +30,7 @@ Install
 
     pip install onnxmltools
 
-Dependancies
+Dependencies
 ============
 
 `scikit-learn <http://scikit-learn.org/stable/>`_ is needed to convert
