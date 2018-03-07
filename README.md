@@ -17,13 +17,17 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 Clone this repository on your local machine.
 
 ## Install
-Currently you can install ONNXMLTools from source:
+You can install latest release of ONNXMLTools from pypi:
+```
+pip install onnxmltools
+```
+or install from source:
 ```
 pip install git+https://github.com/onnx/onnxmltools
 ```
 
-## Dependancies
-This package uses NumPy as well as ProtoBuf. Also If you are converting a model from Scikit-learn or Apple CoreML you need the following packages installed respectively:
+## Dependencies
+This package uses NumPy as well as ProtoBuf. Also If you are converting a model from scikit-learn or Apple Core ML you need the following packages installed respectively:
 1. scikit-learn
 2. CoreMLTools
 
