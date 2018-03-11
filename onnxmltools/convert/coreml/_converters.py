@@ -2675,7 +2675,7 @@ def convert_svm_regressor(scope, operator, container):
     elif kernel_val == 'linearKernel':
         svr_kernel_params = [0.0, 0.0, 0.0]
 
-    n_supports, support_vectors = extract_support_vectors_as_dense_tensor(operator.raw_model.supportVectorRegressor)
+    n_supports, support_vectors = extract_support_vectors_as_dense_tensor(operator.raw_operator.supportVectorRegressor)
 
     svr_coefficients = params.coefficients.alpha
     if isinstance(params.rho, list):
