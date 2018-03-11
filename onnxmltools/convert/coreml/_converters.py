@@ -1248,8 +1248,9 @@ def convert_gru(scope, operator, container):
 
 
 def convert_l2_normalization(scope, operator, container):
-    container.add_node('L2Normalization', operator.input_full_names,
-                       operator.output_full_names, name=operator.full_name)
+    # The first dimension is batch size, so the normalization is done along the 2nd axis (indexed by 1).
+    attrs = {'name': operator.full_name, 'axis': 1}
+    container.add_node('L2Normalization', operator.input_full_names, operator.output_full_names, **attrs)
 
 
 def convert_load_constant(scope, operator, container):
@@ -1312,10 +1313,12 @@ def convert_reduce(scope, operator, container):
                          Params.LOGSUM: 'ReduceLogSum', Params.SUMSQUARE: 'ReduceSumSquare',
                          Params.L1: 'ReduceL1', Params.L2: 'ReduceL2', Params.MAX: 'ReduceMax',
                          Params.MIN: 'ReduceMin', Params.ARGMAX: 'ArgMax'}
-
     params = operator.raw_operator.reduce
     reduce_mode = reduce_mode_table[params.mode]
     reduce_name = scope.get_unique_operator_name(reduce_mode)
+    # CoreML's reduce operator is used to process tensors with shape [C, H, W]. Notice that [C, H, W] in CoreML
+    # corresponds to [N, C, H, W] in ONNX because ONNX explicitly get the batch axis. If a CoreML reduce is working
+    # on CoreML's C-axis, the corresponding ONNX axis's index would be 1 (for the 2nd axis in [N, C, H, W]-system).
     reduce_axis_table = {Params.CHW: [1, 2, 3], Params.HW: [2, 3], Params.C: [1], Params.H: [2], Params.W: [3]}
     reduce_axis = reduce_axis_table[params.axis]
     attrs = {'name': reduce_name, 'axes': reduce_axis}
@@ -1354,13 +1357,17 @@ def convert_slice(scope, operator, container):
     attrs = {'name': op_name}
     params = operator.raw_operator.slice
 
+    # Set up slice range of C-, H-, and W-axes. Notice that only one of them will be actually sliced.
     axis_map = {Params.CHANNEL_AXIS: 0, Params.HEIGHT_AXIS: 1, Params.WIDTH_AXIS: 2}
     starts = [0, 0, 0]
     ends = [-1, -1, -1]
-
     starts[axis_map[params.axis]] = params.startIndex
     ends[axis_map[params.axis]] = params.endIndex
 
+    # The input shape should be [N, C, H, W] in ONNX. Because CoreML only slices one of C-, H-, or W-axes, the
+    # "axes" attribute in ONNX is [1, 2, 3]. Note that for the axes not really sliced, their starting and ending
+    # indexes are 0 and -1, respectively.
+    attrs['axes'] = [1, 2, 3]
     attrs['starts'] = starts
     attrs['ends'] = ends
     attrs['stride'] = params.stride
@@ -1371,7 +1378,10 @@ def convert_slice(scope, operator, container):
 def convert_split(scope, operator, container):
     op_type = 'Split'
     op_name = scope.get_unique_operator_name(op_type)
-    attrs = {'name': op_name, 'split': operator.raw_operator.split.nOutputs, 'axis': 1}
+    # ONNX Split may evenly divide the input along the specified axis if "split" attribute is not specified.
+    # Also, CoreML always evenly split the input along C-axis. Consequently, we only need to specify the axis
+    # and make sure the number of outputs in ONNX matches that in CoreML.
+    attrs = {'name': op_name, 'axis': 1} # axis=1 means that we split along C-axis
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_version=2, **attrs)
 
 
@@ -2415,12 +2425,20 @@ def convert_padding(scope, operator, container):
         raise ValueError('Unsupported padding mode: {}'.format(pad_type))
     attrs['mode'] = pad_table[pad_type]
 
-    # CoreML only pads for their H- and W- axes. Here we assume input tensor's shape is [N, C, H, W].
+    # CoreML only pads for their H- and W-axes. Here we assume the shape of the tensor to be padded
+    # is [N, C, H, W], so we have 8 padding amounts
+    #     pads = [N_begin_index, C_begin_index, H_begin_index, W_begin_index,
+    #             N_end_index,   C_end_index,   H_end_index,   W_end_index]
+    # Because only H- and W-axes are padded in CoreML, we leave padding amounts of N- and C-axes zeros.
     pads = [0, 0, 0, 0, 0, 0, 0, 0]
     if len(params.paddingAmounts.borderAmounts) > 0:
+        # Set H_begin_index
         pads[2] = params.paddingAmounts.borderAmounts[0].startEdgeSize
+        # Set W_begin_index
         pads[3] = params.paddingAmounts.borderAmounts[1].startEdgeSize
+        # Set H_end_index
         pads[6] = params.paddingAmounts.borderAmounts[0].endEdgeSize
+        # Set W_end_index
         pads[7] = params.paddingAmounts.borderAmounts[1].endEdgeSize
     attrs['pads'] = pads
 
@@ -2491,6 +2509,15 @@ def convert_bias(scope, operator, container):
 
 
 def convert_scale(scope, operator, container):
+    # In CoreML's ScaleLayer, the input is first scaled by their "scale" attribute and then a "bias" can be added.
+    # Symbols:
+    #  a: scale attribute in CoreML's ScaleLayer
+    #  b: bias attribute in CoreML's ScaleLayer
+    #  x: input
+    #  y: output
+    # The math formulation of ScaleLayer should be
+    #  y = a * x + b
+    # Therefore, our strategy of composing ScaleLayer is to have one multiplication followed by an addition.
     params = operator.raw_operator.scale
     op1_type = 'Mul'
     attrs1 = {'name': scope.get_unique_operator_name(op1_type)}
@@ -2500,22 +2527,31 @@ def convert_scale(scope, operator, container):
 
     if scale_axis is not None:
         attrs1['axis'] = scale_axis
-    # No matter what shape it is, we activate broadcasting because input shape is larger or equal to the scalar.
+    # CoreML is at most 3-D, so we always turn broadcasting on.
     attrs1['broadcast'] = 1
 
     if not params.hasBias:
+        # Create a element-wise multiplication and use it to scale the input. The first input is the variable we want
+        # to scale while the second input is their multipliers.
         container.add_node(op1_type, [operator.inputs[0].full_name, scale_name], operator.output_full_names, **attrs1)
     else:
+        # Declare a temporal variable to store the scaled input
         intra_variable_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_scaled')
+        # Create a element-wise multiplication and use it to scale the input and save the result to a temporal variable
         container.add_node(op1_type, operator.input_full_names, [intra_variable_name], **attrs1)
+
+        # Prepare materials to build an Add operator for adding bias
         op2_type = 'Add'
         attrs2 = {'name': scope.get_unique_operator_name(op2_type)}
         bias_axis, bias_shape = deduce_broadcast_axis_and_shape(params.shapeBias)
         if bias_axis is not None:
             attrs2['axis'] = scale_axis
+        # CoreML is at most 3-D, so we always turn broadcasting on.
         attrs2['broadcast'] = 1
         bias_name = scope.get_unique_variable_name(op2_type + '_B')
         container.add_initializer(bias_name, onnx_proto.TensorProto.FLOAT, bias_shape, params.bias.floatValue)
+        # As bias exists, we add the bias into the output of the multiplication and then use the output of addition
+        # as the final output of this conversion.
         container.add_node(op2_type, [intra_variable_name, bias_name], operator.output_full_names, **attrs2)
 
 
