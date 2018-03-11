@@ -164,19 +164,20 @@ def find_type_conversion(source_type, target_type):
         raise TypeError('Unsupported type conversion from %s to %s' % (source_type, target_type))
 
 
-def parse_coreml_feature_type(raw_type, batch_size=1):
+def parse_coreml_feature(feature_info, batch_size=1):
     '''
     Encode type information from CoreML's FeatureType protobuf message in converter's type system.
 
     Scalar types such as Int64FeatureType, DoubleFeatureType, and StringFeatureType in CoreML are interpreted as
     [batch_size, 1]-tensor. Tensor-like types such as ArrayFeature in CoreML is viewed as tensors with a prepend
     batch_size; for example, we use [batch_size, C, H, W] to denote [C, H, W]-array in CoreML.
-    :param raw_type: CoreML FeatureType (https://apple.github.io/coremltools/coremlspecification/sections/DataStructuresAndFeatureTypes.html#featuretype)
+    :param feature_info: CoreML FeatureDescription (https://apple.github.io/coremltools/coremlspecification/sections/DataStructuresAndFeatureTypes.html#featuretype)
     :param batch_size: default batch size prepend to scalars and tensors variables from CoreML
     :return: one of our Int64Type, FloatType, StringType, Int64TensorType, FloatTensorType, or DictionaryType
     '''
+    raw_type = feature_info.type
+    doc_string = feature_info.shortDescription
     type_name = raw_type.WhichOneof('Type')
-    doc_string = raw_type.shortDescription
 
     if type_name == 'int64Type':
         return Int64Type(doc_string=doc_string)
