@@ -194,11 +194,16 @@ class Scope:
 
 class Topology:
 
-    def __init__(self, model, initial_types={}, reserved_variable_names=set(), reserved_operator_names=set()):
+    def __init__(self, model, default_batch_size=1, initial_types={},
+                 reserved_variable_names=set(), reserved_operator_names=set()):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph
+
         :param model: the model used to create the topology
+        :param default_batch_size: batch_size prepend to scalar and array types from CoreML
         :param initial_types: a dictionary providing some types for some CoreML root variables
+        :param reserved_variable_names: a set of strings which are not allowed to be used as a variable name
+        :param reserved_operator_names: a set of strings which are not allowed to be used as a operator name
         '''
         self.scopes = []
         self.raw_model = model
@@ -206,6 +211,7 @@ class Topology:
         self.variable_name_set = reserved_variable_names
         self.operator_name_set = reserved_operator_names
         self.initial_types = initial_types
+        self.default_batch_size = default_batch_size
 
     def get_unique_scope_name(self, seed):
         if seed not in self.scope_names:
@@ -496,7 +502,8 @@ def _parse_simple_model(topology, parent_scope, model, inputs, outputs):
     for var in model.description.input:
         # We assume that no duplicated raw name exists. Note that we set prepend=True because model inputs should
         # not hide any intermediate variables.
-        variable = scope.declare_local_variable(var.name, parse_coreml_feature_type(var.type), prepend=True)
+        variable = scope.declare_local_variable(
+            var.name,parse_coreml_feature_type(var.type, topology.default_batch_size), prepend=True)
         this_operator.inputs.append(variable)
     # Connect local variables and variables passed into this scope. Our assumptions are described below.
     # 1. Assume a variable with 'A' as its CoreML name is passed in. There must be at least one local variable gets a
@@ -515,7 +522,8 @@ def _parse_simple_model(topology, parent_scope, model, inputs, outputs):
     # Allocate outputs for the operator and then connect them with outputs from outside
     for var in model.description.output:
         # We assume that no duplicated output raw name exists.
-        variable = scope.declare_local_variable(var.name, parse_coreml_feature_type(var.type))
+        variable = scope.declare_local_variable(
+            var.name, parse_coreml_feature_type(var.type, topology.default_batch_size))
         this_operator.outputs.append(variable)
     # Connect local variables and variables passed into this scope. Our assumptions are described below.
     # 1. Assume a variable with 'A' as its CoreML name is passed in. There must be at least one local variable gets a
@@ -564,11 +572,13 @@ def _parse_pipeline_model(topology, parent_scope, model, inputs, outputs):
         # the sub-model's parsing function and connected with proper child variables.
         sub_inputs = []
         for var in sub_model.description.input:
-            variable = scope.get_local_variable_or_declare_one(var.name, parse_coreml_feature_type(var.type))
+            variable = scope.get_local_variable_or_declare_one(
+                var.name,parse_coreml_feature_type(var.type, topology.default_batch_size))
             sub_inputs.append(variable)
         sub_outputs = []
         for var in sub_model.description.output:
-            variable = scope.declare_local_variable(var.name, parse_coreml_feature_type(var.type))
+            variable = scope.declare_local_variable(
+                var.name,parse_coreml_feature_type(var.type, topology.default_batch_size))
             sub_outputs.append(variable)
         _parse_model(topology, scope, sub_model, sub_inputs, sub_outputs)
 
@@ -578,7 +588,8 @@ def _parse_pipeline_model(topology, parent_scope, model, inputs, outputs):
         child_variable = scope.variables[scope.variable_name_mapping[var.name][0]]
         # Create model's input variable. Note that we set prepend=True because model inputs should not hide any
         # intermediate variables.
-        variable = scope.declare_local_variable(var.name, parse_coreml_feature_type(var.type), prepend=True)
+        variable = scope.declare_local_variable(
+            var.name, parse_coreml_feature_type(var.type, topology.default_batch_size), prepend=True)
         # Feed the input to the sub-model's input. It's possible to add type conversion here by using a casting operator
         # rather than identity, but we haven't see the need of doing so in practices.
         operator = scope.declare_local_operator('identity')
@@ -596,7 +607,8 @@ def _parse_pipeline_model(topology, parent_scope, model, inputs, outputs):
         # Find the latest variable with the same raw name declared when parsing the sub-models
         child_variable = scope.variables[scope.variable_name_mapping[var.name][-1]]
         # Create model's output variable
-        variable = scope.declare_local_variable(var.name, parse_coreml_feature_type(var.type))
+        variable = scope.declare_local_variable(
+            var.name, parse_coreml_feature_type(var.type, topology.default_batch_size))
         # Connect the input and a sub-model's input. It's possible to add type conversion here by using a casting
         # operator rather than identity, but we haven't see the need of doing so in practices.
         operator = scope.declare_local_operator('identity')
@@ -689,7 +701,8 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         child_variable = scope.variables[scope.variable_name_mapping[var.name][0]]
 
         # Declare model input. To prevent intermediate variables form being hidden by model inputs, prepend is True.
-        variable = scope.declare_local_variable(var.name, parse_coreml_feature_type(var.type), prepend=True)
+        variable = scope.declare_local_variable(
+            var.name, parse_coreml_feature_type(var.type, topology.default_batch_size), prepend=True)
 
         # A heuristic which forces the input of embedding to be integer tensor rather than float tensor.
         # Ideally this should be done by adding a cast operator, but ONNX doesn't have float-to-int casting.
@@ -722,7 +735,8 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         child_variable = scope.variables[scope.variable_name_mapping[var.name][-1]]
 
         # Create model output variable
-        variable = scope.declare_local_variable(var.name, parse_coreml_feature_type(var.type))
+        variable = scope.declare_local_variable(
+            var.name, parse_coreml_feature_type(var.type, topology.default_batch_size))
 
         # Feed result calculated by the network to the output variable
         operator = scope.declare_local_operator('identity')
@@ -735,7 +749,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         label_variable = None
         for var in model.description.output:
             if var.name == model.description.predictedFeatureName:
-                label_type = parse_coreml_feature_type(var.type)
+                label_type = parse_coreml_feature_type(var.type, topology.default_batch_size)
                 label_variable = scope.declare_local_variable(var.name, label_type)
                 break
         operator = scope.declare_local_operator('tensorToLabel', model)
@@ -764,7 +778,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         # Find out the description of predicted probabilities and declare a variable for probability map
         for var in model.description.output:
             if var.name == model.description.predictedProbabilitiesName:
-                probability_type = parse_coreml_feature_type(var.type)
+                probability_type = parse_coreml_feature_type(var.type, topology.default_batch_size)
                 probability_variable = scope.declare_local_variable(var.name, probability_type)
                 operator.outputs.append(probability_variable)
                 break
@@ -795,7 +809,9 @@ def parse_coreml(model, initial_types={}):
     reserved_variable_names = set()
     for var in list(model.description.input) + list(model.description.output):
         reserved_variable_names.add(var.name)
-    topology = Topology(model, initial_types, reserved_variable_names)
+    default_batch_size = 1 if model.WhichOneof('Type') not in \
+                              ['neuralNetworkClassifier', 'neuralNetworkRegressor', 'neuralNetwork'] else 'None'
+    topology = Topology(model, default_batch_size, initial_types, reserved_variable_names)
     scope = topology.declare_scope('__root__')
     _parse_model(topology, scope, model)
     topology.compile()

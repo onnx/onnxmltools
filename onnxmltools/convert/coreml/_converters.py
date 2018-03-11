@@ -23,6 +23,8 @@ class ModelComponentContainer:
         self.value_info = []
         # ONNX NodeProto's used to define computation structure
         self.nodes = []
+        # ONNX operators' domain-version pair set
+        self.node_domain_version_pair_sets = set()
 
     def add_input(self, variable):
         '''
@@ -64,26 +66,20 @@ class ModelComponentContainer:
         value_info.type.CopyFrom(variable.type.to_onnx_type())
         self.value_info.append(value_info)
 
-    def add_node(self, op_type, inputs, outputs, **attrs):
+    def add_node(self, op_type, inputs, outputs, op_domain='', op_version=1, **attrs):
         if isinstance(inputs, str):
             inputs = [inputs]
         if isinstance(outputs, str):
             outputs = [outputs]
-
         if not isinstance(inputs, list) or not all(isinstance(s, str) for s in inputs):
             raise ValueError('Inputs must be a list of string')
         if not isinstance(outputs, list) or not all(isinstance(s, str) for s in outputs):
             raise ValueError('Outputs must be a list of string')
 
         node = helper.make_node(op_type, inputs, outputs, **attrs)
+        node.domain = op_domain
 
-        ml_domain = ["ArrayFeatureExtractor", "Binarizer", "CastMap", "CategoryMapper", "DictVectorizer", "Imputer",
-                     "FeatureVectorizer", "LabelEncoder", "LinearClassifier", "LinearRegressor", "Normalizer",
-                     "OneHotEncoder", "Scaler", "SVMClassifier", "SVMRegressor", "TreeEnsembleClassifier",
-                     "TreeEnsembleRegressor", "ZipMap"]
-        if op_type in ml_domain:
-            node.domain = 'ai.onnx.ml'
-
+        self.node_domain_version_pair_sets.add((op_domain, op_version))
         self.nodes.append(node)
 
 
@@ -140,9 +136,16 @@ def convert_topology(topology, model_name):
                     # Make this operator as handled
                     operator.is_evaluated = True
 
+    # Create a graph from its main components
     graph = helper.make_graph(container.nodes, model_name, container.inputs, container.outputs, container.initializers)
+    # Add extra infomration related to the graph
     graph.value_info.extend(container.value_info)
-    return helper.make_model(graph)
+    onnx_model = helper.make_model(graph)
+    for op_domain, op_version in container.node_domain_version_pair_sets:
+        op_set = onnx_model.opset_import.add()
+        op_set.domain = op_domain
+        op_set.version = op_version
+    return onnx_model
 
 
 # [TODO] Check if this function is useful
@@ -472,6 +475,7 @@ def convert_convolution(scope, operator, container):
 
 
 def convert_pooling(scope, operator, container):
+    # [TODO] 1. Handle a exclude_pad_area flag in CoreML. 2. Support legacy padding by Pad
     params = operator.raw_operator.pooling
     inputs = [variable.full_name for variable in operator.inputs]
     outputs = [variable.full_name for variable in operator.outputs]
@@ -491,8 +495,9 @@ def convert_pooling(scope, operator, container):
         op_type = pooling_table[params.type]
         if params.type == Params.L2:
             attrs['p'] = 2
-
-        container.add_node(op_type, inputs, outputs, **attrs)
+            container.add_node(op_type, inputs, outputs, op_version=2, **attrs)
+        else:
+            container.add_node(op_type, inputs, outputs, **attrs)
         return
 
     # Handle local pooling mode
@@ -564,7 +569,10 @@ def convert_pooling(scope, operator, container):
         attrs['auto_pad'] = auto_pad
     # [TODO] Handle exclude_pad_area flag in CoreML's average pooling operator
 
-    container.add_node(op_type, inputs, outputs, **attrs)
+    if params.type == Params.L2:
+        container.add_node(op_type, inputs, outputs, op_version=2, **attrs)
+    else:
+        container.add_node(op_type, inputs, outputs, **attrs)
 
 
 def convert_preprocessing_scaler(scope, operator, container):
@@ -1015,7 +1023,7 @@ def convert_tensor_to_label(scope, operator, container):
     label_selector_attrs = {'name': label_selector_name}
     # [TODO] Check if AFE can handle [N, C]
     container.add_node('ArrayFeatureExtractor', [label_buffer_name, extracted_id_name], [operator.outputs[0].full_name],
-                       **label_selector_attrs)
+                        op_domain='ai.onnx.ml', **label_selector_attrs)
 
 
 def convert_dot(scope, operator, container):
@@ -1341,14 +1349,14 @@ def convert_slice(scope, operator, container):
     attrs['ends'] = ends
     attrs['stride'] = params.stride
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_version=2, **attrs)
 
 
 def convert_split(scope, operator, container):
     op_type = 'Split'
     op_name = scope.get_unique_operator_name(op_type)
     attrs = {'name': op_name, 'split': operator.raw_operator.split.nOutputs, 'axis': 1}
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_version=2, **attrs)
 
 
 def convert_unary(scope, operator, container):
@@ -1743,7 +1751,7 @@ def convert_bidirectional_lstm(scope, operator, container):
 
             container.add_node('Split', lstm_y_h_reshape_name,
                                [operator.outputs[1].full_name, operator.outputs[3].full_name],
-                               name=scope.get_unique_operator_name('Split'), split=[1, 1, ], axis=0)
+                               op_version=2, name=scope.get_unique_operator_name('Split'), split=[1, 1, ], axis=0)
     else:
         # Here we ingore ONNX RNN's first output because it's useless.
         lstm_outputs.append(scope.get_unique_variable_name('isolated'))
@@ -1765,7 +1773,7 @@ def convert_bidirectional_lstm(scope, operator, container):
 
             container.add_node('Split', lstm_y_reshape_name,
                                [operator.outputs[1].full_name, operator.outputs[3].full_name],
-                               name=scope.get_unique_operator_name('Split'), split=[1, 1], axis=0)
+                               op_version=2, name=scope.get_unique_operator_name('Split'), split=[1, 1], axis=0)
 
     # Output cell state if necessary
     if len(operator.outputs) > 2:
@@ -1778,7 +1786,7 @@ def convert_bidirectional_lstm(scope, operator, container):
 
         container.add_node('Split', lstm_y_c_reshape_name,
                            [operator.outputs[2].full_name, operator.outputs[4].full_name],
-                           name=scope.get_unique_operator_name('Split'), split=[1, 1], axis=0)
+                           op_version=2, name=scope.get_unique_operator_name('Split'), split=[1, 1], axis=0)
 
     # Create the major LSTM operator
     container.add_node('LSTM', lstm_inputs, lstm_outputs, **lstm_attrs)
@@ -1979,7 +1987,8 @@ def convert_tensor_to_probability_map(scope, operator, container):
     else:
         raise TypeError('Only neural network classifiers and pipeline classifiers are supported')
 
-    container.add_node('ZipMap', [operator.inputs[0].full_name], [operator.outputs[0].full_name], **attrs)
+    container.add_node('ZipMap', [operator.inputs[0].full_name], [operator.outputs[0].full_name],
+                       op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_dictionary_vectorizer(scope, operator, container):
@@ -1991,7 +2000,8 @@ def convert_dictionary_vectorizer(scope, operator, container):
     else:
         attrs['int64_vocabulary'] = raw_model.int64ToIndex.vector
 
-    container.add_node(op_type, [operator.inputs[0].full_name], [operator.outputs[0].full_name], **attrs)
+    container.add_node(op_type, [operator.inputs[0].full_name], [operator.outputs[0].full_name],
+                       op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_feature_vectorizer(scope, operator, container):
@@ -2007,7 +2017,7 @@ def convert_feature_vectorizer(scope, operator, container):
             scaler_name = scope.get_unique_operator_name('Scaler')
             scaled_name = scope.get_unique_variable_name(variable.full_name + '_scaled')
             scaler_attrs = {'name': scaler_name, 'scale': [1.], 'offset': [0.]}
-            container.add_node('Scaler', [variable.full_name], [scaled_name], **scaler_attrs)
+            container.add_node('Scaler', [variable.full_name], [scaled_name], op_domain='ai.onnx.ml', **scaler_attrs)
             inputs.append(scaled_name)
         else:
             inputs.append(variable.full_name)
@@ -2015,7 +2025,7 @@ def convert_feature_vectorizer(scope, operator, container):
         input_dims.append(variable.type.shape[1])
     attrs['inputdimensions'] = input_dims
 
-    container.add_node(op_type, inputs, [operator.outputs[0].full_name], **attrs)
+    container.add_node(op_type, inputs, [operator.outputs[0].full_name], op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_tree_ensemble_model(scope, operator, container):
@@ -2128,11 +2138,13 @@ def convert_tree_ensemble_model(scope, operator, container):
         if len(operator.inputs) > 1:
             feature_vector_name = scope.get_unique_variable_name('feature_vector')
             container.add_node('FeatureVectorizer', operator.input_full_names, feature_vector_name,
-                               name=scope.get_unique_operator_name('FeatureVectorizer'),
+                               op_domain='ai.onnx.ml', name=scope.get_unique_operator_name('FeatureVectorizer'),
                                inputdimensions=[variable.type.shape[1] for variable in operator.inputs])
-            container.add_node(op_type, feature_vector_name, operator.output_full_names, **attrs)
+            container.add_node(op_type, feature_vector_name, operator.output_full_names,
+                               op_domain='ai.onnx.ml', **attrs)
         else:
-            container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+            container.add_node(op_type, operator.input_full_names, operator.output_full_names,
+                               op_domain='ai.onnx.ml', **attrs)
     else:
         # For classifiers, due to the different representation of classes' probabilities, we need to add some
         # operators for type conversion. It turns out that we have the following topology.
@@ -2155,7 +2167,7 @@ def convert_tree_ensemble_model(scope, operator, container):
         if len(operator.inputs) > 1:
             feature_vector_name = scope.get_unique_variable_name('feature_vector')
             container.add_node('FeatureVectorizer', operator.input_full_names, feature_vector_name,
-                               name=scope.get_unique_operator_name('FeatureVectorizer'),
+                               op_domain='ai.onnx.ml', name=scope.get_unique_operator_name('FeatureVectorizer'),
                                inputdimensions=[variable.type.shape[1] for variable in operator.inputs])
         else:
             feature_vector_name = operator.inputs[0].full_name
@@ -2168,18 +2180,20 @@ def convert_tree_ensemble_model(scope, operator, container):
             if raw_model.description.predictedProbabilitiesName != '' and raw_model.description.predictedProbabilitiesName == variable.raw_name:
                 proba_output_name = variable.full_name
 
-        inputs = [variable.full_name for variable in operator.inputs]
         proba_tensor_name = scope.get_unique_variable_name('ProbabilityTensor')
 
         if proba_output_name is not None:
             # Add tree model ONNX node with probability output
-            container.add_node(op_type, feature_vector_name, [label_output_name, proba_tensor_name], **attrs)
+            container.add_node(op_type, feature_vector_name, [label_output_name, proba_tensor_name],
+                               op_domain='ai.onnx.ml', **attrs)
 
             # Add ZipMap to convert probability tensor into probability map
-            container.add_node('ZipMap', [proba_tensor_name], [proba_output_name], **zipmap_attrs)
+            container.add_node('ZipMap', [proba_tensor_name], [proba_output_name],
+                               op_domain='ai.onnx.ml', **zipmap_attrs)
         else:
             # Add support vector classifier without probability output
-            container.add_node(op_type, feature_vector_name, [label_output_name, proba_tensor_name], **attrs)
+            container.add_node(op_type, feature_vector_name, [label_output_name, proba_tensor_name],
+                               op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_glm_classifier(scope, operator, container):
@@ -2241,7 +2255,8 @@ def convert_glm_classifier(scope, operator, container):
     for variable in operator.outputs:
         if raw_model.description.predictedFeatureName == variable.raw_name:
             label_output_name = variable.full_name
-        if raw_model.description.predictedProbabilitiesName != '' and raw_model.description.predictedProbabilitiesName == variable.raw_name:
+        if raw_model.description.predictedProbabilitiesName != '' and \
+                raw_model.description.predictedProbabilitiesName == variable.raw_name:
             proba_output_name = variable.full_name
 
     inputs = [variable.full_name for variable in operator.inputs]
@@ -2249,7 +2264,7 @@ def convert_glm_classifier(scope, operator, container):
 
     if proba_output_name is not None:
         # Add tree model ONNX node with probability output
-        container.add_node(op_type, inputs, [label_output_name, proba_tensor_name], **attrs)
+        container.add_node(op_type, inputs, [label_output_name, proba_tensor_name], op_domain='ai.onnx.ml', **attrs)
 
         # Add a normalizer to make sure that the sum of all classes' probabilities is 1. It doesn't affect binary
         # classification. For multi-class clssifiers, if one applies sigmoid function independently to all raw scores,
@@ -2257,18 +2272,19 @@ def convert_glm_classifier(scope, operator, container):
         # to convert raw scores into probabilities, this normalization doesn't change anything.
         if len(class_labels) > 2:
             normalized_proba_tensor_name = scope.get_unique_variable_name(proba_tensor_name + '_normalized')
-            container.add_node('Normalizer', proba_tensor_name, normalized_proba_tensor_name,
+            container.add_node('Normalizer', proba_tensor_name, normalized_proba_tensor_name, op_domain='ai.onnx.ml',
                                name=scope.get_unique_operator_name('Normalizer'), norm='L1')
         else:
             # If we don't need a normalization, we just pass the original probability tensor to the following ZipMap
             normalized_proba_tensor_name = proba_tensor_name
 
         # Add ZipMap to convert normalized probability tensor into probability map
-        container.add_node('ZipMap', [normalized_proba_tensor_name], [proba_output_name], **zipmap_attrs)
+        container.add_node('ZipMap', [normalized_proba_tensor_name], [proba_output_name],
+                           op_domain='ai.onnx.ml', **zipmap_attrs)
     else:
         # Add linear classifier with isolated probability output, which means that the probability
         # tensor won't be accessed by any others.
-        container.add_node(op_type, inputs, [label_output_name, proba_tensor_name], **attrs)
+        container.add_node(op_type, inputs, [label_output_name, proba_tensor_name], op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_glm_regressor(scope, operator, container):
@@ -2299,7 +2315,7 @@ def convert_glm_regressor(scope, operator, container):
     attrs['coefficients'] = matrix_w.flatten()
     attrs['intercepts'] = glm.offset
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_array_feature_extractor(scope, operator, container):
@@ -2313,7 +2329,7 @@ def convert_array_feature_extractor(scope, operator, container):
     inputs = [operator.inputs[0].full_name, index_buffer_name]
     outputs = [operator.outputs[0].full_name]
 
-    container.add_node(op_type, inputs, outputs, **attrs)
+    container.add_node(op_type, inputs, outputs, op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_one_hot_encoder(scope, operator, container):
@@ -2326,7 +2342,8 @@ def convert_one_hot_encoder(scope, operator, container):
     if raw_model.HasField('stringCategories'):
         attrs['cats_strings'] = raw_model.stringCategories.vector
 
-    container.add_node(op_type, [operator.inputs[0].full_name], [operator.outputs[0].full_name], **attrs)
+    container.add_node(op_type, [operator.inputs[0].full_name], [operator.outputs[0].full_name],
+                       op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_normalizer(scope, operator, container):
@@ -2339,7 +2356,7 @@ def convert_normalizer(scope, operator, container):
     else:
         raise RuntimeError('Invalid norm type: ' + norm_type)
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_imputer(scope, operator, container):
@@ -2354,7 +2371,7 @@ def convert_imputer(scope, operator, container):
         attrs['imputed_value_floats'] = imputer.imputedDoubleArray.vector
     elif imputer.HasField('imputedInt64Array'):
         attrs['imputed_value_int64s'] = imputer.imputedInt64Array.vector
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_scaler(scope, operator, container):
@@ -2368,7 +2385,7 @@ def convert_scaler(scope, operator, container):
     attrs['scale'] = scale
     attrs['offset'] = offset
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_padding(scope, operator, container):
@@ -2394,7 +2411,7 @@ def convert_padding(scope, operator, container):
     if pad_type == 'constant':
         attrs['values'] = params.constant.value
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_version=2, **attrs)
 
 
 def convert_crop(scope, operator, container):
@@ -2528,6 +2545,30 @@ def convert_batch_normalization(scope, operator, container):
 def convert_identity(scope, operator, container):
     container.add_node('Identity', operator.input_full_names, operator.output_full_names, name=operator.full_name)
 
+def extract_support_vectors_as_dense_tensor(svm_model):
+    support_type = svm_model.WhichOneof('supportVectors')
+    if support_type == 'denseSupportVectors':
+        vectors = svm_model.denseSupportVectors.vectors
+        support_vectors = np.array([v.values for v in vectors]).flatten()
+    elif support_type == 'sparseSupportVectors':
+        # Since current ONNX doesn't support sparse representations, we have to save them as dense tensors. It may
+        # dramatically prolong prediction time and increase memory usage.
+        vectors = svm_model.sparseSupportVectors.vectors
+        # Search for the maximum dimension over all sparse support vectors
+        max_idx = 0
+        for v in vectors:
+            for n in v.nodes:
+                if n.index > max_idx:
+                    max_idx = n.index
+        # Save sparse vectors to dense vectors
+        support_vectors = np.zeros(shape=(len(vectors), max_idx))
+        for i, v in enumerate(vectors):
+            for n in v.nodes:
+                support_vectors[i][n.index-1] = n.value
+        support_vectors = support_vectors.flatten()
+    else:
+        raise ValueError('Unsupported support vector type: %s' % support_type)
+    return len(vectors), support_vectors
 
 def convert_svm_classifier(scope, operator, container):
     params = operator.raw_operator.supportVectorClassifier
@@ -2550,12 +2591,9 @@ def convert_svm_classifier(scope, operator, container):
 
     prob_a = params.probA
     prob_b = params.probB
-    # TODO: handle sparse vectors
-    svc_vectors_per_class = params.numberOfSupportVectorsPerClass
-    vectors = params.denseSupportVectors.vectors
-    support_vectors = np.array([v.values for v in vectors])
-    support_vectors = support_vectors.flatten()
-    svc_support_vectors = support_vectors
+    support_vectors_per_class = params.numberOfSupportVectorsPerClass
+    n_supports, svc_support_vectors = extract_support_vectors_as_dense_tensor(
+        operator.raw_operator.supportVectorClassifier)
     chain_coef = list(itertools.chain.from_iterable([coef.alpha for coef in params.coefficients]))
     svc_coefficients = chain_coef
     svc_rho = [-x for x in params.rho]
@@ -2569,7 +2607,7 @@ def convert_svm_classifier(scope, operator, container):
         attrs['prob_a'] = prob_a
     if prob_b:
         attrs['prob_b'] = prob_b
-    attrs['vectors_per_class'] = svc_vectors_per_class
+    attrs['vectors_per_class'] = support_vectors_per_class
     attrs['support_vectors'] = svc_support_vectors
     attrs['coefficients'] = svc_coefficients
     attrs['rho'] = svc_rho
@@ -2598,7 +2636,8 @@ def convert_svm_classifier(scope, operator, container):
     for variable in operator.outputs:
         if raw_model.description.predictedFeatureName == variable.raw_name:
             label_output_name = variable.full_name
-        if raw_model.description.predictedProbabilitiesName != '' and raw_model.description.predictedProbabilitiesName == variable.raw_name:
+        if raw_model.description.predictedProbabilitiesName != '' and \
+                raw_model.description.predictedProbabilitiesName == variable.raw_name:
             proba_output_name = variable.full_name
 
     inputs = [variable.full_name for variable in operator.inputs]
@@ -2606,13 +2645,14 @@ def convert_svm_classifier(scope, operator, container):
 
     if proba_output_name is not None:
         # Add support vector classifier in terms of ONNX node with probability output
-        container.add_node(op_type, inputs, [label_output_name, proba_tensor_name], **attrs)
+        container.add_node(op_type, inputs, [label_output_name, proba_tensor_name], op_domain='ai.onnx.ml', **attrs)
 
         # Add ZipMap to convert probability tensor into probability map
-        container.add_node('ZipMap', [proba_tensor_name], [proba_output_name], **zipmap_attrs)
+        container.add_node('ZipMap', [proba_tensor_name], [proba_output_name],
+                           op_domain='ai.onnx.ml', **zipmap_attrs)
     else:
         # Add support vector classifier in terms of ONNX node
-        container.add_node(op_type, inputs, [label_output_name, proba_tensor_name], **attrs)
+        container.add_node(op_type, inputs, [label_output_name, proba_tensor_name], op_domain='ai.onnx.ml', **attrs)
 
 
 def convert_svm_regressor(scope, operator, container):
@@ -2635,12 +2675,7 @@ def convert_svm_regressor(scope, operator, container):
     elif kernel_val == 'linearKernel':
         svr_kernel_params = [0.0, 0.0, 0.0]
 
-    # TODO: handle sparse vectors
-    vectors = params.denseSupportVectors.vectors
-    support_vectors = np.array([v.values for v in vectors])
-    i = support_vectors.shape[0]
-    support_vectors = support_vectors.flatten()
-    svr_support_vectors = support_vectors
+    n_supports, support_vectors = extract_support_vectors_as_dense_tensor(operator.raw_model.supportVectorRegressor)
 
     svr_coefficients = params.coefficients.alpha
     if isinstance(params.rho, list):
@@ -2653,12 +2688,12 @@ def convert_svm_regressor(scope, operator, container):
     attrs = {'name': op_name}
     attrs['kernel_type'] = svr_kernel
     attrs['kernel_params'] = svr_kernel_params
-    attrs['support_vectors'] = svr_support_vectors
-    attrs['n_supports'] = i
+    attrs['support_vectors'] = support_vectors
+    attrs['n_supports'] = n_supports
     attrs['coefficients'] = svr_coefficients
     attrs['rho'] = svr_rho
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
 
 converter_table = {'activation': convert_activation,
