@@ -161,9 +161,16 @@ def find_type_conversion(source_type, target_type):
         raise TypeError('Unsupported type conversion from %s to %s' % (source_type, target_type))
 
 
-def parse_coreml_feature_type(raw_type):
+def parse_coreml_feature_type(raw_type, batch_size=1):
     '''
-    Extract type information from CoreML's FeatureType protobuf message
+    Encode type information from CoreML's FeatureType protobuf message in converter's type system.
+
+    Scalar types such as Int64FeatureType, DoubleFeatureType, and StringFeatureType in CoreML are interpreted as
+    [batch_size, 1]-tensor. Tensor-like types such as ArrayFeature in CoreML is viewed as tensors with a prepend
+    batch_size; for example, we use [batch_size, C, H, W] to denote [C, H, W]-array in CoreML.
+    :param raw_type: CoreML FeatureType (https://apple.github.io/coremltools/coremlspecification/sections/DataStructuresAndFeatureTypes.html#featuretype)
+    :param batch_size: default batch size prepend to scalars and tensors variables from CoreML
+    :return: one of our Int64Type, FloatType, StringType, Int64TensorType, FloatTensorType, or DictionaryType
     '''
     type_name = raw_type.WhichOneof('Type')
 
@@ -176,7 +183,7 @@ def parse_coreml_feature_type(raw_type):
     elif type_name == 'imageType':
         # Produce [C, H, W]-tensor, where C is the number of color channels, H the height, and W the width.
         color_space = raw_type.imageType.colorSpace
-        shape = ['None']
+        shape = [batch_size]
         if color_space == 10:  # gray scale
             shape.append(1)
         elif color_space in [20, 30]:  # RGB (20) or BGR (30)
@@ -192,12 +199,12 @@ def parse_coreml_feature_type(raw_type):
         shape = [d for d in raw_type.multiArrayType.shape]
         if len(shape) == 1:
             # [C]
-            shape = ['None', shape[0]]
+            shape = [batch_size, shape[0]]
         elif len(shape) == 3:
             # [C, H, W]
-            shape = ['None', shape[0], shape[1], shape[2]]
+            shape = [batch_size, shape[0], shape[1], shape[2]]
         else:
-            shape = ['None', 1]  # Missing shape information. We will try inferring it.
+            shape = [batch_size, 1]  # Missing shape information. We will try inferring it.
 
         if element_type_id == 65568:
             # CoreML FLOAT32
