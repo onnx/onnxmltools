@@ -12,6 +12,7 @@ class ModelComponentContainer:
     This class is used to collect all materials required to build a ONNX GraphProto, which is usually encapsulated in
     ONNX ModelProto.
     '''
+
     def __init__(self):
         # Inputs of ONNX graph. They are ValueInfoProto in ONNX.
         self.inputs = []
@@ -1023,7 +1024,7 @@ def convert_tensor_to_label(scope, operator, container):
     label_selector_attrs = {'name': label_selector_name}
     # [TODO] Check if AFE can handle [N, C]
     container.add_node('ArrayFeatureExtractor', [label_buffer_name, extracted_id_name], [operator.outputs[0].full_name],
-                        op_domain='ai.onnx.ml', **label_selector_attrs)
+                       op_domain='ai.onnx.ml', **label_selector_attrs)
 
 
 def convert_dot(scope, operator, container):
@@ -1782,7 +1783,7 @@ def convert_bidirectional_lstm(scope, operator, container):
 
         lstm_y_c_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_Y_c_reshape')
         container.add_node('Reshape', lstm_y_c_name, lstm_y_c_reshape_name,
-                          name=scope.get_unique_operator_name('Reshape'), shape=[2, hidden_size])
+                           name=scope.get_unique_operator_name('Reshape'), shape=[2, hidden_size])
 
         container.add_node('Split', lstm_y_c_reshape_name,
                            [operator.outputs[2].full_name, operator.outputs[4].full_name],
@@ -2542,8 +2543,10 @@ def convert_batch_normalization(scope, operator, container):
 
     container.add_node(op_type, inputs, outputs, **attrs)
 
+
 def convert_identity(scope, operator, container):
     container.add_node('Identity', operator.input_full_names, operator.output_full_names, name=operator.full_name)
+
 
 def extract_support_vectors_as_dense_tensor(svm_model):
     support_type = svm_model.WhichOneof('supportVectors')
@@ -2564,11 +2567,12 @@ def extract_support_vectors_as_dense_tensor(svm_model):
         support_vectors = np.zeros(shape=(len(vectors), max_idx))
         for i, v in enumerate(vectors):
             for n in v.nodes:
-                support_vectors[i][n.index-1] = n.value
+                support_vectors[i][n.index - 1] = n.value
         support_vectors = support_vectors.flatten()
     else:
         raise ValueError('Unsupported support vector type: %s' % support_type)
     return len(vectors), support_vectors
+
 
 def convert_svm_classifier(scope, operator, container):
     params = operator.raw_operator.supportVectorClassifier

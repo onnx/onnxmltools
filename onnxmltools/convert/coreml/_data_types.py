@@ -1,6 +1,5 @@
 from ...proto import onnx_proto
 
-import numpy as np
 
 class DataType(object):
     def __init__(self, type_name, shape=None, doc_string=''):
@@ -116,6 +115,7 @@ class StringTensorType(TensorType):
 
 
 class DictionaryType(object):
+    # [TODO] Use DataType as base of all types
     def __init__(self, key_type, value_type, max_cardinality=None, doc_string=''):
         self.type_name = 'MAP'
         self.key_type = key_type

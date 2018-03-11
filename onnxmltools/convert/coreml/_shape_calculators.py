@@ -2,7 +2,6 @@ import copy
 import math
 from ._data_types import *
 
-# [TODO] Support 2-D tesnor as [N, C, 1, 1] in neural network's shape calcuators
 
 def calculate_inner_product_output_shapes(operator):
     if len(operator.inputs) != 1 or len(operator.outputs) != 1:
@@ -42,7 +41,7 @@ def calculate_activation_output_shapes(operator):
     if type(input.type) != FloatTensorType:
         raise RuntimeError('Input must be float tensor')
 
-    output.type = FloatTensorType([d for d in input.type.shape]) # Similar to identity but only accept floats
+    output.type = FloatTensorType([d for d in input.type.shape])  # Similar to identity but only accept floats
 
 
 def calculate_identity_output_shapes(operator):
@@ -312,6 +311,7 @@ def calculate_lstm_output_shapes(operator):
     operator.outputs[1].type.shape = [1, C * D]
     operator.outputs[2].type.shape = [1, C * D]
 
+
 def calculate_bidirectional_lstm_output_shapes(operator):
     for variable in operator.inputs:
         if type(variable.type) != FloatTensorType:
@@ -352,6 +352,7 @@ def calculate_bidirectional_lstm_output_shapes(operator):
     operator.outputs[3].type.shape = [1, C]
     operator.outputs[4].type.shape = [1, C]
 
+
 def calculate_gru_output_shapes(operator):
     for variable in operator.inputs:
         if type(variable.type) != FloatTensorType:
@@ -378,7 +379,7 @@ def calculate_gru_output_shapes(operator):
     if operator.raw_operator.gru.sequenceOutput:
         operator.outputs[0].type.shape = [N, C * D]
     else:
-         # This output shape should be [1, C * D] but we use [N, C * D] for back compatibility
+        # This output shape should be [1, C * D] but we use [N, C * D] for back compatibility
         operator.outputs[0].type.shape = [N, C * D]
     operator.outputs[1].type.shape = [1, C * D]
 
@@ -538,7 +539,8 @@ def calculate_dictionary_vectorizer_output_shapes(operator):
 def calculate_feature_vectorizer_output_shapes(operator):
     if len(operator.outputs) != 1:
         raise RuntimeError('Feature vectorizer operator has only one output')
-    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in operator.inputs):
+    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in
+           operator.inputs):
         raise RuntimeError('Input(s) must be float or integer tensor(s)')
     if any(len(variable.type.shape) != 2 for variable in operator.inputs):
         raise RuntimeError('Input(s) must be 2-D tensor(s)')
@@ -569,7 +571,8 @@ def calculate_traditional_classifier_output_shapes(operator):
     if len(operator.outputs) > 2 or len(operator.outputs) < 1:
         raise RuntimeError('Classifier cannot produce more than two or zero output')
 
-    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in operator.inputs):
+    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in
+           operator.inputs):
         raise RuntimeError('Input(s) must be tensor(s)')
     if any(len(variable.type.shape) != 2 or variable.type.shape[0] != 1 for variable in operator.inputs):
         raise RuntimeError('Input(s) must be [1,C]-tensor(s)')
@@ -597,7 +600,8 @@ def calculate_traditional_classifier_output_shapes(operator):
 
 
 def calculate_traditional_regressor_output_shapes(operator):
-    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in operator.inputs):
+    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in
+           operator.inputs):
         raise RuntimeError('Input(s) must be tensor(s)')
     if any(len(variable.type.shape) != 2 for variable in operator.inputs):
         raise RuntimeError('Input(s) must be 2-D tensor(s)')
@@ -785,7 +789,7 @@ def calculate_split_output_shapes(operator):
     if C % split_num != 0:
         raise RuntimeError(
             'Split Operator, %s, got wrong input shape. Variable %s''s dimension along C-axis (%s) must be divisible by partition number (%s)' % (
-            operator.full_name, operator.inputs[0].full_name, C, split_num))
+                operator.full_name, operator.inputs[0].full_name, C, split_num))
 
     if len(input_shape) == 4:
         operator.outputs[0].type = FloatTensorType([N, int(C / split_num), input_shape[2], input_shape[3]])
@@ -955,6 +959,7 @@ def calculate_dot_output_shapes(operator):
         raise RuntimeError('Input(s) must be a 2-D tensor(s)')
 
 
+# [TODO] Support 2-D tesnor as [N, C, 1, 1] in neural network's shape calcuators
 type_calculator_table = {'activation': calculate_activation_output_shapes,
                          'innerProduct': calculate_inner_product_output_shapes,
                          'identity': calculate_identity_output_shapes,

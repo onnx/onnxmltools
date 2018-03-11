@@ -411,13 +411,13 @@ class Topology:
             abandoned_variable_names = set(onnx_name for onnx_name, variable in scope.variables.items()
                                            if variable.is_abandoned)
             for name in abandoned_operator_names:
-                scope.onnx_operator_names.discard(name) # this variable is a global structure shared by all scopes!
+                scope.onnx_operator_names.discard(name)  # this variable is a global structure shared by all scopes!
                 if name in scope.operator_name_mapping:
                     del scope.operator_name_mapping[name]
                 if name in scope.operators:
                     del scope.operators[name]
             for name in abandoned_variable_names:
-                scope.onnx_variable_names.discard(name) # this variable is a global structure shared by all scopes!
+                scope.onnx_variable_names.discard(name)  # this variable is a global structure shared by all scopes!
                 if name in scope.variable_name_mapping:
                     del scope.variable_name_mapping[name]
                 if name in scope.variables:
@@ -503,7 +503,7 @@ def _parse_simple_model(topology, parent_scope, model, inputs, outputs):
         # We assume that no duplicated raw name exists. Note that we set prepend=True because model inputs should
         # not hide any intermediate variables.
         variable = scope.declare_local_variable(
-            var.name,parse_coreml_feature_type(var.type, topology.default_batch_size), prepend=True)
+            var.name, parse_coreml_feature_type(var.type, topology.default_batch_size), prepend=True)
         this_operator.inputs.append(variable)
     # Connect local variables and variables passed into this scope. Our assumptions are described below.
     # 1. Assume a variable with 'A' as its CoreML name is passed in. There must be at least one local variable gets a
@@ -573,12 +573,12 @@ def _parse_pipeline_model(topology, parent_scope, model, inputs, outputs):
         sub_inputs = []
         for var in sub_model.description.input:
             variable = scope.get_local_variable_or_declare_one(
-                var.name,parse_coreml_feature_type(var.type, topology.default_batch_size))
+                var.name, parse_coreml_feature_type(var.type, topology.default_batch_size))
             sub_inputs.append(variable)
         sub_outputs = []
         for var in sub_model.description.output:
             variable = scope.declare_local_variable(
-                var.name,parse_coreml_feature_type(var.type, topology.default_batch_size))
+                var.name, parse_coreml_feature_type(var.type, topology.default_batch_size))
             sub_outputs.append(variable)
         _parse_model(topology, scope, sub_model, sub_inputs, sub_outputs)
 

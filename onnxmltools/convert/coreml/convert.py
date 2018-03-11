@@ -2,9 +2,9 @@ import coremltools
 from uuid import uuid4
 from . import _converters
 from . import _parser
-from ... import __version__
 from ...proto import onnx_proto
 from ..common import model_util
+
 
 def convert(model, name=None, initial_types={}, doc_string=''):
     if isinstance(model, coremltools.models.MLModel):
@@ -17,7 +17,7 @@ def convert(model, name=None, initial_types={}, doc_string=''):
 
     topology = _parser.parse_coreml(spec, initial_types)
     # Uncomment this line to visualize the intermediate graph for debugging
-    #_parser.visualize_topology(topology, filename=name, view=True)
+    # _parser.visualize_topology(topology, filename=name, view=True)
     # Construct the parts of a ONNX model related to computational graph
     onnx_model = _converters.convert_topology(topology, name)
 
@@ -26,7 +26,7 @@ def convert(model, name=None, initial_types={}, doc_string=''):
     metadata_props = []
     if metadata:
         if not doc_string and metadata.shortDescription:
-            doc_string = metadata.shortDescription # If doc_string is not specified, we use description from CoreML
+            doc_string = metadata.shortDescription  # If doc_string is not specified, we use description from CoreML
         if metadata.author:
             metadata_props.append(model_util.make_string_string_entry('author', metadata.author))
         if metadata.license:
@@ -43,6 +43,7 @@ def convert(model, name=None, initial_types={}, doc_string=''):
     onnx_model.doc_string = doc_string
 
     return onnx_model
+
 
 def make_model(name, ir_version, producer, producer_version, domain, model_version, doc_string, metadata_props,
                operator_domain_version_pairs, nodes, inputs, outputs, values, initializer=list()):
@@ -68,5 +69,3 @@ def make_model(name, ir_version, producer, producer_version, domain, model_versi
     graph.initializer.extend(initializer)
     return model
     return onnx_model
-
-
