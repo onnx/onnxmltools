@@ -371,11 +371,13 @@ def convert_inner_product(scope, operator, container):
     inputs.append(name_w)
     container.add_initializer(name_w, onnx_proto.TensorProto.FLOAT, shape_w, params.weights.floatValue)
 
+    name_b = operator.full_name + '.B'
+    shape_b = [params.outputChannels]
+    inputs.append(name_b)
     if params.hasBias:
-        name_b = operator.full_name + '.B'
-        shape_b = [params.outputChannels]
-        inputs.append(name_b)
         container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_b, params.bias.floatValue)
+    else:
+        container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_b, [0.] * shape_b[0])
 
     attrs['axis'] = 1
     attrs['axis_w'] = 1
@@ -578,6 +580,9 @@ def convert_pooling(scope, operator, container):
 
 def convert_preprocessing_scaler(scope, operator, container):
     params = operator.raw_operator.scaler
+    # Specify some of this operator's attribute. The scale parameter in CoreML is always a scalar.
+    # We just copy it and let ONNX scaler to broadcast it to all channels.
+
     attrs = {'name': operator.full_name, 'scale': params.channelScale}
     color_space = operator.inputs[0].type.color_space
     if color_space == 'GRAY':
@@ -937,7 +942,7 @@ def convert_embedding(scope, operator, container):
         container.add_node('Add', [gather_output_name, bias_name], operator.outputs[0].full_name,
                            name=scope.get_unique_operator_name('Add'), axis=1, broadcast=1)
     else:
-        # There is no bias, so we just output the result produced by the embedding node.
+        # This case has no bias, so we just output the result produced by the embedding node.
         container.add_node('Gather', [weights_name, reshaped_input_name], operator.output_full_names, **gather_attrs)
 
 
@@ -1028,25 +1033,35 @@ def convert_tensor_to_label(scope, operator, container):
 
 
 def convert_dot(scope, operator, container):
+    # To calculate cosine similarity, we first use LpNormalization to make the two input vectors unit-length.
+    # Then, we calculate element-wise product of the two unit-length vectors. Finally, the similarity is the
+    # sum of all the product's elements. Notice that we carefully specify the axis of the subsequent operators,
+    # so they can work properly with a batch of vectors.
+
     if operator.raw_operator.dot.cosineSimilarity:
+        # Normalize the first input and store the result on a temporal variable
         intra_variable_name1 = scope.get_unique_variable_name(operator.inputs[0].full_name + '_normalized')
         normalizer_name1 = scope.get_unique_operator_name('L2NormNormalizer')
-        attrs1 = {'name': normalizer_name1, 'p': 2., 'aixs': 1}
+        attrs1 = {'name': normalizer_name1, 'p': 2, 'aixs': 1}
         container.add_node('LpNormalization', [operator.inputs[0].full_name], [intra_variable_name1], **attrs1)
 
+        # Normalize the second input and store the result on a temporal variable
         intra_variable_name2 = scope.get_unique_variable_name(operator.inputs[1].full_name + '_normalized')
         normalizer_name2 = scope.get_unique_operator_name('L2NormNormalizer')
-        attrs2 = {'name': normalizer_name2, 'p': 2., 'aixs': 1}
+        attrs2 = {'name': normalizer_name2, 'p': 2, 'aixs': 1}
         container.add_node('LpNormalization', [operator.inputs[1].full_name], [intra_variable_name2], **attrs2)
     else:
+        # This case is a simple dot product; no normalization is required.
         intra_variable_name1 = operator.inputs[0].full_name
         intra_variable_name2 = operator.inputs[1].full_name
 
+    # Do element-wise product of the two unit-length tensors
     product_name = scope.get_unique_variable_name(intra_variable_name1 + '_multiply_' + intra_variable_name2)
     multiplier_name = scope.get_unique_operator_name('Mul')
     product_attrs = {'name': multiplier_name}
     container.add_node('Mul', [intra_variable_name1, intra_variable_name2], [product_name], **product_attrs)
 
+    # Sum up results from different dimensions to get the final cosine similarity
     reducer_name = scope.get_unique_operator_name('ReduceSum')
     reducer_attrs = {'name': reducer_name, 'axes': [1], 'keepdims': 0}
     container.add_node('ReduceSum', [product_name], operator.output_full_names, **reducer_attrs)
@@ -2443,6 +2458,11 @@ def convert_add(scope, operator, container):
     else:
         inputs = operator.input_full_names
 
+    if operator.inputs[0].shape != operator.inputs[1].shape:
+        attrs['broadcast'] = 1
+    else:
+        attrs['broadcast'] = 0
+
     container.add_node(op_type, inputs, operator.output_full_names, **attrs)
 
 
@@ -2451,14 +2471,19 @@ def convert_average(scope, operator, container):
 
 
 def convert_bias(scope, operator, container):
+    # Feed the input (which we are going to add a bias onto) into Add operator. Its shape is [C, H, W] in CoreML but
+    # [N, C, H, W] in ONNX.
+
     params = operator.raw_operator.bias
     attrs = {'name': operator.full_name}
 
+    # Adjust CoreML's bias shape and find a proper axis for broadcasting
     axis, shape = deduce_broadcast_axis_and_shape(params.shape)
     if axis is not None:
         attrs['axis'] = axis
+    # No matter what shape it is, we need "broadcast" on because input shape is 4-D while bias is at most 3-D.
     attrs['broadcast'] = 1  # True
-
+    # Create bias vector as an ONNX tensor
     bias_tensor_name = scope.get_unique_variable_name(operator.full_name + '_B')
     container.add_initializer(bias_tensor_name, onnx_proto.TensorProto.FLOAT, shape, params.bias.floatValue)
 
@@ -2531,13 +2556,24 @@ def convert_batch_normalization(scope, operator, container):
         attrs['momentum'] = 0.
 
         if not params.instanceNormalization and params.computeMeanVar:
-            # This is training mode, so some variables may be updated. To update "mean"
-            # and "var," we put some results back to the associated input tensors. We also
-            # allocate two extra output buffers to store some intermediate results.
+            # In this case, we apply batch normalization and adjust the statistics stored according the the batch
+            # being processed.
+
+            # To update "mean" and "var," we put their updated results back to the associated input tensors.
             outputs += inputs[1:3]
+            # We also allocate two extra output buffers to store some intermediate results, but they are not used
+            # in CoreML model.
+            outputs.append(scope.get_unique_variable_name('saved_mean'))
+            outputs.append(scope.get_unique_variable_name('saved_var'))
+            # We choose "training" mode because some variables need to be updated.
             attrs['is_test'] = 0  # False
         elif not params.instanceNormalization and not params.computeMeanVar:
+            # In this case, batch normalization is applied without updating mean, variance, etc. according to
+            # the batches being processed. It means this operator works under testing model. Because there is no
+            # variable update, we don't need to specify extra inputs and outputs like in previous code block.
             attrs['is_test'] = 1  # True
+        else:
+            raise RuntimeError('Unsupported operation mode')
     else:
         attrs['is_test'] = 1  # True
 
