@@ -475,6 +475,7 @@ def convert_convolution(scope, operator, container):
 
 
 def convert_pooling(scope, operator, container):
+    # [TODO] 1. Handle a exclude_pad_area flag in CoreML. 2. Support legacy padding by Pad
     params = operator.raw_operator.pooling
     inputs = [variable.full_name for variable in operator.inputs]
     outputs = [variable.full_name for variable in operator.outputs]
@@ -2544,6 +2545,30 @@ def convert_batch_normalization(scope, operator, container):
 def convert_identity(scope, operator, container):
     container.add_node('Identity', operator.input_full_names, operator.output_full_names, name=operator.full_name)
 
+def extract_support_vectors_as_dense_tensor(svm_model):
+    support_type = svm_model.WhichOneof('supportVectors')
+    if support_type == 'denseSupportVectors':
+        vectors = svm_model.denseSupportVectors.vectors
+        support_vectors = np.array([v.values for v in vectors]).flatten()
+    elif support_type == 'sparseSupportVectors':
+        # Since current ONNX doesn't support sparse representations, we have to save them as dense tensors. It may
+        # dramatically prolong prediction time and increase memory usage.
+        vectors = svm_model.sparseSupportVectors.vectors
+        # Search for the maximum dimension over all sparse support vectors
+        max_idx = 0
+        for v in vectors:
+            for n in v.nodes:
+                if n.index > max_idx:
+                    max_idx = n.index
+        # Save sparse vectors to dense vectors
+        support_vectors = np.zeros(shape=(len(vectors), max_idx))
+        for i, v in enumerate(vectors):
+            for n in v.nodes:
+                support_vectors[i][n.index-1] = n.value
+        support_vectors = support_vectors.flatten()
+    else:
+        raise ValueError('Unsupported support vector type: %s' % support_type)
+    return len(vectors), support_vectors
 
 def convert_svm_classifier(scope, operator, container):
     params = operator.raw_operator.supportVectorClassifier
@@ -2566,12 +2591,9 @@ def convert_svm_classifier(scope, operator, container):
 
     prob_a = params.probA
     prob_b = params.probB
-    # TODO: handle sparse vectors
-    svc_vectors_per_class = params.numberOfSupportVectorsPerClass
-    vectors = params.denseSupportVectors.vectors
-    support_vectors = np.array([v.values for v in vectors])
-    support_vectors = support_vectors.flatten()
-    svc_support_vectors = support_vectors
+    support_vectors_per_class = params.numberOfSupportVectorsPerClass
+    n_supports, svc_support_vectors = extract_support_vectors_as_dense_tensor(
+        operator.raw_operator.supportVectorClassifier)
     chain_coef = list(itertools.chain.from_iterable([coef.alpha for coef in params.coefficients]))
     svc_coefficients = chain_coef
     svc_rho = [-x for x in params.rho]
@@ -2585,7 +2607,7 @@ def convert_svm_classifier(scope, operator, container):
         attrs['prob_a'] = prob_a
     if prob_b:
         attrs['prob_b'] = prob_b
-    attrs['vectors_per_class'] = svc_vectors_per_class
+    attrs['vectors_per_class'] = support_vectors_per_class
     attrs['support_vectors'] = svc_support_vectors
     attrs['coefficients'] = svc_coefficients
     attrs['rho'] = svc_rho
@@ -2653,12 +2675,7 @@ def convert_svm_regressor(scope, operator, container):
     elif kernel_val == 'linearKernel':
         svr_kernel_params = [0.0, 0.0, 0.0]
 
-    # TODO: handle sparse vectors
-    vectors = params.denseSupportVectors.vectors
-    support_vectors = np.array([v.values for v in vectors])
-    i = support_vectors.shape[0]
-    support_vectors = support_vectors.flatten()
-    svr_support_vectors = support_vectors
+    n_supports, support_vectors = extract_support_vectors_as_dense_tensor(operator.raw_model.supportVectorRegressor)
 
     svr_coefficients = params.coefficients.alpha
     if isinstance(params.rho, list):
@@ -2671,8 +2688,8 @@ def convert_svm_regressor(scope, operator, container):
     attrs = {'name': op_name}
     attrs['kernel_type'] = svr_kernel
     attrs['kernel_params'] = svr_kernel_params
-    attrs['support_vectors'] = svr_support_vectors
-    attrs['n_supports'] = i
+    attrs['support_vectors'] = support_vectors
+    attrs['n_supports'] = n_supports
     attrs['coefficients'] = svr_coefficients
     attrs['rho'] = svr_rho
 
