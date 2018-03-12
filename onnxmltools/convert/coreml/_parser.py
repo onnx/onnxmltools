@@ -424,9 +424,8 @@ class Topology:
                     del scope.variables[name]
 
 
-    def _extend_2d_to_4d(self):
-        # Some operator in CoreML only accepts 4-D tensors but their protobuf models might specify a 2-D one. This
-        # function is used to fix this problem.
+    def _fix_shapes(self):
+        # This function applies some rules to adjust graph inputs before doing shape inference
 
         # Identify root of a graph
         self._initialize_graph_status_for_traversing()
@@ -434,16 +433,27 @@ class Topology:
         # Scan through all operators and adjust their variables' shapes if needed
         for scope in self.scopes:
             for operator in scope.operators.values():
-                # Check if operator only accepts 4-D input(s)
-                if operator.type not in ['bias', 'concat', 'convolution', 'crop', 'flatten', 'scalerPreprocessor',
+                # Rule 1:
+                # Some operator in CoreML only accepts 4-D tensors but their protobuf models might specify a 2-D one.
+                # We fix this problem here.
+                if operator.type in ['bias', 'concat', 'convolution', 'crop', 'flatten', 'scalerPreprocessor',
                                             'lrn', 'meanImagePreprocessor', 'padding', 'permute', 'pooling', 'reduce',
                                             'reorganizeData', 'reshape', 'scale', 'slice', 'upsample']:
-                    continue
-                # We only adjust inputs because outputs will be automatically fixed in our shape inference stage
-                for variable in operator.inputs:
-                    if variable.is_root:
-                        # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
-                        variable.type.shape += [1] * (4 - len(variable.type.shape))
+                    # We only adjust inputs because outputs will be automatically fixed in our shape inference stage
+                    for variable in operator.inputs:
+                        if variable.is_root:
+                            # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
+                            variable.type.shape += [1] * (4 - len(variable.type.shape))
+
+                # Rule 2:
+                # Some operator in CoreML accepts integers while the corresponding operator in ONNX only takes floats.
+                # If it is the case, we change tensor type from float to integer.
+                if operator.type == 'embedding':
+                    for variable in operator.inputs:
+                        if variable.is_root:
+                            variable.type = Int64TensorType(shape=variable.type.shape, doc_string=variable.type.doc_string)
+                        else:
+                            raise RuntimeError('Embed operator in ONNX only accepts floats but we got integers')
 
 
     def compile(self):
@@ -453,7 +463,7 @@ class Topology:
         '''
         self._check_structure()
         self._resolve_duplicates()
-        self._extend_2d_to_4d()
+        self._fix_shapes()
         self._infer_all_types()
 
 

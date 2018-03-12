@@ -440,7 +440,7 @@ def calculate_legacy_pad_amount(H_in, pad_h, k_h, s_h):
             H_adjusted_out -= s_h
         else:
             H_adjusted_out -= H_adjusted_out % s_h
-    return (pad_t, H_adjusted_out - H_in)
+    return (pad_t, H_adjusted_out - pad_t - H_in)
 
 
 def create_legacy_pad(scope, input_name, output_name, H_in, W_in, k_h, k_w,
@@ -476,7 +476,7 @@ def create_legacy_pad(scope, input_name, output_name, H_in, W_in, k_h, k_w,
     pads = [0, 0, pad_t, pad_l, 0, 0, pad_b, pad_r]
     attrs = {'name': scope.get_unique_operator_name('Pad'), 'kernel_shape': [k_h, k_w],
              'strides': [k_h, k_w], 'pads': pads, 'value': padded_value}
-    container.add_node('Pad', [input_name], [output_name], op_version=2, **attrs)
+    container.add_node('Pad', input_name, output_name, op_version=2, **attrs)
 
 
 def convert_pooling(scope, operator, container):
@@ -627,7 +627,7 @@ def convert_pooling(scope, operator, container):
         legacy_padded_tensor_name = scope.get_unique_variable_name('legacy_padded_tensor')
         padded_value = 0. if params.type != Params.MAX else 1+np.finfo(np.float32).min
         # Create a sub-graph of cases 3, 6, 7: X ---> Pad ---> X'
-        create_legacy_pad(scope, inputs[0], [legacy_padded_tensor_name], H, W, kernel_shape[0], kernel_shape[1],
+        create_legacy_pad(scope, inputs[0], legacy_padded_tensor_name, H, W, kernel_shape[0], kernel_shape[1],
                           strides[0], strides[1], pad_h, pad_w, padded_value, container)
         # Set the first input name to the output of Pad so that the following Pool operator won't access the
         # original input.
