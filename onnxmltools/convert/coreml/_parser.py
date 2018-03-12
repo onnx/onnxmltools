@@ -423,6 +423,23 @@ class Topology:
                 if name in scope.variables:
                     del scope.variables[name]
 
+
+    def _extend_2d_to_4d(self):
+        # Some operator in CoreML only accepts 4-D tensors but their protobuf models might specify a 2-D one. This
+        # function is used to fix this problem.
+        for scope in self.scopes:
+            for operator in scope.operators.values():
+                # Check if operator only accepts 4-D input(s)
+                if operator.op_type not in ['bias', 'concat', 'convolution', 'crop', 'flatten', 'scalerPreprocessor',
+                                            'lrn', 'meanImagePreprocessor', 'padding', 'permute', 'pooling', 'reduce',
+                                            'reorganizeData', 'reshape', 'scale', 'slice', 'upsample']:
+                    continue
+                # We only adjust inputs because outputs will be automatically fixed in our shape inference stage
+                for variable in operator.inputs:
+                    # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
+                    variable.type.shape += [1] * (4 - len(variable.type.shape))
+
+
     def compile(self):
         '''
         This function aims at giving every operator enough information so that all operator conversions can happen independently.
@@ -430,6 +447,7 @@ class Topology:
         '''
         self._check_structure()
         self._resolve_duplicates()
+        self._extend_2d_to_4d()
         self._infer_all_types()
 
 
