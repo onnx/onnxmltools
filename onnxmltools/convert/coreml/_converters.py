@@ -5,6 +5,7 @@ import six
 from ._data_types import *
 from ...proto import onnx_proto
 from ...proto import helper
+import math
 
 
 class ModelComponentContainer:
@@ -410,10 +411,12 @@ def convert_convolution(scope, operator, container):
     outputs = [operator.outputs[0].full_name]
     attrs = {'name': operator.full_name}
 
-    shape_w = [params.outputChannels, int(params.kernelChannels / params.nGroups), params.kernelSize[0],
-               params.kernelSize[1]]
+    n_groups = 1 if params.nGroups == 0 else params.nGroups
+
+    shape_w = [params.outputChannels, params.kernelChannels, params.kernelSize[0], params.kernelSize[1]]
     if params.isDeconvolution:
-        shape_w[0], shape_w[1] = shape_w[1], shape_w[0]
+        shape_w[0] = params.kernelChannels
+        shape_w[1] = int(params.outputChannels / n_groups)
     name_w = operator.full_name + '.W'
     inputs.append(name_w)
     container.add_initializer(name_w, onnx_proto.TensorProto.FLOAT, shape_w, params.weights.floatValue)
@@ -427,10 +430,16 @@ def convert_convolution(scope, operator, container):
     dilations = [1, 1]
     if len(params.dilationFactor) > 0:
         dilations = [params.dilationFactor[0], params.dilationFactor[1]]
-
+    kernel_shape = [3, 3]
+    if len(params.kernelSize) > 0:
+        kernel_shape = params.kernelSize
+    strides = [1, 1]
+    if len(params.stride) > 0:
+        strides = params.stride
     attrs['dilations'] = dilations
-    attrs['group'] = params.nGroups
-    attrs['kernel_shape'] = params.kernelSize
+    attrs['group'] = n_groups
+    attrs['kernel_shape'] = kernel_shape
+    attrs['strides'] = strides
 
     pads = None
     auto_pad = None
@@ -472,13 +481,62 @@ def convert_convolution(scope, operator, container):
     if auto_pad is not None:
         attrs['auto_pad'] = auto_pad
 
-    attrs['strides'] = params.stride
-
     container.add_node(op_type, inputs, outputs, **attrs)
 
 
+def calculate_legacy_pad_amount(H_in, pad_h, k_h, s_h):
+    '''
+    This function calculate padding amount along H-axis. It can be applied to other axes. It should be only used with
+    pooling conversion.
+    :param H_in: input dimension along H-axis
+    :param pad_h: padding amount at H-axis
+    :param k_h: kernel's H-axis dimension
+    :param s_h: stride along H-axis
+    :return: (top_padding_amount, bottom_padding_amount)
+    '''
+    # Calculate a common variable
+    H_temp = H_in + 2 * pad_h - k_h
+    # Pooling output shape under CoerML IncludeLastPixel padding mode
+    H_include_last_pad_out = math.ceil(H_temp / s_h) + 1
+    # Pooling output shape under valid padding mode
+    H_valid_pad_out = math.floor(H_temp / s_h) + 1
+    # Amount of values padded at top boundary. For max pooling, the padded value should be "-inf."
+    # For average pooling, we should pad zeros.
+    pad_t = pad_h
+    # Amount of values padded at bottom boundary (add extra pixels so that H_include_last_pad_out = floor( (H_adjusted_out - k_h) / stride) + 1)
+    if H_include_last_pad_out > H_valid_pad_out:
+        pad_b = pad_h + (s_h - H_temp % s_h)
+    else:
+        pad_b = pad_h
+    # Intermediate result with pad_t values at top and pad_b valules at bottom of the original input
+    H_adjusted_out = H_in + pad_t + pad_b
+    # Adjust padded result if the original pooling wants to cut off the last output pixel.
+    if(H_include_last_pad_out - 1) * s_h >= H_in + pad_h:
+        if H_adjusted_out % s_h == 0:
+            H_adjusted_out -= s_h
+        else:
+            H_adjusted_out -= H_adjusted_out % s_h
+    return (pad_t, H_adjusted_out - H_in)
+
+
+def create_legacy_pad(scope, input_name, output_name, H_in, W_in, k_h, k_w,
+                      s_h, s_w, p_h, p_w, padded_value, container):
+    # Add a Pad operator to pre-process 4-D tensor
+    pad_t, pad_b = calculate_legacy_pad_amount(H_in, p_h, k_h, s_h)
+    pad_l, pad_r = calculate_legacy_pad_amount(W_in, p_w, k_w, s_w)
+
+    # CoreML pooling operator pads only their H- and W-axes. Here we assume the shape of the tensor to be padded
+    # is [N, C, H, W], so we have 8 padding amounts
+    #     pads = [N_begin_index, C_begin_index, H_begin_index, W_begin_index,
+    #             N_end_index,   C_end_index,   H_end_index,   W_end_index]
+    # Because only H- and W-axes are padded in CoreML, we leave padding amounts of N- and C-axes zeros.
+    pads = [0, 0, pad_t, pad_l, 0, 0, pad_b, pad_r]
+    attrs = {'name': scope.get_unique_operator_name('Pad'), 'kernel_shape': [k_h, k_w],
+             'strides': [k_h, k_w], 'pads': pads, 'value': padded_value}
+    container.add_node('Pad', [input_name], [output_name], op_version=2, **attrs)
+
+
 def convert_pooling(scope, operator, container):
-    # [TODO] 1. Handle a exclude_pad_area flag in CoreML. 2. Support legacy padding by Pad
     params = operator.raw_operator.pooling
     inputs = [variable.full_name for variable in operator.inputs]
     outputs = [variable.full_name for variable in operator.outputs]
@@ -503,30 +561,28 @@ def convert_pooling(scope, operator, container):
             container.add_node(op_type, inputs, outputs, **attrs)
         return
 
+    # CoreML default v.s. non-default parameters
+    kernel_shape = [3, 3] if len(params.kernelSize) <= 0 else params.kernelSize
+    strides = [1, 1] if len(params.stride) <= 0 else params.stride
+
     # Handle local pooling mode
     if params.type == Params.MAX:
         op_type = 'MaxPool'
-        attrs['dilations'] = [1, 1]
-        attrs['kernel_shape'] = params.kernelSize
-        attrs['strides'] = params.stride
     elif params.type == Params.AVERAGE:
         op_type = 'AveragePool'
-        attrs['kernel_shape'] = params.kernelSize
-        attrs['strides'] = params.stride
     elif params.type == Params.L2:
         op_type = 'LpPool'
-        attrs['kernel_shape'] = params.kernelSize
-        attrs['strides'] = params.stride
         attrs['p'] = 2
     else:
         raise ValueError('Unsupported pooling type: {}'.format(params.type))
+    attrs['kernel_shape'] = kernel_shape
+    attrs['strides'] = strides
 
     # Set up padding attributes
     pads = None
     auto_pad = None
     pad_type = params.WhichOneof('PoolingPaddingType')
     if pad_type == 'valid':
-
         if len(params.valid.paddingAmounts.borderAmounts) > 0:
             pads = [0, 0, 0, 0]
             pads[0] = params.valid.paddingAmounts.borderAmounts[0].startEdgeSize
@@ -539,43 +595,90 @@ def convert_pooling(scope, operator, container):
                 auto_pad = 'VALID'
         else:
             auto_pad = 'VALID'
-
     elif pad_type == 'same':
-
         if params.same.asymmetryMode == SamePadding.BOTTOM_RIGHT_HEAVY:
             auto_pad = 'SAME_LOWER'
         elif params.same.asymmetryMode == SamePadding.TOP_LEFT_HEAVY:
             auto_pad = 'SAME_UPPER'
         else:
             raise ValueError('Unknown asymmetric mode: {}'.format(params.same.asymmetryMode))
-
     elif pad_type == 'includeLastPixel':
-
-        # This padding mode is not officially supported in ONNX, so we use a
-        # deprecated feature in Caffe. Notice that this is just a temporal
-        # solution for unblocking some users.
-
-        attrs['legacy_pad'] = 3
-        pads = [0, 0, 0, 0]
-        pads[0] = params.includeLastPixel.paddingAmounts[0]
-        pads[1] = params.includeLastPixel.paddingAmounts[1]
-        pads[2] = pads[0]
-        pads[3] = pads[1]
-
+        # Here we use a Pad operator to mimic the behavior of this CoreML padding.
+        auto_pad = 'VALID'
+        H = operator.inputs[0].type.shape[2]
+        W = operator.inputs[0].type.shape[3]
+        pad_h = params.includeLastPixel.paddingAmounts[0]
+        pad_w = params.includeLastPixel.paddingAmounts[1]
+        legacy_padded_tensor_name = scope.get_unique_variable_name('legacy_padded_tensor')
+        padded_value = 0. if params.type != Params.MAX else 1+np.finfo(np.float32).min
+        create_legacy_pad(scope, inputs[0], [legacy_padded_tensor_name], H, W, kernel_shape[0], kernel_shape[1],
+                          strides[0], strides[1], pad_h, pad_w, padded_value, container)
+        # Set the first input name to the output of legacy padding so that the following Pool operator can directly
+        # use it.
+        inputs[0] = legacy_padded_tensor_name
     else:
         raise ValueError('Unsupported padding mode: {}'.format(pad_type))
 
     if pads is not None:
         attrs['pads'] = pads
-
     if auto_pad is not None:
         attrs['auto_pad'] = auto_pad
-    # [TODO] Handle exclude_pad_area flag in CoreML's average pooling operator
 
-    if params.type == Params.L2:
-        container.add_node(op_type, inputs, outputs, op_version=2, **attrs)
+    if (params.type == Params.AVERAGE and params.avgPoolExcludePadding and pad_type == 'includeLastPixel') or\
+       (params.type == Params.AVERAGE and not params.avgPoolExcludePadding and pad_type != 'includeLastPixel'):
+        # Case 5 & 6. See comment above.
+
+        X_name = operator.inputs[0].full_name
+        Y_name = operator.outputs[0].full_name
+        Z_name = scope.get_unique_variable_name('Z')
+        container.add_node('Affine', X_name, Z_name,
+                           name=scope.get_unique_operator_name('Affine'),
+                           alpha=0., beta=1. / (kernel_shape[0] * kernel_shape[1]))
+
+        Z_prime_name = scope.get_unique_variable_name('Z_prime')
+        Y_prime_name = scope.get_unique_variable_name('Y_prime')
+        outputs[0] = Y_prime_name
+
+        if pad_type != 'includeLastPixel':
+            # Create the major Pool operator
+            container.add_node(op_type, inputs, outputs, **attrs)
+
+            # Create operators to calculate correction coefficients
+            lp_pool_attrs = {'name': scope.get_unique_operator_name('LpPool'), 'kernel_shape': kernel_shape,
+                             'strides': strides, 'p': 1}
+            if pads is not None:
+                lp_pool_attrs['pads'] = pads
+            if auto_pad is not None:
+                lp_pool_attrs['auto_pad'] = auto_pad
+            container.add_node('LpPool', Z_name, Z_prime_name, op_version=2, **lp_pool_attrs)
+
+            # Element-wisely apply adjustment coefficients and create the original CoreML output
+            container.add_node('Mul', [Y_prime_name, Z_prime_name], Y_name, name=scope.get_unique_operator_name('Mul'))
+        else:
+            # Create the major Pool operator
+            container.add_node(op_type, inputs, outputs, **attrs)
+
+            # Create operators to correct Pool's output
+            Y_name = operator.outputs[0].full_name
+            Z_prime_prime = scope.get_unique_variable_name('Z_prime_prime')
+
+            # Pad the constant tensor.
+            create_legacy_pad(scope, Z_name, Z_prime_name, operator.inputs[0].type.shape[2],
+                              operator.inputs[0].type.shape[3], kernel_shape[0], kernel_shape[1],
+                              strides[0], strides[1], params.includeLastPixel.paddingAmounts[0],
+                              params.includeLastPixel.paddingAmounts[1], 0., container)
+
+            lp_pool_attrs = {'name': scope.get_unique_operator_name('LpPool'), 'kernel_shape': kernel_shape,
+                             'strides': strides, 'p': 1, 'audo_pad': 'VALID'}
+            container.add_node('LpPool', Z_prime_name, Z_prime_prime, op_version=2, **lp_pool_attrs)
+
+            # Element-wisely apply adjustment coefficients and create the original CoreML output
+            container.add_node('Div', Y_prime_name, Y_name, name=scope.get_unique_operator_name('Div'))
     else:
-        container.add_node(op_type, inputs, outputs, **attrs)
+        if params.type == Params.L2:
+            container.add_node(op_type, inputs, outputs, op_version=2, **attrs)
+        else:
+            container.add_node(op_type, inputs, outputs, **attrs)
 
 
 def convert_preprocessing_scaler(scope, operator, container):
@@ -2223,6 +2326,44 @@ def convert_tree_ensemble_model(scope, operator, container):
 
 
 def convert_glm_classifier(scope, operator, container):
+    # For classifiers, due to the different representations of classes' probabilities in ONNX and CoreML, some extra
+    # operators are required. See explanation below.
+    #
+    # Symbols:
+    #  X: input feature vector
+    #  Y: the best output label (i.e., the one with highest probability)
+    #  P: probability dictionary of all classes. Its keys are class labels and its values are those labels'
+    #     probabilities.
+    #
+    #  T: probability tensor produced by ONNX classifier
+    #  T': normalized version of "T." Its sum must be 1.
+    #
+    # CoreML computational graph (binary class and multi-class classifications):
+    #
+    #            X ---> CoreML GLMClassifier ---> Y (must present in model)
+    #                           |
+    #                           '---------------> P
+    #
+    # ONNX computational graph (binary class classification):
+    #
+    #            X ---> ONNX GLMClassifier ---> Y (must present in model)
+    #                           |
+    #                           '-------------> T ---> ZipMap ---> P (If P is not specified in the considered CoreML
+    #                                                                 model "T" would become an isolated variable
+    #                                                                 which is not connected with any other
+    #                                                                 operators. That is, both of ZipMap and P are
+    #                                                                 optional in this graph.)
+    #
+    # ONNX computational graph (multi-class classification):
+    #
+    #            X ---> ONNX GLMClassifier ---> Y (must present in model)
+    #                           |
+    #                           '-------------> T ---> L1-norm Normalizer ---> T' ---> ZipMap ---> P
+    #                                                                              (things after T' are optional.
+    #                                                                               If P is specified, we may have
+    #                                                                               ZipMap and P. Otherwise, this
+    #                                                                               ends at T' and T' is not linked
+    #                                                                               with other operators.
     from coremltools.proto.GLMClassifier_pb2 import GLMClassifier
     op_type = 'LinearClassifier'
     attrs = {'name': operator.full_name}
