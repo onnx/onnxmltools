@@ -430,7 +430,7 @@ class Topology:
         for scope in self.scopes:
             for operator in scope.operators.values():
                 # Check if operator only accepts 4-D input(s)
-                if operator.op_type not in ['bias', 'concat', 'convolution', 'crop', 'flatten', 'scalerPreprocessor',
+                if operator.type not in ['bias', 'concat', 'convolution', 'crop', 'flatten', 'scalerPreprocessor',
                                             'lrn', 'meanImagePreprocessor', 'padding', 'permute', 'pooling', 'reduce',
                                             'reorganizeData', 'reshape', 'scale', 'slice', 'upsample']:
                     continue
