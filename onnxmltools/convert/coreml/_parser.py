@@ -329,7 +329,7 @@ class Topology:
         # 4. The input of embedding is integer tensor
 
         # [TODO] Fix shapes of top-level inputs and outputs to produce identical shape like CoreML
-        # We use 4-D tensor, [N, C, H, W], as the major communication inferface between tensor operations. In CoreML,
+        # We use 4-D tensor, [N, C, H, W], as the major communication interface between tensor operations. In CoreML,
         # some redundant coordinates may be squeezed; for example,[1, C, 1, 1] is usually encoded by [1, C] or [C].
         # Steps:
         #   1. Find roots and leaves of the graph
@@ -427,6 +427,11 @@ class Topology:
     def _extend_2d_to_4d(self):
         # Some operator in CoreML only accepts 4-D tensors but their protobuf models might specify a 2-D one. This
         # function is used to fix this problem.
+
+        # Identify root of a graph
+        self._initialize_graph_status_for_traversing()
+
+        # Scan through all operators and adjust their variables' shapes if needed
         for scope in self.scopes:
             for operator in scope.operators.values():
                 # Check if operator only accepts 4-D input(s)
@@ -436,8 +441,9 @@ class Topology:
                     continue
                 # We only adjust inputs because outputs will be automatically fixed in our shape inference stage
                 for variable in operator.inputs:
-                    # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
-                    variable.type.shape += [1] * (4 - len(variable.type.shape))
+                    if variable.is_root:
+                        # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
+                        variable.type.shape += [1] * (4 - len(variable.type.shape))
 
 
     def compile(self):
@@ -515,7 +521,6 @@ def _parse_simple_model(topology, parent_scope, model, inputs, outputs):
     # Create operator for the considered model
     this_operator = scope.declare_local_operator(model.WhichOneof('Type'), model)
 
-    # [TODO] Add feature vectorizer into all classifiers/regressors
     # Allocate inputs for the operator and then connect them with inputs from outside
     for var in model.description.input:
         # We assume that no duplicated raw name exists. Note that we set prepend=True because model inputs should
@@ -529,7 +534,6 @@ def _parse_simple_model(topology, parent_scope, model, inputs, outputs):
     # 2. It's possible to find multiple local variables associated with the same raw name. For example, raw name 'A' can
     #    be associated with 'A' and 'A1' in ONNX. In this case, we connect the first one to parent input.
 
-    # [TODO] Add feature vectorizer if there are multiple feature tensors
     for parent_variable in inputs:
         raw_name = parent_variable.raw_name
         child_variable = scope.variables[scope.variable_name_mapping[raw_name][0]]
@@ -584,7 +588,6 @@ def _parse_pipeline_model(topology, parent_scope, model, inputs, outputs):
         raise RuntimeError('Unsupported CoreML pipeline type: {0}'.format(pipeline_type))
 
     # Sequentially parse the sub-models
-    # [TODO] Prepend '_' to all variable names but model I/O
     for sub_model in sub_models:
         # Declare the sub-model's input and output in this scope. Those input and output variables will be passed into
         # the sub-model's parsing function and connected with proper child variables.
@@ -669,7 +672,6 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
     else:
         raise RuntimeError('Unknown network type {}'.format(network_type))
 
-    # [TODO] Prepend '_' to all variable names but model I/O
     for op in network.preprocessing:
         operator = scope.declare_local_operator(op.WhichOneof('preprocessor') + 'Preprocessor', op)
 
@@ -814,16 +816,12 @@ def parse_coreml(model, initial_types={}):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model
-    :param initial_types: a dictionary providing some types for some CoreML root variables
+    :param initial_types: a dictionary providing some types for some CoreML root variables. For example, a key-value
+           pair, ('A', FloatTensorType([40, 12, 1, 1])), means that in your CoreML model, there is variable called 'A'
+           and it's a float tensor with shape [40, 12, 1, 1].
     :return: a Topology object. It's a intermediate representation of the input CoreML model
-
-    Example of initial types:
-    Assume that 'A' and 'B' are two root variable names used in a CoreML model. We can specify their types via
-    >>> from _data_types import FloatTensorType
-    >>> initial_type = {'A': FloatTensorType([40, 12, 1, 1]), 'B': FloatTensorType([1, 32, 1, 1])}
     '''
 
-    # [TODO] Preserve top-level CoreML variable names
     reserved_variable_names = set()
     for var in list(model.description.input) + list(model.description.output):
         reserved_variable_names.add(var.name)

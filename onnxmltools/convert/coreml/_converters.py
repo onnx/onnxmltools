@@ -150,83 +150,6 @@ def convert_topology(topology, model_name):
     return onnx_model
 
 
-# [TODO] Check if this function is useful
-def is_numeric_type(item):
-    types = (six.integer_types)
-    if (isinstance(item, list)):
-        return isinstance(item[0], types)
-    elif isinstance(item, np.ndarray):
-        return np.issubdtype(item.dtype, int) or \
-               np.issubdtype(item.dtype, float) or \
-               isinstance(item.dtype, six.integer_types)
-    else:
-        return isinstance(item, types)
-
-
-# [TODO] Check if this function is useful
-def is_string_type(item):
-    types = (six.string_types, six.text_type)
-
-    if isinstance(item, list):
-        return isinstance(item[0], types)
-    if isinstance(item, np.ndarray):
-        return isinstance(item.dtype, types)
-    return isinstance(item, types)
-
-
-# [TODO] Merge it into convert_to_list
-def cast_list(type, items):
-    return [type(item) for item in items]
-
-
-def convert_to_python_value(var):
-    if isinstance(var, numbers.Integral):
-        return int(var)
-    elif isinstance(var, numbers.Real):
-        return float(var)
-    elif isinstance(var, str):
-        return str(var)
-    else:
-        raise TypeError('Unable to convert {0} to python type'.format(type(var)))
-
-
-def convert_to_python_default_value(var):
-    if isinstance(var, numbers.Integral):
-        return int()
-    elif isinstance(var, numbers.Real):
-        return float()
-    elif isinstance(var, str):
-        return str()
-    else:
-        raise TypeError('Unable to find default python value for type {0}'.format(type(var)))
-
-
-def convert_to_list(var):
-    if isinstance(var, numbers.Real) or isinstance(var, str):
-        return [convert_to_python_value(var)]
-    elif isinstance(var, np.ndarray) and len(var.shape) == 1:
-        return [convert_to_python_value(v) for v in var]
-    elif isinstance(var, list):
-        flattened = []
-        if all(isinstance(ele, np.ndarray) and len(ele.shape) == 1 for ele in var):
-            max_classes = max([ele.shape[0] for ele in var])
-            flattened_one = []
-            for ele in var:
-                for i in range(max_classes):
-                    if i < ele.shape[0]:
-                        flattened_one.append(convert_to_python_value(ele[i]))
-                    else:
-                        flattened_one.append(convert_to_python_default_value(ele[0]))
-            flattened += flattened_one
-            return flattened
-        elif all(isinstance(v, numbers.Real) or isinstance(v, str) for v in var):
-            return [convert_to_python_value(v) for v in var]
-        else:
-            raise TypeError('Unable to flatten variable')
-    else:
-        raise TypeError('Unable to flatten variable')
-
-
 def deduce_broadcast_axis_and_shape(shape):
     # This function is used to calculate the first axis aligned with the scalar and the scalar's ONNX shape for reduce-
     # like operators. Assuming input variable is always a 4-D tensor, we provide a few of examples. If scalar's shape
@@ -1192,20 +1115,20 @@ def convert_tensor_to_label(scope, operator, container):
     if model_type == 'neuralNetworkClassifier':
         model = operator.raw_operator.neuralNetworkClassifier
         if model.WhichOneof('ClassLabels') == 'stringClassLabels':
-            labels = [s.encode('ascii') for s in model.stringClassLabels.vector]
+            labels = list(s.encode('ascii') for s in model.stringClassLabels.vector)
             label_type = onnx_proto.TensorProto.STRING
         elif model.WhichOneof('ClassLabels') == 'int64ClassLabels':
-            labels = model.int64ClassLabels.vector
+            labels = list(int(i) for i in model.int64ClassLabels.vector)
             label_type = onnx_proto.TensorProto.INT64
         else:
             raise ValueError('Unknown label type found')
     elif model_type == 'pipelineClassifier':
         model = operator.raw_operator.pipelineClassifier
         if model.WhichOneof('ClassLabels') == 'stringClassLabels':
-            labels = [s.encode('ascii') for s in model.pipelineClassifier.stringClassLabels.vector]
+            labels = list(s.encode('ascii') for s in model.pipelineClassifier.stringClassLabels.vector)
             label_type = onnx_proto.TensorProto.STRING
         elif model.WhichOneof('ClassLabels') == 'int64ClassLabels':
-            labels = model.int64ClassLabels.vector
+            labels = list(int(i) for i in model.int64ClassLabels.vector)
             label_type = onnx_proto.TensorProto.INT64
         else:
             raise ValueError('Unknown label type found')
@@ -1222,7 +1145,6 @@ def convert_tensor_to_label(scope, operator, container):
     # Extract most possible label index
     label_id_extractor_name = scope.get_unique_operator_name('LabelIndexExtractor')
     label_id_extractor_attrs = {'name': label_id_extractor_name}
-    # [TODO] We assume probability tensor's shape is [N, C]. Need to consider [C] cases.
     label_id_extractor_attrs['axis'] = 1
     label_id_extractor_attrs['keepdims'] = 1
     extracted_id_name = scope.get_unique_variable_name('LabelId')
@@ -1231,7 +1153,6 @@ def convert_tensor_to_label(scope, operator, container):
     # Pick up the label indicated by the selected ID
     label_selector_name = scope.get_unique_operator_name('LabelSelector')
     label_selector_attrs = {'name': label_selector_name}
-    # [TODO] Check if AFE can handle [N, C]
     container.add_node('ArrayFeatureExtractor', [label_buffer_name, extracted_id_name], [operator.outputs[0].full_name],
                        op_domain='ai.onnx.ml', **label_selector_attrs)
 
@@ -2201,17 +2122,17 @@ def convert_tensor_to_probability_map(scope, operator, container):
     if model_type == 'neuralNetworkClassifier':
         model = operator.raw_operator.neuralNetworkClassifier
         if model.WhichOneof('ClassLabels') == 'stringClassLabels':
-            attrs['classlabels_strings'] = [s.encode('ascii') for s in model.stringClassLabels.vector]
+            attrs['classlabels_strings'] = list(s.encode('ascii') for s in model.stringClassLabels.vector)
         elif model.WhichOneof('ClassLabels') == 'int64ClassLabels':
-            attrs['classlabels_int64s'] = model.int64ClassLabels.vector
+            attrs['classlabels_int64s'] = list(int(i) for i in model.int64ClassLabels.vector)
         else:
             raise ValueError('Unknown label type found')
     elif model_type == 'pipelineClassifier':
         model = operator.raw_operator.pipelineClassifier
         if model.WhichOneof('ClassLabels') == 'stringClassLabels':
-            attrs['classlabels_strings'] = [s.encode('ascii') for s in model.stringClassLabels.vector]
+            attrs['classlabels_strings'] = list(s.encode('ascii') for s in model.stringClassLabels.vector)
         elif model.WhichOneof('ClassLabels') == 'int64ClassLabels':
-            attrs['classlabels_int64s'] = model.int64ClassLabels.vector
+            attrs['classlabels_int64s'] = list(int(i) for i in model.int64ClassLabels.vector)
         else:
             raise ValueError('Unknown label type found')
     else:
@@ -2297,11 +2218,11 @@ def convert_tree_ensemble_model(scope, operator, container):
         zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
         # [TODO] We should use WhichOnelf('ClassLabels') to replace HasField below for proto3 capability
         if raw_model.treeEnsembleClassifier.HasField('int64ClassLabels'):
-            class_labels = raw_model.treeEnsembleClassifier.int64ClassLabels.vector
+            class_labels = list(int(i) for i in raw_model.treeEnsembleClassifier.int64ClassLabels.vector)
             attrs['classlabels_int64s'] = class_labels
             zipmap_attrs['classlabels_int64s'] = class_labels
         else:
-            class_labels = [s.encode('ascii') for s in raw_model.treeEnsembleClassifier.stringClassLabels.vector]
+            class_labels = list(s.encode('ascii') for s in raw_model.treeEnsembleClassifier.stringClassLabels.vector)
             attrs['classlabels_strings'] = class_labels
             zipmap_attrs['classlabels_strings'] = class_labels
     elif raw_model.WhichOneof('Type') == 'treeEnsembleRegressor':
@@ -2490,18 +2411,18 @@ def convert_glm_classifier(scope, operator, container):
         matrix_w[i, :] = w.value
 
     if glm.WhichOneof('ClassLabels') == 'stringClassLabels':
-        class_labels = [s.encode('ascii') for s in glm.stringClassLabels.vector]
+        class_labels = list(s.encode('ascii') for s in glm.stringClassLabels.vector)
         attrs['classlabels_strings'] = class_labels
         zipmap_attrs['classlabels_strings'] = class_labels
     elif glm.WhichOneof('ClassLabels') == 'int64ClassLabels':
-        class_labels = glm.int64ClassLabels.vector
+        class_labels = list(int(i) for i in glm.int64ClassLabels.vector)
         attrs['classlabels_ints'] = class_labels
         zipmap_attrs['classlabels_int64s'] = class_labels
     else:
         raise ValueError('Unknown class label type')
 
     coefficients = matrix_w.flatten().tolist()
-    intercepts = cast_list(float, glm.offset)
+    intercepts = list(float(i) for i in glm.offset)
     if len(class_labels) == 2:
         # Handle the binary case for coefficients and intercepts
         coefficients = list(map(lambda x: -1 * x, coefficients)) + coefficients
@@ -2606,9 +2527,9 @@ def convert_one_hot_encoder(scope, operator, container):
 
     raw_model = operator.raw_operator.oneHotEncoder
     if raw_model.HasField('int64Categories'):
-        attrs['cats_int64s'] = raw_model.int64Categories.vector
+        attrs['cats_int64s'] = list(int(i) for i in raw_model.int64Categories.vector)
     if raw_model.HasField('stringCategories'):
-        attrs['cats_strings'] = raw_model.stringCategories.vector
+        attrs['cats_strings'] = list(str(s).encode('ascii') for s in raw_model.stringCategories.vector)
 
     container.add_node(op_type, [operator.inputs[0].full_name], [operator.outputs[0].full_name],
                        op_domain='ai.onnx.ml', **attrs)
@@ -2932,11 +2853,11 @@ def convert_svm_classifier(scope, operator, container):
     zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
     svc_classes = params.WhichOneof('ClassLabels')
     if svc_classes == 'int64ClassLabels':
-        class_labels = params.int64ClassLabels.vector
+        class_labels = list(int(i) for i in params.int64ClassLabels.vector)
         attrs['classlabels_ints'] = class_labels
         zipmap_attrs['classlabels_int64s'] = class_labels
     elif svc_classes == 'stringClassLabels':
-        class_labels = params.stringClassLabels.vector
+        class_labels = list(str(s).encode('ascii') for s in params.stringClassLabels.vector)
         attrs['classlabels_strings'] = class_labels
         zipmap_attrs['classlabels_strings'] = class_labels
     else:

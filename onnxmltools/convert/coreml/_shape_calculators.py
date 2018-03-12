@@ -229,7 +229,6 @@ def calculate_pooling_output_shapes(operator):
 
 
 def calculate_flatten_output_shapes(operator):
-    # [TODO] In addition to [N, C, H, W], this operator should be able to accept [N, C].
     if len(operator.inputs) > 1 or len(operator.outputs) > 1:
         raise RuntimeError('Flatten layer can only have one input and one output')
 
@@ -959,7 +958,7 @@ def calculate_dot_output_shapes(operator):
         raise RuntimeError('Input(s) must be a 2-D tensor(s)')
 
 
-# [TODO] Support 2-D tesnor as [N, C, 1, 1] in neural network's shape calcuators
+# [TODO] Support 2-D tesnor as [N, C, 1, 1] in neural network's shape calculators
 type_calculator_table = {'activation': calculate_activation_output_shapes,
                          'innerProduct': calculate_inner_product_output_shapes,
                          'identity': calculate_identity_output_shapes,
