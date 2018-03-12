@@ -488,6 +488,7 @@ def calculate_legacy_pad_amount(H_in, pad_h, k_h, s_h):
     '''
     This function calculate padding amount along H-axis. It can be applied to other axes. It should be only used with
     pooling conversion.
+
     :param H_in: input dimension along H-axis
     :param pad_h: padding amount at H-axis
     :param k_h: kernel's H-axis dimension
@@ -521,6 +522,25 @@ def calculate_legacy_pad_amount(H_in, pad_h, k_h, s_h):
 
 def create_legacy_pad(scope, input_name, output_name, H_in, W_in, k_h, k_w,
                       s_h, s_w, p_h, p_w, padded_value, container):
+    '''
+    This function adds one Pad operator into its last argument, which is a Container object. By feeding the output of
+    the created Pad operator into Pool operator under valid padding mode, we can achieve the same functionality of
+    CoreML' pooling under IncludeLastPixel padding mode.
+
+    :param scope:
+    :param input_name:
+    :param output_name:
+    :param H_in: input dimension along H-axis
+    :param W_in: input dimension along W-axis
+    :param k_h: kernel's H-axis dimension
+    :param k_w: kernel's W-axis dimension
+    :param s_h: stride along H-axis
+    :param s_w: stride along W-axis
+    :param p_h: padding amount at the beginning and the end of H-axis
+    :param p_w: padding amount at the beginning and the end of W-axis
+    :param padded_value: value used to fill padded area
+    :param container: Container object
+    '''
     # Add a Pad operator to pre-process 4-D tensor
     pad_t, pad_b = calculate_legacy_pad_amount(H_in, p_h, k_h, s_h)
     pad_l, pad_r = calculate_legacy_pad_amount(W_in, p_w, k_w, s_w)
@@ -2617,7 +2637,7 @@ def convert_add(scope, operator, container):
     else:
         inputs = operator.input_full_names
 
-    if operator.inputs[0].shape != operator.inputs[1].shape:
+    if operator.inputs[0].type.shape != operator.inputs[1].type.shape:
         attrs['broadcast'] = 1
     else:
         attrs['broadcast'] = 0
