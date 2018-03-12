@@ -578,7 +578,7 @@ def convert_pooling(scope, operator, container):
     #
     # Case 3: local max/L2 pooling under CoreML's IncludeLastPixel padding
     #
-    #  X ---> Pad --> ONNX Local Max/L2 Pooling ---> Y
+    #  X ---> Pad --> X' ---> ONNX Local Max/L2 Pooling ---> Y
     #
     # CoreML's IncludeLastPixel padding mode is not supported in ONNX's pooling. We combine a Pad
     # operator and a pooling to simulate CoreML's behavior. In this case, the Pad takes all padding-related
@@ -622,17 +622,20 @@ def convert_pooling(scope, operator, container):
     #
     # Case 7: local average pooling with IncludeLastPixel padding. exclude_pad_area is off.
     #
-    #  X ---> Pad --> ONNX Local Average Pooling ---> Y
+    #  X ---> Pad --> X' ---> ONNX Local Average Pooling ---> Y
     #
     # Since Pad operators add zeros to X's margin and the local pooling here is working under valid padding, it's
     # equivalent to the situation of exclude_pad_area=off.
-    params = operator.raw_operator.pooling
-    inputs = [variable.full_name for variable in operator.inputs]
-    outputs = [variable.full_name for variable in operator.outputs]
-
     from coremltools.proto.NeuralNetwork_pb2 import PoolingLayerParams as Params
     from coremltools.proto.NeuralNetwork_pb2 import SamePadding
-    # Handle global pooling mode
+
+    params = operator.raw_operator.pooling
+    # The input of Pool
+    inputs = [variable.full_name for variable in operator.inputs]
+    # The output of Pool
+    outputs = [variable.full_name for variable in operator.outputs]
+
+    # Handle global pooling mode. This case if much simpler than the conversion of local pooling.
     attrs = {'name': operator.full_name}
     if params.globalPooling:
         pooling_table = {params.MAX: 'GlobalMaxPool',
@@ -650,11 +653,7 @@ def convert_pooling(scope, operator, container):
             container.add_node(op_type, inputs, outputs, **attrs)
         return
 
-    # CoreML default v.s. non-default parameters
-    kernel_shape = [3, 3] if len(params.kernelSize) <= 0 else params.kernelSize
-    strides = [1, 1] if len(params.stride) <= 0 else params.stride
-
-    # Handle local pooling mode
+    # From here to the end of this function, we will handle local pooling mode
     if params.type == Params.MAX:
         op_type = 'MaxPool'
     elif params.type == Params.AVERAGE:
@@ -664,6 +663,10 @@ def convert_pooling(scope, operator, container):
         attrs['p'] = 2
     else:
         raise ValueError('Unsupported pooling type: {}'.format(params.type))
+
+    # CoreML default v.s. non-default parameters
+    kernel_shape = [3, 3] if len(params.kernelSize) <= 0 else params.kernelSize
+    strides = [1, 1] if len(params.stride) <= 0 else params.stride
     attrs['kernel_shape'] = kernel_shape
     attrs['strides'] = strides
 
@@ -700,10 +703,11 @@ def convert_pooling(scope, operator, container):
         pad_w = params.includeLastPixel.paddingAmounts[1]
         legacy_padded_tensor_name = scope.get_unique_variable_name('legacy_padded_tensor')
         padded_value = 0. if params.type != Params.MAX else 1+np.finfo(np.float32).min
+        # Create a sub-graph of cases 3, 6, 7: X ---> Pad ---> X'
         create_legacy_pad(scope, inputs[0], [legacy_padded_tensor_name], H, W, kernel_shape[0], kernel_shape[1],
                           strides[0], strides[1], pad_h, pad_w, padded_value, container)
-        # Set the first input name to the output of legacy padding so that the following Pool operator can directly
-        # use it.
+        # Set the first input name to the output of Pad so that the following Pool operator won't access the
+        # original input.
         inputs[0] = legacy_padded_tensor_name
     else:
         raise ValueError('Unsupported padding mode: {}'.format(pad_type))
@@ -717,22 +721,23 @@ def convert_pooling(scope, operator, container):
        (params.type == Params.AVERAGE and not params.avgPoolExcludePadding and pad_type != 'includeLastPixel'):
         # Case 5 & 6. See comment above.
 
+        # X --> Affine --> Z
         X_name = operator.inputs[0].full_name
         Y_name = operator.outputs[0].full_name
         Z_name = scope.get_unique_variable_name('Z')
-        container.add_node('Affine', X_name, Z_name,
-                           name=scope.get_unique_operator_name('Affine'),
+        container.add_node('Affine', X_name, Z_name, name=scope.get_unique_operator_name('Affine'),
                            alpha=0., beta=1. / (kernel_shape[0] * kernel_shape[1]))
 
         Z_prime_name = scope.get_unique_variable_name('Z_prime')
         Y_prime_name = scope.get_unique_variable_name('Y_prime')
-        outputs[0] = Y_prime_name
 
         if pad_type != 'includeLastPixel':
-            # Create the major Pool operator
-            container.add_node(op_type, inputs, outputs, **attrs)
+            # Create the major Pool operator.
+            # Associated sub-graph of case 5: X ---> Pool ---> Y'
+            container.add_node(op_type, inputs, Y_prime_name, **attrs)
 
             # Create operators to calculate correction coefficients
+            # Associated sub-graph of case 5: Z ---> L1Pool ---> Z'
             lp_pool_attrs = {'name': scope.get_unique_operator_name('LpPool'), 'kernel_shape': kernel_shape,
                              'strides': strides, 'p': 1}
             if pads is not None:
@@ -741,29 +746,36 @@ def convert_pooling(scope, operator, container):
                 lp_pool_attrs['auto_pad'] = auto_pad
             container.add_node('LpPool', Z_name, Z_prime_name, op_version=2, **lp_pool_attrs)
 
-            # Element-wisely apply adjustment coefficients and create the original CoreML output
+            # Element-wisely apply adjustment coefficients and create the expected CoreML output
+            # Associated sub-graph of case 5: Y', Z' ---> Mul ---> Y
             container.add_node('Mul', [Y_prime_name, Z_prime_name], Y_name, name=scope.get_unique_operator_name('Mul'))
         else:
             # Create the major Pool operator
-            container.add_node(op_type, inputs, outputs, **attrs)
+            # Associated sub-graph of case 6: X' ---> Pool ---> Y'
+            container.add_node(op_type, inputs, Y_prime_name, **attrs)
 
             # Create operators to correct Pool's output
             Y_name = operator.outputs[0].full_name
-            Z_prime_prime = scope.get_unique_variable_name('Z_prime_prime')
+            Z_prime_prime_name = scope.get_unique_variable_name('Z_prime_prime')
 
             # Pad the constant tensor.
+            # Associated sub-graph of case 6: Z ---> Pad ---> Z'
             create_legacy_pad(scope, Z_name, Z_prime_name, operator.inputs[0].type.shape[2],
                               operator.inputs[0].type.shape[3], kernel_shape[0], kernel_shape[1],
                               strides[0], strides[1], params.includeLastPixel.paddingAmounts[0],
                               params.includeLastPixel.paddingAmounts[1], 0., container)
 
+            # Associated sub-graph of case 6: Z' ---> L1Pool ---> Z''
             lp_pool_attrs = {'name': scope.get_unique_operator_name('LpPool'), 'kernel_shape': kernel_shape,
                              'strides': strides, 'p': 1, 'audo_pad': 'VALID'}
-            container.add_node('LpPool', Z_prime_name, Z_prime_prime, op_version=2, **lp_pool_attrs)
+            container.add_node('LpPool', Z_prime_name, Z_prime_prime_name, op_version=2, **lp_pool_attrs)
 
-            # Element-wisely apply adjustment coefficients and create the original CoreML output
-            container.add_node('Div', Y_prime_name, Y_name, name=scope.get_unique_operator_name('Div'))
+            # Element-wisely apply adjustment coefficients and create the expected CoreML output
+            # Associated sub-graph of case 6: Y', Z''  ---> Div ---> Y
+            container.add_node('Div', [Y_prime_name, Z_prime_prime_name], Y_name,
+                               name=scope.get_unique_operator_name('Div'))
     else:
+        # Create the major Pool operator
         if params.type == Params.L2:
             container.add_node(op_type, inputs, outputs, op_version=2, **attrs)
         else:
