@@ -557,6 +557,75 @@ def create_legacy_pad(scope, input_name, output_name, H_in, W_in, k_h, k_w,
 
 
 def convert_pooling(scope, operator, container):
+    # The conversion of pooling has several possible outcomes. Let's first define some symbols and then discuss their
+    # ONNX computational graphs case-by-case.
+    #
+    # Symbols:
+    #  X: input 4-D tensor. It should have a shape [N, C, H, W] following CoreML's pooling definition.
+    #  Y: output tensor identical to CorML's pooling. Its shapes depends on the pooling type applied.
+    #
+    # Case 1: global pooling
+    #  X ---> ONNX Global Pooling ---> Y
+    # In this case, ONNX's pooling implementation should directly match CoreML's implementation, so it's just a naive
+    # translation.
+    #
+    # Case 2: local max/L2 pooling with same or valid padding
+    #
+    #  X ---> ONNX Local Max/L2 Pooling ---> Y
+    #
+    # In this case, ONNX's pooling implementation should directly match CoreML's implementation, so it's just a naive
+    # translation.
+    #
+    # Case 3: local max/L2 pooling under CoreML's IncludeLastPixel padding
+    #
+    #  X ---> Pad --> ONNX Local Max/L2 Pooling ---> Y
+    #
+    # CoreML's IncludeLastPixel padding mode is not supported in ONNX's pooling. We combine a Pad
+    # operator and a pooling to simulate CoreML's behavior. In this case, the Pad takes all padding-related
+    # parameters from CoreML's pooling while ONNX's pooling is working under valid padding mode.
+    #
+    # Case 4: local average pooling with same or valid padding. exclude_pad_area is on.
+    #
+    #  X ---> ONNX Local Average Pooling ---> Y
+    #
+    # Current ONNX pooling operator just follows Caffe2, so the padded area is naturally excluded when calculating the
+    # numerator and denumerator of the pixel average covered by the kernel. That is, the translation from CoreML to ONNX
+    # is trivial.
+    #
+    # Case 5: local average pooling with same or valid padding. exclude_pad_area is off.
+    #
+    #  X ---> ONNX Local Average Pooling ---> Y' ------------> Mul ---> Y
+    #  |                                                        ^
+    #  |                                                        |
+    #  '---> Scaler ---> Z ---> ONNX L1-norm Pooling ---> Z' ---'
+    #
+    #  The Scaler has "alpha=0" and its "beta" is a constant. If "beta=1", the output of the L1-norm pooling, Z', is the
+    #  effective kernel size applied at each pixel when padded area is excluded. Here we use "beta=1/kerenel_size" so
+    #  that one value in Z' stands for
+    #         (the kernel size without padded area) / (the kernel size with padded area)
+    #  at a pixel. The output Y' is computed with exclude_pad_area=on, so the element-wise multiplication of Y' and Z'
+    #  is Y.
+    #
+    # Case 6: local average pooling with IncludeLastPixel padding. exclude_pad_area is on.
+    #
+    #  X ---> Pad ---> X' ---> ONNX Local Average Pooling ---> Y' ------> Div ---> Y
+    #  |                                                                                         ^
+    #  |                                                                                         |
+    #  '---> Scaler ---> Z ---> Pad ---> Z' ---> ONNX L1-norm Pooling ---> Z''
+    #
+    #  The Scaler has "alpha=0" and its "beta" is a constant. If "beta=1", the output of the L1-norm pooling, Z'', is
+    #  the effective kernel size applied at each pixel when padded area is excluded (since Pad fills the
+    #  padded area with zeros so those padded pixels are not counted by the L1-norm pooling). Here we use
+    #  "beta=1/kerenel_size" so that one value in Z' stands for
+    #         (the kernel size without padded area) / (the kernel size with padded area)
+    #  at a pixel. The output Y' is computed as if exclude_pad_area=on, so the element-wise division of Y' and Z'' is Y.
+    #
+    # Case 7: local average pooling with IncludeLastPixel padding. exclude_pad_area is off.
+    #
+    #  X ---> Pad --> ONNX Local Average Pooling ---> Y
+    #
+    # Since Pad operators add zeros to X's margin and the local pooling here is working under valid padding, it's
+    # equivalent to the situation of exclude_pad_area=off.
     params = operator.raw_operator.pooling
     inputs = [variable.full_name for variable in operator.inputs]
     outputs = [variable.full_name for variable in operator.outputs]
