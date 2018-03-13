@@ -473,15 +473,13 @@ def calculate_tensor_to_probability_map_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
     if class_label_type == 'stringClassLabels':
-        if N == 1:
-            operator.outputs[0].type = DictionaryType(StringType(), FloatType())
-        else:
-            operator.outputs[0].type = SequenceType(DictionaryType(StringType(), FloatType()), N)
+        operator.outputs[0].type = DictionaryType(StringType(), FloatTensorType([1]))
+        # It should be a sequence of dictionary if batch size is larger than 1, but runtime don't have such a type.
+        # operator.outputs[0].type = SequenceType(DictionaryType(StringType(), FloatType()), N)
     elif class_label_type == 'int64ClassLabels':
-        if N == 1:
-            operator.outputs[0].type = DictionaryType(Int64Type(), FloatType())
-        else:
-            operator.outputs[0].type = SequenceType(DictionaryType(Int64Type(), FloatType()), N)
+        operator.outputs[0].type = DictionaryType(Int64Type(), FloatTensorType([1]))
+        # It should be a sequence of dictionary if batch size is larger than 1, but runtime don't have such a type.
+        # operator.outputs[0].type = SequenceType(DictionaryType(Int64Type(), FloatType()), N)
     else:
         raise TypeError('Unsupported label type')
 
