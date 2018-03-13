@@ -592,6 +592,7 @@ def convert_pooling(scope, operator, container):
     strides = [1, 1] if len(params.stride) <= 0 else params.stride
     attrs['kernel_shape'] = kernel_shape
     attrs['strides'] = strides
+    attrs['dilations'] = [1, 1]  # Required by runtime but useless in ONNX
 
     # Set up padding attributes
     pads = None
