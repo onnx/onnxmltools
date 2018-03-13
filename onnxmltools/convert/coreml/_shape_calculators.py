@@ -445,15 +445,21 @@ def calculte_tensor_to_label_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
     if type(operator.outputs[0].type) == Int64Type:
-        if N == 1:
-            operator.outputs[0].type = Int64Type()
-        else:
-            operator.outputs[0].type = Int64TensorType([N, 1])
+        operator.outputs[0].type = Int64TensorType([1])
+        # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
+        # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
+        # if N == 1:
+        #    operator.outputs[0].type = Int64Type()
+        # else:
+        #    operator.outputs[0].type = Int64TensorType([N, 1])
     elif type(operator.outputs[0].type) == StringType:
-        if N == 1:
-            operator.outputs[0].type = StringTensorType([N, 1])
-        else:
-            operator.outputs[0].type = StringType()
+        operator.outputs[0].type = StringTensorType([1])
+        # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
+        # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
+        # if N == 1:
+        #    operator.outputs[0].type = StringTensorType([N, 1])
+        # else:
+        #    operator.outputs[0].type = StringType()
     else:
         raise RuntimeError('Unsupported label type')
 
