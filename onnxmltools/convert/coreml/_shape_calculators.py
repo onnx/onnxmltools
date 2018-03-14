@@ -386,15 +386,21 @@ def calculte_tensor_to_label_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
     if type(operator.outputs[0].type) == Int64Type:
-        if N == 1:
-            operator.outputs[0].type = Int64Type()
-        else:
-            operator.outputs[0].type = Int64TensorType([N, 1])
+        operator.outputs[0].type = Int64TensorType([1])
+        # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
+        # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
+        # if N == 1:
+        #    operator.outputs[0].type = Int64Type()
+        # else:
+        #    operator.outputs[0].type = Int64TensorType([N, 1])
     elif type(operator.outputs[0].type) == StringType:
-        if N == 1:
-            operator.outputs[0].type = StringTensorType([N, 1])
-        else:
-            operator.outputs[0].type = StringType()
+        operator.outputs[0].type = StringTensorType([1])
+        # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
+        # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
+        # if N == 1:
+        #    operator.outputs[0].type = StringTensorType([N, 1])
+        # else:
+        #    operator.outputs[0].type = StringType()
     else:
         raise RuntimeError('Unsupported label type')
 
@@ -414,15 +420,13 @@ def calculate_tensor_to_probability_map_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
     if class_label_type == 'stringClassLabels':
-        if N == 1:
-            operator.outputs[0].type = DictionaryType(StringType(), FloatType())
-        else:
-            operator.outputs[0].type = SequenceType(DictionaryType(StringType(), FloatType()), N)
+        operator.outputs[0].type = DictionaryType(StringType(), FloatTensorType([1]))
+        # It should be a sequence of dictionary if batch size is larger than 1, but runtime don't have such a type.
+        # operator.outputs[0].type = SequenceType(DictionaryType(StringType(), FloatType()), N)
     elif class_label_type == 'int64ClassLabels':
-        if N == 1:
-            operator.outputs[0].type = DictionaryType(Int64Type(), FloatType())
-        else:
-            operator.outputs[0].type = SequenceType(DictionaryType(Int64Type(), FloatType()), N)
+        operator.outputs[0].type = DictionaryType(Int64Type(), FloatTensorType([1]))
+        # It should be a sequence of dictionary if batch size is larger than 1, but runtime don't have such a type.
+        # operator.outputs[0].type = SequenceType(DictionaryType(Int64Type(), FloatType()), N)
     else:
         raise TypeError('Unsupported label type')
 
