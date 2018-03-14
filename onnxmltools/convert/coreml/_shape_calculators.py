@@ -61,17 +61,17 @@ def calculate_convolution_and_pooling_1D_output_shape(
     if not isinstance(input_size, int):
         return 'None'
     if output_size > 0:
-        return output_size  # Must use output_size = 1 for global pooling
+        return int(output_size)  # Must use output_size = 1 for global pooling
 
-    effective_kernel_size = 1 + kernel_dilation * (kernel_size - 1)
+    effective_kernel_size = 1 + kernel_dilation * (kernel_size - 1)  # For pooling, we always have dilation = 1.
     if pad_mode == 'valid':
-        return int(math.floor((input_size + pad_head + pad_tail - effective_kernel_size) / stride + 1))
+        return int(math.floor((input_size + pad_head + pad_tail - effective_kernel_size) / stride) + 1)
     elif pad_mode == 'same':
         return int(math.ceil(input_size / stride))
     elif pad_mode == 'includeLastPixel':
         if pad_head != pad_tail:
             raise RuntimeError('Padding amounts at the beginning and the end of an axis must be the same')
-        effective_input_size = input_size + pad_head + pad_tail - kernel_size
+        effective_input_size = input_size + pad_head + pad_tail - effective_kernel_size
         out_size = math.ceil(effective_input_size / stride) + 1
         if (out_size - 1) * stride >= input_size + pad_head:
             out_size -= 1
@@ -120,7 +120,7 @@ def calculate_convolution_output_shapes(operator):
     if len(params.stride) > 0:
         strides = params.stride
     specified_output_shape = [0, 0]  # Only used with convolution transpose
-    if len(params.outputShape) > 0:
+    if params.isDeconvolution and len(params.outputShape) > 0:
         specified_output_shape = list(int(i) for i in params.outputShape)
     pad_mode = params.WhichOneof('ConvolutionPaddingType')
     if  pad_mode == 'valid' and len(params.valid.paddingAmounts.borderAmounts) > 0:
@@ -137,11 +137,11 @@ def calculate_convolution_output_shapes(operator):
         if params.isDeconvolution:
             output_shape[i + 2] = calculate_convolution_transpose_1D_output_shape(
                 input_shape[i + 2], kernel_shape[i], dilations[i], strides[i],
-                pad_mode, pad_heads[i], pad_tails[i])
+                pad_mode, pad_heads[i], pad_tails[i], specified_output_shape[i])
         else:
             output_shape[i + 2] = calculate_convolution_and_pooling_1D_output_shape(
                 input_shape[i + 2], kernel_shape[i], dilations[i], strides[i],
-                pad_mode, pad_heads[i], pad_tails[i], specified_output_shape[i])
+                pad_mode, pad_heads[i], pad_tails[i])
 
 
 def calculate_pooling_output_shapes(operator):
@@ -182,12 +182,13 @@ def calculate_pooling_output_shapes(operator):
         pad_heads = [pad_amounts[0], pad_amounts[1]]
         pad_tails = [pad_amounts[0], pad_amounts[1]]
     else:
+        # For same padding, padding amounts are not used
         pad_heads = [0, 0]
         pad_tails = [0, 0]
 
     # Calculate output shape along H- and W-axes
     for i in range(2):
-        output_shape[i + 2] = calculate_convolution_transpose_1D_output_shape(
+        output_shape[i + 2] = calculate_convolution_and_pooling_1D_output_shape(
             input_shape[i + 2], kernel_shape[i], dilations[i], strides[i],
             pad_mode, pad_heads[i], pad_tails[i], params.globalPooling)
 
@@ -705,6 +706,8 @@ def calculate_split_output_shapes(operator):
 
     output_shape[1] = int(divided)
 
+    operator.outputs[0].type.shape = output_shape
+
 
 def calculate_slice_output_shapes(operator):
     if len(operator.inputs) != 1 or len(operator.outputs) != 1:
@@ -736,7 +739,8 @@ def calculate_sequence_repeat_output_shapes(operator):
         raise RuntimeError('Input must be a float tensor')
 
     output_shape = copy.deepcopy(operator.inputs[0].type.shape)
-    output_shape[0] *= operator.raw_operator.sequenceRepeat.nRepetitions
+    if output_shape[0] != None:
+        output_shape[0] *= operator.raw_operator.sequenceRepeat.nRepetitions
 
     operator.outputs[0].type = FloatTensorType(output_shape)
 
