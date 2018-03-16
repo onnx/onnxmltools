@@ -1,7 +1,7 @@
 import coremltools
 from uuid import uuid4
-from . import _converters
-from . import _parser
+from ._converters import convert_topology
+from ._parser import parse_coreml
 from ...proto import onnx_proto
 from ..common import model_util
 
@@ -32,13 +32,14 @@ def convert(model, name=None, initial_types={}, doc_string=''):
         name = str(uuid4().hex)
 
     # Parse CoreML model as our internal data structure (i.e., Topology)
-    topology = _parser.parse_coreml(spec, initial_types)
+    topology = parse_coreml(spec, initial_types)
 
     # Uncomment this line to visualize the intermediate graph for debugging
+    # from . import _parser
     # _parser.visualize_topology(topology, filename=name, view=True)
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
-    onnx_model = _converters.convert_topology(topology, name)
+    onnx_model = convert_topology(topology, name)
 
     # Parse CoreML description, author, and license
     metadata = spec.description.metadata

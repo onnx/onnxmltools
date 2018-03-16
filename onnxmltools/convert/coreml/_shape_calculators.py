@@ -40,10 +40,10 @@ def calculate_identical_float_tensor_shapes(operator):
     input = operator.inputs[0]
     output = operator.outputs[0]
 
-    if type(input.type) != FloatTensorType:
+    if type(input.type) != FloatTensorType or type(output.type) != FloatTensorType:
         raise RuntimeError('Input must be float tensor')
 
-    output.type = copy.deepcopy(input.type)  # Similar to identity but only accept floats
+    output.type.shape = copy.deepcopy(input.type.shape)  # Similar to identity but only accept floats
 
 
 def calculate_identity_output_shapes(operator):
@@ -53,7 +53,9 @@ def calculate_identity_output_shapes(operator):
     input = operator.inputs[0]
     output = operator.outputs[0]
 
+    doc_string = output.type.doc_string
     output.type = copy.deepcopy(input.type)
+    output.type.doc_string = doc_string
 
 
 def calculate_convolution_and_pooling_1D_output_shape(
@@ -100,7 +102,7 @@ def calculate_convolution_output_shapes(operator):
     params = operator.raw_operator.convolution
 
     input_shape = operator.inputs[0].type.shape
-    operator.outputs[0].type = FloatTensorType([0, 0, 0, 0])
+    operator.outputs[0].type.shape = [0, 0, 0, 0]
     output_shape = operator.outputs[0].type.shape
 
     # Adjust N-axis
@@ -123,12 +125,12 @@ def calculate_convolution_output_shapes(operator):
     if params.isDeconvolution and len(params.outputShape) > 0:
         specified_output_shape = list(int(i) for i in params.outputShape)
     pad_mode = params.WhichOneof('ConvolutionPaddingType')
-    if  pad_mode == 'valid' and len(params.valid.paddingAmounts.borderAmounts) > 0:
+    if pad_mode == 'valid' and len(params.valid.paddingAmounts.borderAmounts) > 0:
         pad_amounts = params.valid.paddingAmounts.borderAmounts
         pad_heads = [pad_amounts[0].startEdgeSize, pad_amounts[1].startEdgeSize]
         pad_tails = [pad_amounts[0].endEdgeSize, pad_amounts[1].endEdgeSize]
     else:
-        # Padding amounts are useless for same padding.
+        # Padding amounts are useless for same padding and valid padding uses [0, 0] by default.
         pad_heads = [0, 0]
         pad_tails = [0, 0]
 
@@ -154,7 +156,7 @@ def calculate_pooling_output_shapes(operator):
     if type(input.type) != FloatTensorType or len(input.type.shape) != 4:
         raise RuntimeError('Input must be 4-D float tensor')
 
-    operator.outputs[0].type = FloatTensorType([0, 0, 0, 0])
+    operator.outputs[0].type.shape = [0, 0, 0, 0]
     output_shape = operator.outputs[0].type.shape
 
     # Adjust N-axis
@@ -215,7 +217,7 @@ def calculate_flatten_output_shapes(operator):
             output_shape[1] = 'None'
             break
 
-    output.type = FloatTensorType(output_shape)
+    output.type.shape = output_shape
 
 
 def calculate_permute_output_shapes(operator):
@@ -230,7 +232,7 @@ def calculate_permute_output_shapes(operator):
 
     axes = [int(i) for i in operator.raw_operator.permute.axis]
     input_shape = copy.deepcopy(input.type.shape)
-    output.type = FloatTensorType([input_shape[a] for a in axes])
+    output.type.shape = [input_shape[a] for a in axes]
 
 
 def calculate_lstm_output_shapes(operator):
@@ -257,11 +259,11 @@ def calculate_lstm_output_shapes(operator):
         Y_c_in = operator.inputs[2]  # The initial cell state of a single sequence
         Y_c_in.type.shape = state_shape
 
-    operator.outputs[0].type = FloatTensorType(output_shape)
+    operator.outputs[0].type.shape = output_shape
     if len(operator.outputs) > 1:
-        operator.outputs[1].type = FloatTensorType(state_shape)
+        operator.outputs[1].type.shape = state_shape
     if len(operator.outputs) > 2:
-        operator.outputs[2].type = FloatTensorType(state_shape)
+        operator.outputs[2].type.shape = state_shape
 
 
 def calculate_bidirectional_lstm_output_shapes(operator):
@@ -292,13 +294,13 @@ def calculate_bidirectional_lstm_output_shapes(operator):
         Y_c_rev_in = operator.inputs[4]  # The backward initial cell state of a single sequence
         Y_c_rev_in.type.shape = state_shape
 
-    operator.outputs[0].type = FloatTensorType(output_shape)
+    operator.outputs[0].type.shape = output_shape
     if len(operator.outputs) > 1:
-        operator.outputs[1].type = FloatTensorType(state_shape)
-        operator.outputs[3].type = FloatTensorType(state_shape)
+        operator.outputs[1].type.shape = state_shape
+        operator.outputs[3].type.shape = state_shape
     if len(operator.outputs) > 2:
-        operator.outputs[2].type = FloatTensorType(state_shape)
-        operator.outputs[4].type = FloatTensorType(state_shape)
+        operator.outputs[2].type.shape = state_shape
+        operator.outputs[4].type.shape = state_shape
 
 
 def calculate_gru_output_shapes(operator):
@@ -327,9 +329,9 @@ def calculate_gru_output_shapes(operator):
         Y_h_in = operator.inputs[1]  # The initial hidden state of a single sequence
         Y_h_in.type.shape = state_shape
 
-    operator.outputs[0].type = FloatTensorType(output_shape)
+    operator.outputs[0].type.shape = output_shape
     if len(operator.outputs) > 1:
-        operator.outputs[1].type = FloatTensorType(state_shape)
+        operator.outputs[1].type.shape = state_shape
 
 
 def calculate_embedding_output_shapes(operator):
@@ -375,7 +377,7 @@ def calculate_concat_output_shapes(operator):
         dims.append(variable.type.shape[1])
 
     output_shape[1] = 'None' if 'None' in dims else sum(dims)
-    operator.outputs[0].type = FloatTensorType(output_shape)
+    operator.outputs[0].type.shape = output_shape
 
 
 def calculte_tensor_to_label_output_shapes(operator):
@@ -387,7 +389,7 @@ def calculte_tensor_to_label_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
     if type(operator.outputs[0].type) == Int64Type:
-        operator.outputs[0].type = Int64TensorType([1])
+        operator.outputs[0].type = Int64TensorType([1], operator.outputs[0].type.doc_string)
         # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
         # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
         # if N == 1:
@@ -395,7 +397,7 @@ def calculte_tensor_to_label_output_shapes(operator):
         # else:
         #    operator.outputs[0].type = Int64TensorType([N, 1])
     elif type(operator.outputs[0].type) == StringType:
-        operator.outputs[0].type = StringTensorType([1])
+        operator.outputs[0].type = StringTensorType([1], operator.outputs[0].type.doc_string)
         # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
         # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
         # if N == 1:
@@ -421,11 +423,13 @@ def calculate_tensor_to_probability_map_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
     if class_label_type == 'stringClassLabels':
-        operator.outputs[0].type = DictionaryType(StringType(), FloatTensorType([1]))
+        doc_string = operator.outputs[0].type.doc_string
+        operator.outputs[0].type = DictionaryType(StringType(), FloatTensorType([1]), doc_string)
         # It should be a sequence of dictionary if batch size is larger than 1, but runtime don't have such a type.
         # operator.outputs[0].type = SequenceType(DictionaryType(StringType(), FloatType()), N)
     elif class_label_type == 'int64ClassLabels':
-        operator.outputs[0].type = DictionaryType(Int64Type(), FloatTensorType([1]))
+        doc_string = operator.outputs[0].type.doc_string
+        operator.outputs[0].type = DictionaryType(Int64Type(), FloatTensorType([1]), doc_string)
         # It should be a sequence of dictionary if batch size is larger than 1, but runtime don't have such a type.
         # operator.outputs[0].type = SequenceType(DictionaryType(Int64Type(), FloatType()), N)
     else:
@@ -446,7 +450,7 @@ def calculate_reshape_output_shapes(operator):
     if len(output_shape) == 3:
         output_shape = [operator.inputs[0].type.shape[0]] + output_shape
 
-    operator.outputs[0].type = FloatTensorType(output_shape)
+    operator.outputs[0].type.shape = output_shape
 
 
 def calculate_dictionary_vectorizer_output_shapes(operator):
@@ -466,10 +470,11 @@ def calculate_dictionary_vectorizer_output_shapes(operator):
     if len(string_key_vector) > 0 and len(int64_key_vector) > 0:
         raise RuntimeError('Only one key type can present at the same time')
 
+    doc_string = operator.outputs[0].type.doc_string
     if len(string_key_vector) > 0:
-        operator.outputs[0].type = FloatTensorType([1, len(string_key_vector)])
+        operator.outputs[0].type = FloatTensorType([1, len(string_key_vector)], doc_string)
     elif len(int64_key_vector) > 0:
-        operator.outputs[1].type = FloatTensorType([1, len(int64_key_vector)])
+        operator.outputs[1].type.shape = FloatTensorType([1, len(int64_key_vector)], doc_string)
     else:
         raise RuntimeError('Key vector cannot be empty')
 
@@ -496,9 +501,11 @@ def calculate_feature_vectorizer_output_shapes(operator):
     C = sum(info.inputDimensions for info in operator.raw_operator.featureVectorizer.inputList)
 
     if isinstance(operator.inputs[0].type, (FloatTensorType, FloatType)):
-        operator.outputs[0].type = FloatTensorType([N, C])
+        doc_string = operator.outputs[0].type.doc_string
+        operator.outputs[0].type = FloatTensorType([N, C], doc_string)
     elif isinstance(operator.inputs[0].type, (Int64TensorType, Int64Type)):
-        operator.outputs[0].type = Int64TensorType([N, C])
+        doc_string = operator.outputs[0].type.doc_string
+        operator.outputs[0].type = Int64TensorType([N, C], doc_string)
     else:
         raise RuntimeError('Unsupported input type: %s' % type(operator.inputs[0].type))
 
@@ -526,13 +533,13 @@ def calculate_traditional_classifier_output_shapes(operator):
         raise TypeError('%s has no class label' % model_type)
 
     if class_label_type == 'stringClassLabels':
-        operator.outputs[0].type = StringType()
+        operator.outputs[0].type = StringType(operator.outputs[0].type.doc_string)
         if len(operator.outputs) == 2:
-            operator.outputs[1].type = DictionaryType(StringType(), FloatType())
+            operator.outputs[1].type = DictionaryType(StringType(), FloatType(), operator.outputs[1].type.doc_string)
     elif class_label_type == 'int64ClassLabels':
-        operator.outputs[0].type = Int64Type()
+        operator.outputs[0].type = Int64Type(operator.outputs[0].type.doc_string)
         if len(operator.outputs) == 2:
-            operator.outputs[1].type = DictionaryType(Int64Type(), FloatType())
+            operator.outputs[1].type = DictionaryType(Int64Type(), FloatType(), operator.outputs[1].type.doc_string)
     else:
         raise ValueError('Traditional classifier must include label information')
 
@@ -557,7 +564,7 @@ def calculate_traditional_regressor_output_shapes(operator):
         raise ValueError('Model should be one of linear model, tree-based model, and support vector machine')
 
     N = operator.inputs[0].type.shape[0]
-    operator.outputs[0].type = FloatTensorType([N, C])
+    operator.outputs[0].type = FloatTensorType([N, C], operator.outputs[0].type.doc_string)
 
 
 def calculate_array_feature_extractor_output_shapes(operator):
@@ -570,8 +577,13 @@ def calculate_array_feature_extractor_output_shapes(operator):
     N = operator.inputs[0].type.shape[0]
     extracted_feature_number = len(operator.raw_operator.arrayFeatureExtractor.extractIndex)
 
+    # Save doc_string before over-writing by us
+    doc_string = operator.outputs[0].type.doc_string
     operator.outputs[0].type = copy.deepcopy(operator.inputs[0].type)
     operator.outputs[0].type.shape = [N, extracted_feature_number]
+    # Assign correct doc_string to the output
+    operator.outputs[0].type.doc_string = doc_string
+
 
 
 def calculate_one_hot_encoder_output_shapes(operator):
@@ -586,9 +598,9 @@ def calculate_one_hot_encoder_output_shapes(operator):
     N = operator.inputs[0].type.shape[0]
 
     if len(int_categories) > 0:
-        operator.outputs[0].type = FloatTensorType([N, len(int_categories)])
+        operator.outputs[0].type = FloatTensorType([N, len(int_categories)], operator.outputs[0].type.doc_string)
     elif len(str_categories) > 0 and type(operator.inputs[0].type) == StringTensorType:
-        operator.outputs[0].type = FloatTensorType([N, len(str_categories)])
+        operator.outputs[0].type = FloatTensorType([N, len(str_categories)], operator.outputs[0].type.doc_string)
     else:
         raise RuntimeError('Categorical indexes are missing')
 
@@ -623,7 +635,7 @@ def calculate_batch_normalization_output_shapes(operator):
     if len(input_shape) not in [2, 4]:
         raise RuntimeError('Input must be a 2-D or a 4-D tensor')
 
-    operator.outputs[0].type = copy.deepcopy(operator.inputs[0].type)
+    operator.outputs[0].type.shape = copy.deepcopy(operator.inputs[0].type.shape)
 
 
 def calculate_crop_output_shapes(operator):
@@ -685,7 +697,7 @@ def calculate_upsample_output_shapes(operator):
     output_shape[2] *= scales[0]
     output_shape[3] *= scales[1]
 
-    operator.outputs[0].type = FloatTensorType(output_shape)
+    operator.outputs[0].type = FloatTensorType(output_shape, operator.outputs[0].type.doc_string)
 
 
 def calculate_split_output_shapes(operator):
@@ -728,7 +740,7 @@ def calculate_slice_output_shapes(operator):
     else:
         output_shape[axis_map[Params.CHANNEL_AXIS]] += 1 + params.endIndex - params.startIndex
 
-    operator.outputs[0].type = FloatTensorType(output_shape)
+    operator.outputs[0].type = FloatTensorType(output_shape, operator.outputs[0].type.doc_string)
 
 
 def calculate_sequence_repeat_output_shapes(operator):
@@ -742,7 +754,7 @@ def calculate_sequence_repeat_output_shapes(operator):
     if output_shape[0] != None:
         output_shape[0] *= operator.raw_operator.sequenceRepeat.nRepetitions
 
-    operator.outputs[0].type = FloatTensorType(output_shape)
+    operator.outputs[0].type = FloatTensorType(output_shape, operator.outputs[0].type.doc_string)
 
 
 def calculate_reorganizeData_output_shapes(operator):
@@ -773,7 +785,8 @@ def calculate_reorganizeData_output_shapes(operator):
     else:
         raise ValueError('Unsupport reorganization mode {0}'.format(params.mode))
 
-    operator.outputs[0].type = FloatTensorType([int(i) if i != 'None' else 'None' for i in output_shape])
+    operator.outputs[0].type = FloatTensorType([int(i) if i != 'None' else 'None' for i in output_shape],
+                                               operator.outputs[0].type.doc_string)
 
 
 def calculate_reduce_output_shapes(operator):
@@ -813,7 +826,7 @@ def calculate_load_constant_output_shapes(operator):
     const_shape = [1] + [int(d) for d in const_shape]
     if output.type is None:
         # Use default type
-        output.type = FloatTensorType(const_shape)
+        output.type = FloatTensorType(const_shape, output.type.doc_string)
     else:
         if not isinstance(output.type, TensorType):
             raise RuntimeError('Type conflict detected. Output must be a tensor.')

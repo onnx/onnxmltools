@@ -10,6 +10,9 @@ class DataType(object):
     def __str__(self):
         return '%s' % self.type_name
 
+    def update_shape(self, new_shape):
+        self.shape = new_shape
+
     def to_onnx_type(self):
         raise NotImplementedError()
 
