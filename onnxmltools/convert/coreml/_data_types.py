@@ -1,3 +1,9 @@
+#-------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+#--------------------------------------------------------------------------
+
 from ...proto import onnx_proto
 
 
@@ -6,9 +12,6 @@ class DataType(object):
         self.type_name = type_name
         self.shape = shape
         self.doc_string = doc_string
-
-    def __str__(self):
-        return '%s' % self.type_name
 
     def to_onnx_type(self):
         raise NotImplementedError()
@@ -54,9 +57,6 @@ class TensorType(DataType):
     def __init__(self, type_name, element_type, shape=[], doc_string=''):
         super(TensorType, self).__init__(type_name, shape, doc_string)
         self.element_type = element_type
-
-    def __str__(self):
-        return '%s-%s' % (str(self.shape), self.type_name)
 
 
 class Int64TensorType(TensorType):
@@ -123,9 +123,6 @@ class DictionaryType(object):
         self.max_cardinality = max_cardinality  # It is only used to encode length of sparse vector. For other cases, it should be None.
         self.doc_string = doc_string
 
-    def __str__(self):
-        return '%s-%s %s' % (str(self.key_type), str(self.value_type), self.type_name)
-
     def to_onnx_type(self):
         onnx_type = onnx_proto.TypeProto()
         if type(self.key_type) == Int64Type:
@@ -142,9 +139,6 @@ class SequenceType(DataType):
         self.element_type = element_type
         self.length = length
         self.doc_string = doc_string
-
-    def __str__(self):
-        return '%s of %s' % (super(SequenceType, self).__str__(), str(self.element_type))
 
     def to_onnx_type(self):
         onnx_type = onnx_proto.TypeProto()

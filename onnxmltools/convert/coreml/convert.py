@@ -1,3 +1,9 @@
+#-------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+#--------------------------------------------------------------------------
+
 import coremltools
 from uuid import uuid4
 from ._converters import convert_topology
@@ -33,10 +39,6 @@ def convert(model, name=None, initial_types={}, doc_string=''):
 
     # Parse CoreML model as our internal data structure (i.e., Topology)
     topology = parse_coreml(spec, initial_types)
-
-    # Uncomment this line to visualize the intermediate graph for debugging
-    # from . import _parser
-    # _parser.visualize_topology(topology, filename=name, view=True)
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
     onnx_model = convert_topology(topology, name)

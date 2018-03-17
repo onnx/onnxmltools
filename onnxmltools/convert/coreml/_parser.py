@@ -1,6 +1,11 @@
+#-------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+#--------------------------------------------------------------------------
+
 from ._data_types import *
 from ._shape_calculators import type_calculator_table
-from graphviz import Digraph
 
 
 class Variable:
@@ -466,37 +471,6 @@ class Topology:
         self._resolve_duplicates()
         self._fix_shapes()
         self._infer_all_types()
-
-
-def visualize_topology(topology, filename=None, view=False):
-    # [TODO] Replace graphvis package with other choice
-    graph = Digraph()
-
-    # declare nodes (variables and operators)
-    for scope in topology.scopes:
-        for variable in scope.variables.values():
-            if variable.is_root:
-                graph.attr('node', shape='oval', style='filled', fillcolor='blue')
-            else:
-                graph.attr('node', shape='oval', style='filled', fillcolor='white')
-            graph.node(variable.full_name, label=variable.full_name + ', ' + str(variable.type))
-
-        for operator in scope.operators.values():
-            graph.attr('node', shape='box', style='filled', fillcolor='green')
-            graph.node(operator.full_name, label=operator.full_name)
-
-    # declare edges (connections between variables and operators)
-    for scope in topology.scopes:
-        for operator in scope.operators.values():
-            for variable in operator.inputs:
-                graph.edge(variable.full_name, operator.full_name)
-            for variable in operator.outputs:
-                graph.edge(operator.full_name, variable.full_name)
-
-    if filename is not None:
-        graph.render(filename, view=view)
-
-    return graph
 
 
 def _parse_model(topology, scope, model, inputs=list(), outputs=list()):

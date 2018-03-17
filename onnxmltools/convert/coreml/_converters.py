@@ -1,7 +1,11 @@
+#-------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+#--------------------------------------------------------------------------
+
 import itertools
-import numbers
 import numpy as np
-import six
 from ._data_types import *
 from ...proto import onnx_proto
 from ...proto import helper
