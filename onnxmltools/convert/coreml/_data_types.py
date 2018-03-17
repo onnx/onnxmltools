@@ -10,9 +10,6 @@ class DataType(object):
     def __str__(self):
         return '%s' % self.type_name
 
-    def update_shape(self, new_shape):
-        self.shape = new_shape
-
     def to_onnx_type(self):
         raise NotImplementedError()
 
@@ -194,14 +191,14 @@ def parse_coreml_feature(feature_info, batch_size=1):
         shape = [batch_size]
         if color_space == 10:  # gray scale
             shape.append(1)
-            doc_string = 'Image(s) in gray scale. If there are N images, it is a 4-D tensor with shape [N, 1, H, W]'
+            doc_string += ' Image(s) in gray scale. If there are N images, it is a 4-D tensor with shape [N, 1, H, W]'
         elif color_space == 20:  # RGB (20)
             shape.append(3)
-            doc_string = 'Image(s) in RGB format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
+            doc_string += 'Image(s) in RGB format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
                          'C-axis are red, green, and blue channels, respectively.'
         elif color_space == 30:  # BGR (30)
             shape.append(3)
-            doc_string = 'Image(s) in BGR format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
+            doc_string += 'Image(s) in BGR format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
                          'C-axis are blue, green, and red channels, respectively.'
         else:
             raise RuntimeError('Unknown image format. Only gray-level, RGB, and BGR are supported')

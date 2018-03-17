@@ -6,11 +6,10 @@ from graphviz import Digraph
 class Variable:
 
     def __init__(self, raw_name, onnx_name, scope, type=None):
-        self.raw_name = raw_name
-        self.onnx_name = onnx_name
+        self.raw_name = raw_name  # variable name in the original model
+        self.onnx_name = onnx_name  # variable name in the converted model
         self.scope = scope
         self.type = type
-        self.fed_order = None
         self.is_fed = None
         self.is_root = None
         self.is_leaf = None
@@ -27,7 +26,7 @@ class Variable:
 class Operator:
 
     def __init__(self, onnx_name, scope, type, raw_operator):
-        self.onnx_name = onnx_name
+        self.onnx_name = onnx_name # operator name in the converted model
         self.scope = scope
         self.type = type
         self.raw_operator = raw_operator
@@ -67,7 +66,7 @@ class Operator:
 
 class Scope:
 
-    def __init__(self, name, parent_scopes=[], variable_name_set=set(), operator_name_set=set()):
+    def __init__(self, name, parent_scopes=list(), variable_name_set=set(), operator_name_set=set()):
         # name: scope's ID. It's unique in a topology.
         # parent_scopes: all parents of this scope. It encodes the tree structure of the computational graph.
         # variable_name_set: set used to stored variable names declared in this scope.
@@ -102,34 +101,13 @@ class Scope:
         '''
         Create a unique variable ID based on the given seed
         '''
-        if seed not in self.onnx_variable_names:
-            self.onnx_variable_names.add(seed)
-            self.variable_name_mapping[seed] = [seed]
-            return seed
-        else:
-            i = 1
-            new_name = seed + str(i)
-            while seed + str(i) in self.onnx_variable_names:
-                i += 1
-            new_name = seed + str(i)
-            self.onnx_variable_names.add(new_name)
-            return new_name
+        return Topology._generate_unique_name(seed, self.onnx_variable_names)
 
     def get_unique_operator_name(self, seed):
         '''
         Create a unique operator ID based on the given seed
         '''
-        if seed not in self.onnx_operator_names:
-            self.onnx_operator_names.add(seed)
-            self.operator_name_mapping[seed] = [seed]
-            return seed
-        else:
-            i = 1
-            while seed + str(i) in self.onnx_operator_names:
-                i += 1
-            new_name = seed + str(i)
-            self.onnx_operator_names.add(new_name)
-            return new_name
+        return Topology._generate_unique_name(seed, self.onnx_operator_names)
 
     def find_sink_variables(self):
         '''
@@ -194,7 +172,7 @@ class Scope:
 
 class Topology:
 
-    def __init__(self, model, default_batch_size=1, initial_types={},
+    def __init__(self, model, default_batch_size=1, initial_types=dict(),
                  reserved_variable_names=set(), reserved_operator_names=set()):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph
@@ -213,22 +191,42 @@ class Topology:
         self.initial_types = initial_types
         self.default_batch_size = default_batch_size
 
-    def get_unique_scope_name(self, seed):
-        if seed not in self.scope_names:
-            self.scope_names.add(seed)
+    @staticmethod
+    def _generate_unique_name(seed, existing_names):
+        '''
+        Produce an unique string based on the seed
+        :param seed: a string
+        :param existing_names: a set containing strings which cannot be produced
+        :return: a string similar to the seed
+        '''
+        if seed not in existing_names:
+            existing_names.add(seed)
             return seed
         else:
             i = 1
-            while seed + str(i) in self.scope_names:
+            while seed + str(i) in existing_names:
                 i += 1
-            name = seed + str(i)
-            self.scope_names.add(name)
-            return name
+            new_name = seed + str(i)
+            existing_names.add(new_name)
+            return new_name
 
-    def declare_scope(self, seed, parent_scopes=[]):
+    def get_unique_scope_name(self, seed):
+        return Topology._generate_unique_name(seed, self.scope_names)
+
+    def declare_scope(self, seed, parent_scopes=list()):
         scope = Scope(self.get_unique_scope_name(seed), parent_scopes, self.variable_name_set, self.operator_name_set)
         self.scopes.append(scope)
         return scope
+
+    def unordered_operator_iterator(self):
+        for scope in self.scopes:
+            for operator in scope.operators.values():
+                yield operator
+
+    def unordered_variable_iterator(self):
+        for scope in self.scopes:
+            for variable in scope.variables.values():
+                yield variable
 
     def find_root_and_sink_variables(self):
         '''
@@ -237,17 +235,41 @@ class Topology:
         # First we assume all variables are roots
         is_root = {name: True for scope in self.scopes for name in scope.variables.keys()}
         # Then, we remove those variables which are outputs of some operators
-        for scope in self.scopes:
-            for operator in scope.operators.values():
-                for variable in operator.outputs:
-                    is_root[variable.onnx_name] = False
+        for operator in self.unordered_operator_iterator():
+            for variable in operator.outputs:
+                is_root[variable.onnx_name] = False
         is_sink = {name: True for scope in self.scopes for name in scope.variables.keys()}
-        for scope in self.scopes:
-            for operator in scope.operators.values():
-                for variable in operator.inputs:
-                    is_sink[variable.onnx_name] = False
+        for operator in self.unordered_operator_iterator():
+            for variable in operator.inputs:
+                is_sink[variable.onnx_name] = False
         return [variable for scope in self.scopes for name, variable in scope.variables.items()
                 if is_root[name] or is_sink[name]]
+
+    def topological_operator_iterator(self):
+        self._initialize_graph_status_for_traversing()
+        while not all(operator.is_evaluated for scope in self.scopes for operator in scope.operators.values()):
+            is_evaluation_happened = False
+            for scope in self.scopes:
+                for operator in scope.operators.values():
+                    # TODO: break if no operator can be evaluated
+                    # If all unevaluated operators' inputs are not fed, we have to terminate this function
+                    if all(variable.is_fed for variable in operator.inputs) and not operator.is_evaluated:
+                        # Check if over-writing problem occurs (i.e., multiple operators produce results on one variable).
+                        for variable in operator.outputs:
+                            # Throw an error if this variable has been treated as an output somewhere
+                            if variable.is_fed:
+                                raise RuntimeError('One variable can only be assigned once')
+                            # Mark this variable as filled
+                            variable.is_fed = True
+                        # Make this operator as handled
+                        operator.is_evaluated = True
+                        is_evaluation_happened = True
+                        # Send out an operator
+                        yield operator
+            # After scanning through the whole computational graph, at least one operator should be evaluated. If not,
+            # we need to terminate this procedure to avoid dead lock.
+            if not is_evaluation_happened:
+                break
 
     def rename_variable(self, old_name, new_name):
         # Search for the first variable that is named as old_name.
@@ -282,59 +304,63 @@ class Topology:
 
     def _check_structure(self):
         '''
-        This function applies some rules to check if the parsed model is proper
+        This function applies some rules to check if the parsed model is proper. Currently, it only checks if isolated
+        variable and isolated operator exists.
         '''
-        # variable over-writing (one variable is a output of multiple operators)
-        # Isolated variables
-        # Isolated operators
-        pass
+        # Collect all variable names and operator names
+        unused_variables = set()
+        unused_operators = set()
+        for variable in self.unordered_variable_iterator():
+            unused_variables.add(variable.full_name)
+        for operator in self.unordered_operator_iterator():
+            unused_operators.add(operator.full_name)
+
+        for operator in self.unordered_operator_iterator():
+            for variable in operator.inputs:
+                # A variable is used by an operator, so we remove the variable from the unused-variable list.
+                unused_variables.discard(variable.full_name)
+                # A operator has an input, so we remove the operator from the unused-operator list.
+                unused_operators.discard(operator.full_name)
+            for variable in operator.outputs:
+                # A variable is used by an operator, so we remove the variable from the unused-variable list.
+                unused_variables.discard(variable.full_name)
+                # A operator has an output, so we remove the operator from the unused-operator list.
+                unused_operators.discard(operator.full_name)
+
+        if len(unused_variables) > 0:
+            raise RuntimeError('Isolated variables exist: %s' % unused_variables)
+
+        if len(unused_operators) > 0:
+            raise RuntimeError('Isolated operators exist: %s' % unused_operators)
 
     def _initialize_graph_status_for_traversing(self):
         '''
         Initialize the status of all variables and operators for traversing the underline graph
         '''
         # In the beginning, we set all flags true
-        for scope in self.scopes:
-            for variable in scope.variables.values():
-                variable.is_fed = True
-                variable.is_root = True
-                variable.is_leaf = True
+        for variable in self.unordered_variable_iterator():
+            variable.is_fed = True
+            variable.is_root = True
+            variable.is_leaf = True
         # Then, we flip some flags by applying some simple rules so that only
         #   1. all roots get is_root=True and is_fed=True
         #   2. all leaves get is_leaf=True
-        for scope in self.scopes:
-            for operator in scope.operators.values():
-                operator.is_evaluated = False  # All operators are not processed in the beginning
-                for variable in operator.outputs:
-                    # Output cannot be fed before graph traversing
-                    variable.is_fed = False
-                    # If the variable is an output of one operator, it must not be a root
-                    variable.is_root = False
-                for variable in operator.inputs:
-                    # If the variable is an input of one operator, it must not be a leaf
-                    variable.is_leaf = False
+        for operator in self.unordered_operator_iterator():
+            operator.is_evaluated = False  # All operators are not processed in the beginning
+            for variable in operator.outputs:
+                # Output cannot be fed before graph traversing
+                variable.is_fed = False
+                # If the variable is an output of one operator, it must not be a root
+                variable.is_root = False
+            for variable in operator.inputs:
+                # If the variable is an input of one operator, it must not be a leaf
+                variable.is_leaf = False
 
     def _infer_all_types(self):
         '''
         Infer all variables' shapes in the computational graph.
         '''
         self._initialize_graph_status_for_traversing()
-
-        # [TODO] Apply default rules to pre-process root types
-        # 1. If the top-level model is a neural network and the initial shape dictionary is empty, change all roots to
-        #    4-D tensors with unknown batch size.
-        # 2. For hidden and cell states RNN/LSTM/GRU, their batch sizes are one.
-        # 3. We need to carefully revise the change of leaves' types. For example, the color space of an output image
-        #    cannot be affected by our code.
-        # 4. The input of embedding is integer tensor
-
-        # [TODO] Fix shapes of top-level inputs and outputs to produce identical shape like CoreML
-        # We use 4-D tensor, [N, C, H, W], as the major communication interface between tensor operations. In CoreML,
-        # some redundant coordinates may be squeezed; for example,[1, C, 1, 1] is usually encoded by [1, C] or [C].
-        # Steps:
-        #   1. Find roots and leaves of the graph
-        #   2. Extract roots' and leaves' types from CoreML modle file
-        #   3. Fix them if necessary
 
         # Deliver user-specified types to root variables
         for raw_name, initial_type in self.initial_types.items():
@@ -351,23 +377,8 @@ class Topology:
                         variable.type = initial_type
 
         # Traverse the graph from roots to leaves
-        while not all(operator.is_evaluated for scope in self.scopes for operator in scope.operators.values()):
-            for scope in self.scopes:
-                for operator in scope.operators.values():
-                    if all(variable.is_fed for variable in operator.inputs) and not operator.is_evaluated:
-                        # Infer output types
-                        operator.infer_types()
-
-                        # Check if over-writing problem occurs (i.e., multiple operators produce results on one variable).
-                        for variable in operator.outputs:
-                            # Throw an error if this variable has been treated as an output somewhere
-                            if variable.is_fed:
-                                raise RuntimeError('One variable can only be assigned once')
-                            # Mark this variable as filled
-                            variable.is_fed = True
-
-                        # Make this operator as handled
-                        operator.is_evaluated = True
+        for operator in self.topological_operator_iterator():
+            operator.infer_types()
 
     def _resolve_duplicates(self):
         '''
@@ -376,33 +387,22 @@ class Topology:
         self._initialize_graph_status_for_traversing()
 
         # Traverse the graph from roots to leaves
-        while not all(operator.is_evaluated for scope in self.scopes for operator in scope.operators.values()):
-            for scope in self.scopes:
-                for operator in scope.operators.values():
-                    if all(variable.is_fed for variable in operator.inputs) and not operator.is_evaluated:
-                        # Check if over-writing problem occurs (i.e., multiple operators produce results on one variable).
-                        for variable in operator.outputs:
-                            # Throw an error if this variable has been treated as an output somewhere
-                            if variable.is_fed:
-                                raise RuntimeError('One variable can only be assigned once')
-                            # Mark this variable as filled
-                            variable.is_fed = True
-
-                        # Make this operator as handled
-                        operator.is_evaluated = True
-
-                        if operator.type != 'identity':
+        for operator in self.topological_operator_iterator():
+            if operator.type != 'identity':
+                continue
+            # Replace the output variable with the input variable everywhere
+            original = operator.inputs[0]
+            duplicate = operator.outputs[0]
+            for another_scope in self.scopes:
+                for another_operator in another_scope.operators.values():
+                    for i in range(len(another_operator.inputs)):
+                        if another_operator.inputs[i].onnx_name != duplicate.onnx_name:
                             continue
-                        original = operator.inputs[0]
-                        duplicate = operator.outputs[0]
-                        for another_scope in self.scopes:
-                            for another_operator in another_scope.operators.values():
-                                for i in range(len(another_operator.inputs)):
-                                    if another_operator.inputs[i].onnx_name != duplicate.onnx_name:
-                                        continue
-                                    another_operator.inputs[i] = original
-                        duplicate.is_abandoned = True
-                        operator.is_abandoned = True
+                        another_operator.inputs[i] = original
+            # Because we're iterating through the topology, we cannot delete any operator or variable. Otherwise,
+            # the traversing function may be broken. We will delete those abandoned ones later.
+            duplicate.is_abandoned = True
+            operator.is_abandoned = True
 
         for scope in self.scopes:
             # Find out who is going to be abandoned
@@ -410,12 +410,14 @@ class Topology:
                                            if operator.is_abandoned)
             abandoned_variable_names = set(onnx_name for onnx_name, variable in scope.variables.items()
                                            if variable.is_abandoned)
+            # Remove abandoned operators
             for name in abandoned_operator_names:
                 scope.onnx_operator_names.discard(name)  # this variable is a global structure shared by all scopes!
                 if name in scope.operator_name_mapping:
                     del scope.operator_name_mapping[name]
                 if name in scope.operators:
                     del scope.operators[name]
+            # Remove abandoned variables
             for name in abandoned_variable_names:
                 scope.onnx_variable_names.discard(name)  # this variable is a global structure shared by all scopes!
                 if name in scope.variable_name_mapping:
@@ -427,39 +429,38 @@ class Topology:
     def _fix_shapes(self):
         # This function applies some rules to adjust graph inputs before doing shape inference
 
-        # Identify root of a graph
+        # Identify roots of a graph
         self._initialize_graph_status_for_traversing()
 
         # Scan through all operators and adjust their variables' shapes if needed
-        for scope in self.scopes:
-            for operator in scope.operators.values():
-                # Rule 1:
-                # Some operator in CoreML only accepts 4-D tensors but their protobuf models might specify a 2-D one.
-                # We fix this problem here.
-                if operator.type in ['bias', 'concat', 'convolution', 'crop', 'flatten', 'scalerPreprocessor',
-                                            'lrn', 'meanImagePreprocessor', 'padding', 'permute', 'pooling', 'reduce',
-                                            'reorganizeData', 'reshape', 'scale', 'slice', 'upsample']:
-                    # We only adjust inputs because outputs will be automatically fixed in our shape inference stage
-                    for variable in operator.inputs:
-                        if variable.is_root:
-                            # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
-                            variable.type.shape += [1] * (4 - len(variable.type.shape))
+        for operator in self.unordered_operator_iterator():
+            # Rule 1:
+            # Some operator in CoreML only accepts 4-D tensors but their protobuf models might specify a 2-D one.
+            # We fix this problem here.
+            if operator.type in ['bias', 'concat', 'convolution', 'crop', 'flatten', 'scalerPreprocessor',
+                                        'lrn', 'meanImagePreprocessor', 'padding', 'permute', 'pooling', 'reduce',
+                                        'reorganizeData', 'reshape', 'scale', 'slice', 'upsample']:
+                # We only adjust inputs because outputs will be automatically fixed in our shape inference stage
+                for variable in operator.inputs:
+                    if variable.is_root:
+                        # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
+                        variable.type.shape += [1] * (4 - len(variable.type.shape))
 
-                # Rule 2:
-                # Some operator in CoreML accepts integers while the corresponding operator in ONNX only takes floats.
-                # If it is the case, we change tensor type from float to integer.
-                if operator.type == 'embedding':
-                    for variable in operator.inputs:
-                        if variable.is_root:
-                            variable.type = Int64TensorType(shape=variable.type.shape, doc_string=variable.type.doc_string)
-                        else:
-                            raise RuntimeError('Embed operator in ONNX only accepts floats but we got integers')
+            # Rule 2:
+            # Some operator in CoreML accepts integers while the corresponding operator in ONNX only takes floats.
+            # If it is the case, we change tensor type from float to integer.
+            if operator.type == 'embedding':
+                for variable in operator.inputs:
+                    if variable.is_root:
+                        variable.type = Int64TensorType(variable.type.shape, doc_string=variable.type.doc_string)
+                    else:
+                        raise RuntimeError('Embed operator in ONNX only accepts floats but we got integers')
 
 
     def compile(self):
         '''
-        This function aims at giving every operator enough information so that all operator conversions can happen independently.
-        We also want to simplify the network structure here.
+        This function aims at giving every operator enough information so that all operator conversions can happen
+        independently. We also want to simplify the network structure here.
         '''
         self._check_structure()
         self._resolve_duplicates()
@@ -498,7 +499,7 @@ def visualize_topology(topology, filename=None, view=False):
     return graph
 
 
-def _parse_model(topology, scope, model, inputs=[], outputs=[]):
+def _parse_model(topology, scope, model, inputs=list(), outputs=list()):
     '''
     This is a delegate function of all top-level parsing functions. It does nothing but call a proper function
     to parse the given model.
@@ -538,12 +539,12 @@ def _parse_simple_model(topology, parent_scope, model, inputs, outputs):
         variable = scope.declare_local_variable(
             var.name, parse_coreml_feature(var, topology.default_batch_size), prepend=True)
         this_operator.inputs.append(variable)
+
     # Connect local variables and variables passed into this scope. Our assumptions are described below.
     # 1. Assume a variable with 'A' as its CoreML name is passed in. There must be at least one local variable gets a
     #    raw name 'A'. That is, for each parent variable, at least one local duplicate is available.
     # 2. It's possible to find multiple local variables associated with the same raw name. For example, raw name 'A' can
     #    be associated with 'A' and 'A1' in ONNX. In this case, we connect the first one to parent input.
-
     for parent_variable in inputs:
         raw_name = parent_variable.raw_name
         child_variable = scope.variables[scope.variable_name_mapping[raw_name][0]]
@@ -557,6 +558,7 @@ def _parse_simple_model(topology, parent_scope, model, inputs, outputs):
         variable = scope.declare_local_variable(
             var.name, parse_coreml_feature(var, topology.default_batch_size))
         this_operator.outputs.append(variable)
+
     # Connect local variables and variables passed into this scope. Our assumptions are described below.
     # 1. Assume a variable with 'A' as its CoreML name is passed in. There must be at least one local variable gets a
     #    raw name 'A'. That is, for each parent variable, at least one local duplicate is available.
@@ -742,8 +744,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
             variable.type = Int64TensorType(variable.type.shape)
 
         # Feed model input to the associated model input
-        if variable.type != child_variable.type:
-            operator_type = find_type_conversion(source_type=variable.type, target_type=child_variable.type)
+        operator_type = find_type_conversion(source_type=variable.type, target_type=child_variable.type)
         operator = scope.declare_local_operator(operator_type)
         operator.inputs.append(variable)
         operator.outputs.append(child_variable)
@@ -822,7 +823,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         operator.outputs.append(parent_variable)
 
 
-def parse_coreml(model, initial_types={}):
+def parse_coreml(model, initial_types=dict()):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model

@@ -389,7 +389,7 @@ def calculte_tensor_to_label_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
     if type(operator.outputs[0].type) == Int64Type:
-        operator.outputs[0].type = Int64TensorType([1], operator.outputs[0].type.doc_string)
+        operator.outputs[0].type = Int64TensorType([1], doc_string=operator.outputs[0].type.doc_string)
         # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
         # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
         # if N == 1:
@@ -397,7 +397,7 @@ def calculte_tensor_to_label_output_shapes(operator):
         # else:
         #    operator.outputs[0].type = Int64TensorType([N, 1])
     elif type(operator.outputs[0].type) == StringType:
-        operator.outputs[0].type = StringTensorType([1], operator.outputs[0].type.doc_string)
+        operator.outputs[0].type = StringTensorType([1], doc_string=operator.outputs[0].type.doc_string)
         # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
         # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
         # if N == 1:
@@ -422,14 +422,13 @@ def calculate_tensor_to_probability_map_output_shapes(operator):
         raise TypeError('%s has no class label' % model_type)
 
     N = operator.inputs[0].type.shape[0]
+    doc_string = operator.outputs[0].type.doc_string
     if class_label_type == 'stringClassLabels':
-        doc_string = operator.outputs[0].type.doc_string
-        operator.outputs[0].type = DictionaryType(StringType(), FloatTensorType([1]), doc_string)
+        operator.outputs[0].type = DictionaryType(StringType(), FloatTensorType([1]), doc_string=doc_string)
         # It should be a sequence of dictionary if batch size is larger than 1, but runtime don't have such a type.
         # operator.outputs[0].type = SequenceType(DictionaryType(StringType(), FloatType()), N)
     elif class_label_type == 'int64ClassLabels':
-        doc_string = operator.outputs[0].type.doc_string
-        operator.outputs[0].type = DictionaryType(Int64Type(), FloatTensorType([1]), doc_string)
+        operator.outputs[0].type = DictionaryType(Int64Type(), FloatTensorType([1]), doc_string=doc_string)
         # It should be a sequence of dictionary if batch size is larger than 1, but runtime don't have such a type.
         # operator.outputs[0].type = SequenceType(DictionaryType(Int64Type(), FloatType()), N)
     else:
@@ -472,9 +471,9 @@ def calculate_dictionary_vectorizer_output_shapes(operator):
 
     doc_string = operator.outputs[0].type.doc_string
     if len(string_key_vector) > 0:
-        operator.outputs[0].type = FloatTensorType([1, len(string_key_vector)], doc_string)
+        operator.outputs[0].type = FloatTensorType([1, len(string_key_vector)], doc_string=doc_string)
     elif len(int64_key_vector) > 0:
-        operator.outputs[1].type.shape = FloatTensorType([1, len(int64_key_vector)], doc_string)
+        operator.outputs[1].type.shape = FloatTensorType([1, len(int64_key_vector)], doc_string=doc_string)
     else:
         raise RuntimeError('Key vector cannot be empty')
 
@@ -502,10 +501,10 @@ def calculate_feature_vectorizer_output_shapes(operator):
 
     if isinstance(operator.inputs[0].type, (FloatTensorType, FloatType)):
         doc_string = operator.outputs[0].type.doc_string
-        operator.outputs[0].type = FloatTensorType([N, C], doc_string)
+        operator.outputs[0].type = FloatTensorType([N, C], doc_string=doc_string)
     elif isinstance(operator.inputs[0].type, (Int64TensorType, Int64Type)):
         doc_string = operator.outputs[0].type.doc_string
-        operator.outputs[0].type = Int64TensorType([N, C], doc_string)
+        operator.outputs[0].type = Int64TensorType([N, C], doc_string=doc_string)
     else:
         raise RuntimeError('Unsupported input type: %s' % type(operator.inputs[0].type))
 
@@ -533,13 +532,15 @@ def calculate_traditional_classifier_output_shapes(operator):
         raise TypeError('%s has no class label' % model_type)
 
     if class_label_type == 'stringClassLabels':
-        operator.outputs[0].type = StringType(operator.outputs[0].type.doc_string)
+        operator.outputs[0].type = StringType(doc_string=operator.outputs[0].type.doc_string)
         if len(operator.outputs) == 2:
-            operator.outputs[1].type = DictionaryType(StringType(), FloatType(), operator.outputs[1].type.doc_string)
+            operator.outputs[1].type = DictionaryType(StringType(), FloatType(),
+                                                      doc_string=operator.outputs[1].type.doc_string)
     elif class_label_type == 'int64ClassLabels':
-        operator.outputs[0].type = Int64Type(operator.outputs[0].type.doc_string)
+        operator.outputs[0].type = Int64Type(doc_string=operator.outputs[0].type.doc_string)
         if len(operator.outputs) == 2:
-            operator.outputs[1].type = DictionaryType(Int64Type(), FloatType(), operator.outputs[1].type.doc_string)
+            operator.outputs[1].type = DictionaryType(Int64Type(), FloatType(),
+                                                      doc_string=operator.outputs[1].type.doc_string)
     else:
         raise ValueError('Traditional classifier must include label information')
 
@@ -564,7 +565,7 @@ def calculate_traditional_regressor_output_shapes(operator):
         raise ValueError('Model should be one of linear model, tree-based model, and support vector machine')
 
     N = operator.inputs[0].type.shape[0]
-    operator.outputs[0].type = FloatTensorType([N, C], operator.outputs[0].type.doc_string)
+    operator.outputs[0].type = FloatTensorType([N, C], doc_string=operator.outputs[0].type.doc_string)
 
 
 def calculate_array_feature_extractor_output_shapes(operator):
@@ -598,9 +599,11 @@ def calculate_one_hot_encoder_output_shapes(operator):
     N = operator.inputs[0].type.shape[0]
 
     if len(int_categories) > 0:
-        operator.outputs[0].type = FloatTensorType([N, len(int_categories)], operator.outputs[0].type.doc_string)
+        operator.outputs[0].type = FloatTensorType([N, len(int_categories)],
+                                                   doc_string=operator.outputs[0].type.doc_string)
     elif len(str_categories) > 0 and type(operator.inputs[0].type) == StringTensorType:
-        operator.outputs[0].type = FloatTensorType([N, len(str_categories)], operator.outputs[0].type.doc_string)
+        operator.outputs[0].type = FloatTensorType([N, len(str_categories)],
+                                                   doc_string=operator.outputs[0].type.doc_string)
     else:
         raise RuntimeError('Categorical indexes are missing')
 
@@ -697,7 +700,7 @@ def calculate_upsample_output_shapes(operator):
     output_shape[2] *= scales[0]
     output_shape[3] *= scales[1]
 
-    operator.outputs[0].type = FloatTensorType(output_shape, operator.outputs[0].type.doc_string)
+    operator.outputs[0].type = FloatTensorType(output_shape, doc_string=operator.outputs[0].type.doc_string)
 
 
 def calculate_split_output_shapes(operator):
@@ -740,7 +743,7 @@ def calculate_slice_output_shapes(operator):
     else:
         output_shape[axis_map[Params.CHANNEL_AXIS]] += 1 + params.endIndex - params.startIndex
 
-    operator.outputs[0].type = FloatTensorType(output_shape, operator.outputs[0].type.doc_string)
+    operator.outputs[0].type = FloatTensorType(output_shape, doc_string=operator.outputs[0].type.doc_string)
 
 
 def calculate_sequence_repeat_output_shapes(operator):
@@ -754,7 +757,7 @@ def calculate_sequence_repeat_output_shapes(operator):
     if output_shape[0] != None:
         output_shape[0] *= operator.raw_operator.sequenceRepeat.nRepetitions
 
-    operator.outputs[0].type = FloatTensorType(output_shape, operator.outputs[0].type.doc_string)
+    operator.outputs[0].type = FloatTensorType(output_shape, doc_string=operator.outputs[0].type.doc_string)
 
 
 def calculate_reorganizeData_output_shapes(operator):
@@ -786,7 +789,7 @@ def calculate_reorganizeData_output_shapes(operator):
         raise ValueError('Unsupport reorganization mode {0}'.format(params.mode))
 
     operator.outputs[0].type = FloatTensorType([int(i) if i != 'None' else 'None' for i in output_shape],
-                                               operator.outputs[0].type.doc_string)
+                                               doc_string=operator.outputs[0].type.doc_string)
 
 
 def calculate_reduce_output_shapes(operator):
@@ -826,7 +829,7 @@ def calculate_load_constant_output_shapes(operator):
     const_shape = [1] + [int(d) for d in const_shape]
     if output.type is None:
         # Use default type
-        output.type = FloatTensorType(const_shape, output.type.doc_string)
+        output.type = FloatTensorType(const_shape, doc_string=output.type.doc_string)
     else:
         if not isinstance(output.type, TensorType):
             raise RuntimeError('Type conflict detected. Output must be a tensor.')

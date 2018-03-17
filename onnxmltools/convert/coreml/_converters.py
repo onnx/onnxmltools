@@ -28,16 +28,21 @@ class ModelComponentContainer:
         # ONNX operators' domain-version pair set
         self.node_domain_version_pair_sets = set()
 
+    def _make_value_info(self, variable):
+        value_info = helper.ValueInfoProto()
+        value_info.name = variable.full_name
+        value_info.type.CopyFrom(variable.type.to_onnx_type())
+        if variable.type.doc_string:
+            value_info.doc_string = variable.type.doc_string
+        return value_info
+
     def add_input(self, variable):
         '''
         Add our Variable object defined _parser.py into the the input list of the final ONNX model
 
         :param variable: The Variable object to be added
         '''
-        value_info = helper.ValueInfoProto()
-        value_info.name = variable.full_name
-        value_info.type.CopyFrom(variable.type.to_onnx_type())
-        self.inputs.append(value_info)
+        self.inputs.append(self._make_value_info(variable))
 
     def add_output(self, variable):
         '''
@@ -45,10 +50,7 @@ class ModelComponentContainer:
 
         :param variable: The Variable object to be added
         '''
-        value_info = helper.ValueInfoProto()
-        value_info.name = variable.full_name
-        value_info.type.CopyFrom(variable.type.to_onnx_type())
-        self.outputs.append(value_info)
+        self.outputs.append(self._make_value_info(variable))
 
     def add_initializer(self, name, onnx_type, shape, content):
         '''
@@ -63,10 +65,7 @@ class ModelComponentContainer:
         self.initializers.append(tensor)
 
     def add_value_info(self, variable):
-        value_info = helper.ValueInfoProto()
-        value_info.name = variable.full_name
-        value_info.type.CopyFrom(variable.type.to_onnx_type())
-        self.value_info.append(value_info)
+        self.value_info.append(self._make_value_info(variable))
 
     def add_node(self, op_type, inputs, outputs, op_domain='', op_version=1, **attrs):
         if isinstance(inputs, str):
@@ -115,28 +114,9 @@ def convert_topology(topology, model_name):
         container.add_output(variable)
 
     # Traverse the graph from roots to leaves
-    while not all(operator.is_evaluated for scope in topology.scopes for operator in scope.operators.values()):
-        for scope in topology.scopes:
-            for operator in scope.operators.values():
-                if all(variable.is_fed for variable in operator.inputs) and not operator.is_evaluated:
-                    # Similar to the evaluation of a operation, unknown inputs are not allowed
-                    for variable in operator.inputs:
-                        if not variable.is_fed:
-                            raise RuntimeError('No input can be unknown')
-
-                    # Convert the selected operator into some ONNX objects and save them into the container
-                    converter_table[operator.type](scope, operator, container)
-
-                    # Check if over-writing problem occurs (i.e., multiple operators produce results on one variable).
-                    for variable in operator.outputs:
-                        # Throw an error if this variable has been treated as an output somewhere
-                        if variable.is_fed:
-                            raise RuntimeError('One variable can only be assigned once')
-                        # Mark this variable as filled
-                        variable.is_fed = True
-
-                    # Make this operator as handled
-                    operator.is_evaluated = True
+    for operator in topology.topological_operator_iterator():
+        # Convert the selected operator into some ONNX objects and save them into the container
+        converter_table[operator.type](scope, operator, container)
 
     # Create a graph from its main components
     graph = helper.make_graph(container.nodes, model_name, container.inputs, container.outputs, container.initializers)
