@@ -122,6 +122,18 @@ def convert_topology(topology, model_name):
         # Convert the selected operator into some ONNX objects and save them into the container
         converter_table[operator.type](scope, operator, container)
 
+    # Move ZipMap nodes to the end of the node list. In the future, here should be a sorting function which re-order
+    # the nodes according the model's outputs.
+    for i, node in enumerate(container.nodes):
+        if node.op_type != 'ZipMap':
+            continue
+        zipmap_node = container.nodes[i]
+        for another_node_id in range(i + 1, len(container.nodes)):
+            another_node = container.nodes[another_node_id]
+            if zipmap_node.output[0] not in another_node.input:
+                container.nodes[i], container.nodes[another_node_id] = \
+                    container.nodes[another_node_id], container.nodes[i]
+
     # Create a graph from its main components
     graph = helper.make_graph(container.nodes, model_name, container.inputs, container.outputs, container.initializers)
     # Add extra infomration related to the graph
@@ -2686,7 +2698,7 @@ def convert_scale(scope, operator, container):
         # Declare a temporal variable to store the scaled input
         intra_variable_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_scaled')
         # Create a element-wise multiplication and use it to scale the input and save the result to a temporal variable
-        container.add_node(op1_type, operator.input_full_names, [intra_variable_name], **attrs1)
+        container.add_node(op1_type, [operator.inputs[0].full_name, scale_name], intra_variable_name, **attrs1)
 
         # Prepare materials to build an Add operator for adding bias
         op2_type = 'Add'
