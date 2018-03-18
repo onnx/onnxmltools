@@ -5,7 +5,6 @@ import coremltools
 import numpy as np
 import unittest
 from sklearn.preprocessing import Imputer
-from onnxmltools.convert.coreml.ImputerConverter import ImputerConverter
 from onnxmltools.convert.coreml.convert import convert
 
 

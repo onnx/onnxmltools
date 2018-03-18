@@ -4,7 +4,6 @@ Tests CoreML TreeEnsembleClassifier converter.
 import coremltools
 import unittest
 from sklearn.ensemble import RandomForestClassifier
-from onnxmltools.convert.coreml.TreeEnsembleClassifierConverter import TreeEnsembleClassifierConverter
 from onnxmltools.convert.coreml.convert import convert
 
 class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
