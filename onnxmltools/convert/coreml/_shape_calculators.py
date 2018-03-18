@@ -66,7 +66,7 @@ def calculate_identity_output_shapes(operator):
 
 def calculate_convolution_and_pooling_1D_output_shape(
         input_size, kernel_size, kernel_dilation, stride, pad_mode, pad_head, pad_tail, output_size=0):
-    if not isinstance(input_size, int):
+    if not isinstance(input_size, numbers.Integral):
         return 'None'
     if output_size > 0:
         return int(output_size)  # Must use output_size = 1 for global pooling
@@ -90,7 +90,7 @@ def calculate_convolution_and_pooling_1D_output_shape(
 
 def calculate_convolution_transpose_1D_output_shape(
         input_size, kernel_size, kernel_dilation, stride, pad_mode, pad_head, pad_tail, output_size=0):
-    if not isinstance(input_size, int):
+    if not isinstance(input_size, numbers.Integral):
         return 'None'
     if output_size > 0:
         return output_size

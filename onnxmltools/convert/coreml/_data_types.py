@@ -5,6 +5,7 @@
 #--------------------------------------------------------------------------
 
 from ...proto import onnx_proto
+import numbers
 
 
 class DataType(object):
@@ -68,12 +69,12 @@ class Int64TensorType(TensorType):
         onnx_type.tensor_type.elem_type = onnx_proto.TensorProto.INT64
         for d in self.shape:
             s = onnx_type.tensor_type.shape.dim.add()
-            if isinstance(d, int):
+            if isinstance(d, numbers.Integral):
                 s.dim_value = d
             elif isinstance(d, str):
                 s.dim_param = 'None'
             else:
-                raise TypeError('Unsupported dimension value')
+                raise TypeError('Unsupported dimension type: %s' % type(d))
         return onnx_type
 
 
@@ -87,12 +88,12 @@ class FloatTensorType(TensorType):
         onnx_type.tensor_type.elem_type = onnx_proto.TensorProto.FLOAT
         for d in self.shape:
             s = onnx_type.tensor_type.shape.dim.add()
-            if isinstance(d, int):
+            if isinstance(d, numbers.Integral):
                 s.dim_value = d
             elif isinstance(d, str):
                 s.dim_param = 'None'
             else:
-                raise TypeError('Unsupported dimension value')
+                raise TypeError('Unsupported dimension type: %s' % type(d))
         return onnx_type
 
 
@@ -105,12 +106,12 @@ class StringTensorType(TensorType):
         onnx_type.tensor_type.elem_type = onnx_proto.TensorProto.STRING
         for d in self.shape:
             s = onnx_type.tensor_type.shape.dim.add()
-            if isinstance(d, int):
+            if isinstance(d, numbers.Integral):
                 s.dim_value = d
             elif isinstance(d, str):
                 s.dim_param = 'None'
             else:
-                raise TypeError('Unsupported dimension value')
+                raise TypeError('Unsupported dimension type: %s' % type(d))
         return onnx_type
 
 

@@ -10,6 +10,7 @@ from ._data_types import *
 from ...proto import onnx_proto
 from ...proto import helper
 import math
+import six
 
 
 class ModelComponentContainer:
@@ -72,13 +73,14 @@ class ModelComponentContainer:
         self.value_info.append(self._make_value_info(variable))
 
     def add_node(self, op_type, inputs, outputs, op_domain='', op_version=1, **attrs):
-        if isinstance(inputs, str):
+        if isinstance(inputs, (six.string_types, six.text_type)):
             inputs = [inputs]
-        if isinstance(outputs, str):
+        if isinstance(outputs, (six.string_types, six.text_type)):
             outputs = [outputs]
-        if not isinstance(inputs, list) or not all(isinstance(s, str) for s in inputs):
-            raise ValueError('Inputs must be a list of string')
-        if not isinstance(outputs, list) or not all(isinstance(s, str) for s in outputs):
+        if not isinstance(inputs, list) or not all(isinstance(s, (six.string_types, six.text_type)) for s in inputs):
+            type_list = ','.join(list(str(type(s)) for s in inputs))
+            raise ValueError('Inputs must be a list of string but get [%s]' % type_list)
+        if not isinstance(outputs, list) or not all(isinstance(s, (six.string_types, six.text_type)) for s in outputs):
             raise ValueError('Outputs must be a list of string')
 
         node = helper.make_node(op_type, inputs, outputs, **attrs)
