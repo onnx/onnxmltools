@@ -81,7 +81,8 @@ class ModelComponentContainer:
             type_list = ','.join(list(str(type(s)) for s in inputs))
             raise ValueError('Inputs must be a list of string but get [%s]' % type_list)
         if not isinstance(outputs, list) or not all(isinstance(s, (six.string_types, six.text_type)) for s in outputs):
-            raise ValueError('Outputs must be a list of string')
+            type_list = ','.join(list(str(type(s)) for s in outputs))
+            raise ValueError('Outputs must be a list of string but get [%s]' % type_list)
 
         node = helper.make_node(op_type, inputs, outputs, **attrs)
         node.domain = op_domain
@@ -202,7 +203,7 @@ def extract_rnn_activation_info(activation):
         if alpha == 0:
             alpha = 0.3
     elif activation_type == 'PReLU':
-        raise RuntimeError('Unsupported activation function: {}'.format(activation_type))
+        raise ValueError('Unsupported activation function: {}'.format(activation_type))
     elif activation_type == 'ELU':
         alpha = activation.ELU.alpha
     elif activation_type == 'thresholdedReLU':
@@ -225,7 +226,7 @@ def extract_rnn_activation_info(activation):
         if beta == 0:
             beta = 0.5
     elif activation_type == 'parametricSoftplus':
-        raise RuntimeError('Unsupported activation function: {}'.format(activation_type))
+        raise ValueError('Unsupported activation function: {}'.format(activation_type))
 
     return activation_map[activation_type], alpha, beta
 
@@ -276,7 +277,7 @@ def convert_activation(scope, operator, container):
         attrs['alpha'] = params.parametricSoftplus.alpha
         attrs['beta'] = params.parametricSoftplus.beta
     else:
-        raise TypeError('Unsupported activation layer {0}'.format(activation_type))
+        raise ValueError('Unsupported activation layer {0}'.format(activation_type))
 
     container.add_node(op_type, inputs, outputs, **attrs)
 
@@ -1132,7 +1133,7 @@ def convert_tensor_to_label(scope, operator, container):
         else:
             raise ValueError('Unknown label type found')
     else:
-        raise TypeError('Only neural network classifiers and pipeline classifiers are supported')
+        raise ValueError('Only neural network classifiers and pipeline classifiers are supported')
 
     # Use a Constant operator to load and output all labels as a tensor
     label_loader_name = scope.get_unique_operator_name('LabelLoader')
@@ -2113,7 +2114,7 @@ def convert_tensor_to_probability_map(scope, operator, container):
         raise RuntimeError('Too many input or output variables')
 
     if type(operator.inputs[0].type) != FloatTensorType:
-        raise TypeError('Only float tensor is supported')
+        raise RuntimeError('Only float tensor is supported')
 
     attrs = {'name': scope.get_unique_operator_name('ZipMap')}
 
@@ -2199,12 +2200,12 @@ def convert_tree_ensemble_model(scope, operator, container):
     def get_onnx_tree_mode(cm_tree_behavior):
         if cm_tree_behavior in COREML_TREE_NODE_BEHAVIOR_TO_ONNX_TREE_NODE_MODE:
             return COREML_TREE_NODE_BEHAVIOR_TO_ONNX_TREE_NODE_MODE[cm_tree_behavior]
-        raise RuntimeError('CoreML tree node behavior not supported {0}'.format(cm_tree_behavior))
+        raise ValueError('CoreML tree node behavior not supported {0}'.format(cm_tree_behavior))
 
     def get_onnx_tree_post_transform(cm_tree_post_transform):
         if cm_tree_post_transform in COREML_TREE_POST_TRANSFORM_TO_ONNX_TREE_POST_TRANSFORM:
             return COREML_TREE_POST_TRANSFORM_TO_ONNX_TREE_POST_TRANSFORM[cm_tree_post_transform]
-        raise RuntimeError('CoreML tree post transform not supported {0}'.format(cm_tree_post_transform))
+        raise ValueError('CoreML tree post transform not supported {0}'.format(cm_tree_post_transform))
 
     raw_model = operator.raw_operator
     attrs = {'name': operator.full_name}
@@ -2215,8 +2216,7 @@ def convert_tree_ensemble_model(scope, operator, container):
         attrs['base_values'] = raw_model.treeEnsembleClassifier.treeEnsemble.basePredictionValue
         attrs['post_transform'] = get_onnx_tree_post_transform(raw_model.treeEnsembleClassifier.postEvaluationTransform)
         zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-        # [TODO] We should use WhichOnelf('ClassLabels') to replace HasField below for proto3 capability
-        if raw_model.treeEnsembleClassifier.HasField('int64ClassLabels'):
+        if raw_model.treeEnsembleClassifier.WhichOneof('ClassLabels') == 'int64ClassLabels':
             class_labels = list(int(i) for i in raw_model.treeEnsembleClassifier.int64ClassLabels.vector)
             attrs['classlabels_int64s'] = class_labels
             zipmap_attrs['classlabels_int64s'] = class_labels
@@ -2542,7 +2542,7 @@ def convert_normalizer(scope, operator, container):
     if norm_type in range(3):
         attrs['norm'] = norms[norm_type]
     else:
-        raise RuntimeError('Invalid norm type: ' + norm_type)
+        raise ValueError('Invalid norm type: ' + norm_type)
 
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
@@ -2612,7 +2612,7 @@ def convert_padding(scope, operator, container):
 
 def convert_crop(scope, operator, container):
     if len(operator.input_full_names) > 2:
-        raise ValueError('Unlike CoreML, ONNX only supports cropping with a single input')
+        raise RuntimeError('Unlike CoreML, ONNX only supports cropping with a single input')
 
     op_type = 'Crop'
     attrs = {'name': operator.full_name}
@@ -2771,7 +2771,7 @@ def convert_batch_normalization(scope, operator, container):
             # variable update, we don't need to specify extra inputs and outputs like in previous code block.
             attrs['is_test'] = 1  # True
         else:
-            raise RuntimeError('Unsupported operation mode')
+            raise ValueError('Unsupported operation mode')
     else:
         attrs['is_test'] = 1  # True
 

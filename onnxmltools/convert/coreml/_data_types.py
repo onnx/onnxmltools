@@ -74,7 +74,7 @@ class Int64TensorType(TensorType):
             elif isinstance(d, str):
                 s.dim_param = 'None'
             else:
-                raise TypeError('Unsupported dimension type: %s' % type(d))
+                raise ValueError('Unsupported dimension type: %s' % type(d))
         return onnx_type
 
 
@@ -156,7 +156,7 @@ def find_type_conversion(source_type, target_type):
     elif type(target_type) == FloatTensorType:
         return 'imageToFloatTensor'
     else:
-        raise TypeError('Unsupported type conversion from %s to %s' % (source_type, target_type))
+        raise ValueError('Unsupported type conversion from %s to %s' % (source_type, target_type))
 
 
 def parse_coreml_feature(feature_info, batch_size=1):
@@ -196,7 +196,7 @@ def parse_coreml_feature(feature_info, batch_size=1):
             doc_string += 'Image(s) in BGR format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
                          'C-axis are blue, green, and red channels, respectively.'
         else:
-            raise RuntimeError('Unknown image format. Only gray-level, RGB, and BGR are supported')
+            raise ValueError('Unknown image format. Only gray-level, RGB, and BGR are supported')
         shape.append(raw_type.imageType.height)
         shape.append(raw_type.imageType.width)
         color_space_map = {10: 'GRAY', 20: 'RGB', 30: 'BGR'}
@@ -220,7 +220,7 @@ def parse_coreml_feature(feature_info, batch_size=1):
             # CoreML INT32
             return Int64TensorType(shape, doc_string=doc_string)
         else:
-            raise RuntimeError('Invalid element type')
+            raise ValueError('Invalid element type')
     elif type_name == 'dictionaryType':
         key_type = raw_type.dictionaryType.WhichOneof('KeyType')
         if key_type == 'int64KeyType':
@@ -228,6 +228,6 @@ def parse_coreml_feature(feature_info, batch_size=1):
         elif key_type == 'stringKeyType':
             return DictionaryType(StringType(), FloatType(), doc_string=doc_string)
         else:
-            raise RuntimeError('Unsupported key type: {}'.format(key_type))
+            raise ValueError('Unsupported key type: {}'.format(key_type))
     else:
-        raise RuntimeError('Unsupported feature type: {}'.format(type_name))
+        raise ValueError('Unsupported feature type: {}'.format(type_name))

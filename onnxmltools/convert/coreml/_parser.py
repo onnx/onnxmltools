@@ -251,13 +251,16 @@ class Topology:
                 if is_root[name] or is_sink[name]]
 
     def topological_operator_iterator(self):
+        '''
+        This is an iterator of all operators in Topology object. Operators may be produced in a topological order.
+        If you want to simply go though all operators without considering their topological structure, please use
+        another function, unordered_operator_iterator.
+        '''
         self._initialize_graph_status_for_traversing()
         while not all(operator.is_evaluated for scope in self.scopes for operator in scope.operators.values()):
             is_evaluation_happened = False
             for scope in self.scopes:
                 for operator in scope.operators.values():
-                    # TODO: break if no operator can be evaluated
-                    # If all unevaluated operators' inputs are not fed, we have to terminate this function
                     if all(variable.is_fed for variable in operator.inputs) and not operator.is_evaluated:
                         # Check if over-writing problem occurs (i.e., multiple operators produce results on one variable).
                         for variable in operator.outputs:
@@ -432,7 +435,9 @@ class Topology:
 
 
     def _fix_shapes(self):
-        # This function applies some rules to adjust graph inputs before doing shape inference
+        '''
+        This function applies some rules to adjust graph inputs (i.e., roots) before doing shape inference
+        '''
 
         # Identify roots of a graph
         self._initialize_graph_status_for_traversing()
@@ -445,14 +450,14 @@ class Topology:
             if operator.type in ['bias', 'concat', 'convolution', 'crop', 'flatten', 'scalerPreprocessor',
                                         'lrn', 'meanImagePreprocessor', 'padding', 'permute', 'pooling', 'reduce',
                                         'reorganizeData', 'reshape', 'scale', 'slice', 'upsample']:
-                # We only adjust inputs because outputs will be automatically fixed in our shape inference stage
+                # We only adjust inputs because outputs will be automatically fixed at our shape inference stage
                 for variable in operator.inputs:
                     if variable.is_root:
                         # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
                         variable.type.shape += [1] * (4 - len(variable.type.shape))
 
             # Rule 2:
-            # Some operator in CoreML accepts integers while the corresponding operator in ONNX only takes floats.
+            # Some model in ONNX accepts integers while the corresponding one in CoreML only takes floats.
             # If it is the case, we change tensor type from float to integer.
             if operator.type == 'embedding':
                 for variable in operator.inputs:
@@ -465,7 +470,7 @@ class Topology:
     def compile(self):
         '''
         This function aims at giving every operator enough information so that all operator conversions can happen
-        independently. We also want to simplify the network structure here.
+        independently. We also want to check, fix, and simplify the network structure here.
         '''
         self._check_structure()
         self._resolve_duplicates()
@@ -571,7 +576,7 @@ def _parse_pipeline_model(topology, parent_scope, model, inputs, outputs):
     elif pipeline_type == 'pipeline':
         sub_models = model.pipeline.models
     else:
-        raise RuntimeError('Unsupported CoreML pipeline type: {0}'.format(pipeline_type))
+        raise ValueError('Unsupported CoreML pipeline type: {0}'.format(pipeline_type))
 
     # Sequentially parse the sub-models
     for sub_model in sub_models:
@@ -656,7 +661,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
     elif network_type == 'neuralNetwork':
         network = model.neuralNetwork
     else:
-        raise RuntimeError('Unknown network type {}'.format(network_type))
+        raise ValueError('Unknown network type {}'.format(network_type))
 
     for op in network.preprocessing:
         operator = scope.declare_local_operator(op.WhichOneof('preprocessor') + 'Preprocessor', op)
@@ -666,14 +671,12 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
 
         # Find out input variable
         original = scope.get_local_variable_or_declare_one(name)
-        # [REVIEW] To avoid repeated assignments, we should pass type directly to get_local_variable_or_declare_one
-        original.type = FloatTensorType()
+        original.type = FloatTensorType() # A newly-declared variable has no type, so we add it.
         operator.inputs.append(original)
 
         # Declare a variable for storing the processed result
         processed = scope.declare_local_variable(name)
-        # [REVIEW] To avoid repeated assignments, we should pass type directly to get_local_variable_or_declare_one
-        processed.type = FloatTensorType()
+        processed.type = FloatTensorType() # A newly-declared variable has no type, so we add it
         operator.outputs.append(processed)
 
     for op in network.layers:
@@ -682,10 +685,8 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         # Find out input variable and connect them with the operator
         for name in op.input:
             variable = scope.get_local_variable_or_declare_one(name)
-            # [REVIEW] To avoid repeated assignments, we should pass type directly to get_local_variable_or_declare_one
-
-            # Although most neural network operators only accepts floats, we still need to handle the only exception
-            # , embedding layer.
+            # Although most neural network operators only accepts floats, we still need to handle the only exception,
+            # embedding layer. In the furture, we should create a Cast operator right inside embedding's converter.
             if operator.type == 'embedding':
                 variable.type = Int64TensorType()
             else:
@@ -695,8 +696,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         # Declare variables for catching the operator's outputs
         for name in op.output:
             variable = scope.declare_local_variable(name)
-            # [REVIEW] To avoid repeated assignments, we should pass type directly to get_local_variable_or_declare_one
-            variable.type = FloatTensorType()
+            variable.type = FloatTensorType() # A newly-declared variable has no type, so we add it
             operator.outputs.append(variable)
 
     sink_variables = scope.find_sink_variables()

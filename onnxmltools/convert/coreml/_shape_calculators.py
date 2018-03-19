@@ -49,7 +49,9 @@ def calculate_identical_float_tensor_shapes(operator):
     if type(input.type) != FloatTensorType or type(output.type) != FloatTensorType:
         raise RuntimeError('Input must be float tensor')
 
+    doc_string = output.type.doc_string
     output.type.shape = copy.deepcopy(input.type.shape)  # Similar to identity but only accept floats
+    output.type.doc_string = doc_string
 
 
 def calculate_identity_output_shapes(operator):
@@ -78,14 +80,14 @@ def calculate_convolution_and_pooling_1D_output_shape(
         return int(math.ceil(input_size / stride))
     elif pad_mode == 'includeLastPixel':
         if pad_head != pad_tail:
-            raise RuntimeError('Padding amounts at the beginning and the end of an axis must be the same')
+            raise ValueError('Padding amounts at the beginning and the end of an axis must be the same')
         effective_input_size = input_size + pad_head + pad_tail - effective_kernel_size
         out_size = math.ceil(effective_input_size / stride) + 1
         if (out_size - 1) * stride >= input_size + pad_head:
             out_size -= 1
         return out_size
     else:
-        raise RuntimeError('Unknown padding mode: %s' % pad_mode)
+        raise ValueError('Unknown padding mode: %s' % pad_mode)
 
 
 def calculate_convolution_transpose_1D_output_shape(
@@ -101,14 +103,14 @@ def calculate_convolution_transpose_1D_output_shape(
     elif pad_mode == 'same':
         return int(input_size * stride)
     else:
-        raise RuntimeError('Unknown padding mode: %s' % pad_mode)
+        raise ValueError('Unknown padding mode: %s' % pad_mode)
 
 
 def calculate_convolution_output_shapes(operator):
     params = operator.raw_operator.convolution
 
     input_shape = operator.inputs[0].type.shape
-    operator.outputs[0].type.shape = [0, 0, 0, 0]
+    operator.outputs[0].type.shape = [0, 0, 0, 0]  # Initialize output shape. It will be modified below.
     output_shape = operator.outputs[0].type.shape
 
     # Adjust N-axis
@@ -228,7 +230,7 @@ def calculate_flatten_output_shapes(operator):
 
 def calculate_permute_output_shapes(operator):
     if len(operator.inputs) > 1 or len(operator.outputs) > 1:
-        raise RuntimeError('Flatten layer can only have one input and one output')
+        raise RuntimeError('Permute layer can only have one input and one output')
 
     input = operator.inputs[0]
     output = operator.outputs[0]
@@ -345,7 +347,7 @@ def calculate_embedding_output_shapes(operator):
         raise RuntimeError('Embedding layer can only have one input and one output')
 
     if type(operator.inputs[0].type) not in [Int64Type, Int64TensorType]:
-        raise TypeError('ONNX embedding only accepts integer input')
+        raise RuntimeError('ONNX embedding only accepts integer input')
 
     output = operator.outputs[0]
 
@@ -411,12 +413,12 @@ def calculte_tensor_to_label_output_shapes(operator):
         # else:
         #    operator.outputs[0].type = StringType()
     else:
-        raise RuntimeError('Unsupported label type')
+        raise ValueError('Unsupported label type')
 
 
 def calculate_tensor_to_probability_map_output_shapes(operator):
     if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Tensor-to-label operator has only one input and output')
+        raise RuntimeError('Tensor-to-probability operator has only one input and output')
 
     if not isinstance(operator.inputs[0].type, FloatTensorType):
         raise RuntimeError('Input must be a float tensor')
@@ -438,7 +440,7 @@ def calculate_tensor_to_probability_map_output_shapes(operator):
         # It should be a sequence of dictionary if batch size is larger than 1, but runtime don't have such a type.
         # operator.outputs[0].type = SequenceType(DictionaryType(Int64Type(), FloatType()), N)
     else:
-        raise TypeError('Unsupported label type')
+        raise ValueError('Unsupported label type')
 
 
 def calculate_reshape_output_shapes(operator):
@@ -466,7 +468,7 @@ def calculate_dictionary_vectorizer_output_shapes(operator):
 
     # [TODO] dictionary vectorizer should be able to accept a sequence of dictionary
     if type(operator.inputs[0].type) != DictionaryType and type(operator.inputs[0].type) != SequenceType:
-        raise TypeError('Input type must be a sequence of dictionary or a dictionary of a sequence')
+        raise RuntimeError('Input type must be a sequence of dictionary or a dictionary of a sequence')
 
     params = operator.raw_operator.dictVectorizer
     string_key_vector = params.stringToIndex.vector
@@ -481,7 +483,7 @@ def calculate_dictionary_vectorizer_output_shapes(operator):
     elif len(int64_key_vector) > 0:
         operator.outputs[1].type.shape = FloatTensorType([1, len(int64_key_vector)], doc_string=doc_string)
     else:
-        raise RuntimeError('Key vector cannot be empty')
+        raise ValueError('Key vector cannot be empty')
 
 
 def calculate_feature_vectorizer_output_shapes(operator):
@@ -512,14 +514,12 @@ def calculate_feature_vectorizer_output_shapes(operator):
         doc_string = operator.outputs[0].type.doc_string
         operator.outputs[0].type = Int64TensorType([N, C], doc_string=doc_string)
     else:
-        raise RuntimeError('Unsupported input type: %s' % type(operator.inputs[0].type))
+        raise ValueError('Unsupported input type: %s' % type(operator.inputs[0].type))
 
 
 def calculate_traditional_classifier_output_shapes(operator):
-    if len(operator.inputs) != 1:
-        raise RuntimeError('Classifier has only one input')
     if len(operator.outputs) > 2 or len(operator.outputs) < 1:
-        raise RuntimeError('Classifier cannot produce more than two or zero output')
+        raise RuntimeError('Classifier cannot produce more than two or no output')
 
     if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in
            operator.inputs):
@@ -535,7 +535,7 @@ def calculate_traditional_classifier_output_shapes(operator):
     elif model_type == 'supportVectorClassifier':
         class_label_type = operator.raw_operator.supportVectorClassifier.WhichOneof('ClassLabels')
     else:
-        raise TypeError('%s has no class label' % model_type)
+        raise ValueError('%s has no class label' % model_type)
 
     if class_label_type == 'stringClassLabels':
         operator.outputs[0].type = StringType(doc_string=operator.outputs[0].type.doc_string)
@@ -576,7 +576,7 @@ def calculate_traditional_regressor_output_shapes(operator):
 
 def calculate_array_feature_extractor_output_shapes(operator):
     if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Tree ensemble classifier has only one input and one output')
+        raise RuntimeError('Array feature extractor has only one input and one output')
 
     if not isinstance(operator.inputs[0].type, TensorType):
         raise RuntimeError('Input must be a tensor')
@@ -611,7 +611,7 @@ def calculate_one_hot_encoder_output_shapes(operator):
         operator.outputs[0].type = FloatTensorType([N, len(str_categories)],
                                                    doc_string=operator.outputs[0].type.doc_string)
     else:
-        raise RuntimeError('Categorical indexes are missing')
+        raise ValueError('Categorical indexes are missing')
 
 
 def calculate_padding_output_shapes(operator):
@@ -732,7 +732,7 @@ def calculate_split_output_shapes(operator):
 
 def calculate_slice_output_shapes(operator):
     if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Upsample has only one input and one output')
+        raise RuntimeError('Slice has only one input and one output')
 
     if type(operator.inputs[0].type) != FloatTensorType:
         raise RuntimeError('Input must be a float tensor')
@@ -768,7 +768,7 @@ def calculate_sequence_repeat_output_shapes(operator):
 
 def calculate_reorganizeData_output_shapes(operator):
     if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Upsample has only one input and one output')
+        raise RuntimeError('Reorganize Data has only one input and one output')
 
     if type(operator.inputs[0].type) != FloatTensorType:
         raise RuntimeError('Input must be a float tensor')
@@ -800,7 +800,7 @@ def calculate_reorganizeData_output_shapes(operator):
 
 def calculate_reduce_output_shapes(operator):
     if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Upsample has only one input and one output')
+        raise RuntimeError('Reduce has only one input and one output')
 
     if type(operator.inputs[0].type) != FloatTensorType:
         raise RuntimeError('Input must be a float tensor')
@@ -824,9 +824,9 @@ def calculate_reduce_output_shapes(operator):
 
 def calculate_load_constant_output_shapes(operator):
     if len(operator.inputs) != 0:
-        raise RuntimeError('LoadConstant operator has no input')
+        raise RuntimeError('Load Constant operator has no input')
     if len(operator.outputs) != 1:
-        raise RuntimeError('LoadConstant operator has only one output')
+        raise RuntimeError('Load Constant operator has only one output')
     output = operator.outputs[0]
 
     # CoreML's constant is always 3-D tensor, so we assume its shape is [C, H, W].
@@ -857,7 +857,6 @@ def calculate_dot_output_shapes(operator):
     operator.outputs[0].type.shape = output_shape
 
 
-# [TODO] Support 2-D tesnor as [N, C, 1, 1] in neural network's shape calculators
 type_calculator_table = {'activation': calculate_identical_float_tensor_shapes,
                          'innerProduct': calculate_inner_product_output_shapes,
                          'identity': calculate_identity_output_shapes,
