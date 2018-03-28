@@ -5,14 +5,11 @@ import unittest
 import onnxmltools
 from sklearn.datasets import load_iris
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
-from onnxmltools.convert.sklearn.SVMConverter import SVCConverter, SVRConverter
-from onnxmltools.convert.sklearn.SklearnConvertContext import SklearnConvertContext as ConvertContext
-from onnxmltools.proto import onnx_proto
-from onnxmltools.convert.common import model_util
+from onnxmltools import convert_sklearn
+from onnxmltools.convert.coreml._data_types import FloatTensorType
 
 
 class TestSklearnSVM(unittest.TestCase):
-    defaultInput = [model_util.make_tensor_value_info('input', onnx_proto.TensorProto.FLOAT, [1])]
 
     def _fit_binary_classification(self, model):
         iris = load_iris()
@@ -30,7 +27,7 @@ class TestSklearnSVM(unittest.TestCase):
         return model
 
     def _check_attributes(self, node, attribute_test):
-        attributes = node.attributes
+        attributes = node.attribute
         attribute_map = {}
         for attribute in attributes:
             attribute_map[attribute.name] = attribute
@@ -50,19 +47,9 @@ class TestSklearnSVM(unittest.TestCase):
                 else:
                     self.fail('Unknown type')
 
-    def _check_outputs(self, node, output_names):
-        outputs = node.outputs
-        output_map = {}
-        for output in outputs:
-            output_map[output.name] = output
-
-        for name in output_names:
-            self.assertTrue(name in output_map)
-
     def test_convert_svmc_linear_binary(self):
         model = self._fit_binary_classification(SVC(kernel='linear', probability=False))
-        context = ConvertContext()
-        nodes = SVCConverter.convert(context, model, self.defaultInput)
+        nodes = convert_sklearn(model, 'SVC', [FloatTensorType([1, 1])]).graph.node
         self.assertIsNotNone(nodes)
         self.assertEqual(len(nodes), 2)
 
@@ -74,12 +61,10 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        self._check_outputs(svc_node, [svc_node.name])
 
     def test_convert_svmc_linear_multi(self):
         model = self._fit_multi_classification(SVC(kernel='linear', probability=False))
-        context = ConvertContext()
-        nodes = SVCConverter.convert(context, model, self.defaultInput)
+        nodes = convert_sklearn(model, 'SVC', [FloatTensorType([1, 1])]).graph.node
         self.assertIsNotNone(nodes)
         self.assertEqual(len(nodes), 2)
 
@@ -91,25 +76,21 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        self._check_outputs(svc_node, [svc_node.name])
 
     def test_convert_svmr_linear_binary(self):
         model = self._fit_binary_classification(SVR(kernel='linear'))
-        context = ConvertContext()
-        node = SVRConverter.convert(context, model, self.defaultInput)
-        self.assertIsNotNone(node)
-        self._check_attributes(node, {'coefficients': None,
+        nodes = convert_sklearn(model, 'SVR', [FloatTensorType([1, 1])]).graph.node
+        self.assertIsNotNone(nodes)
+        self._check_attributes(nodes[0], {'coefficients': None,
                                       'kernel_params': None,
                                       'kernel_type': 'LINEAR',
                                       'post_transform': None,
                                       'rho': None,
                                       'support_vectors': None})
-        self._check_outputs(node, [node.name])
 
     def test_convert_svmr_linear_multi(self):
         model = self._fit_multi_classification(SVR(kernel='linear'))
-        context = ConvertContext()
-        node = SVRConverter.convert(context, model, self.defaultInput)
+        node = convert_sklearn(model, 'SVR', [FloatTensorType([1, 1])]).graph.node[0]
         self.assertIsNotNone(node)
         self._check_attributes(node, {'coefficients': None,
                                       'kernel_params': None,
@@ -117,12 +98,10 @@ class TestSklearnSVM(unittest.TestCase):
                                       'post_transform': None,
                                       'rho': None,
                                       'support_vectors': None})
-        self._check_outputs(node, [node.name])
 
     def test_convert_nusvmc_binary(self):
         model = self._fit_binary_classification(NuSVC(probability=False))
-        context = ConvertContext()
-        nodes = SVCConverter.convert(context, model, self.defaultInput)
+        nodes = convert_sklearn(model, 'SVC', [FloatTensorType([1, 1])]).graph.node
         self.assertIsNotNone(nodes)
         self.assertEqual(len(nodes), 2)
 
@@ -134,12 +113,10 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        self._check_outputs(svc_node, [svc_node.name])
 
     def test_convert_nusvmc_multi(self):
         model = self._fit_multi_classification(NuSVC(probability=False))
-        context = ConvertContext()
-        nodes = SVCConverter.convert(context, model, self.defaultInput)
+        nodes = convert_sklearn(model, 'SVC', [FloatTensorType([1, 1])]).graph.node
         self.assertIsNotNone(nodes)
         self.assertEqual(len(nodes), 2)
         svc_node = nodes[0]
@@ -150,12 +127,10 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        self._check_outputs(svc_node, [svc_node.name])
 
     def test_convert_nusvmr_binary(self):
         model = self._fit_binary_classification(NuSVR())
-        context = ConvertContext()
-        node = SVRConverter.convert(context, model, self.defaultInput)
+        node = convert_sklearn(model, 'SVR', [FloatTensorType([1, 1])]).graph.node[0]
         self.assertIsNotNone(node)
         self._check_attributes(node, {'coefficients': None,
                                       'kernel_params': None,
@@ -166,8 +141,7 @@ class TestSklearnSVM(unittest.TestCase):
 
     def test_convert_nusvmr_multi(self):
         model = self._fit_multi_classification(NuSVR())
-        context = ConvertContext()
-        node = SVRConverter.convert(context, model, self.defaultInput)
+        node = convert_sklearn(model, 'SVR', [FloatTensorType([1, 1])]).graph.node[0]
         self.assertIsNotNone(node)
         self._check_attributes(node, {'coefficients': None,
                                       'kernel_params': None,
@@ -178,20 +152,20 @@ class TestSklearnSVM(unittest.TestCase):
 
     def test_registration_convert_nusvr_model(self):
         model = self._fit_binary_classification(NuSVR())
-        model_onnx = onnxmltools.convert_sklearn(model)
+        model_onnx = onnxmltools.convert_sklearn(model, 'SVR', [FloatTensorType([1, 1])])
         self.assertIsNotNone(model_onnx)
 
     def test_registration_convert_nusvc_model(self):
         model = self._fit_multi_classification(NuSVC(probability=False))
-        model_onnx = onnxmltools.convert_sklearn(model)
+        model_onnx = onnxmltools.convert_sklearn(model, 'SVC', [FloatTensorType([1, 1])])
         self.assertIsNotNone(model_onnx)
 
     def test_registration_convert_svr_model(self):
         model = self._fit_multi_classification(SVR(kernel='linear'))
-        model_onnx = onnxmltools.convert_sklearn(model)
+        model_onnx = onnxmltools.convert_sklearn(model, 'SVR', [FloatTensorType([1, 1])])
         self.assertIsNotNone(model_onnx)
 
     def test_registration_convert_svc_model(self):
         model = self._fit_binary_classification(SVC(kernel='linear', probability=False))
-        model_onnx = onnxmltools.convert_sklearn(model)
+        model_onnx = onnxmltools.convert_sklearn(model, 'SVR', [FloatTensorType([1, 1])])
         self.assertIsNotNone(model_onnx)

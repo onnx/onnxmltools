@@ -7,16 +7,22 @@
 from . import operator_converters
 from . import shape_calculators
 from ._data_types import *
+from ._topology import CoremlModelContainer
 from ._topology import Topology
 from .operator_converters import neural_network
 from .shape_calculators import neural_network
 
 
-def _parse_model(topology, scope, model, inputs=list(), outputs=list()):
+def _parse_model(topology, scope, model, inputs=None, outputs=None):
     '''
     This is a delegate function of all top-level parsing functions. It does nothing but call a proper function
     to parse the given model.
     '''
+
+    if inputs is None:
+        inputs = list()
+    if outputs is None:
+        outputs = list()
 
     model_type = model.WhichOneof('Type')
     if model_type in ['pipeline', 'pipelineClassifier', 'pipelineRegressor']:
@@ -331,7 +337,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         operator.outputs.append(parent_variable)
 
 
-def parse_coreml(model, initial_types=dict()):
+def parse_coreml(model, initial_types=None):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model
@@ -346,10 +352,15 @@ def parse_coreml(model, initial_types=dict()):
         reserved_variable_names.add(var.name)
     default_batch_size = 1 if model.WhichOneof('Type') not in \
                               ['neuralNetworkClassifier', 'neuralNetworkRegressor', 'neuralNetwork'] else 'None'
-    topology = Topology(model, default_batch_size, initial_types, reserved_variable_names)
+    # Topology is shared by both of CoreML and scikit-learn conversion frameworks, so we have a wrapper class,
+    # CoremlModelContainer, to make sure our topology-related functions can seamlessly handle both of CoreML and
+    # scikit-learn.
+    topology = Topology(CoremlModelContainer(model), default_batch_size, initial_types, reserved_variable_names)
     scope = topology.declare_scope('__root__')
+    # Instead of using CoremlModelContainer, we directly pass the model in because _parse_model is CoreML-specific.
     _parse_model(topology, scope, model)
     topology.compile()
+    # Use original CoreML names for model-level input(s)/output(s)
     for variable in topology.find_root_and_sink_variables():
         if variable.raw_name not in reserved_variable_names:
             continue

@@ -10,6 +10,60 @@ from ._data_types import *
 from ._container import ModelComponentContainer
 
 
+class RawModelContainer(object):
+
+    def __init__(self, raw_model):
+        self._raw_model = raw_model
+
+    @property
+    def raw_model(self):
+        return self._raw_model
+
+    @property
+    def input_names(self):
+        raise NotImplementedError()
+
+    @property
+    def output_names(self):
+        raise NotImplementedError()
+
+
+class CoremlModelContainer(RawModelContainer):
+
+    def __init__(self, coreml_model):
+        super(CoremlModelContainer, self).__init__(coreml_model)
+
+    @property
+    def input_names(self):
+        return [str(var.name) for var in self.raw_model.description.input]
+
+    @property
+    def output_names(self):
+        return [str(var.name) for var in self.raw_model.description.output]
+
+
+class SklearnModelContainer(RawModelContainer):
+
+    def __init__(self, sklearn_model):
+        super(SklearnModelContainer, self).__init__(sklearn_model)
+        self._inputs = []
+        self._outputs = []
+
+    @property
+    def input_names(self):
+        return [variable.raw_name for variable in self._inputs]
+
+    @property
+    def output_names(self):
+        return [variable.raw_name for variable in self._outputs]
+
+    def add_input(self, variable):
+        self._inputs.append(variable)
+
+    def add_output(self, variable):
+        self._outputs.append(variable)
+
+
 class Variable:
 
     def __init__(self, raw_name, onnx_name, scope, type=None):
@@ -70,7 +124,7 @@ class Operator:
 
 class Scope:
 
-    def __init__(self, name, parent_scopes=list(), variable_name_set=set(), operator_name_set=set()):
+    def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None):
         # name: scope's ID. It's unique in a topology.
         # parent_scopes: all parents of this scope. It encodes the tree structure of the computational graph.
         # variable_name_set: set used to stored variable names declared in this scope.
@@ -84,9 +138,9 @@ class Scope:
         # operator_name_mapping: an one-to-many map from raw operator name to ONNX operator names.
         #                        (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ...])
         self.name = name
-        self.parent_scopes = parent_scopes
-        self.onnx_variable_names = variable_name_set
-        self.onnx_operator_names = operator_name_set
+        self.parent_scopes = parent_scopes if parent_scopes else list()
+        self.onnx_variable_names = variable_name_set if variable_name_set is not None else set()
+        self.onnx_operator_names = operator_name_set if operator_name_set is not None else set()
         self.variable_name_mapping = {}
         self.operator_name_mapping = {}
         self.variables = {}
@@ -176,10 +230,10 @@ class Scope:
 
 class Topology:
 
-    def __init__(self, model, default_batch_size=1, initial_types=dict(),
-                 reserved_variable_names=set(), reserved_operator_names=set()):
+    def __init__(self, model, default_batch_size=1, initial_types=None,
+                 reserved_variable_names=None, reserved_operator_names=None):
         '''
-        Initialize a Topology object, which is an intermediate representation of a computational graph
+        Initialize a Topology object, which is an intermediate representation of a computational graph.
 
         :param model: the model used to create the topology
         :param default_batch_size: batch_size prepend to scalar and array types from CoreML
@@ -189,10 +243,10 @@ class Topology:
         '''
         self.scopes = []
         self.raw_model = model
-        self.scope_names = set()
-        self.variable_name_set = reserved_variable_names
-        self.operator_name_set = reserved_operator_names
-        self.initial_types = initial_types
+        self.scope_names = set('__none__')
+        self.variable_name_set = reserved_variable_names if reserved_variable_names is not None else set()
+        self.operator_name_set = reserved_operator_names if reserved_operator_names is not None else set()
+        self.initial_types = initial_types if initial_types else dict()
         self.default_batch_size = default_batch_size
 
     @staticmethod
@@ -497,11 +551,11 @@ def convert_topology(topology, model_name):
             if variable.is_leaf:
                 model_outputs.append(variable)
     # Add roots and leaves of the graph according to their order in the original CoreML model
-    for var in topology.raw_model.description.input:
-        variable = next(variable for variable in model_inputs if variable.raw_name == var.name)
+    for name in topology.raw_model.input_names:
+        variable = next(variable for variable in model_inputs if variable.raw_name == name)
         container.add_input(variable)
-    for var in topology.raw_model.description.output:
-        variable = next(variable for variable in model_outputs if variable.raw_name == var.name)
+    for name in topology.raw_model.output_names:
+        variable = next(variable for variable in model_outputs if variable.raw_name == name)
         container.add_output(variable)
 
     # Traverse the graph from roots to leaves

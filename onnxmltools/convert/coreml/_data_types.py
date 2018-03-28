@@ -55,13 +55,13 @@ class StringType(DataType):
 
 
 class TensorType(DataType):
-    def __init__(self, type_name, element_type, shape=[], doc_string=''):
-        super(TensorType, self).__init__(type_name, shape, doc_string)
+    def __init__(self, type_name, element_type, shape=None, doc_string=''):
+        super(TensorType, self).__init__(type_name, [] if not shape else shape, doc_string)
         self.element_type = element_type
 
 
 class Int64TensorType(TensorType):
-    def __init__(self, shape=[], doc_string=''):
+    def __init__(self, shape=None, doc_string=''):
         super(Int64TensorType, self).__init__('INT64S', Int64Type(), shape, doc_string)
 
     def to_onnx_type(self):
@@ -79,7 +79,7 @@ class Int64TensorType(TensorType):
 
 
 class FloatTensorType(TensorType):
-    def __init__(self, shape=[], color_space=None, doc_string=''):
+    def __init__(self, shape=None, color_space=None, doc_string=''):
         super(FloatTensorType, self).__init__('FLOATS', FloatType(), shape, doc_string)
         self.color_space = color_space
 
@@ -98,7 +98,7 @@ class FloatTensorType(TensorType):
 
 
 class StringTensorType(TensorType):
-    def __init__(self, shape=[], doc_string=''):
+    def __init__(self, shape=None, doc_string=''):
         super(StringTensorType, self).__init__('STRINGS', StringType(), shape, doc_string)
 
     def to_onnx_type(self):
@@ -126,9 +126,9 @@ class DictionaryType(object):
 
     def to_onnx_type(self):
         onnx_type = onnx_proto.TypeProto()
-        if type(self.key_type) == Int64Type:
+        if type(self.key_type) in [Int64Type, Int64TensorType]:
             onnx_type.map_type.key_type = onnx_proto.TensorProto.INT64
-        elif type(self.key_type) == StringType:
+        elif type(self.key_type) in [StringType, StringTensorType]:
             onnx_type.map_type.key_type = onnx_proto.TensorProto.STRING
         onnx_type.map_type.value_type.CopyFrom(self.value_type.to_onnx_type())
         return onnx_type
