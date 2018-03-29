@@ -1,6 +1,6 @@
 import unittest
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common._data_types import FloatTensorType, Int64TensorType, StringTensorType
+from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType, StringTensorType
 from onnxmltools.convert.sklearn.operator_converters.common import concatenate_variables
 
 class TestSklearnPipeline(unittest.TestCase):

@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ..common._data_types import *
+from ..common.data_types import *
 from ..common._topology import CoremlModelContainer
 from ..common._topology import Topology
 # Import modules to invoke function registrations
@@ -12,6 +12,80 @@ from . import operator_converters
 from . import shape_calculators
 from .operator_converters import neural_network as nn_converters
 from .shape_calculators import neural_network as nn_shape_calculators
+
+
+def parse_coreml_feature(feature_info, batch_size=1):
+    '''
+    Encode type information from CoreML's FeatureType protobuf message in converter's type system.
+
+    Scalar types such as Int64FeatureType, DoubleFeatureType, and StringFeatureType in CoreML are interpreted as
+    [batch_size, 1]-tensor. Tensor-like types such as ArrayFeature in CoreML is viewed as tensors with a prepend
+    batch_size; for example, we use [batch_size, C, H, W] to denote [C, H, W]-array in CoreML.
+    :param feature_info: CoreML FeatureDescription (https://apple.github.io/coremltools/coremlspecification/sections/DataStructuresAndFeatureTypes.html#featuretype)
+    :param batch_size: default batch size prepend to scalars and tensors variables from CoreML
+    :return: one of our Int64Type, FloatType, StringType, Int64TensorType, FloatTensorType, or DictionaryType
+    '''
+    raw_type = feature_info.type
+    doc_string = feature_info.shortDescription
+    type_name = raw_type.WhichOneof('Type')
+
+    if type_name == 'int64Type':
+        return Int64Type(doc_string=doc_string)
+    elif type_name == 'doubleType':
+        return FloatType(doc_string=doc_string)
+    elif type_name == 'stringType':
+        return StringType(doc_string=doc_string)
+    elif type_name == 'imageType':
+        # Produce [C, H, W]-tensor, where C is the number of color channels, H the height, and W the width.
+        color_space = raw_type.imageType.colorSpace
+        shape = [batch_size]
+        if color_space == 10:  # gray scale
+            shape.append(1)
+            doc_string += ' Image(s) in gray scale. If there are N images, it is a 4-D tensor with shape [N, 1, H, W]'
+        elif color_space == 20:  # RGB (20)
+            shape.append(3)
+            doc_string += 'Image(s) in RGB format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
+                          'C-axis are red, green, and blue channels, respectively.'
+        elif color_space == 30:  # BGR (30)
+            shape.append(3)
+            doc_string += 'Image(s) in BGR format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
+                          'C-axis are blue, green, and red channels, respectively.'
+        else:
+            raise ValueError('Unknown image format. Only gray-level, RGB, and BGR are supported')
+        shape.append(raw_type.imageType.height)
+        shape.append(raw_type.imageType.width)
+        color_space_map = {10: 'GRAY', 20: 'RGB', 30: 'BGR'}
+        return FloatTensorType(shape, color_space_map[color_space], doc_string=doc_string)
+    elif type_name == 'multiArrayType':
+        element_type_id = raw_type.multiArrayType.dataType
+        shape = [d for d in raw_type.multiArrayType.shape]
+        if len(shape) == 1:
+            # [C]
+            shape = [batch_size, shape[0]]
+        elif len(shape) == 3:
+            # [C, H, W]
+            shape = [batch_size, shape[0], shape[1], shape[2]]
+        else:
+            shape = [batch_size, 1]  # Missing shape information. We will try inferring it.
+
+        if element_type_id in [65568, 65600]:
+            # CoreML FLOAT32 & DOUBLE
+            return FloatTensorType(shape, doc_string=doc_string)
+        elif element_type_id == 131104:
+            # CoreML INT32
+            return Int64TensorType(shape, doc_string=doc_string)
+        else:
+            raise ValueError('Invalid element type')
+    elif type_name == 'dictionaryType':
+        key_type = raw_type.dictionaryType.WhichOneof('KeyType')
+        if key_type == 'int64KeyType':
+            return DictionaryType(Int64Type(), FloatType(), doc_string=doc_string)
+        elif key_type == 'stringKeyType':
+            return DictionaryType(StringType(), FloatType(), doc_string=doc_string)
+        else:
+            raise ValueError('Unsupported key type: {}'.format(key_type))
+    else:
+        raise ValueError('Unsupported feature type: {}'.format(type_name))
 
 
 def _parse_model(topology, scope, model, inputs=None, outputs=None):

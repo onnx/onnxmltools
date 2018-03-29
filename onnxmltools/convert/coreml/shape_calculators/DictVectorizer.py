@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common._data_types import DictionaryType, SequenceType, FloatTensorType
+from ...common.data_types import DictionaryType, SequenceType, FloatTensorType
 from ...common._registration import register_shape_calculator
 
 

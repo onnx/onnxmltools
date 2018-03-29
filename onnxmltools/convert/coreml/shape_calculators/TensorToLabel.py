@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common._data_types import Int64TensorType, Int64Type, StringTensorType, StringType, TensorType
+from ...common.data_types import Int64TensorType, Int64Type, StringTensorType, StringType, TensorType
 from ...common._registration import register_shape_calculator
 
 

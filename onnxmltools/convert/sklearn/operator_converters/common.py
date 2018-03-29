@@ -1,4 +1,10 @@
-from ...common._data_types import Int64TensorType, Int64Type
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+
+from ...common.data_types import Int64TensorType, Int64Type
 
 
 def convert_integer_to_float(scope, variable, container):

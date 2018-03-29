@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 import copy
-from ....common._data_types import TensorType
+from ....common.data_types import TensorType
 from ....common._registration import register_shape_calculator
 
 

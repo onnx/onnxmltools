@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common._data_types import Int64Type, Int64TensorType
+from ...common.data_types import Int64Type, Int64TensorType
 from ...common._registration import register_converter
 
 

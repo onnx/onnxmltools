@@ -14,12 +14,48 @@ from ._parse import parse_sklearn
 from . import shape_calculators
 from . import operator_converters
 
-def convert(model, name=None, initial_types=[], doc_string=''):
+def convert(model, name=None, initial_types=None, doc_string=''):
     '''
+    This function produces an equivalent ONNX model of the given scikit-learn model. The supported scikit-learn
+    modules are listed below.
+
+    * Preprocessings and transformations:
+      1.  feature_extraction.DictVectorizer
+      2.  preprocessing.Imputer
+      3.  preprocessing.LabelEncoder
+      4.  preprocessing.Normalizer
+      5.  preprocessing.OneHotEncoder
+      6.  preprocessing.StandardScaler
+    * Linear classification and regression:
+      7.  svm.LinearSVC
+      8.  linear_model.LogisticRegression,
+      9.  linear_model.SGDClassifier
+      10. svm.LinearSVR
+      11. linear_model.LinearRegression
+      12. linear_model.Ridge
+      13. linear_model.SGDRegressor
+    * Support vector machine for classification and regression
+      14. svm.SVC
+      15. svm.SVR
+      16. svm.NuSVC
+      17. svm.NuSVR
+    * Tree-based models for classification and regression
+      18. tree.DecisionTreeClassifier
+      19. tree.DecisionTreeRegressor
+      20. ensemble.GradientBoostingClassifier
+      21. ensemble.GradientBoostingRegressor
+      22. ensemble.RandomForestClassifier
+      23. ensemble.RandomForestRegressor
+    * pipeline
+      24. pipeline.Pipeline
+
+    For pipeline conversion, user needs to make sure each component is one of our supported items (1)-(24).
+
     This function converts the specified scikit-learn model into its ONNX counterpart. Notice that for all conversions,
     initial types are required.  ONNX model name can also be specified.
+
     :param model: A scikit-learn model
-    :param initial_types: a python list whose elements are data types defined in _data_types.py 
+    :param initial_types: a python list whose elements are data types defined in data_types.py
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
     :return: An ONNX model (type: ModelProto) which is equivalent to the input scikit-learn model
@@ -28,9 +64,12 @@ def convert(model, name=None, initial_types=[], doc_string=''):
     Assume that the specified scikit-learn model takes a heterogeneous list as its input. If the first 5 elements are
     floats and the last 10 elements are integers, we need to specify initial types as below. The [1] in [1, 5] indicates
     the batch size here is 1.
-    >>> from _data_types import FloatTensorType
+    >>> from onnxmltools.convert.common.data_types import FloatTensorType
     >>> initial_type = [FloatTensorType([1, 5]), Int64TensorType([1, 10])]
     '''
+    if initial_types is None:
+        raise ValueError('Initial types are required')
+
     if name is None:
         name = str(uuid4().hex)
 

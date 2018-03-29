@@ -26,7 +26,7 @@ def convert(model, name=None, initial_types=None, doc_string=''):
     Example of initial types:
     Assume that 'A' and 'B' are two root variable names used in the CoreML model you want to convert. We can specify
     their types via
-    >>> from _data_types import FloatTensorType
+    >>> from onnxmltools.convert.common.data_types import FloatTensorType
     >>> initial_type = {'A': FloatTensorType([40, 12, 1, 1]), 'B': FloatTensorType([1, 32, 1, 1])}
     '''
     if isinstance(model, coremltools.models.MLModel):

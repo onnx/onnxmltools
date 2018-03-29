@@ -68,6 +68,18 @@ class ModelComponentContainer:
         self.value_info.append(self._make_value_info(variable))
 
     def add_node(self, op_type, inputs, outputs, op_domain='', op_version=1, **attrs):
+        '''
+        Add a NodeProto into the node list of the final ONNX model. If the input operator's domain-version information
+        cannot be found in our domain-version pool (a Python set), we may add it.
+
+        :param op_type: A string (e.g., Pool and Conv) indicating the type of the NodeProto
+        :param inputs: A list of strings. They are the input variables' names of the considered NodeProto
+        :param outputs: A list of strings. They are the output variables' names of the considered NodeProto
+        :param op_domain: The domain name (e.g., ai.onnx.ml) of the operator we are trying to add.
+        :param op_version: The version number of the operator we are trying to add.
+        :param attrs: A Python dictionary. Keys and values are attributes' names and attributes' values, respectively.
+        '''
+
         if isinstance(inputs, (six.string_types, six.text_type)):
             inputs = [inputs]
         if isinstance(outputs, (six.string_types, six.text_type)):

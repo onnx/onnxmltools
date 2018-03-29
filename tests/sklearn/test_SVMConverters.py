@@ -6,7 +6,7 @@ import onnxmltools
 from sklearn.datasets import load_iris
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common._data_types import FloatTensorType
+from onnxmltools.convert.common.data_types import FloatTensorType
 
 
 class TestSklearnSVM(unittest.TestCase):

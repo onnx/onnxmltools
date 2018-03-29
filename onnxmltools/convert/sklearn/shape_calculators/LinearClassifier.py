@@ -1,6 +1,12 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+
 import numpy as np
 import six, numbers
-from ...common._data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType
+from ...common.data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType
 from ...common._registration import register_shape_calculator
 
 

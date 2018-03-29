@@ -6,7 +6,7 @@ from sklearn import datasets
 from sklearn import linear_model
 from sklearn.svm import LinearSVR
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common._data_types import FloatTensorType
+from onnxmltools.convert.common.data_types import FloatTensorType
 
 
 class TestGLMRegressorConverter(unittest.TestCase):
