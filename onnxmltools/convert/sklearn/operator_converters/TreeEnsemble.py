@@ -1,6 +1,6 @@
 import numpy as np
 import numbers, six
-from ...coreml.registration import register_converter
+from ...common._registration import register_converter
 
 
 def _get_default_tree_classifier_attribute_pairs():
@@ -113,7 +113,7 @@ def convert_sklearn_decision_tree_classifier(scope, operator, container):
     classes = op.classes_
     if all(isinstance(i, np.ndarray) for i in classes):
         classes = np.concatenate(classes)
-    if all(isinstance(i, numbers.Real) for i in classes):
+    if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in classes):
         class_labels = [int(i) for i in classes]
         attrs['classlabels_int64s'] = class_labels
         zipmap_attrs['classlabels_int64s'] = class_labels
@@ -156,7 +156,7 @@ def convert_sklearn_random_forest_classifier(scope, operator, container):
     attr_pairs['name'] = scope.get_unique_operator_name(op_type)
     zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
 
-    if all(isinstance(i, numbers.Real) for i in classes):
+    if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in classes):
         class_labels = [int(i) for i in classes]
         attr_pairs['classlabels_int64s'] = class_labels
         zipmap_attrs['classlabels_int64s'] = class_labels
@@ -216,7 +216,7 @@ def convert_sklearn_gradient_boosting_classifier(scope, operator, container):
     attrs['post_transform'] = transform
 
     classes = op.classes_
-    if all(isinstance(i, numbers.Real) for i in classes):
+    if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in classes):
         class_labels = [int(i) for i in classes]
         attrs['classlabels_int64s'] = class_labels
         zipmap_attrs['classlabels_int64s'] = class_labels

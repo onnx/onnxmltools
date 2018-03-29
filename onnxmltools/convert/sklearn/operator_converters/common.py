@@ -1,4 +1,4 @@
-from ...coreml._data_types import Int64TensorType, Int64Type
+from ...common._data_types import Int64TensorType, Int64Type
 
 
 def convert_integer_to_float(scope, variable, container):

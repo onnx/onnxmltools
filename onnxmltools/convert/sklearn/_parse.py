@@ -1,5 +1,4 @@
-import graphviz
-from ..coreml._topology import *
+from ..common._topology import *
 
 # Pipeline
 from sklearn import pipeline
@@ -135,31 +134,3 @@ def parse_sklearn(model, initial_types=None):
         raw_model_container.add_output(variable)
 
     return topology
-
-
-def visualize_topology(topology, filename=None, view=True):
-    graph = graphviz.Digraph()
-    # declare nodes (variables and operators)
-    for scope in topology.scopes:
-        for variable in scope.variables.values():
-            if variable.is_root:
-                graph.attr('node', shape='oval', style='filled', fillcolor='blue')
-            else:
-                graph.attr('node', shape='oval', style='filled', fillcolor='white')
-                if type(variable.type) != DictionaryType:
-                    graph.node(variable.full_name, label=variable.full_name + ', ' + str(variable.type.shape))
-                else:
-                    graph.node(variable.full_name, label=variable.full_name + ', Dictionary')
-    for operator in scope.operators.values():
-        graph.attr('node', shape='box', style='filled', fillcolor='green')
-        graph.node(operator.full_name, label=operator.full_name)
-    # declare edges (connections between variables and operators)
-    for scope in topology.scopes:
-        for operator in scope.operators.values():
-            for variable in operator.inputs:
-                graph.edge(variable.full_name, operator.full_name)
-            for variable in operator.outputs:
-                graph.edge(operator.full_name, variable.full_name)
-    if filename is not None:
-        graph.render(filename, view=view)
-    return graph

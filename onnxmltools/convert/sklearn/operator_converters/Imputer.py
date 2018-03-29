@@ -1,5 +1,5 @@
 import numpy as np
-from ...coreml.registration import register_converter
+from ...common._registration import register_converter
 from .common import concatenate_variables
 
 

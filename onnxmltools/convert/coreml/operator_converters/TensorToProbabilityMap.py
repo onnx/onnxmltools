@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .._data_types import FloatTensorType
-from ..registration import register_converter
+from ...common._data_types import FloatTensorType
+from ...common._registration import register_converter
 
 
 def convert_tensor_to_probability_map(scope, operator, container):

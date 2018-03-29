@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from ..common._data_types import *
+from ..common._topology import CoremlModelContainer
+from ..common._topology import Topology
+# Import modules to invoke function registrations
 from . import operator_converters
 from . import shape_calculators
-from ._data_types import *
-from ._topology import CoremlModelContainer
-from ._topology import Topology
-from .operator_converters import neural_network
-from .shape_calculators import neural_network
+from .operator_converters import neural_network as nn_converters
+from .shape_calculators import neural_network as nn_shape_calculators
 
 
 def _parse_model(topology, scope, model, inputs=None, outputs=None):

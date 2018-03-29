@@ -7,12 +7,12 @@
 import coremltools
 from uuid import uuid4
 from ...proto import onnx_proto
-from ..common import model_util
+from ..common import utils
+from ..common._topology import convert_topology
 from ._parse import parse_coreml
-from ._topology import convert_topology
 
 
-def convert(model, name=None, initial_types={}, doc_string=''):
+def convert(model, name=None, initial_types=None, doc_string=''):
     '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
     ONNX model name can be specified.
@@ -37,6 +37,9 @@ def convert(model, name=None, initial_types={}, doc_string=''):
     if name is None:
         name = str(uuid4().hex)
 
+    if initial_types is None:
+        initial_types = dict()
+
     # Parse CoreML model as our internal data structure (i.e., Topology)
     topology = parse_coreml(spec, initial_types)
 
@@ -50,18 +53,23 @@ def convert(model, name=None, initial_types={}, doc_string=''):
         if not doc_string and metadata.shortDescription:
             doc_string = metadata.shortDescription  # If doc_string is not specified, we use description from CoreML
         if metadata.author:
-            metadata_props.append(model_util.make_string_string_entry('author', metadata.author))
+            entry = onnx_proto.StringStringEntryProto()
+            entry.key = 'author'
+            entry.value = metadata.author
+            metadata_props.append(entry)
         if metadata.license:
-            metadata_props.append(model_util.make_string_string_entry('license', metadata.license))
+            entry = onnx_proto.StringStringEntryProto()
+            entry.key = 'license'
+            entry.value = metadata.license
 
     # Specify ONNX model's attributes which are not directly related to computational graph
     if len(metadata_props) > 0:
         onnx_model.metadata_props.extend(metadata_props)
     onnx_model.ir_version = onnx_proto.IR_VERSION
-    onnx_model.producer_name = model_util.get_producer()
-    onnx_model.producer_version = model_util.get_producer_version()
-    onnx_model.domain = model_util.get_domain()
-    onnx_model.model_version = model_util.get_model_version()
+    onnx_model.producer_name = utils.get_producer()
+    onnx_model.producer_version = utils.get_producer_version()
+    onnx_model.domain = utils.get_domain()
+    onnx_model.model_version = utils.get_model_version()
     onnx_model.doc_string = doc_string
 
     return onnx_model

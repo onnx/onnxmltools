@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 import copy
-from ..._data_types import FloatTensorType
-from ...registration import register_shape_calculator
+from ....common._data_types import FloatTensorType
+from ....common._registration import register_shape_calculator
 
 
 def calculate_identical_float_tensor_shapes(operator):

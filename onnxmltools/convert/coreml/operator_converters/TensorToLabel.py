@@ -6,7 +6,7 @@
 
 from ....proto import helper
 from ....proto import onnx_proto
-from ..registration import register_converter
+from ...common._registration import register_converter
 
 
 def convert_tensor_to_label(scope, operator, container):

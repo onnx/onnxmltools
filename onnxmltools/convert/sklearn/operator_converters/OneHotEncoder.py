@@ -1,7 +1,7 @@
 import numbers
 import collections
 from ....proto import onnx_proto
-from ...coreml.registration import register_converter
+from ...common._registration import register_converter
 
 
 def convert_sklearn_one_hot_encoder(scope, operator, container):

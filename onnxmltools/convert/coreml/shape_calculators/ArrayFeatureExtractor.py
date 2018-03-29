@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 import copy
-from ..registration import register_shape_calculator
-from .._data_types import TensorType
+from ...common._data_types import TensorType
+from ...common._registration import register_shape_calculator
 
 
 def calculate_array_feature_extractor_output_shapes(operator):

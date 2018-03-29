@@ -4,8 +4,8 @@
 # license information.
 #--------------------------------------------------------------------------
 
-from ..._data_types import TensorType, FloatTensorType
-from ...registration import register_shape_calculator
+from ....common._data_types import TensorType, FloatTensorType
+from ....common._registration import register_shape_calculator
 
 def calculate_load_constant_output_shapes(operator):
     if len(operator.inputs) != 0:

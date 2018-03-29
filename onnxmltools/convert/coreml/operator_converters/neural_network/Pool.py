@@ -6,7 +6,7 @@
 
 import math
 import numpy as np
-from ...registration import register_converter
+from ....common._registration import register_converter
 
 
 def calculate_legacy_pad_amount(H_in, pad_h, k_h, s_h):

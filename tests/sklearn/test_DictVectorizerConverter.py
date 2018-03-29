@@ -4,7 +4,7 @@ Tests scikit-dictvectorizer converter.
 import unittest
 from sklearn.feature_extraction import DictVectorizer
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.coreml._data_types import DictionaryType, StringTensorType, FloatTensorType
+from onnxmltools.convert.common._data_types import DictionaryType, StringTensorType, FloatTensorType
 
 
 class TestSklearnDictVectorizerConverter(unittest.TestCase):

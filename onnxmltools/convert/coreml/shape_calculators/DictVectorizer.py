@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .._data_types import DictionaryType, SequenceType, FloatTensorType
-from ..registration import register_shape_calculator
+from ...common._data_types import DictionaryType, SequenceType, FloatTensorType
+from ...common._registration import register_shape_calculator
 
 
 def calculate_dictionary_vectorizer_output_shapes(operator):

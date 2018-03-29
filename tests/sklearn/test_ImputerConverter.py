@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from sklearn.preprocessing import Imputer
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.coreml._data_types import FloatTensorType, Int64TensorType
+from onnxmltools.convert.common._data_types import FloatTensorType, Int64TensorType
 
 
 class TestSklearnImputerConverter(unittest.TestCase):

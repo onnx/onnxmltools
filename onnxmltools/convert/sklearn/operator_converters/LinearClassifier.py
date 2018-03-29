@@ -1,5 +1,6 @@
+import numpy as np
 import six, numbers
-from ...coreml.registration import register_converter
+from ...common._registration import register_converter
 
 
 def convert_sklearn_linear_classifier(scope, operator, container):
@@ -37,7 +38,7 @@ def convert_sklearn_linear_classifier(scope, operator, container):
     if all(isinstance(i, (six.string_types, six.text_type)) for i in classes):
         class_labels = [str(i) for i in classes]
         classifier_attrs['classlabels_strings'] = class_labels
-    elif all(isinstance(i, numbers.Real) for i in classes):
+    elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in classes):
         class_labels = [int(i) for i in classes]
         classifier_attrs['classlabels_ints'] = class_labels
     else:
@@ -65,7 +66,7 @@ def convert_sklearn_linear_classifier(scope, operator, container):
         zipmap_attrs = {'name': scope.get_unique_operator_name(zipmap_type)}
         if all(isinstance(i, (six.string_types, six.text_type)) for i in class_labels):
             zipmap_attrs['classlabels_strings'] = class_labels
-        elif all(isinstance(i, numbers.Real) for i in class_labels):
+        elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
             zipmap_attrs['classlabels_int64s'] = class_labels
         else:
             raise RuntimeError('Label vector must be a string or a integer tensor')

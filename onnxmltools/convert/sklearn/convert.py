@@ -6,9 +6,11 @@
 
 from uuid import uuid4
 from ...proto import onnx_proto
-from ..common import model_util
+from ..common import utils
+from ..common._topology import convert_topology
 from ._parse import parse_sklearn
-from ..coreml._topology import convert_topology
+
+# Invoke the registration of all our converters and shape calculators
 from . import shape_calculators
 from . import operator_converters
 
@@ -43,10 +45,10 @@ def convert(model, name=None, initial_types=[], doc_string=''):
 
     # Add extra information
     onnx_model.ir_version = onnx_proto.IR_VERSION
-    onnx_model.producer_name = model_util.get_producer()
-    onnx_model.producer_version = model_util.get_producer_version()
-    onnx_model.domain = model_util.get_domain()
-    onnx_model.model_version = model_util.get_model_version()
+    onnx_model.producer_name = utils.get_producer()
+    onnx_model.producer_version = utils.get_producer_version()
+    onnx_model.domain = utils.get_domain()
+    onnx_model.model_version = utils.get_model_version()
     onnx_model.doc_string = doc_string
 
     return onnx_model

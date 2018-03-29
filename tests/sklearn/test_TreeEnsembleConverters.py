@@ -9,7 +9,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.coreml._data_types import FloatTensorType, Int64TensorType
+from onnxmltools.convert.common._data_types import FloatTensorType, Int64TensorType
 
 
 class TestSklearnTreeEnsembleModels(unittest.TestCase):

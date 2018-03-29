@@ -6,8 +6,8 @@
 
 import numpy as np
 from .....proto import onnx_proto
+from ....common._registration import register_converter
 from .SimpleRNN import extract_rnn_activation_info
-from ...registration import register_converter
 
 
 def convert_unidirectional_lstm(scope, operator, container):

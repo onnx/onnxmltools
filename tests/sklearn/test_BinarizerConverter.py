@@ -1,7 +1,7 @@
 import unittest
 from sklearn.preprocessing import Binarizer
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.coreml._data_types import FloatTensorType
+from onnxmltools.convert.common._data_types import FloatTensorType
 
 
 class TestSklearnBinarizer(unittest.TestCase):

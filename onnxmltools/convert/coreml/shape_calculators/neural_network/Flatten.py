@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ..._data_types import FloatTensorType
-from ...registration import register_shape_calculator
+from ....common._data_types import FloatTensorType
+from ....common._registration import register_shape_calculator
 
 
 def calculate_flatten_output_shapes(operator):

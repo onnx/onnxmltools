@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ..registration import register_converter
+from ...common._registration import register_converter
 from .SVC import extract_support_vectors_as_dense_tensor
 
 

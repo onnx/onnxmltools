@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ..registration import register_converter
+from ...common._registration import register_converter
 
 
 def convert_one_hot_encoder(scope, operator, container):

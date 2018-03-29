@@ -1,5 +1,5 @@
-from ...coreml._data_types import StringTensorType, Int64TensorType
-from ...coreml.registration import register_converter
+from ...common._data_types import StringTensorType, Int64TensorType
+from ...common._registration import register_converter
 
 
 def convert_sklearn_label_encoder(scope, operator, container):

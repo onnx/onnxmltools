@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ....proto import onnx_proto
-from ..registration import register_converter
+from ...common._registration import register_converter
 
 
 def convert_array_feature_extractor(scope, operator, container):

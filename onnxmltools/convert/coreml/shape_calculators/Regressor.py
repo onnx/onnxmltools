@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .._data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type
-from ..registration import register_shape_calculator
+from ...common._data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type
+from ...common._registration import register_shape_calculator
 
 
 def calculate_traditional_regressor_output_shapes(operator):

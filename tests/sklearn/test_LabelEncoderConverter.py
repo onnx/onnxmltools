@@ -4,7 +4,7 @@ Tests scikit-labebencoder converter.
 import unittest
 from sklearn.preprocessing import LabelEncoder
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.coreml._data_types import StringTensorType
+from onnxmltools.convert.common._data_types import StringTensorType
 
 class TestSklearnLabelEncoderConverter(unittest.TestCase):
 

@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .._data_types import Int64Type, Int64TensorType
-from ..registration import register_converter
+from ...common._data_types import Int64Type, Int64TensorType
+from ...common._registration import register_converter
 
 
 def convert_feature_vectorizer(scope, operator, container):

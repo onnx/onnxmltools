@@ -1,6 +1,6 @@
 import copy
-from ...coreml._data_types import Int64TensorType, StringTensorType
-from ...coreml.registration import register_shape_calculator
+from ...common._data_types import Int64TensorType, StringTensorType
+from ...common._registration import register_shape_calculator
 
 
 def calculate_sklearn_lebel_encoder_output_shapes(operator):

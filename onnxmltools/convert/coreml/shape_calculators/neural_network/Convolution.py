@@ -6,7 +6,7 @@
 
 import math
 import numbers
-from ...registration import register_shape_calculator
+from ....common._registration import register_shape_calculator
 
 
 def calculate_convolution_and_pooling_1D_output_shape(

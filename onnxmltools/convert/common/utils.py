@@ -1,14 +1,10 @@
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 
-"""
-Helpers for converters.
-"""
-import numbers
-import six
+import numbers, six
 import numpy as np
 import warnings
 from distutils.version import LooseVersion
@@ -56,10 +52,6 @@ def torch_installed():
         return True
     except ImportError:
         return False
-    try:
-        import torch.onnx
-    except ImportError:
-        return False
 
 
 def caffe2_installed():
@@ -69,10 +61,6 @@ def caffe2_installed():
     try:
         import caffe2
         return True
-    except ImportError:
-        return False
-    try:
-        import onnx_caffe2
     except ImportError:
         return False
 
@@ -110,6 +98,38 @@ def xgboost_installed():
     if vers < allowed:
         warnings.warn('The converter works for xgboost >= 0.7. Earlier versions might not.')
     return True
+
+
+def get_producer():
+    """
+    Internal helper function to return the producer
+    """
+    from ... import __producer__
+    return __producer__
+
+
+def get_producer_version():
+    """
+    Internal helper function to return the producer version
+    """
+    from ... import __producer_version__
+    return __producer_version__
+
+
+def get_domain():
+    """
+    Internal helper function to return the model domain
+    """
+    from ... import __domain__
+    return __domain__
+
+
+def get_model_version():
+    """
+    Internal helper function to return the model version
+    """
+    from ... import __model_version__
+    return __model_version__
 
 
 def is_numeric_type(item):

@@ -1,6 +1,6 @@
 import numpy as np
 import numbers, six
-from ...coreml.registration import register_converter
+from ...common._registration import register_converter
 
 
 def convert_sklearn_svm(scope, operator, container):
@@ -42,7 +42,7 @@ def convert_sklearn_svm(scope, operator, container):
         probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
 
         zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-        if all(isinstance(i, numbers.Real) for i in op.classes_):
+        if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in op.classes_):
             labels = [int(i) for i in op.classes_]
             svm_attrs['classlabels_ints'] = labels
             zipmap_attrs['classlabels_int64s'] = labels

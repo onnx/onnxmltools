@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .._data_types import FloatTensorType, StringTensorType
-from ..registration import register_shape_calculator
+from ...common._data_types import FloatTensorType, StringTensorType
+from ...common._registration import register_shape_calculator
 
 
 def calculate_one_hot_encoder_output_shapes(operator):

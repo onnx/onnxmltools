@@ -1,5 +1,5 @@
 import numbers, six
-from ...coreml.registration import register_converter
+from ...common._registration import register_converter
 
 
 def convert_sklearn_dict_vectorizer(scope, operator, container):

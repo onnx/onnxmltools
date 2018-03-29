@@ -1,7 +1,7 @@
 import numpy as np
 import six, numbers
-from ...coreml._data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType
-from ...coreml.registration import register_shape_calculator
+from ...common._data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType
+from ...common._registration import register_shape_calculator
 
 
 def calculate_sklearn_linear_classifier_output_shapes(operator):
@@ -27,7 +27,7 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
         else:
             # For binary classifier, we produce the probability of the positive class
             operator.outputs[1].type = FloatTensorType(shape=[1, 1])
-    elif all(isinstance(i, numbers.Real) for i in class_labels):
+    elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
         operator.outputs[0].type = Int64TensorType(shape=[1, 1])
         if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
             # For multi-class classifier, we produce a map for encoding the probabilities of all classes

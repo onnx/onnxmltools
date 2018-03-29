@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 
-from ...registration import register_converter
+from ....common._registration import register_converter
 
 
 def convert_preprocessing_mean_image(scope, operator, container):

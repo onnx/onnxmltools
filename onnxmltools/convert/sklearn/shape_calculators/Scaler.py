@@ -1,6 +1,6 @@
 import numbers
-from ...coreml._data_types import FloatTensorType, Int64TensorType
-from ...coreml.registration import register_shape_calculator
+from ...common._data_types import FloatTensorType, Int64TensorType
+from ...common._registration import register_shape_calculator
 
 
 def calculate_sklearn_scaler_output_shapes(operator):

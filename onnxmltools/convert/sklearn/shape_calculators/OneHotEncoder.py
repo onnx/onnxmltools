@@ -1,6 +1,7 @@
+import numpy as np
 import collections, numbers
-from ...coreml._data_types import FloatTensorType
-from ...coreml.registration import register_shape_calculator
+from ...common._data_types import FloatTensorType
+from ...common._registration import register_shape_calculator
 
 
 def calculate_sklearn_one_hot_encoder_output_shapes(operator):
@@ -9,7 +10,7 @@ def calculate_sklearn_one_hot_encoder_output_shapes(operator):
         C = operator.inputs[0].type.shape[1]
         categorical_feature_indices = [i for i in range(C)]
     elif isinstance(op.categorical_features, collections.Iterable):
-        if all(isinstance(i, bool) for i in op.categorical_features):
+        if all(isinstance(i, (bool, np.bool_)) for i in op.categorical_features):
             categorical_feature_indices = [i for i, active in enumerate(op.categorical_features) if active]
         else:
             categorical_feature_indices = [int(i) for i in op.categorical_features]

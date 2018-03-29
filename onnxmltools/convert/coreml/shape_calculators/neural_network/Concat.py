@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------------
 
 import copy
-from ...registration import register_shape_calculator
+from ....common._registration import register_shape_calculator
 
 def calculate_concat_output_shapes(operator):
     if len(operator.inputs) < 1:

@@ -1,6 +1,7 @@
+import numpy as np
 import six, numbers
-from ...coreml._data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType
-from ...coreml.registration import register_shape_calculator
+from ...common._data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType
+from ...common._registration import register_shape_calculator
 
 
 def calculate_sklearn_svm_output_shapes(operator):
@@ -20,7 +21,7 @@ def calculate_sklearn_svm_output_shapes(operator):
         if all(isinstance(i, (six.string_types, six.text_type)) for i in op.classes_):
             operator.outputs[0].type = StringTensorType([1, 1])
             operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]))
-        elif all(isinstance(i, numbers.Real) for i in op.classes_):
+        elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in op.classes_):
             operator.outputs[0].type = Int64TensorType([1, 1])
             operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
         else:

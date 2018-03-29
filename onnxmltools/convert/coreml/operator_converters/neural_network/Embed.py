@@ -6,7 +6,7 @@
 
 import numpy as np
 from .....proto import onnx_proto
-from ...registration import register_converter
+from ....common._registration import register_converter
 
 
 def convert_embedding(scope, operator, container):

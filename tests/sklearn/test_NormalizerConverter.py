@@ -4,7 +4,7 @@ Tests scikit-normalizer converter.
 import unittest
 from sklearn.preprocessing import Normalizer
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.coreml._data_types import Int64TensorType
+from onnxmltools.convert.common._data_types import Int64TensorType
 
 class TestSklearnNormalizerConverter(unittest.TestCase):
 

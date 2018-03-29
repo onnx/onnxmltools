@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .._data_types import Int64TensorType, Int64Type, StringTensorType, StringType, TensorType
-from ..registration import register_shape_calculator
+from ...common._data_types import Int64TensorType, Int64Type, StringTensorType, StringType, TensorType
+from ...common._registration import register_shape_calculator
 
 
 def calculte_tensor_to_label_output_shapes(operator):

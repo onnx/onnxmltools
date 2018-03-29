@@ -5,9 +5,9 @@
 # --------------------------------------------------------------------------
 
 from ...proto import helper
-from . import registration
 from ._data_types import *
 from ._container import ModelComponentContainer
+from . import _registration
 
 
 class RawModelContainer(object):
@@ -119,7 +119,7 @@ class Operator:
 
     def infer_types(self):
         # Invoke a core inference function
-        registration.get_shape_calculator(self.type)(self)
+        _registration.get_shape_calculator(self.type)(self)
 
 
 class Scope:
@@ -243,7 +243,7 @@ class Topology:
         '''
         self.scopes = []
         self.raw_model = model
-        self.scope_names = set('__none__')
+        self.scope_names = set()
         self.variable_name_set = reserved_variable_names if reserved_variable_names is not None else set()
         self.operator_name_set = reserved_operator_names if reserved_operator_names is not None else set()
         self.initial_types = initial_types if initial_types else dict()
@@ -561,7 +561,7 @@ def convert_topology(topology, model_name):
     # Traverse the graph from roots to leaves
     for operator in topology.topological_operator_iterator():
         # Convert the selected operator into some ONNX objects and save them into the container
-        registration.get_converter(operator.type)(scope, operator, container)
+        _registration.get_converter(operator.type)(scope, operator, container)
 
     # Move ZipMap nodes to the end of the node list. In the future, here should be a sorting function which re-orders
     # the nodes according the model's outputs.

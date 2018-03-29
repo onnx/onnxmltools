@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 import copy
-from ..._data_types import TensorType
-from ...registration import register_shape_calculator
+from ....common._data_types import TensorType
+from ....common._registration import register_shape_calculator
 
 
 def calculate_permute_output_shapes(operator):
