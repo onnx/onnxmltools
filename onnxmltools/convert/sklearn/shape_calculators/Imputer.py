@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import copy
 from ...common.data_types import FloatTensorType, Int64TensorType
 from ...common._registration import register_shape_calculator
 
@@ -25,3 +26,4 @@ def calculate_sklearn_imputer_output_shapes(operator):
 
 
 register_shape_calculator('SklearnImputer', calculate_sklearn_imputer_output_shapes)
+register_shape_calculator('SklearnBinarizer', calculate_sklearn_imputer_output_shapes)

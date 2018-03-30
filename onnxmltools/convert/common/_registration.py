@@ -4,7 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
+# The converters which can be invoked in the conversion framework defined in _topology.py
 _converter_pool = {}
+# The shape calculators which can be invoked in the conversion framework defined in _topology.py
 _shape_calculator_pool = {}
 
 

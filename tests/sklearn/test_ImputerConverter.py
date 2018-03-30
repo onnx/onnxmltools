@@ -21,7 +21,7 @@ class TestSklearnImputerConverter(unittest.TestCase):
         model.fit([[1, 2], [np.nan, 3], [7, 6]])
 
         model_onnx = convert_sklearn(model, 'scikit-learn imputer', [Int64TensorType([1, 2])])
-        self.assertTrue(len(model_onnx.graph.node) == 3)
+        self.assertEqual(len(model_onnx.graph.node), 2)
 
         # Last node should be Imputer
         outputs = model_onnx.graph.output
@@ -36,8 +36,8 @@ class TestSklearnImputerConverter(unittest.TestCase):
         model_onnx = convert_sklearn(model, 'scikit-learn imputer', [FloatTensorType([1, 2])])
         self.assertTrue(model_onnx.graph.node is not None)
 
-        # should contain two nodes
-        self.assertEqual(len(model_onnx.graph.node), 2)
+        # should contain only node
+        self.assertEqual(len(model_onnx.graph.node), 1)
 
         # last node should contain the Imputer
         outputs = model_onnx.graph.output

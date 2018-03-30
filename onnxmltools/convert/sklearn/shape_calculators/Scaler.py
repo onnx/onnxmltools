@@ -38,4 +38,3 @@ def calculate_sklearn_scaler_output_shapes(operator):
 
 register_shape_calculator('SklearnScaler', calculate_sklearn_scaler_output_shapes)
 register_shape_calculator('SklearnNormalizer', calculate_sklearn_scaler_output_shapes)
-register_shape_calculator('SklearnBinarizer', calculate_sklearn_scaler_output_shapes)

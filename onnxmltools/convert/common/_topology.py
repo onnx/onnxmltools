@@ -25,10 +25,18 @@ class RawModelContainer(object):
 
     @property
     def input_names(self):
+        '''
+        This function should return a list of strings. Each string corresponds to an input variable name.
+        :return: a list of string
+        '''
         raise NotImplementedError()
 
     @property
     def output_names(self):
+        '''
+        This function should return a list of strings. Each string corresponds to a variable name.
+        :return: a list of string
+        '''
         raise NotImplementedError()
 
 
@@ -72,10 +80,18 @@ class SklearnModelContainer(RawModelContainer):
 class Variable:
 
     def __init__(self, raw_name, onnx_name, scope, type=None):
-        self.raw_name = raw_name  # variable name in the original model
-        self.onnx_name = onnx_name  # variable name in the converted model
+        '''
+        :param raw_name: A string indicating the variable's name in the original model. Usually, it's the seed string
+        used to created its ONNX name (i.e., the field onnx_name below).
+        :param onnx_name: A string indicating the variable's name in the converted model
+        :param scope: A string. It's the name of the scope where this variable is declared
+        :param type: A type object defined in onnxmltools.convert.common.data_types.py; e.g., FloatTensorType
+        '''
+        self.raw_name = raw_name  #
+        self.onnx_name = onnx_name  #
         self.scope = scope
         self.type = type
+        # The following fields are bool variables used in parsing and compiling stages
         self.is_fed = None
         self.is_root = None
         self.is_leaf = None
@@ -92,6 +108,14 @@ class Variable:
 class Operator:
 
     def __init__(self, onnx_name, scope, type, raw_operator):
+        '''
+        :param onnx_name: A unique ID, which is a string
+        :param scope: The name of the scope where this operator is declared. It's a string.
+        :param type: A object which uniquely characterizes the type of this operator. For example, it can be a string,
+        pooling, if this operator is associated with a CoreML pooling layer.
+        :param raw_operator: The original operator which defines this operator; for example, a scikit-learn Imputer and
+        a CoreML Normalizer.
+        '''
         self.onnx_name = onnx_name  # operator name in the converted model
         self.scope = scope
         self.type = type
@@ -130,25 +154,32 @@ class Operator:
 class Scope:
 
     def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None):
-        # name: scope's ID. It's unique in a topology.
-        # parent_scopes: all parents of this scope. It encodes the tree structure of the computational graph.
-        # variable_name_set: set used to stored variable names declared in this scope.
-        # operator_name_set: set used to stored operator names declared in this scope.
-        # onnx_variable_names: variable IDs live in this scope.
-        # onnx_operator_names: operator IDs live in this scope.
-        # variables: a map of local variables defined in this scope. (key, value) = (onnx_name, variable)
-        # operators: a map of local operators defined in this scope. (key, value) = (onnx_name, operator)
-        # variable_name_mapping: an one-to-many map from raw variable name to ONNX variable names.
-        #                        (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ...])
-        # operator_name_mapping: an one-to-many map from raw operator name to ONNX operator names.
-        #                        (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ...])
+        '''
+        :param name:  A string, the unique ID of this scope in a Topology object
+        :param parent_scopes: A list of Scope objects. The last element should be the direct parent scope (i.e., where
+        this scope is declared).
+        :param variable_name_set: A set of strings serving as the name pool of variables
+        :param operator_name_set: A set of strings serving as the name pool of operators
+        '''
         self.name = name
         self.parent_scopes = parent_scopes if parent_scopes else list()
         self.onnx_variable_names = variable_name_set if variable_name_set is not None else set()
         self.onnx_operator_names = operator_name_set if operator_name_set is not None else set()
+
+        # An one-to-many map from raw variable name to ONNX variable names. It looks like
+        #   (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ..., onnx_nameN])
+        # The last name may hide all other names in this scope.
         self.variable_name_mapping = {}
+
+        # An one-to-many map from raw operator name to ONNX operator names. It looks like
+        #   (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ..., onnx_nameN])
+        # The last name may hide all other names in this scope.
         self.operator_name_mapping = {}
+
+        # A map of local variables defined in this scope. (key, value) = (onnx_name, variable)
         self.variables = {}
+
+        # A map of local operators defined in this scope. (key, value) = (onnx_name, operator)
         self.operators = {}
 
     def get_onnx_variable_name(self, seed):
@@ -209,7 +240,8 @@ class Scope:
     def get_local_variable_or_declare_one(self, raw_name, type=None):
         '''
         This function will first check if raw_name has been used to create some variables. If yes, the latest one
-        will be returned. Otherwise, a new variable will be created and then returned.
+        named in self.variable_name_mapping[raw_name] will be returned. Otherwise, a new variable will be created and
+        then returned.
         '''
         onnx_name = self.get_onnx_variable_name(raw_name)
         if onnx_name in self.variables:
@@ -240,11 +272,11 @@ class Topology:
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
 
-        :param model: the model used to create the topology
-        :param default_batch_size: batch_size prepend to scalar and array types from CoreML
-        :param initial_types: a dictionary providing some types for some CoreML root variables
-        :param reserved_variable_names: a set of strings which are not allowed to be used as a variable name
-        :param reserved_operator_names: a set of strings which are not allowed to be used as a operator name
+        :param model: RawModelContainer object or one of its derived classes. It contains the original model.
+        :param default_batch_size: batch_size prepend to scalar and array types from CoreML. It's usually 1 or 'None'.
+        :param initial_types: A dictionary providing some types for some CoreML root variables
+        :param reserved_variable_names: A set of strings which are not allowed to be used as a variable name
+        :param reserved_operator_names: A set of strings which are not allowed to be used as a operator name
         '''
         self.scopes = []
         self.raw_model = model
