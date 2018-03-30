@@ -7,6 +7,7 @@
 from ..common.data_types import *
 from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
+
 # Import modules to invoke function registrations
 from . import operator_converters
 from . import shape_calculators
@@ -39,16 +40,23 @@ def parse_coreml_feature(feature_info, batch_size=1):
         # Produce [C, H, W]-tensor, where C is the number of color channels, H the height, and W the width.
         color_space = raw_type.imageType.colorSpace
         shape = [batch_size]
+
+        if doc_string:
+            if doc_string[-1] not in ['.', '!', '?']:
+                doc_string += '. '
+            else:
+                doc_string += ' '
+
         if color_space == 10:  # gray scale
             shape.append(1)
-            doc_string += ' Image(s) in gray scale. If there are N images, it is a 4-D tensor with shape [N, 1, H, W]'
+            doc_string += 'Image(s) in gray scale. If there are N images, it is a 4-D tensor with shape [N, 1, H, W]'
         elif color_space == 20:  # RGB (20)
             shape.append(3)
-            doc_string += 'Image(s) in RGB format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
+            doc_string += 'Image(s) in RGB format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the ' \
                           'C-axis are red, green, and blue channels, respectively.'
         elif color_space == 30:  # BGR (30)
             shape.append(3)
-            doc_string += 'Image(s) in BGR format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the' \
+            doc_string += 'Image(s) in BGR format. It is a [N, C, H, W]-tensor. The 1st/2nd/3rd slices along the ' \
                           'C-axis are blue, green, and red channels, respectively.'
         else:
             raise ValueError('Unknown image format. Only gray-level, RGB, and BGR are supported')

@@ -61,6 +61,7 @@ def convert(model, name=None, initial_types=None, doc_string=''):
             entry = onnx_proto.StringStringEntryProto()
             entry.key = 'license'
             entry.value = metadata.license
+            metadata_props.append(entry)
 
     # Specify ONNX model's attributes which are not directly related to computational graph
     if len(metadata_props) > 0:

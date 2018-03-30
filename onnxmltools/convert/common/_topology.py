@@ -421,6 +421,7 @@ class Topology:
         for operator in self.topological_operator_iterator():
             if operator.type != 'identity':
                 continue
+
             # Replace the output variable with the input variable everywhere
             original = operator.inputs[0]
             duplicate = operator.outputs[0]
@@ -430,6 +431,12 @@ class Topology:
                         if another_operator.inputs[i].onnx_name != duplicate.onnx_name:
                             continue
                         another_operator.inputs[i] = original
+
+            # When original variable's document string is empty but duplicate's document string is not, we
+            # copy that non-empty string to the original variable to avoid information loss.
+            if not original.type.doc_string and duplicate.type.doc_string:
+                original.type.doc_string = duplicate.type.doc_string
+
             # Because we're iterating through the topology, we cannot delete any operator or variable. Otherwise,
             # the traversing function may be broken. We will delete those abandoned ones later.
             duplicate.is_abandoned = True
@@ -441,16 +448,18 @@ class Topology:
                                            if operator.is_abandoned)
             abandoned_variable_names = set(onnx_name for onnx_name, variable in scope.variables.items()
                                            if variable.is_abandoned)
+
             # Remove abandoned operators
             for name in abandoned_operator_names:
-                scope.onnx_operator_names.discard(name)  # this variable is a global structure shared by all scopes!
+                scope.onnx_operator_names.discard(name)  # scope variable is a global structure shared by all scopes!
                 if name in scope.operator_name_mapping:
                     del scope.operator_name_mapping[name]
                 if name in scope.operators:
                     del scope.operators[name]
+
             # Remove abandoned variables
             for name in abandoned_variable_names:
-                scope.onnx_variable_names.discard(name)  # this variable is a global structure shared by all scopes!
+                scope.onnx_variable_names.discard(name)  # scope variable is a global structure shared by all scopes!
                 if name in scope.variable_name_mapping:
                     del scope.variable_name_mapping[name]
                 if name in scope.variables:
