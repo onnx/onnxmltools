@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ..common.data_types import *
-from ..common._topology import CoremlModelContainer
+from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
 # Import modules to invoke function registrations
 from . import operator_converters

@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ..common._topology import *
+from ..common._container import SklearnModelContainer
 
 # Pipeline
 from sklearn import pipeline
