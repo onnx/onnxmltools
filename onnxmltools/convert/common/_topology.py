@@ -104,11 +104,6 @@ class Scope:
         # The last name may hide all other names in this scope.
         self.variable_name_mapping = {}
 
-        # An one-to-many map from raw operator name to ONNX operator names. It looks like
-        #   (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ..., onnx_nameN])
-        # The last name may hide all other names in this scope.
-        self.operator_name_mapping = {}
-
         # A map of local variables defined in this scope. (key, value) = (onnx_name, variable)
         self.variables = {}
 
@@ -197,6 +192,26 @@ class Scope:
         self.operators[onnx_name] = operator
         return operator
 
+    def delete_local_operator(self, onnx_name):
+        '''
+        Remove the operator whose onnx_name is the input onnx_name
+        '''
+        if onnx_name not in self.onnx_operator_names or onnx_name not in self.operators:
+            raise RuntimeError('The operator to be removed not found')
+        self.onnx_operator_names.discard(onnx_name)
+        del self.operators[onnx_name]
+
+    def delete_local_variable(self, onnx_name):
+        '''
+        Remove the variable whose onnx_name is the input onnx_name
+        '''
+        if onnx_name not in self.onnx_variable_names or onnx_name not in self.variables:
+            raise RuntimeError('The variable to be removed not found')
+        self.onnx_variable_names.discard(onnx_name)
+        raw_name = self.variables[onnx_name].raw_name
+        self.variable_name_mapping[raw_name].remove(onnx_name)
+        del self.variables[onnx_name]
+
 
 class Topology:
 
@@ -218,6 +233,13 @@ class Topology:
         self.operator_name_set = reserved_operator_names if reserved_operator_names is not None else set()
         self.initial_types = initial_types if initial_types else dict()
         self.default_batch_size = default_batch_size
+
+        # This attribute is used when optimizing the graph structure. If it's not empty, only the variables specified
+        # will be treated as the roots (i.e., set is_fed to True in the beginning of a graph evaluation) of the graph.
+        # Specifying all root variables in this list and leaving it empty are equivalent. This attribute directly
+        # affects _initialize_graph_status_for_traversing function and indirectly affects _infer_all_shapes and _prune
+        # functions.
+        self.root_names = list()
 
     @staticmethod
     def _generate_unique_name(seed, existing_names):
@@ -368,11 +390,20 @@ class Topology:
         '''
         Initialize the status of all variables and operators for traversing the underline graph
         '''
-        # In the beginning, we set all flags true
+        # In the beginning, we set is_root and is_leaf true. For is_fed, we have two different behaviors depending on
+        # whether root_names is empty.
         for variable in self.unordered_variable_iterator():
-            variable.is_fed = True
+            # If root_names is set, we only set those variable to be fed. Otherwise, all roots would be fed.
+            if self.root_names:
+                if variable.onnx_name in self.root_names:
+                    variable.is_fed = True
+                else:
+                    variable.is_fed = False
+            else:
+                variable.is_fed = True
             variable.is_root = True
             variable.is_leaf = True
+
         # Then, we flip some flags by applying some simple rules so that only
         #   1. all roots get is_root=True and is_fed=True
         #   2. all leaves get is_leaf=True
@@ -451,19 +482,11 @@ class Topology:
 
             # Remove abandoned operators
             for name in abandoned_operator_names:
-                scope.onnx_operator_names.discard(name)  # scope variable is a global structure shared by all scopes!
-                if name in scope.operator_name_mapping:
-                    del scope.operator_name_mapping[name]
-                if name in scope.operators:
-                    del scope.operators[name]
+                scope.delete_local_operator(name)
 
             # Remove abandoned variables
             for name in abandoned_variable_names:
-                scope.onnx_variable_names.discard(name)  # scope variable is a global structure shared by all scopes!
-                if name in scope.variable_name_mapping:
-                    del scope.variable_name_mapping[name]
-                if name in scope.variables:
-                    del scope.variables[name]
+                scope.delete_local_variable(name)
 
     def _fix_shapes(self):
         '''
@@ -497,15 +520,39 @@ class Topology:
                     else:
                         raise RuntimeError('Embed operator in ONNX only accepts floats but we got integers')
 
+    def _prune(self):
+        # Conduct a dummy evaluation of this topology. It may set all reachable operators evaluated and all reachable
+        # variables fed.
+        for operator in self.topological_operator_iterator():
+            pass
+
+        for scope in self.scopes:
+            # Remove unused operators
+            abandoned_operator_names = []
+            for operator in scope.operators.values():
+                if not operator.is_evaluated:
+                    abandoned_operator_names.append(operator.onnx_name)
+            for onnx_name in abandoned_operator_names:
+                scope.delete_local_operator(onnx_name)
+
+            # Remove unused variables
+            abandoned_variable_names = []
+            for variable in scope.variables.values():
+                if not variable.is_fed:
+                    abandoned_variable_names.append(variable.onnx_name)
+            for onnx_name in abandoned_variable_names:
+                scope.delete_local_variable(onnx_name)
+
     def compile(self):
         '''
         This function aims at giving every operator enough information so that all operator conversions can happen
         independently. We also want to check, fix, and simplify the network structure here.
         '''
-        self._check_structure()
+        self._prune()
         self._resolve_duplicates()
         self._fix_shapes()
         self._infer_all_types()
+        self._check_structure()
 
 
 def convert_topology(topology, model_name):
