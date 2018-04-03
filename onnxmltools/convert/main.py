@@ -21,3 +21,11 @@ def convert_coreml(model, name=None):
 
     from .coreml.convert import convert
     return convert(model, name)
+
+
+def convert_keras(model, name=None):
+    if not utils.keras_installed():
+        raise RuntimeError('keras is not installed. Please install coremltools to use this feature.')
+
+    from .keras.convert import convert
+    return convert(model, name)
