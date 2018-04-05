@@ -4,6 +4,10 @@
 # license information.
 #--------------------------------------------------------------------------
 
+import re
+import warnings
+
+
 class ConvertContext:
     '''
     The ConvertContext provides data about the conversion, specifically keeping a mapping of the old->new names as
@@ -27,6 +31,10 @@ class ConvertContext:
         return self.__generate_name(name)
 
     def __generate_name(self, name):
+        original_name = name
+        name = re.sub('[^0-9a-zA-Z]|^[0-9]', '_', name)
+        if name != original_name:
+            warnings.warn('Illegal C-style name found %s. We replace it with %s.' % (original_name, name))
         if name in self._name_override_map:
             _name = self._name_override_map[name]
         else:
@@ -35,7 +43,7 @@ class ConvertContext:
         count = 1
         gen_name = _name
         while gen_name in self._unique_name_set:
-            gen_name = "{}.{}".format(_name, count)
+            gen_name = "{}{}".format(_name, count)
             count += 1
         self._unique_name_set.add(gen_name)
         return gen_name

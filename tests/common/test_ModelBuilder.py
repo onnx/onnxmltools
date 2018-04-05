@@ -29,7 +29,7 @@ class TestModelBuilder(unittest.TestCase):
         mb.add_outputs([model_util.make_tensor_value_info('Output', onnx_proto.TensorProto.FLOAT, [1])])
         model = mb.make_model()
         self.assertEqual(len(model.graph.initializer), 1)
-        self.assertEqual(model.graph.initializer[0].name, 'bar.classes')
+        self.assertEqual(model.graph.initializer[0].name, 'bar_classes')
 
     def test_intitializers_on_multiple_nodes(self):
         context = ConvertContext()
@@ -57,6 +57,6 @@ class TestModelBuilder(unittest.TestCase):
         mb.add_outputs([model_util.make_tensor_value_info('Output', onnx_proto.TensorProto.FLOAT, [1])])
         model = mb.make_model()
         self.assertEqual(len(model.graph.initializer), 2)
-        self.assertEqual(model.graph.initializer[0].name, 'bar.classes')
-        self.assertEqual(model.graph.initializer[1].name, 'bar2.classes2')
+        self.assertEqual(model.graph.initializer[0].name, 'bar_classes')
+        self.assertEqual(model.graph.initializer[1].name, 'bar2_classes2')
 

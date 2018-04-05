@@ -15,7 +15,7 @@ class TestCoremlConverter(unittest.TestCase):
 
         result = _resolve_name_conflicts(context, inputs, outputs)
         self.assertEqual(len(result), 3)
-        expected = ['test.1', 'foo', 'bar']
+        expected = ['test3', 'foo', 'bar']
         self.assertEqual(result, expected)
 
     def test_resolve_name_conflicts_no_conflicts(self):
@@ -40,7 +40,7 @@ class TestCoremlConverter(unittest.TestCase):
         context.get_onnx_name(input)
 
         result = _resolve_name_conflicts(context, input, output)
-        expected = 'foo.1'
+        expected = 'foo1'
         self.assertEqual(result, expected)
 
     def test_resolve_name_no_conflicts_string(self):
