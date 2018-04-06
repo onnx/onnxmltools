@@ -21,7 +21,7 @@ class TestNodeBuilder(unittest.TestCase):
         node = nb.make_node()
 
         self.assertEqual(len(node.initializers), 1)
-        self.assertEqual(node.initializers[0].name, 'bar.classes')
+        self.assertEqual(node.initializers[0].name, 'bar_classes')
 
     def test_multiple_initializers(self):
         context = ConvertContext()
@@ -41,10 +41,10 @@ class TestNodeBuilder(unittest.TestCase):
         node = nb.make_node()
 
         self.assertEqual(len(node.initializers), 4)
-        self.assertEqual(node.initializers[0].name, 'bar.classes1')
-        self.assertEqual(node.initializers[1].name, 'bar.classes2')
-        self.assertEqual(node.initializers[2].name, 'bar.classes3')
-        self.assertEqual(node.initializers[3].name, 'bar.classes4')
+        self.assertEqual(node.initializers[0].name, 'bar_classes1')
+        self.assertEqual(node.initializers[1].name, 'bar_classes2')
+        self.assertEqual(node.initializers[2].name, 'bar_classes3')
+        self.assertEqual(node.initializers[3].name, 'bar_classes4')
 
 
     def test_value(self):
@@ -59,7 +59,7 @@ class TestNodeBuilder(unittest.TestCase):
         node = nb.make_node()
 
         self.assertEqual(len(node.values), 1)
-        self.assertEqual(node.values[0].name, 'bar.value_test')
+        self.assertEqual(node.values[0].name, 'bar_value_test')
 
     def test_add_inputs(self):
         context = ConvertContext()
@@ -80,5 +80,5 @@ class TestNodeBuilder(unittest.TestCase):
         self.assertEqual(len(input_names),5)
 
         # Confirm the order of the names based upon when added
-        expected_names = ['test','','value_test','foo.init', 'foo.value']
+        expected_names = ['test','','value_test','foo_init', 'foo_value']
         self.assertEqual(input_names, expected_names)

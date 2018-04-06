@@ -74,7 +74,7 @@ class NodeBuilder:
         the tensor_name as the initializer's name.
         '''
         if tensor_name is None:
-            tensor.name = self._name + '.' + tensor.name
+            tensor.name = self._name + '_' + tensor.name
         else:
             tensor.name = tensor_name
         self._initializers.append(tensor)
@@ -82,9 +82,9 @@ class NodeBuilder:
 
     def add_value(self, value):
         '''
-        Set the name of the initializer to be node-name.value-name
+        Set the name of the initializer to be node-name_value-name
         '''
-        value_name = self._name + '.' + value.name
+        value_name = self._name + '_' + value.name
         value.name = value_name
         self._input_names.append(value_name)
         self._values.append(value)
