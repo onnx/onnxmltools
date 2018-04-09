@@ -24,7 +24,7 @@ def calculate_sklearn_scaler_output_shapes(operator):
     if type(operator.outputs[0].type) != FloatTensorType:
         raise RuntimeError('Output must be a float tensor')
 
-    N = variable.type.shape[0]
+    N = operator.inputs[0].type.shape[0]
     C = 0
     for variable in operator.inputs:
         if isinstance(variable.type.shape[1], numbers.Integral):

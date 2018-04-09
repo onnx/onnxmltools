@@ -8,12 +8,6 @@ from ..common.data_types import *
 from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
 
-# Import modules to invoke function registrations
-from . import operator_converters
-from . import shape_calculators
-from .operator_converters import neural_network as nn_converters
-from .shape_calculators import neural_network as nn_shape_calculators
-
 
 def parse_coreml_feature(feature_info, batch_size=1):
     '''
@@ -430,19 +424,27 @@ def parse_coreml(model, initial_types=None):
     :return: a Topology object. It's a intermediate representation of the input CoreML model
     '''
 
+    # Add model-level input and output names into a set. The set will be fed into our Topology so that all its elements
+    # will not be used to declare variables
     reserved_variable_names = set()
     for var in list(model.description.input) + list(model.description.output):
         reserved_variable_names.add(var.name)
+
+    # Determine the batch size for parsing CoreML model's input and output features. Note that batch size is always
+    # missing in all CoreML models.
     default_batch_size = 1 if model.WhichOneof('Type') not in \
                               ['neuralNetworkClassifier', 'neuralNetworkRegressor', 'neuralNetwork'] else 'None'
+
     # Topology is shared by both of CoreML and scikit-learn conversion frameworks, so we have a wrapper class,
     # CoremlModelContainer, to make sure our topology-related functions can seamlessly handle both of CoreML and
     # scikit-learn.
     topology = Topology(CoremlModelContainer(model), default_batch_size, initial_types, reserved_variable_names)
     scope = topology.declare_scope('__root__')
+
     # Instead of using CoremlModelContainer, we directly pass the model in because _parse_model is CoreML-specific.
     _parse_model(topology, scope, model)
     topology.compile()
+
     # Use original CoreML names for model-level input(s)/output(s)
     for variable in topology.find_root_and_sink_variables():
         if variable.raw_name not in reserved_variable_names:

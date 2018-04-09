@@ -10,6 +10,7 @@ from ...proto import helper
 from .data_types import *
 from ._container import ModelComponentContainer
 from . import _registration
+from . import utils
 
 
 class Variable:
@@ -236,11 +237,11 @@ class Topology:
         self.initial_types = initial_types if initial_types else dict()
         self.default_batch_size = default_batch_size
 
-        # This attribute is used when optimizing the graph structure. If it's not empty, only the variables specified
-        # will be treated as the roots (i.e., set is_fed to True in the beginning of a graph evaluation) of the graph.
-        # Specifying all root variables in this list and leaving it empty are equivalent. This attribute directly
-        # affects _initialize_graph_status_for_traversing function and indirectly affects _infer_all_shapes and _prune
-        # functions.
+        # This attribute is used in optimizing the graph structure. If root_names is not empty, only the variables
+        # specified will be treated as the roots (i.e., set is_fed to True in the beginning of a graph evaluation) of
+        # the graph. Specifying all root variables in this list and leaving it empty are equivalent. This attribute
+        # directly affects _initialize_graph_status_for_traversing function and indirectly affects _infer_all_shapes and
+        # _prune functions.
         self.root_names = list()
 
     @staticmethod
@@ -339,6 +340,19 @@ class Topology:
                 break
 
     def rename_variable(self, old_name, new_name):
+        '''
+        Replace the old ONNX variable name with a new ONNX variable name. There are several fields we need to edit.
+            a. Topology
+                1. scopes (the scope where the specified ONNX variable was declared)
+                2. variable_name_set
+            b. Scope
+                1. onnx_variable_names (a mirror of Topology's variable_name_set)
+                2. variable_name_mapping
+                3. variables
+
+        :param old_name: a string
+        :param new_name: a string
+        '''
         # Search for the first variable that is named as old_name.
         scope, onnx_name, variable = next((scope, onnx_name, variable) for scope in self.scopes
                                           for onnx_name, variable in scope.variables.items() if onnx_name == old_name)
@@ -356,7 +370,7 @@ class Topology:
         # derived_names contains all ONNX variable names derived from variable.raw_name.
         derived_names = scope.variable_name_mapping[variable.raw_name]
         for i in range(len(derived_names)):
-            # Check if the ith ONNX name is just replaced by new_name
+            # Find old_name in derived_names
             if old_name != derived_names[i]:
                 continue
             # Replace the recorded ONNX name with the new name
@@ -467,6 +481,10 @@ class Topology:
             if operator.type != 'identity':
                 continue
 
+            if any(variable.is_root for variable in operator.inputs) and \
+                    any(variable.is_leaf for variable in operator.outputs):
+                continue
+
             # Replace the output variable with the input variable everywhere
             original = operator.inputs[0]
             duplicate = operator.outputs[0]
@@ -512,7 +530,7 @@ class Topology:
 
         # Scan through all operators and adjust their variables' shapes if needed
         for operator in self.unordered_operator_iterator():
-            # Rule 1:
+            # Rule 1 (CoreML):
             # Some operator in CoreML only accepts 4-D tensors but their protobuf models might specify a 2-D one.
             # We fix this problem here.
             if operator.type in ['bias', 'concat', 'convolution', 'crop', 'flatten', 'scalerPreprocessor',
@@ -524,7 +542,7 @@ class Topology:
                         # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
                         variable.type.shape += [1] * (4 - len(variable.type.shape))
 
-            # Rule 2:
+            # Rule 2 (CoreML):
             # Some model in ONNX accepts integers while the corresponding one in CoreML only takes floats.
             # If it is the case, we change tensor type from float to integer.
             if operator.type == 'embedding':
@@ -569,12 +587,13 @@ class Topology:
         self._check_structure()
 
 
-def convert_topology(topology, model_name):
+def convert_topology(topology, model_name, doc_string):
     '''
     This function is used to convert our Topology object defined in _parser.py into a ONNX model (type: ModelProto).
     :param topology: The Topology object we are going to convert
     :param model_name: GraphProto's name. Let "model" denote the output model. The string "model_name" would be assigned
     to "model.graph.name."
+    :param doc_string: A string attached to the produced model
     :return: a ONNX ModelProto
     '''
     topology._initialize_graph_status_for_traversing()
@@ -624,4 +643,13 @@ def convert_topology(topology, model_name):
         op_set = onnx_model.opset_import.add()
         op_set.domain = op_domain
         op_set.version = op_version
+
+    # Add extra information
+    onnx_model.ir_version = onnx_proto.IR_VERSION
+    onnx_model.producer_name = utils.get_producer()
+    onnx_model.producer_version = utils.get_producer_version()
+    onnx_model.domain = utils.get_domain()
+    onnx_model.model_version = utils.get_model_version()
+    onnx_model.doc_string = doc_string
+
     return onnx_model

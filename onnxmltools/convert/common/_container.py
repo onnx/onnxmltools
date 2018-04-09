@@ -69,10 +69,12 @@ class SklearnModelContainer(RawModelContainer):
         return [variable.raw_name for variable in self._outputs]
 
     def add_input(self, variable):
-        self._inputs.append(variable)
+        if variable not in self._inputs:
+            self._inputs.append(variable)
 
     def add_output(self, variable):
-        self._outputs.append(variable)
+        if variable not in self._outputs:
+            self._outputs.append(variable)
 
 
 class ModelComponentContainer:
