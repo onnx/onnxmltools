@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import FloatTensorType, StringTensorType
 from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, StringTensorType
+from ...common.utils import check_input_and_output_numbers
 
 
 def calculate_one_hot_encoder_output_shapes(operator):
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('One-hot encoder has only one input and one output')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+
     if operator.inputs[0].type.shape[1] != 1 or len(operator.inputs[0].type.shape) > 2:
         raise RuntimeError('Input must be [N, 1]-tensor')
 

@@ -6,11 +6,11 @@
 
 import copy
 from ...common._registration import register_shape_calculator
+from ...common.utils import check_input_and_output_numbers
 
 
 def calculate_identity_output_shapes(operator):
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Identity layer can only have one input and one output')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 
     input = operator.inputs[0]
     output = operator.outputs[0]

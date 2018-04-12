@@ -5,24 +5,21 @@
 # --------------------------------------------------------------------------
 
 import numbers
-from ...common.data_types import FloatTensorType, Int64TensorType
 from ...common._registration import register_shape_calculator
-
+from ...common.data_types import FloatTensorType, Int64TensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 def calculate_sklearn_scaler_output_shapes(operator):
+    check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType],
+                                 good_output_types=[FloatTensorType])
     # Inputs: multiple float- and integer-tensors
     # Output: one float tensor
     for variable in operator.inputs:
-        if type(variable.type) not in [FloatTensorType, Int64TensorType]:
-            raise RuntimeError('Scaler only accepts float- and int-tensors but got %s' % type(variable.type))
         if len(variable.type.shape) != 2:
             raise RuntimeError('Only 2-D tensor(s) can be input(s)')
         if len(set(variable.type.shape[0] for variable in operator.inputs)) > 1:
             raise RuntimeError('Batch size must be identical across inputs')
-    if len(operator.outputs) != 1:
-        raise RuntimeError('Only one output is allowed')
-    if type(operator.outputs[0].type) != FloatTensorType:
-        raise RuntimeError('Output must be a float tensor')
 
     N = operator.inputs[0].type.shape[0]
     C = 0

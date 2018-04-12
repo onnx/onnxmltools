@@ -4,17 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ....common.data_types import FloatTensorType
 from ....common._registration import register_shape_calculator
+from ....common.data_types import FloatTensorType
+from ....common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 def calculate_reshape_output_shapes(operator):
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Reshape operator has only one input and output')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     params = operator.raw_operator.reshape
-
-    if not isinstance(operator.inputs[0].type, FloatTensorType):
-        raise RuntimeError('Only float tensors can be reshaped')
 
     output_shape = list(int(i) for i in params.targetShape)
 

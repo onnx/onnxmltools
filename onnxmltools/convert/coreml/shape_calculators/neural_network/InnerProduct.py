@@ -4,20 +4,19 @@
 # license information.
 #--------------------------------------------------------------------------
 
-from ....common.data_types import FloatTensorType
 from ....common._registration import register_shape_calculator
+from ....common.data_types import FloatTensorType
+from ....common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 def calculate_inner_product_output_shapes(operator):
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType])
+
     # Input shape: [N, C]- or [N, C, 1, 1]-tensor
     # Output shape: [N, C']- or [N, C', 1, 1]-tensor
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Inner product layer can only have one input and one output')
 
     input = operator.inputs[0]
     output = operator.outputs[0]
-
-    if type(input.type) != FloatTensorType:
-        raise RuntimeError('Input must be float tensor')
 
     input_shape = input.type.shape
     if len(input_shape) == 4 and (input_shape[2] != 1 or input_shape[3] != 1):

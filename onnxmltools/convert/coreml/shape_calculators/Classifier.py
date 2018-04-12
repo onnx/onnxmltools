@@ -4,17 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type, DictionaryType, StringType
 from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type, DictionaryType, StringType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_traditional_classifier_output_shapes(operator):
-    if len(operator.outputs) > 2 or len(operator.outputs) < 1:
-        raise RuntimeError('Classifier cannot produce more than two or no output')
+    check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=[1, 2])
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType, FloatType, Int64Type])
 
-    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in
-           operator.inputs):
-        raise RuntimeError('Input(s) must be tensor(s)')
     if any(len(variable.type.shape) != 2 or variable.type.shape[0] != 1 for variable in operator.inputs):
         raise RuntimeError('Input(s) must be [1,C]-tensor(s)')
 

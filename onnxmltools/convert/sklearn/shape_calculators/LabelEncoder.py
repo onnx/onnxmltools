@@ -5,16 +5,15 @@
 # --------------------------------------------------------------------------
 
 import copy
-from ...common.data_types import Int64TensorType, StringTensorType
 from ...common._registration import register_shape_calculator
+from ...common.data_types import Int64TensorType, StringTensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_sklearn_lebel_encoder_output_shapes(operator):
-    if len(operator.outputs) != 1:
-        raise RuntimeError('Lebel encoder has only one output')
+    check_input_and_output_numbers(operator, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[Int64TensorType, StringTensorType])
 
-    if any(not isinstance(variable.type, (Int64TensorType, StringTensorType)) for variable in operator.inputs):
-        raise RuntimeError('Unsupported input type(s) found')
     input_shape = copy.deepcopy(operator.inputs[0].type.shape)
     operator.outputs[0].type = Int64TensorType(copy.deepcopy(input_shape))
 

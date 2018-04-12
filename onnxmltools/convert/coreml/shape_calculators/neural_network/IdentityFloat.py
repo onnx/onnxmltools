@@ -5,19 +5,17 @@
 # --------------------------------------------------------------------------
 
 import copy
-from ....common.data_types import FloatTensorType
 from ....common._registration import register_shape_calculator
+from ....common.data_types import FloatTensorType
+from ....common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_identical_float_tensor_shapes(operator):
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('This layer %s can only have one input and one output' % operator.type)
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     input = operator.inputs[0]
     output = operator.outputs[0]
-
-    if type(input.type) != FloatTensorType or type(output.type) != FloatTensorType:
-        raise RuntimeError('Input must be float tensor')
 
     doc_string = output.type.doc_string
     output.type.shape = copy.deepcopy(input.type.shape)  # Similar to identity but only accept floats

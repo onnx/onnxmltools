@@ -4,16 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import Int64TensorType, Int64Type, StringTensorType, StringType, TensorType
 from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, Int64TensorType, Int64Type, StringTensorType, StringType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculte_tensor_to_label_output_shapes(operator):
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Tensor-to-label operator has only one input and output')
-
-    if not isinstance(operator.inputs[0].type, TensorType):
-        raise RuntimeError('Input must be a tensor')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     N = operator.inputs[0].type.shape[0]
     if type(operator.outputs[0].type) == Int64Type:

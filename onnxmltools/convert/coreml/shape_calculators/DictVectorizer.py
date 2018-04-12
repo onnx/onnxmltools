@@ -4,19 +4,17 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import DictionaryType, SequenceType, FloatTensorType
 from ...common._registration import register_shape_calculator
+from ...common.data_types import DictionaryType, SequenceType, FloatTensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_dictionary_vectorizer_output_shapes(operator):
     # We assume all dictionaries' value types are float. It seems be reasonable to CoreML's
     # model input, but the existence of other map types leads to some concerns.
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Dictionary vectorizer operator has only one input and output')
-
-    # [TODO] dictionary vectorizer should be able to accept a sequence of dictionary
-    if type(operator.inputs[0].type) != DictionaryType and type(operator.inputs[0].type) != SequenceType:
-        raise RuntimeError('Input type must be a sequence of dictionary or a dictionary of a sequence')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+    # Two types are allowed. One is DictionaryType and the other one, SequenceType, means a sequence of dictionaries.
+    check_input_and_output_types(operator, good_input_types=[DictionaryType, SequenceType])
 
     params = operator.raw_operator.dictVectorizer
     string_key_vector = params.stringToIndex.vector

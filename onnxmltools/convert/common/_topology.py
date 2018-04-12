@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 
 import re
-import warnings
 from ...proto import helper
 from .data_types import *
 from ._container import ModelComponentContainer
@@ -256,12 +255,9 @@ class Topology:
             raise ValueError('Name seed must be an non-empty string')
 
         # Make the seed meet C-style naming convention
-        original_seed = seed
         seed = re.sub('[^0-9a-zA-Z]', '_', seed)  # Only alphabets and numbers are allowed
         if re.match('^[0-9]', seed):  # The first symbol cannot be a number
             seed = '_' + seed
-        if original_seed != seed:
-            warnings.warn('Illegal C-style name %s is replaced by %s' % (original_seed, seed))
 
         # If seed has never been seen, we return it as it is. Otherwise, we will append an number to make it unique.
         if seed not in existing_names:

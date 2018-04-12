@@ -4,16 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ....common.data_types import Int64Type, Int64TensorType
 from ....common._registration import register_shape_calculator
+from ....common.data_types import Int64Type, Int64TensorType
+from ....common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_embedding_output_shapes(operator):
-    if len(operator.inputs) > 1 or len(operator.outputs) > 1:
-        raise RuntimeError('Embedding layer can only have one input and one output')
-
-    if type(operator.inputs[0].type) not in [Int64Type, Int64TensorType]:
-        raise RuntimeError('ONNX embedding only accepts integer input')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[Int64Type, Int64TensorType])
 
     output = operator.outputs[0]
 

@@ -5,15 +5,15 @@
 # --------------------------------------------------------------------------
 
 import copy
-from ....common.data_types import FloatTensorType
 from ....common._registration import register_shape_calculator
+from ....common.data_types import FloatTensorType
+from ....common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_dot_output_shapes(operator):
-    if len(operator.inputs) != 2 or len(operator.outputs) != 1:
-        raise RuntimeError('Dot must have two inputs and one output')
-    if any(type(variable.type) != FloatTensorType for variable in operator.inputs):
-        raise RuntimeError('Input(s) must be float tensor(s)')
+    check_input_and_output_numbers(operator, input_count_range=2, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType])
+
     if operator.inputs[0].type.shape != operator.inputs[1].type.shape:
         raise RuntimeError('Input shapes must be identical')
 

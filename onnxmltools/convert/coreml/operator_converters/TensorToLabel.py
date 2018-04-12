@@ -10,6 +10,33 @@ from ...common._registration import register_converter
 
 
 def convert_tensor_to_label(scope, operator, container):
+    '''
+    This converter tries to convert a dummy operator 'TensorToLabel' into a sequence of some ONNX operators. Those
+    operators are used to extract the label with the highest probability for doing a prediction. We assume that the
+    elements in the given probability tensor are aligned with the class labels specified in the CoreML model. That is,
+    if you have a class label vector ['a', 'b'] in our CoreML classifier, the first (and the only) input of this
+    operator should be [probability_of_class_a, probability_of_class_b].
+
+    Assume that we have C classes with batch size N (N must be 1. If not, the output class probabilities need to be
+    encoded as a sequence of dictionary, which is not allowed in ONNX). The ONNX computation graph of this operator may
+    look like
+
+                Probability tensor [1, C] (the variable defined at operator.inputs[0])
+                        |
+                        v
+                      ArgMax                                        LoadConstant (its attribute is extracted from
+                        |                                                |        operator.raw_operator, which is a
+                        |                                                |        CoreML classifier)
+                        |                                                |
+                        v                                                |
+                   best index [1]                                        |
+                        |                                                |
+                        v                                                v
+               ArrayFeatureExtractor  <-------------------- a 1-D tensor of class labels [C]
+                        |
+                        v
+                  predicted label [1]
+    '''
     model_type = operator.raw_operator.WhichOneof('Type')
     if model_type == 'neuralNetworkClassifier':
         model = operator.raw_operator.neuralNetworkClassifier

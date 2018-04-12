@@ -4,17 +4,19 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import FloatTensorType
 from ...common._registration import register_converter
 
 
 def convert_tensor_to_probability_map(scope, operator, container):
-    if len(operator.inputs) > 1 or len(operator.outputs) > 1:
-        raise RuntimeError('Too many input or output variables')
+    '''
+    This converter tries to convert a special operator 'TensorToProbabilityMap' into a sequence of some ONNX operators.
+    Those operators are used to create a dictionary in which keys are class labels and values are the associated
+    probabilities. We assume that the elements in the given probability tensor are aligned with the class labels
+    specified in the CoreML model.
 
-    if type(operator.inputs[0].type) != FloatTensorType:
-        raise RuntimeError('Only float tensor is supported')
-
+    Notice that we currently doesn't support a CoreML classifier with a batch size larger than one because ONNX's ZipMap
+    is not able to produce a batch of dictionaries.
+    '''
     attrs = {'name': scope.get_unique_operator_name('ZipMap')}
 
     model_type = operator.raw_operator.WhichOneof('Type')

@@ -4,16 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 
-import copy
-from ...common.data_types import FloatTensorType, Int64TensorType
 from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, Int64TensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_sklearn_imputer_output_shapes(operator):
-    if len(operator.inputs) < 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Invalid input or output numbers')
-    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType)) for variable in operator.inputs):
-        raise RuntimeError('Input(s) must be integer- or float-tensor(s)')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType])
+
     C = 0
     for variable in operator.inputs:
         if variable.type.shape[1] != 'None':

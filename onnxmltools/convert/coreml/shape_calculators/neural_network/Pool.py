@@ -4,18 +4,19 @@
 # license information.
 #--------------------------------------------------------------------------
 
-from ....common.data_types import FloatTensorType
 from ....common._registration import register_shape_calculator
+from ....common.data_types import FloatTensorType
+from ....common.utils import check_input_and_output_numbers, check_input_and_output_types
 from .Convolution import calculate_convolution_and_pooling_1D_output_shape
 
 def calculate_pooling_output_shapes(operator):
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Pooling layer can only have one input and one output')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     input = operator.inputs[0]
     input_shape = operator.inputs[0].type.shape
 
-    if type(input.type) != FloatTensorType or len(input.type.shape) != 4:
+    if len(input.type.shape) != 4:
         raise RuntimeError('Input must be 4-D float tensor')
 
     operator.outputs[0].type.shape = [0, 0, 0, 0]

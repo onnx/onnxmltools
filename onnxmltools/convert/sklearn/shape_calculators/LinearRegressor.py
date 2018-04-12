@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import FloatTensorType
 from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType
+from ...common.utils import check_input_and_output_numbers
 
 
 def calculate_sklearn_linear_regressor_output_shapes(operator):
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('This is an one-to-one mapping')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+
     N = operator.inputs[0].type.shape[0]
     operator.outputs[0].type = FloatTensorType([N, 1])
 

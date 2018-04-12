@@ -4,16 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import FloatTensorType, FloatType, Int64TensorType, Int64Type
 from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, FloatType, Int64TensorType, Int64Type
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_feature_vectorizer_output_shapes(operator):
-    if len(operator.outputs) != 1:
-        raise RuntimeError('Feature vectorizer operator has only one output')
-    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in
-           operator.inputs):
-        raise RuntimeError('Input(s) must be float or integer tensor(s)')
+    check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType, FloatType, Int64Type])
+
     if any(len(variable.type.shape) != 2 for variable in operator.inputs):
         raise RuntimeError('Input(s) must be 2-D tensor(s)')
 
@@ -29,12 +28,13 @@ def calculate_feature_vectorizer_output_shapes(operator):
 
     C = sum(info.inputDimensions for info in operator.raw_operator.featureVectorizer.inputList)
 
-    if isinstance(operator.inputs[0].type, (FloatTensorType, FloatType)):
-        doc_string = operator.outputs[0].type.doc_string
-        operator.outputs[0].type = FloatTensorType([N, C], doc_string=doc_string)
-    elif isinstance(operator.inputs[0].type, (Int64TensorType, Int64Type)):
-        doc_string = operator.outputs[0].type.doc_string
+    # Currently, we only expect numerical inputs. If both of integers and floats exist, we may convert integers into
+    # floats before concatenating them. Thus, the output type is integer-like only if all inputs are integer-like.
+    doc_string = operator.outputs[0].type.doc_string
+    if all(isinstance(variable.type, (Int64TensorType, Int64Type)) for variable in operator.inputs):
         operator.outputs[0].type = Int64TensorType([N, C], doc_string=doc_string)
+    elif isinstance(operator.inputs[0].type, (FloatTensorType, FloatType)):
+        operator.outputs[0].type = FloatTensorType([N, C], doc_string=doc_string)
     else:
         raise ValueError('Unsupported input type: %s' % type(operator.inputs[0].type))
 

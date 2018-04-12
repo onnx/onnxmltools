@@ -7,6 +7,7 @@
 import math
 import numbers
 from ....common._registration import register_shape_calculator
+from ....common.utils import check_input_and_output_numbers
 
 
 def calculate_convolution_and_pooling_1D_output_shape(
@@ -50,6 +51,8 @@ def calculate_convolution_transpose_1D_output_shape(
 
 
 def calculate_convolution_output_shapes(operator):
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+
     params = operator.raw_operator.convolution
 
     input_shape = operator.inputs[0].type.shape

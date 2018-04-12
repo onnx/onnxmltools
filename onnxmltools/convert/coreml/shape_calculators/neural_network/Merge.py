@@ -4,19 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ....common.data_types import FloatTensorType
 from ....common._registration import register_shape_calculator
+from ....common.data_types import FloatTensorType
+from ....common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_merge_output_shapes(operator):
-    if len(operator.inputs) < 1:
-        raise RuntimeError('Add operator requires at least one input')
-    if len(operator.outputs) != 1:
-        raise RuntimeError('Add operator only has one output')
-
-    for variable in operator.inputs:
-        if not isinstance(variable.type, FloatTensorType):
-            raise RuntimeError('Input must be a float tensor')
+    check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     # [TODO] Fix reduce-like shape inference. We now assume all inputs are 4-D.
     output_shape = [0, 0, 0, 0]

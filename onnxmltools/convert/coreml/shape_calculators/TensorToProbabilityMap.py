@@ -4,16 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import Int64Type, StringType, DictionaryType, FloatTensorType
 from ...common._registration import register_shape_calculator
+from ...common.data_types import Int64Type, StringType, DictionaryType, FloatTensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_tensor_to_probability_map_output_shapes(operator):
-    if len(operator.inputs) != 1 or len(operator.outputs) != 1:
-        raise RuntimeError('Tensor-to-probability operator has only one input and output')
-
-    if not isinstance(operator.inputs[0].type, FloatTensorType):
-        raise RuntimeError('Input must be a float tensor')
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     model_type = operator.raw_operator.WhichOneof('Type')
     if model_type == 'neuralNetworkClassifier':

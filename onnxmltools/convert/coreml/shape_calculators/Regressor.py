@@ -4,14 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type
 from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type
+from ...common.utils import check_input_and_output_types
 
 
 def calculate_traditional_regressor_output_shapes(operator):
-    if any(not isinstance(variable.type, (FloatTensorType, Int64TensorType, FloatType, Int64Type)) for variable in
-           operator.inputs):
-        raise RuntimeError('Input(s) must be tensor(s)')
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType, FloatType, Int64Type])
+
     if any(len(variable.type.shape) != 2 for variable in operator.inputs):
         raise RuntimeError('Input(s) must be 2-D tensor(s)')
 

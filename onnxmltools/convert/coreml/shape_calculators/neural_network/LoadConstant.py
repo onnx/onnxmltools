@@ -4,14 +4,13 @@
 # license information.
 #--------------------------------------------------------------------------
 
-from ....common.data_types import TensorType, FloatTensorType
 from ....common._registration import register_shape_calculator
+from ....common.data_types import TensorType, FloatTensorType
+from ....common.utils import check_input_and_output_numbers
 
 def calculate_load_constant_output_shapes(operator):
-    if len(operator.inputs) != 0:
-        raise RuntimeError('Load Constant operator has no input')
-    if len(operator.outputs) != 1:
-        raise RuntimeError('Load Constant operator has only one output')
+    check_input_and_output_numbers(operator, input_count_range=None, output_count_range=1)
+
     output = operator.outputs[0]
 
     # CoreML's constant is always 3-D tensor, so we assume its shape is [C, H, W].
