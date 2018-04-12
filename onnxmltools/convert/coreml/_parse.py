@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ..common.data_types import *
 from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
+from ..common.data_types import *
 
 
 def parse_coreml_feature(feature_info, batch_size=1):
