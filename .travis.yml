@@ -17,7 +17,6 @@ python:
     - "3.6"
 
 install:
-  - pwd
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
       PYTHON_VER="2.7";
@@ -38,10 +37,9 @@ install:
   - conda install -c conda-forge numpy
   - conda install -c conda-forge cmake
   - pip install "onnx$ONNX_VERSION"
-  - pwd
-  - pip install -r requirements.txt
-  - pip install -r requirements-dev.txt
-  - export PYTHONPATH=pwd
+  - cd $TRAVIS_BUILD_DIR && pip install -r requirements.txt
+  - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
+  - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
 
 script:
     - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
