@@ -1,13 +1,46 @@
 dist: trusty
 language: python
+env:
+  - ONNX_VERSION="==1.0.1"
+  - ONNX_ML=1
+
+addons:
+  apt:
+    packages:
+      - build-essential
+      - curl
+      - git
+
 python:
     - "2.7"
     - "3.5"
     - "3.6"
-install: 
-    - pip install -r requirements.txt
-    - pip install -r requirements-dev.txt
-    - export PYTHONPATH=pwd
+
+install:
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
+      PYTHON_VER="2.7";
+    else
+      curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
+      PYTHON_VER="3.6m";
+    fi
+  - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
+  - export LIBRARY_PATH="$HOME/miniconda/lib:$LIBRARY_PATH"
+  - export CPATH="$HOME/miniconda/include:$CPATH"
+  - export CPATH="$HOME/miniconda/include/python$PYTHON_VER:$CPATH"
+  - ls $HOME/miniconda/include/python$PYTHON_VER
+  - printenv
+  - conda config --set always_yes yes --set changeps1 no
+  - conda install -c conda-forge protobuf
+  - conda install -c conda-forge numpy
+  - conda install -c conda-forge cmake
+  - pip install "onnx$ONNX_VERSION"
+  - pip install -r requirements.txt
+  - pip install -r requirements-dev.txt
+  - export PYTHONPATH=pwd
+
 script:
     - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
 
