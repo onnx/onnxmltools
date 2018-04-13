@@ -1,8 +1,8 @@
 dist: trusty
 language: python
 env:
-  - ONNX_VERSION="==1.0.1"
-  - ONNX_ML=1
+  - ONNX_VERSION="==1.0.1" ONNX_ML=1
+  - ONNX_VERSION="" ONNX_ML=1
 
 addons:
   apt:
@@ -17,6 +17,7 @@ python:
     - "3.6"
 
 install:
+  - pwd
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
       PYTHON_VER="2.7";
@@ -37,6 +38,7 @@ install:
   - conda install -c conda-forge numpy
   - conda install -c conda-forge cmake
   - pip install "onnx$ONNX_VERSION"
+  - pwd
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
   - export PYTHONPATH=pwd
