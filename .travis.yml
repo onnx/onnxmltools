@@ -1,20 +1,13 @@
 dist: trusty
-
 language: python
-
 python:
     - "2.7"
     - "3.5"
     - "3.6"
-
-before_install:
-    - ./.travis/before_install.sh
-
 install: 
     - pip install -r requirements.txt
     - pip install -r requirements-dev.txt
     - export PYTHONPATH=pwd
- 
 script:
     - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
 
