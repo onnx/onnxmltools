@@ -13,8 +13,8 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 
 def calculate_sklearn_linear_classifier_output_shapes(operator):
     '''
-    This operator maps an input feature vector into a scalar label if the number of outputs is one. If two outputs are
-    provided, this operator should further generate a map storing all classes' probabilities.
+    This operator maps an input feature vector into a scalar label if the number of outputs is one. If two outputs
+    appear in this operator's output list, we should further generate a map storing all classes' probabilities.
 
     Allowed input/output patterns are
         1. [1, C] ---> [1, 1], Map

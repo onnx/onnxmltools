@@ -12,7 +12,9 @@ from ...common.utils import check_input_and_output_numbers
 def calculate_sklearn_dict_vectorizer_output_shapes(operator):
     '''
     Allowed input/output patterns are
-        1. [1, C] ---> [1, C]
+        1. Map ---> [1, C]
+
+    C is the total number of allowed keys in the input dictionary.
     '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 

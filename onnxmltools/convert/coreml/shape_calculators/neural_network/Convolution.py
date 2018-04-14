@@ -12,10 +12,6 @@ from ....common.utils import check_input_and_output_numbers
 
 def calculate_convolution_and_pooling_1D_output_shape(
         input_size, kernel_size, kernel_dilation, stride, pad_mode, pad_head, pad_tail, output_size=0):
-    '''
-    Allowed input/output patterns are
-        1. [N, C, H, W] ---> [N, C, H', W']
-    '''
     if not isinstance(input_size, numbers.Integral):
         return 'None'
     if output_size > 0:
@@ -55,6 +51,10 @@ def calculate_convolution_transpose_1D_output_shape(
 
 
 def calculate_convolution_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. [N, C, H, W] ---> [N, C, H', W']
+    '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 
     params = operator.raw_operator.convolution

@@ -13,6 +13,9 @@ def calculate_feature_vectorizer_output_shapes(operator):
     '''
     Allowed input/output patterns are
         1. [N, C_1], ..., [N, C_n] ---> [N, C_1 + ... + C_n]
+
+    Feature vectorizer concatenates all input tensors along the C-axis, so the output dimension along C-axis is simply
+    a sum of all input features.
     '''
     check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType, FloatType, Int64Type])

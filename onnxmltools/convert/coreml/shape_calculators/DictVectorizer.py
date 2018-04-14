@@ -13,6 +13,8 @@ def calculate_dictionary_vectorizer_output_shapes(operator):
     '''
     Allowed input/output patterns are
         1. Map ---> [1, C]
+
+    C is the number of all allowed keys in the input dictionary.
     '''
     # We assume all dictionaries' value types are float. It seems be reasonable to CoreML's
     # model input, but the existence of other map types leads to some concerns.

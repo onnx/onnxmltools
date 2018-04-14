@@ -12,7 +12,9 @@ from ...common.utils import check_input_and_output_numbers
 def calculate_one_hot_encoder_output_shapes(operator):
     '''
     Allowed input/output patterns are
-        1. [N, C] ---> [N, C']
+        1. [N, 1] ---> [N, C']
+
+    C' is the total number of categorical values.
     '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 

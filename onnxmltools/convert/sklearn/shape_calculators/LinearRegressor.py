@@ -13,6 +13,9 @@ def calculate_sklearn_linear_regressor_output_shapes(operator):
     '''
     Allowed input/output patterns are
         1. [N, C] ---> [N, 1]
+
+    This operator produces a scalar prediction for every example in a batch. If the input batch size is N, the output
+    shape may be [N, 1].
     '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 
