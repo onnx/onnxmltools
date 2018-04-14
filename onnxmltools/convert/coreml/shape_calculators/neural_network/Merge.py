@@ -10,6 +10,13 @@ from ....common.utils import check_input_and_output_numbers, check_input_and_out
 
 
 def calculate_merge_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. [N, C_1, H_1, W_1], ..., [N, C_n, H_n, W_n] --->
+            [N, max(C_1, ..., C_n), max(H_1, ..., H_n), max(W_1, ..., W_n)]
+
+    If 'None' happens at any coordinate, that coordinate's final dimension would be 'None'.
+    '''
     check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 

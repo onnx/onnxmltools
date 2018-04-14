@@ -10,6 +10,16 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 
 
 def calculate_traditional_classifier_output_shapes(operator):
+    '''
+    For classifiers, allowed input/output patterns are
+        1. [N, C_1], ..., [N, C_n] ---> [N, 1], Map
+        2. [N, C_1], ..., [N, C_n] ---> [N, 1]
+
+    For regressors, allowed input/output patterns are
+        1. [N, C_1], ..., [N, C_n] ---> [N, 1]
+
+    Note that the N must be 1 as long as ZipMap only produces dictionary.
+    '''
     check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=[1, 2])
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType, FloatType, Int64Type])
 

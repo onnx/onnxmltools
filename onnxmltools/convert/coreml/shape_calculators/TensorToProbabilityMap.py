@@ -10,6 +10,13 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 
 
 def calculate_tensor_to_probability_map_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. [1, C] ---> Map
+        2. [N, C] ---> A sequence of maps
+
+    Note that N must be 1 currently because ZipMap doesn't support batch size larger than 1.
+    '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 

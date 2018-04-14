@@ -12,6 +12,21 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 
 
 def calculate_sklearn_svm_output_shapes(operator):
+    '''
+    For SVM classifiers, allowed input/output patterns are
+        1. [1, C] ---> [1, 1], Map
+        2. [N, C] ---> [N, 1], A sequence of map
+    Note that the second case is not allowed as long as ZipMap only produces dictionary.
+
+    For SVM regressors, allowed input/output patterns are
+        1. [N, C] ---> [N, 1]
+
+    For both of SVC and SVR, the inputs should numerical tensor(s). For SVC with batch size 1, the first output is the
+    label and the second output is a map used to store all class probabilities (For a key-value pair, the value is
+    assigned to the class specified by the key). If batch size is larger than 1, we need to use a sequence of maps to
+    denote class probabilities. Regarding SVR, we just produce a scalar for each example. If there are N examples, the
+    output shape would be [N, 1].
+    '''
     op = operator.raw_operator
 
     N = operator.inputs[0].type.shape[0]

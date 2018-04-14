@@ -11,6 +11,12 @@ from ....common.utils import check_input_and_output_numbers, check_input_and_out
 
 
 def calculate_permute_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. [N, C, H, W] ---> [N', C', H', W']
+
+    Note that here [N', C', H', W'] means all possible permutations of [N, C, H, W]
+    '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType, StringTensorType],
                                  good_output_types=[FloatTensorType, Int64TensorType, StringTensorType])

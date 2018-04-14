@@ -10,6 +10,10 @@ from ...common.utils import check_input_and_output_numbers
 
 
 def calculate_sklearn_dict_vectorizer_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. [1, C] ---> [1, C]
+    '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 
     C = len(operator.raw_operator.feature_names_)

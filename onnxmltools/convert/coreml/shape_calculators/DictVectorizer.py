@@ -10,6 +10,10 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 
 
 def calculate_dictionary_vectorizer_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. Map ---> [1, C]
+    '''
     # We assume all dictionaries' value types are float. It seems be reasonable to CoreML's
     # model input, but the existence of other map types leads to some concerns.
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)

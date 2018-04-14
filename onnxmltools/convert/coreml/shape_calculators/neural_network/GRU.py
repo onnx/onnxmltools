@@ -10,6 +10,9 @@ from ....common.utils import check_input_and_output_numbers, check_input_and_out
 
 
 def calculate_gru_output_shapes(operator):
+    '''
+    See GRU's conversion function for its output shapes.
+    '''
     check_input_and_output_numbers(operator, input_count_range=[1, 2], output_count_range=[1, 2])
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 

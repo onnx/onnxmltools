@@ -10,6 +10,12 @@ from ...common.utils import check_input_and_output_types
 
 
 def calculate_traditional_regressor_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. [N, C] ---> [N, C']
+
+    The number C' is the length of prediction vector. It can be a scalar (C'=1) or a vector (C'>1)
+    '''
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType, FloatType, Int64Type])
 
     if any(len(variable.type.shape) != 2 for variable in operator.inputs):

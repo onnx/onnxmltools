@@ -9,6 +9,11 @@ from ....common.utils import check_input_and_output_numbers
 from ....common._registration import register_shape_calculator
 
 def calculate_concat_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. [N_1, C, H, W], ..., [N_n, C, H, W] ---> [N_1 + ... + N_n, C, H, W]
+        2. [N, C_1, H, W], ..., [N, C_n, H, W] ---> [N, C_1 + ... + C_n, H, W]
+    '''
     check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=[1, 1])
 
     output_shape = copy.deepcopy(operator.inputs[0].type.shape)

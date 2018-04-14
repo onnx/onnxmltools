@@ -10,6 +10,10 @@ from ...common.utils import check_input_and_output_numbers
 
 
 def calculate_sklearn_linear_regressor_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. [N, C] ---> [N, 1]
+    '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 
     N = operator.inputs[0].type.shape[0]

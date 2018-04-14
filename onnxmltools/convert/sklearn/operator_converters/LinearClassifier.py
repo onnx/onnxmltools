@@ -10,7 +10,6 @@ from ...common._registration import register_converter
 
 
 def convert_sklearn_linear_classifier(scope, operator, container):
-    print('convert sklearn linear classifier')
     op = operator.raw_operator
     coefficients = op.coef_.flatten().tolist()
     intercepts = op.intercept_.tolist()
