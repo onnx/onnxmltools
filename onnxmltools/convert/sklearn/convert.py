@@ -13,21 +13,6 @@ from . import shape_calculators
 from . import operator_converters
 
 
-# The conversion of a scikit-learn model consists of several major steps.
-#   1. Put the input model into a Container object (i.e., onnxmltools.convert.common._container.SklearnModelContainer)
-#   2. Create a empty Topology (i.e., onnxmltools.convert.common._topology.Topology) object. It will be an an abstract
-#      computational graph of the input model.
-#   3. Parse the scikit-learn model as a computational graph. We may add variables and operators into the Topology
-#      object defined in the previous step.
-#   4. Call the member function, compile, in Topology. There are two important steps.
-#        a. First, we may feed input variables specified in the Container (defined in Step 1) into our computational
-#           graph and then evaluate the computational graph. Unreachable variables and operators would be removed.
-#        b. Second, we may invoke the shape calculators for all existing operators in a topological order.
-#   5. Finally, the conversion functions of all existing operators are called in a topological order.
-#
-#   Note that steps 1-3 can be found in onnxmltools.convert.sklearn._parse.parse_sklearn. Step 5 is implemented in
-#   onnxmltools.common._topology.convert_topology. Step 4-a is onnxmltools.convert.common._topology.Topology._prune and
-#   step 4-b is onnxmltools.convert.common._topology.Topology._infer_all_types.
 def convert(model, name=None, initial_types=None, doc_string=''):
     '''
     This function produces an equivalent ONNX model of the given scikit-learn model. The supported scikit-learn

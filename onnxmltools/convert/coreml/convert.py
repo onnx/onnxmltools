@@ -17,21 +17,6 @@ from .operator_converters import neural_network as nn_converters
 from .shape_calculators import neural_network as nn_shape_calculators
 
 
-# The conversion of a CoreLM model consists of several major steps.
-#   1. Put the input model into a Container object (i.e., onnxmltools.convert.common._container.CoremlModelContainer)
-#   2. Create a empty Topology (i.e., onnxmltools.convert.common._topology.Topology) object. It's an an abstract
-#      computational graph of the input model.
-#   3. Parse the CoreML model as a computational graph. We may add variables and operators into the Topology object
-#      defined in the previous step.
-#   4. Call the member function, compile, in Topology. There are two important steps.
-#        a. First, we may feed input variables specified in the Container (defined in Step 1) into our computational
-#           graph. Then, we may evaluate the computational graph. Unreachable variables and operators would be removed.
-#        b. Second, we may invoke the shape calculators for all existing operators in a topological order.
-#   5. Finally, the conversion functions of all existing operators are called in a topological order.
-#
-#   Note that steps 1-4 can be found in onnxmltools.convert.coreml._parse.parse_coreml. Step 5 is implemented in
-#   onnxmltools.common._topology.convert_topology. Step 4-a is onnxmltools.convert.common._topology.Topology._prune and
-#   step 4-b is onnxmltools.convert.common._topology.Topology._infer_all_types.
 def convert(model, name=None, initial_types=None, doc_string=''):
     '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
