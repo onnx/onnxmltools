@@ -7,6 +7,11 @@ In ONNXMLTools, the conversion framework consists of several essential component
     * Scope
     * Operator
     * Variable
+* Containers
+    * RawModelContainer
+        * CoremlModelContainer
+        * SklearnModelContainer
+    * ModelComponentContainer
 * Parsers (defined in coreml/sklearn subdirectory's _parse.py)
     * Core ML parser
     * scikit-learn parser
@@ -37,22 +42,30 @@ There are two major functionilities a `Scope` may provide. First, it includes a 
 
 `Variable` and `Operator` are the smallest objects in a computational graph. To encode the topological dependencies between operators, each `Operator` object has a input list and a output list. The two lists are python lists of `Variable` object. As you may expect, an operator computes its output(s) from its given input(s).
 
+## Containers
+
+Our framework relies on two different types of containers.
+
+The first one is `RawModelContainer` and its derived classes. These objects are used to store the raw model (the one you want to convert into ONNX) and its input and output names. Let's provide an example explaining what are those names. If a CoreML model has input `feature_vector` and output `class_probabilities`, calling the property `input_names`/`output_names` of `RawModelContainer` should yield `['feature_vector']`/`['class_probabilities']`. These names basically defines the roots and leaves of your original computational graph. If we forget assigning an input name, it may cause some unreachable sub-graph which will be pruned in our compling phase.
+
+The second container is `ModelComponentContainer` class, which we use to store the ONNX objects created during the conversion phase. Those saved objects will be put into a ONNX `ModelProto` finally.
+
 ## Parsers
 
-Parser is used to translate the considered raw model (e.g., a Core ML model) into our a `Topology` object. For Core ML, its parsing functions is defined in
+A parser is used to translate the considered raw model (e.g., a Core ML model) into a `Topology` object. For Core ML, its parsing algorithm is defined in
 `onnxmltools.convert.coreml._parse`. For scikit-learn's, please see `onnxmltools.convert.sklearn._parse`.
 
 ## Complier
 
 Our complier is a collection of functions defined in `Topology` class. By calling `compile()` defined in `Topology`, those functions would be sequentially applied to the associated `Topology` object.
 
-Our compliing procedure also aims at provide enough information so that at conversion stage, the conversions of all operators can happen in parallel.
+The compling process generates all necessary information for every single operator's conversion. Once a topology is complied, the subsequent conversions can happen independently and in parallel.
 
-### Shape inference
+### Variable Types and Shape Inference
 
-For each variable, its shape information, a list of integers and strings, is encoded in  its `type` field. To access the shape of a variable, `x`, you can do `x.type.shape`. Note that the only allowed string is `"None"`, which stands for a variable-length coordinate.
+Every `Variable` object has a type field (i.e., a member variable in C++). Allowed `type` values such as `FloatTensorType` and `Int64TensorType` are defined in `onnxmltools.convert.common.data_types`. For each variable, its `type` contains its shape information. To access the shape of a variable, `x`, you can do `x.type.shape`, which returns a list of integers and strings. Note that the only allowed string is `'None'`, which stands for a variable-length coordinate.
 
-Our shape inference is a sequence of functions calls. Each call takes one `Operator` as the only input argument and calculate the `type` fields of all its output variables. Of course, a shape calculator is called only if all its input variables have been initialized or produced by some other operators.
+Our shape inference is a sequence of functions calls. Each call takes one `Operator` as the only input argument and calculate the `type` (including `type`'s `shape` field) fields of all its output variables. Of course, a shape calculator is called only if all its input variables have been initialized or produced by some other operators.
 
 The shape mapping from Core ML to our IR follows the following rules.
 
@@ -85,8 +98,8 @@ For each `Operator` type we want to support, one shape calculator and one conver
 
 A typical conversion process may include three steps.
 
-* First, we translate the input model (commonly called raw model in our code) into our IR by calling a suitable parser.
-* The second stage is compling. We may try to optimize the computational graph (i.e, a topology) to reduce redundant computations and then calculate the shapes of all existing variables. Also, post-processing rules and some basic checks are applied.
+* First, we translate the input model (commonly called a raw model in our code) into our IR by calling a suitable parser.
+* The second stage is compling. We may try to optimize the computational graph (i.e, a topology) and then calculate the shapes of all existing variables. Also, post-processing rules and some basic checks may be applied.
 * Third, we may call a function to invode the conversions of all existing operators in a topologically order.
 * Notice that all existing operators' shape calculators and converters should be registered.
 

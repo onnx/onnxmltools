@@ -38,8 +38,8 @@ install:
   - conda install -c conda-forge cmake
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements.txt
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
-  - pip install "onnx$ONNX_VERSION"
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
+  - pip install -I "onnx$ONNX_VERSION"
 
 script:
     - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
