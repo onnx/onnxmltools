@@ -632,13 +632,24 @@ def convert_topology(topology, model_name, doc_string):
 
     # Create a graph from its main components
     graph = helper.make_graph(container.nodes, model_name, container.inputs, container.outputs, container.initializers)
+
     # Add extra information related to the graph
     graph.value_info.extend(container.value_info)
+
+    # Create model
     onnx_model = helper.make_model(graph)
+
+    # Fill operator sets
+    i = 0
     for op_domain, op_version in container.node_domain_version_pair_sets:
-        op_set = onnx_model.opset_import.add()
+        if i  == 0 and len(onnx_model.opset_import) == 1:
+            # Overwrite the default operator set created by helper.make_model(...)
+            op_set = onnx_model.opset_import[0]
+        else:
+            op_set = onnx_model.opset_import.add()
         op_set.domain = op_domain
         op_set.version = op_version
+        i += 1
 
     # Add extra information
     onnx_model.ir_version = onnx_proto.IR_VERSION
