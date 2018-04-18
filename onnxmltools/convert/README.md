@@ -15,7 +15,7 @@ In ONNXMLTools, the conversion framework consists of several essential component
 * Parsers (defined in coreml/sklearn subdirectory's _parse.py)
     * Core ML parser
     * scikit-learn parser
-* Complier (defined in _topology.py)
+* Compiler (defined in _topology.py)
     * Graph optimization
     * Shape inference
     * Apply post-processing rules
@@ -46,7 +46,7 @@ There are two major functionilities a `Scope` may provide. First, it includes a 
 
 Our framework relies on two different types of containers.
 
-The first one is `RawModelContainer` and its derived classes. These objects are used to store the raw model (the one you want to convert into ONNX) and its input and output names. Let's provide an example explaining what are those names. If a CoreML model has input `feature_vector` and output `class_probabilities`, calling the property `input_names`/`output_names` of `RawModelContainer` should yield `['feature_vector']`/`['class_probabilities']`. These names basically defines the roots and leaves of your original computational graph. If we forget assigning an input name, it may cause some unreachable sub-graph which will be pruned in our compling phase.
+The first one is `RawModelContainer` and its derived classes. These objects are used to store the raw model (the one you want to convert into ONNX) and its input and output names. Let's provide an example explaining what are those names. If a CoreML model has input `feature_vector` and output `class_probabilities`, calling the property `input_names`/`output_names` of `RawModelContainer` should yield `['feature_vector']`/`['class_probabilities']`. These names basically defines the roots and leaves of your original computational graph. If we forget assigning an input name, it may cause some unreachable sub-graph which will be pruned in our compiling phase.
 
 The second container is `ModelComponentContainer` class, which we use to store the ONNX objects created during the conversion phase. Those saved objects will be put into a ONNX `ModelProto` finally.
 
@@ -55,11 +55,11 @@ The second container is `ModelComponentContainer` class, which we use to store t
 A parser is used to translate the considered raw model (e.g., a Core ML model) into a `Topology` object. For Core ML, its parsing algorithm is defined in
 `onnxmltools.convert.coreml._parse`. For scikit-learn's, please see `onnxmltools.convert.sklearn._parse`.
 
-## Complier
+## Compiler
 
-Our complier is a collection of functions defined in `Topology` class. By calling `compile()` defined in `Topology`, those functions would be sequentially applied to the associated `Topology` object.
+Our compiler is a collection of functions defined in `Topology` class. By calling `compile()` defined in `Topology`, those functions would be sequentially applied to the associated `Topology` object.
 
-The compling process generates all necessary information for every single operator's conversion. Once a topology is complied, the subsequent conversions can happen independently and in parallel.
+The compiling process generates all necessary information for every single operator's conversion. Once a topology is compiled, the subsequent conversions can happen independently and in parallel.
 
 ### Variable Types and Shape Inference
 
@@ -99,7 +99,7 @@ For each `Operator` type we want to support, one shape calculator and one conver
 A typical conversion process may include three steps.
 
 * First, we translate the input model (commonly called a raw model in our code) into our IR by calling a suitable parser.
-* The second stage is compling. We may try to optimize the computational graph (i.e, a topology) and then calculate the shapes of all existing variables. Also, post-processing rules and some basic checks may be applied.
+* The second stage is compiling. We may try to optimize the computational graph (i.e, a topology) and then calculate the shapes of all existing variables. Also, post-processing rules and some basic checks may be applied.
 * Third, we may call a function to invode the conversions of all existing operators in a topologically order.
 * Notice that all existing operators' shape calculators and converters should be registered.
 
