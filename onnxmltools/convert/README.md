@@ -7,6 +7,7 @@ In ONNXMLTools, the conversion framework consists of several essential component
     * Scope
     * Operator
     * Variable
+    * Type (defined in data_types.py)
 * Containers
     * RawModelContainer
         * CoremlModelContainer
@@ -40,7 +41,8 @@ The `Topology` class is the top-level structure of a computational graph. A `Top
 
 There are two major functionilities a `Scope` may provide. First, it includes a naming mechanism for variables/operators so that all variable/operator names are unique. Note that variables' naming mechnisms is independent from that of operators so that an operator and a variable can share the same name. Second, a `Scope` works like a container of operators and variables. Because two different `Scope` objects are essentially independent, we can use them in an recursive parsing algorithm to isolate components found at different stages.
 
-`Variable` and `Operator` are the smallest objects in a computational graph. To encode the topological dependencies between operators, each `Operator` object has a input list and a output list. The two lists are python lists of `Variable` object. As you may expect, an operator computes its output(s) from its given input(s).
+`Variable` and `Operator` are the smallest objects in a computational graph. To encode the topological dependencies between operators, each `Operator` object has a input list and a output list. The two lists are python lists of `Variable` object. As you may expect, an operator computes its output(s) from its given input(s). One important attribute of a `Variable` object is its `type` field (i.e., a member variable in C++). Allowed `type` values such as `FloatTensorType` and `Int64TensorType` are defined in `onnxmltools.convert.common.data_types`. Shape information is also included in `type`. To access the shape of a variable, `x`, you can do `x.type.shape`, which returns a list of integers and strings. Note that the only allowed string is `'None'`, which stands for a variable-length coordinate.
+
 
 ## Containers
 
@@ -61,21 +63,21 @@ Our compiler is a collection of functions defined in `Topology` class. By callin
 
 The compiling process generates all necessary information for every single operator's conversion. Once a topology is compiled, the subsequent conversions can happen independently and in parallel.
 
-### Variable Types and Shape Inference
+### Shape Inference
 
-Every `Variable` object has a type field (i.e., a member variable in C++). Allowed `type` values such as `FloatTensorType` and `Int64TensorType` are defined in `onnxmltools.convert.common.data_types`. For each variable, its `type` contains its shape information. To access the shape of a variable, `x`, you can do `x.type.shape`, which returns a list of integers and strings. Note that the only allowed string is `'None'`, which stands for a variable-length coordinate.
+Our shape inference is a sequence of function calls. Each call takes one `Operator` as the only input argument and calculate the `type` (including `type`'s `shape` field) fields of all its output variables. Of course, a shape calculator is called only if all its input variables have been initialized or produced by some other operators.
 
-Our shape inference is a sequence of functions calls. Each call takes one `Operator` as the only input argument and calculate the `type` (including `type`'s `shape` field) fields of all its output variables. Of course, a shape calculator is called only if all its input variables have been initialized or produced by some other operators.
-
-The shape mapping from Core ML to our IR follows the following rules.
+The shape mapping from Core ML to our IR obeys the following rules.
 
 * Core ML's `[C, H, W]` is mapped to `[N, C, H, W]`
 * Core ML's `[C]` is mapped to `[N, C]`
 * Core ML's `[S, C]` is mapped to `[N, C]`
 * Core ML's `[S, C, H, W]` is mapped to `[N, C, H, W]`
-* Core ML's scalar shape (e.g., `Int64Type`) is mapped to `[1, 1]`
+* Core ML's scalar shape (e.g., `Int64Type`) is mapped to `[1, 1]` because they are all kind of features of an example.
 
-Core ML's batch size, `N-axis`, is ignored because it's is not related to graph structure. In fact, ONNX's batch size is rather equivalent to sequence axis in Core ML. By default, we use `N=1` for traditional machine learning models and `N='None'` for neural networks. To overwrite our default types, user can provide `initial_types` when calling `convert(...)` defined in `onnxmltools.convert.coreml.convert.py`. All Core ML's shape calculations are derived from [this document](https://apple.github.io/coremltools/coremlspecification/index.html) specifically for our type system.
+Notice that the compiler can overwrite those rules at some stages like shape inference. An example is the label shape of a classifier. One may expect that its shape is `[1, 1].` Nevertheless, our shape inference may change it to `[1]`. The major reason is that the current definition of ZipMap, the operator used to generate the predicted probabilities, does not support batch size greater than one.
+
+Core ML's batch size, `N-axis`, is ignored because it's is not related to graph structures. In fact, ONNX's batch size is rather equivalent to sequence axis in Core ML. By default, we use `N=1` for traditional machine learning models and `N='None'` for neural networks. To overwrite our default types, user can provide `initial_types` when calling `convert(...)` defined in `onnxmltools.convert.coreml.convert.py`. All Core ML's shape calculations are derived from [this document](https://apple.github.io/coremltools/coremlspecification/index.html) specifically for our type system.
 Some more details about Core ML neural network operator can be found at this [page](https://github.com/apple/coremltools/blob/master/mlmodel/format/NeuralNetwork.proto)
 
 For scikit-learn, user may need to specify the input types for their models. In general, we expect `[1, C]` if the input is feature vector.
@@ -88,7 +90,7 @@ A converter is a function used to convert an `Operator` into some ONNX component
 
 Every converter has three input arguments, `scope`, `operator`, and `container`. The `scope` is a `Scope` object including some functions for declaring new operators and new variables. The `operator` is an `Operator` object, which is the major piece you need to convert. In addition to the two input and output lists, a `Operator` also contains the input model's operator and some other useful information. The last argument, `container`, is used to stored all ONNX objects created inside this converter. Note that all the ONNX objects stored in `container` will be passed to an ONNX `ModelProto` at the end of our conversion pipeline.
 
-To invode converters in a topological order, call `convert_topology(...)` defined in _topology.py
+To invoke converters in a topological order, call `convert_topology(...)` defined in _topology.py
 
 ## Registration
 
