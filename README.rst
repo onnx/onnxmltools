@@ -33,9 +33,9 @@ Install
 Dependencies
 ============
 
-`scikit-learn <http://scikit-learn.org/stable/>`_ is needed to convert
-a scikit-learn model, `coremltools <https://pypi.python.org/pypi/coremltools>`_
-for Apple CoreML.
+This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn or Apple Core ML you need the following packages installed respectively:
+1. `scikit-learn <http://scikit-learn.org/stable/>`_
+2. `coremltools <https://pypi.python.org/pypi/coremltools>`_
 
 Example
 =======
