@@ -4,11 +4,8 @@ Tests scikit-imputer converter.
 import unittest
 import numpy as np
 from sklearn.preprocessing import Imputer
-from onnxmltools.convert.sklearn.ImputerConverter import ImputerConverter
-from onnxmltools.convert.sklearn.convert import convert
-from onnxmltools.convert.common.ConvertContext import ConvertContext
-from onnxmltools.convert.common.model_util import make_tensor_value_info
-from onnxmltools.proto import onnx_proto
+from onnxmltools import convert_sklearn
+from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType
 
 
 class TestSklearnImputerConverter(unittest.TestCase):
@@ -16,38 +13,33 @@ class TestSklearnImputerConverter(unittest.TestCase):
     def test_model_imputer(self):
         model = Imputer(missing_values='NaN', strategy='mean', axis=0)
         model.fit([[1, 2], [np.nan, 3], [7, 6]])
-        model_onnx = convert(model, 'scikit-learn imputer', [('features', 'int32', 2)])
+        model_onnx = convert_sklearn(model, 'scikit-learn imputer', [Int64TensorType([1, 2])])
         self.assertTrue(model_onnx is not None)
 
     def test_imputer_int_inputs(self):
         model = Imputer(missing_values='NaN', strategy='mean', axis=0)
         model.fit([[1, 2], [np.nan, 3], [7, 6]])
 
-        context = ConvertContext()
-        node = ImputerConverter.convert(context, model,
-            [make_tensor_value_info('features', onnx_proto.TensorProto.INT32, [2])])
-        self.assertTrue(node is not None)
+        model_onnx = convert_sklearn(model, 'scikit-learn imputer', [Int64TensorType([1, 2])])
+        self.assertEqual(len(model_onnx.graph.node), 2)
 
-        # should contain two nodes
-        self.assertEqual(len(node), 2)
-        # last node should contain the Imputer
-        outputs = node[-1].outputs
+        # Last node should be Imputer
+        outputs = model_onnx.graph.output
         self.assertEqual(len(outputs), 1)
+
         self.assertEqual(outputs[0].type.tensor_type.shape.dim[-1].dim_value, 2)
 
     def test_imputer_float_inputs(self):
         model = Imputer(missing_values='NaN', strategy='mean', axis=0)
         model.fit([[1, 2], [np.nan, 3], [7, 6]])
 
-        context = ConvertContext()
-        node = ImputerConverter.convert(context, model,
-            [make_tensor_value_info('features', onnx_proto.TensorProto.FLOAT, [2])])
-        self.assertTrue(node is not None)
+        model_onnx = convert_sklearn(model, 'scikit-learn imputer', [FloatTensorType([1, 2])])
+        self.assertTrue(model_onnx.graph.node is not None)
 
-        # should contain two nodes
-        self.assertEqual(len(node), 1)
+        # should contain only node
+        self.assertEqual(len(model_onnx.graph.node), 1)
 
         # last node should contain the Imputer
-        outputs = node[-1].outputs
+        outputs = model_onnx.graph.output
         self.assertEqual(len(outputs), 1)
         self.assertEqual(outputs[0].type.tensor_type.shape.dim[-1].dim_value, 2)

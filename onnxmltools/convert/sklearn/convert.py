@@ -1,40 +1,23 @@
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 
-import copy
-import sklearn.pipeline as pipeline
-from ..common import ModelBuilder
-from ..common import registration
-from .SklearnConvertContext import SklearnConvertContext as ConvertContext
-from .datatype import convert_incoming_type
+from uuid import uuid4
+from ..common._topology import convert_topology
+from ._parse import parse_sklearn
 
-# These are not referenced directly but are imported to initialize the registration call
-from .TreeEnsembleConverter import *
-from .BinarizerConverter import BinarizerConverter
-from .DictVectorizerConverter import DictVectorizerConverter
-from .ImputerConverter import ImputerConverter
-from .LabelEncoderConverter import LabelEncoderConverter
-from .NormalizerConverter import NormalizerConverter
-from .OneHotEncoderConverter import OneHotEncoderConverter
-from .ScalerConverter import ScalerConverter
-from .TreeEnsembleConverter import DecisionTreeClassifierConverter
-from .TreeEnsembleConverter import DecisionTreeRegressorConverter
-from .TreeEnsembleConverter import RandomForestClassifierConverter
-from .TreeEnsembleConverter import RandomForestRegressorConverter
-from .TreeEnsembleConverter import GradientBoostingClassifierConverter
-from .TreeEnsembleConverter import GradientBoostingRegressorConverter
-from .GLMClassifierConverter import GLMClassifierConverter
-from .GLMRegressorConverter import GLMRegressorConverter
-from .SVMConverter import SVCConverter, SVMConverter
+# Invoke the registration of all our converters and shape calculators
+from . import shape_calculators
+from . import operator_converters
 
 
-def convert(model, name=None, input_features=None):
+def convert(model, name=None, initial_types=None, doc_string=''):
     '''
     This function produces an equivalent ONNX model of the given scikit-learn model. The supported scikit-learn
     modules are listed below.
+
     * Preprocessings and transformations:
       1.  feature_extraction.DictVectorizer
       2.  preprocessing.Imputer
@@ -64,126 +47,38 @@ def convert(model, name=None, input_features=None):
       23. ensemble.RandomForestRegressor
     * pipeline
       24. pipeline.Pipeline
+
     For pipeline conversion, user needs to make sure each component is one of our supported items (1)-(24).
-    :param model: A scikit-learn object form the list above
-    :param name: Name of the ONNX graph (type: GraphProto) in the generated ONNX model (type: ModelProto)
-    :param input_features: A list of tuples specifying input feature types. The tuple format is (feature_name,
-    input_type, input_shape), where feature_name is a string. There are several major input types.
-      1. Tensors: Its input_type (a string) is one of tensor element types allowed in ONNX. Common values of input_type
-      include "float," "int64," and "string." User can specify the tensor shape using input_shape, which is an integer
-      or a list of integers.
-      2. Dictionary: Its input_type is a string with format "DictKeyType_ValueType," where each of KeyType and ValueType
-      is one of ONNX's tensor element types. For a dictionary with string keys and float values, we can use
-      "input_type=Dictstring_float." Dimension is not needed so input_shape would be ignored if specified.
-    :return: An equivalent ONNX model (type: ModelProto) of the input scikit-learn model
+
+    This function converts the specified scikit-learn model into its ONNX counterpart. Notice that for all conversions,
+    initial types are required.  ONNX model name can also be specified.
+
+    :param model: A scikit-learn model
+    :param initial_types: a python list whose elements are data types defined in data_types.py
+    :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
+    :param doc_string: A string attached onto the produced ONNX model
+    :return: An ONNX model (type: ModelProto) which is equivalent to the input scikit-learn model
+
+    Example of initial types:
+    Assume that the specified scikit-learn model takes a heterogeneous list as its input. If the first 5 elements are
+    floats and the last 10 elements are integers, we need to specify initial types as below. The [1] in [1, 5] indicates
+    the batch size here is 1.
+    >>> from onnxmltools.convert.common.data_types import FloatTensorType
+    >>> initial_type = [FloatTensorType([1, 5]), Int64TensorType([1, 10])]
     '''
-    context = ConvertContext()
+    if initial_types is None:
+        raise ValueError('Initial types are required')
 
-    # model_inputs are the inputs to the model
-    # node_inputs are the current set of inputs that are going into the converted node
-    model_inputs = []
-    node_inputs = []
-    nodes = []
-    if input_features:
-        try:
-            for input_name, input_type, input_shape in input_features:
-                # Register the input name
-                context.get_unique_name(input_name)
-                converted_input = convert_incoming_type(input_name, input_type, input_shape)
-                model_inputs.append(converted_input)
+    if name is None:
+        name = str(uuid4().hex)
 
-            # Merge the inputs into a feature vectorizer
-            if len(input_features) > 1:
-                nodes.extend(_combine_inputs(context, model_inputs))
-                node_inputs = nodes[-1].outputs
-            else:
-                # Set node_inputs to be the model inputs since there are no features to override.
-                node_inputs = copy.deepcopy(model_inputs)
-        except:
-            raise ValueError('Invalid input_features argument.')
-    else:
-        # Use the default input argument
-        node_inputs = [model_util.make_tensor_value_info('Input', onnx_proto.TensorProto.FLOAT)]
-        model_inputs = copy.deepcopy(node_inputs)
+    # Parse scikit-learn model as our internal data structure (i.e., Topology)
+    topology = parse_sklearn(model, initial_types)
 
-    nodes += _convert_sklearn_node(context, model, node_inputs)
-    mb = ModelBuilder(name)
-    for node in nodes:
-        mb.add_nodes([node.onnx_node])
-        mb.add_initializers(node.initializers)
-        mb.add_values(node.values)
-        mb.add_domain_version_pair(node.domain_version_pair)
+    # Infer variable shapes
+    topology.compile()
 
-    mb.add_inputs(model_inputs)
+    # Convert our Topology object into ONNX. The outcome is an ONNX model.
+    onnx_model = convert_topology(topology, name, doc_string)
 
-    # The last converter could have set outputs to use for the model.
-    # Therefore use these outputs if set, otherwise use the outputs from the last
-    # node
-    if len(context.outputs) > 0:
-        mb.add_outputs(context.outputs)
-    else:
-        mb.add_outputs(nodes[-1].outputs)
-    return mb.make_model()
-
-
-def _convert_sklearn_pipeline(context, pipeline, inputs):
-    nodes = []
-    for sk_node in pipeline.steps:
-        context.clear_outputs()
-        converted_nodes = _convert_sklearn_node(context, sk_node[1], inputs)
-        nodes.extend(converted_nodes)
-
-        # Grab the outputs from the context if set.
-        # If not set, then use the outputs from the last node.
-        if len(context.outputs) > 0:
-            inputs = context.outputs
-        else:
-            inputs = converted_nodes[-1].outputs
-
-    return nodes
-
-
-def _do_convert(context, converter, sk_node, inputs):
-    converter.validate(sk_node)
-    node = converter.convert(context, sk_node, inputs)
-    if isinstance(node, list):
-        return node
-    return [node]
-
-
-def _convert_sklearn_node(context, node, inputs):
-    if isinstance(node, pipeline.Pipeline):
-        return _convert_sklearn_pipeline(context, node, inputs)
-    else:
-        converter = registration.get_converter(type(node))
-        return _do_convert(context, converter, node, inputs)
-
-
-def _combine_inputs(context, inputs):
-    nodes = []
-
-    # This combines all the inputs into a single input. This currently only handles ints and floats.
-    # Ints are converted to a float by adding a Scalar operator into the graph
-    # Strings are not supported and will assert if specified.
-
-    onnx_unsupported_types = [onnx_proto.TensorProto.STRING]
-
-    fv_inputs = []
-    # Get inputs that are integer types
-    for inp in inputs:
-        if inp.type.tensor_type.elem_type in onnx_unsupported_types:
-            raise RuntimeError("Unsupported type specified."
-                               "These types are not supported when specifying multiple inputs {0}".format(onnx_unsupported_types))
-
-        if inp.type.tensor_type.elem_type in model_util.onnx_integer_types:
-            scale_node = model_util.create_scaler(inp, inp.name, 1.0, 0.0, context)
-            nodes.append(scale_node)
-            fv_inputs.append(scale_node.outputs[0])
-        else:
-            fv_inputs.append(inp)
-
-    feature_vector = model_util.create_feature_vector(fv_inputs, 'input_vector', context)
-    nodes.append(feature_vector)
-
-    return nodes
-
+    return onnx_model

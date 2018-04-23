@@ -4,7 +4,6 @@ Tests CoreML Scaler converter.
 import coremltools
 import unittest
 from sklearn.preprocessing import StandardScaler
-from onnxmltools.convert.coreml.ScalerConverter import ScalerConverter
 from onnxmltools.convert.coreml.convert import convert
 
 class TestCoreMLScalerConverter(unittest.TestCase):

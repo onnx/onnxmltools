@@ -33,9 +33,9 @@ Install
 Dependencies
 ============
 
-`scikit-learn <http://scikit-learn.org/stable/>`_ is needed to convert
-a scikit-learn model, `coremltools <https://pypi.python.org/pypi/coremltools>`_
-for Apple CoreML.
+This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn or Apple Core ML you need the following packages installed respectively:
+1. `scikit-learn <http://scikit-learn.org/stable/>`_
+2. `coremltools <https://pypi.python.org/pypi/coremltools>`_
 
 Example
 =======
@@ -47,14 +47,14 @@ Here is a simple example to convert a CoreML model:
     import onnxmltools
     import coremltools
 
-    model_coreml = coremltools.utils.load_spec("image_recognition.mlmodel")
-    model_onnx = onnxmltools.convert.convert_coreml(model_coreml, "Image_Reco")
+    model_coreml = coremltools.utils.load_spec('image_recognition.mlmodel')
+    model_onnx = onnxmltools.convert_coreml(model_coreml, 'Image_Reco')
 
     # Save as text
-    onnxmltools.utils.save_text(model_onnx, "image_recognition.json")
+    onnxmltools.utils.save_text(model_onnx, 'image_recognition.json')
 
     # Save as protobuf
-    onnxmltools.utils.save_model(model_onnx, "image_recognition.onnx")
+    onnxmltools.utils.save_model(model_onnx, 'image_recognition.onnx')
 
 License
 =======

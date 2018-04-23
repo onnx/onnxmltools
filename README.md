@@ -27,7 +27,7 @@ pip install git+https://github.com/onnx/onnxmltools
 ```
 
 ## Dependencies
-This package uses NumPy as well as ProtoBuf. Also If you are converting a model from scikit-learn or Apple Core ML you need the following packages installed respectively:
+This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn or Apple Core ML you need the following packages installed respectively:
 1. scikit-learn
 2. CoreMLTools
 
@@ -37,14 +37,14 @@ Here is a simple example to convert a CoreML model:
 import onnxmltools
 import coremltools
 
-model_coreml = coremltools.utils.load_spec("image_recognition.mlmodel")
-model_onnx = onnxmltools.convert.convert_coreml(model_coreml, "Image_Reco")
+model_coreml = coremltools.utils.load_spec('image_recognition.mlmodel')
+model_onnx = onnxmltools.convert_coreml(model_coreml, 'Image_Reco')
 
 # Save as text
-onnxmltools.utils.save_text(model_onnx, "image_recognition.json")
+onnxmltools.utils.save_text(model_onnx, 'image_recognition.json')
 
 # Save as protobuf
-onnxmltools.utils.save_model(model_onnx, "image_recognition.onnx")
+onnxmltools.utils.save_model(model_onnx, 'image_recognition.onnx')
 ```
 
 

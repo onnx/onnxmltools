@@ -5,11 +5,8 @@ import unittest
 from sklearn import datasets
 from sklearn import linear_model
 from sklearn.svm import LinearSVR
-from onnxmltools.convert.sklearn.GLMRegressorConverter import GLMRegressorConverter
-from onnxmltools.convert.sklearn.convert import convert
-from onnxmltools.convert.common.ConvertContext import ConvertContext
-from onnxmltools.convert.common.model_util import make_tensor_value_info
-from onnxmltools.proto import onnx_proto
+from onnxmltools import convert_sklearn
+from onnxmltools.convert.common.data_types import FloatTensorType
 
 
 class TestGLMRegressorConverter(unittest.TestCase):
@@ -19,30 +16,22 @@ class TestGLMRegressorConverter(unittest.TestCase):
         model.fit(X, y)
         return model
 
-    def test_glm_regressor_converter(self):
-        model = self._fit_model(linear_model.LinearRegression())
-
-        context = ConvertContext()
-        node = GLMRegressorConverter.convert(
-            context, model, [make_tensor_value_info('feature', onnx_proto.TensorProto.FLOAT, [1, 4])])
-        self.assertIsNotNone(node)
-
     def test_model_linear_regression(self):
         model = self._fit_model(linear_model.LinearRegression())
-        model_onnx = convert(model, 'linear regression', [('features', 'double', 4)])
+        model_onnx = convert_sklearn(model, 'linear regression', [FloatTensorType([1, 4])])
         self.assertIsNotNone(model_onnx)
 
     def test_model_linear_svr(self):
         model = self._fit_model(LinearSVR())
-        model_onnx = convert(model, 'linear SVR', [('features', 'double', 4)])
+        model_onnx = convert_sklearn(model, 'linear SVR', [FloatTensorType([1, 4])])
         self.assertIsNotNone(model_onnx)
 
     def test_model_ridge(self):
         model = self._fit_model(linear_model.Ridge())
-        model_onnx = convert(model, 'ridge regression', [('features', 'double', 4)])
+        model_onnx = convert_sklearn(model, 'ridge regression', [FloatTensorType([1, 4])])
         self.assertIsNotNone(model_onnx)
 
     def test_model_sgd_regressor(self):
         model = self._fit_model(linear_model.SGDRegressor())
-        model_onnx = convert(model, 'scikit-learn SGD regression', [('features', 'double', 4)])
+        model_onnx = convert_sklearn(model, 'scikit-learn SGD regression', [FloatTensorType([1, 4])])
         self.assertIsNotNone(model_onnx)

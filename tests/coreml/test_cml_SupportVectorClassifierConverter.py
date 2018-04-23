@@ -5,7 +5,6 @@ import coremltools
 import unittest
 from sklearn.datasets import load_iris
 from sklearn.svm import SVC
-from onnxmltools.convert.coreml.SupportVectorClassifierConverter import SupportVectorClassifierConverter
 from onnxmltools.convert.coreml.convert import convert
 
 class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):

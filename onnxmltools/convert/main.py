@@ -1,8 +1,8 @@
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 
 from .common import utils
 
@@ -21,4 +21,3 @@ def convert_coreml(model, name=None):
 
     from .coreml.convert import convert
     return convert(model, name)
-

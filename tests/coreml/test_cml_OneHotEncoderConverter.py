@@ -1,7 +1,6 @@
 """
 Main functions to convert machine learned model from *Core ML* model to *ONNX*.
 """
-import sys
 import os
 import unittest
 import coremltools

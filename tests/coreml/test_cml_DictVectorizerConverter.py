@@ -4,7 +4,6 @@ Tests CoreML DictVectorizer converter.
 import coremltools
 import unittest
 from sklearn.feature_extraction import DictVectorizer
-from onnxmltools.convert.coreml.DictVectorizerConverter import DictVectorizerConverter
 from onnxmltools.convert.coreml.convert import convert
 
 class TestCoreMLDictVectorizerConverter(unittest.TestCase):
