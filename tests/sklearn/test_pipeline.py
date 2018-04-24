@@ -1,7 +1,6 @@
 import unittest
 from onnxmltools import convert_sklearn
 from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType, StringTensorType
-from onnxmltools.convert.sklearn.operator_converters.common import concatenate_variables
 
 class TestSklearnPipeline(unittest.TestCase):
 
@@ -13,7 +12,7 @@ class TestSklearnPipeline(unittest.TestCase):
         scaler.fit([[0, 0],[0, 0],[1, 1],[1, 1]])
         model = Pipeline([('scaler1',scaler),('scaler2', scaler)])
 
-        model_onnx = convert_sklearn(model, 'pipeline', [FloatTensorType([1, 2])])
+        model_onnx = convert_sklearn(model, 'pipeline', [('input', FloatTensorType([1, 2]))])
         self.assertTrue(model_onnx is not None)
 
     def test_combine_inputs(self):
@@ -24,7 +23,8 @@ class TestSklearnPipeline(unittest.TestCase):
         scaler.fit([[0., 0.],[0., 0.],[1., 1.],[1., 1.]])
         model = Pipeline([('scaler1', scaler),('scaler2', scaler)])
 
-        model_onnx = convert_sklearn(model, 'pipeline', [FloatTensorType([1, 1]), FloatTensorType([1, 1])])
+        model_onnx = convert_sklearn(model, 'pipeline',
+                                     [('input1', FloatTensorType([1, 1])), ('input2', FloatTensorType([1, 1]))])
         self.assertTrue(len(model_onnx.graph.node[-1].output) == 1)
         self.assertTrue(model_onnx is not None)
 
@@ -36,7 +36,8 @@ class TestSklearnPipeline(unittest.TestCase):
         scaler.fit([[0, 0.],[0, 0.],[1, 1.],[1, 1.]])
         model = Pipeline([('scaler1', scaler), ('scaler2', scaler)])
 
-        model_onnx = convert_sklearn(model, 'pipeline', [Int64TensorType([1, 1]), FloatTensorType([1, 1])])
+        model_onnx = convert_sklearn(model, 'pipeline',
+                                     [('input1', Int64TensorType([1, 1])), ('input2', FloatTensorType([1, 1]))])
         self.assertTrue(len(model_onnx.graph.node[-1].output) == 1)
         self.assertTrue(model_onnx is not None)
 
@@ -49,7 +50,8 @@ class TestSklearnPipeline(unittest.TestCase):
         model = LabelEncoder()
         model.fit(['a', 'b', 'b', 'a', 'c'])
 
-        model_onnx = convert_sklearn(model, 'pipeline', [StringTensorType([1, 1]), StringTensorType([1, 4])])
+        model_onnx = convert_sklearn(model, 'pipeline',
+                                     [('input1', StringTensorType([1, 1])), ('input2', StringTensorType([1, 4]))])
         self.assertTrue(len(model_onnx.graph.node[-1].output) == 1)
         self.assertTrue(model_onnx is not None)
 

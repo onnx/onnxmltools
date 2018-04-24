@@ -162,8 +162,8 @@ def parse_sklearn(model, initial_types=None):
 
     # Declare input variables. They should be the inputs of the scikit-learn model you want to convert into ONNX
     inputs = []
-    for i, initial_type in enumerate(initial_types):
-        inputs.append(scope.declare_local_variable('input' + str(i), initial_type))
+    for var_name, initial_type in initial_types:
+        inputs.append(scope.declare_local_variable(var_name, initial_type))
 
     # The object raw_model_container is a part of the topology we're going to return. We use it to store the inputs of
     # the scikit-learn's computational graph.

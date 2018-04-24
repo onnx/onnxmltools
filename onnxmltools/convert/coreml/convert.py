@@ -23,7 +23,8 @@ def convert(model, name=None, initial_types=None, doc_string=''):
     ONNX model name can be specified.
     :param model: A CoreML model (https://apple.github.io/coremltools/coremlspecification/sections/Model.html#model) or
     a CoreML MLModel object
-    :param initial_types: a python dictionary. Its keys are variable name while the corresponding values are their types
+    :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
+    name and a type defined in data_types.py.
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
     :return: An ONNX model (type: ModelProto) which is equivalent to the input CoreML model
@@ -32,7 +33,7 @@ def convert(model, name=None, initial_types=None, doc_string=''):
     Assume that 'A' and 'B' are two root variable names used in the CoreML model you want to convert. We can specify
     their types via
     >>> from onnxmltools.convert.common.data_types import FloatTensorType
-    >>> initial_type = {'A': FloatTensorType([40, 12, 1, 1]), 'B': FloatTensorType([1, 32, 1, 1])}
+    >>> initial_type = [('A', FloatTensorType([40, 12, 1, 1])), ('B', FloatTensorType([1, 32, 1, 1]))]
     '''
     if isinstance(model, coremltools.models.MLModel):
         spec = model.get_spec()
@@ -41,9 +42,6 @@ def convert(model, name=None, initial_types=None, doc_string=''):
 
     if name is None:
         name = str(uuid4().hex)
-
-    if initial_types is None:
-        initial_types = dict()
 
     # Parse CoreML model as our internal data structure (i.e., Topology)
     topology = parse_coreml(spec, initial_types)

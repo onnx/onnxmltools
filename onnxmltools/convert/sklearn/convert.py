@@ -54,17 +54,17 @@ def convert(model, name=None, initial_types=None, doc_string=''):
     initial types are required.  ONNX model name can also be specified.
 
     :param model: A scikit-learn model
-    :param initial_types: a python list whose elements are data types defined in data_types.py
+    :param initial_types: a python list. Each element is a tuple of a variable name and a type defined in data_types.py
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
     :return: An ONNX model (type: ModelProto) which is equivalent to the input scikit-learn model
 
-    Example of initial types:
+    Example of initial_types:
     Assume that the specified scikit-learn model takes a heterogeneous list as its input. If the first 5 elements are
     floats and the last 10 elements are integers, we need to specify initial types as below. The [1] in [1, 5] indicates
     the batch size here is 1.
     >>> from onnxmltools.convert.common.data_types import FloatTensorType
-    >>> initial_type = [FloatTensorType([1, 5]), Int64TensorType([1, 10])]
+    >>> initial_type = [('float_input', FloatTensorType([1, 5])), ('int64_input', Int64TensorType([1, 10]))]
     '''
     if initial_types is None:
         raise ValueError('Initial types are required')

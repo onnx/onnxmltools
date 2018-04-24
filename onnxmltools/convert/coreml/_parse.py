@@ -418,9 +418,8 @@ def parse_coreml(model, initial_types=None):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model
-    :param initial_types: a dictionary providing some types for some CoreML root variables. For example, a key-value
-           pair, ('A', FloatTensorType([40, 12, 1, 1])), means that in your CoreML model, there is variable called 'A'
-           and it's a float tensor with shape [40, 12, 1, 1].
+    :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
+    name and a type defined in data_types.py.
     :return: a Topology object. It's a intermediate representation of the input CoreML model
     '''
 

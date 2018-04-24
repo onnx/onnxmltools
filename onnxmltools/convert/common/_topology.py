@@ -224,7 +224,8 @@ class Topology:
 
         :param model: RawModelContainer object or one of its derived classes. It contains the original model.
         :param default_batch_size: batch_size prepend to scalar and array types from CoreML. It's usually 1 or 'None'.
-        :param initial_types: A dictionary providing some types for some CoreML root variables
+        :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
+        name and a type defined in data_types.py.
         :param reserved_variable_names: A set of strings which are not allowed to be used as a variable name
         :param reserved_operator_names: A set of strings which are not allowed to be used as a operator name
         '''
@@ -233,7 +234,7 @@ class Topology:
         self.scope_names = set()
         self.variable_name_set = reserved_variable_names if reserved_variable_names is not None else set()
         self.operator_name_set = reserved_operator_names if reserved_operator_names is not None else set()
-        self.initial_types = initial_types if initial_types else dict()
+        self.initial_types = initial_types if initial_types else list()
         self.default_batch_size = default_batch_size
 
         # This attribute is used in optimizing the graph structure. If root_names is not empty, only the variables
@@ -449,7 +450,7 @@ class Topology:
         self._initialize_graph_status_for_traversing()
 
         # Deliver user-specified types to root variables
-        for raw_name, initial_type in self.initial_types.items():
+        for raw_name, initial_type in self.initial_types:
             # Check all variables declared using raw_name in the whole graph
             for scope in self.scopes:
                 # Skip scopes without having the considered variable name
