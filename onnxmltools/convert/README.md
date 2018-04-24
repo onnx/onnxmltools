@@ -106,4 +106,4 @@ The second stage is compiling. We may try to optimize the computational graph (i
 
 Third, we may call a function to invoke the conversions of all existing operators in a topological order.
 
-This flow is implemented in both of our Core ML and scikit-learn conversions. The main Core ML conver function is `onnxmltools.convert.coreml.convert`. For scikit-learn, see `onnxmltools.convert.sklearn.convert`. Notice that each operator existing in your raw model must have one shape calculators and one converter registered (it can be an empty function if your parser is able to extract those information directly from the input model).
+This procedure is implemented in both of our Core ML and scikit-learn conversions. The main Core ML conver function is `onnxmltools.convert.coreml.convert`. For scikit-learn, see `onnxmltools.convert.sklearn.convert`. Notice that each operator existing in your raw model must have one shape calculators and one converter registered (it can be an empty function if your parser is able to extract those information directly from the input model).

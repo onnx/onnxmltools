@@ -13,6 +13,6 @@ class TestSklearnDictVectorizerConverter(unittest.TestCase):
         model = DictVectorizer()
         model.fit_transform([{'amy': 1, 'chin': 200}, {'nice': 3, 'amy': 1}])
         model_onnx = convert_sklearn(model, 'dictionary vectorizer',
-                                     [DictionaryType(StringTensorType([1]), FloatTensorType([1]))])
+                                     [('input', DictionaryType(StringTensorType([1]), FloatTensorType([1])))])
         self.assertTrue(model_onnx is not None)
 

@@ -10,6 +10,6 @@ class TestSklearnNormalizerConverter(unittest.TestCase):
 
     def test_model_normalizer(self):
         model = Normalizer(norm='l2')
-        model_onnx = convert_sklearn(model, 'scikit-learn normalizer', [Int64TensorType([1, 1])])
+        model_onnx = convert_sklearn(model, 'scikit-learn normalizer', [('input', Int64TensorType([1, 1]))])
         self.assertTrue(model_onnx is not None)
         self.assertTrue(len(model_onnx.graph.node) == 1)

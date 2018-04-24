@@ -18,20 +18,20 @@ class TestGLMRegressorConverter(unittest.TestCase):
 
     def test_model_linear_regression(self):
         model = self._fit_model(linear_model.LinearRegression())
-        model_onnx = convert_sklearn(model, 'linear regression', [FloatTensorType([1, 4])])
+        model_onnx = convert_sklearn(model, 'linear regression', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
 
     def test_model_linear_svr(self):
         model = self._fit_model(LinearSVR())
-        model_onnx = convert_sklearn(model, 'linear SVR', [FloatTensorType([1, 4])])
+        model_onnx = convert_sklearn(model, 'linear SVR', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
 
     def test_model_ridge(self):
         model = self._fit_model(linear_model.Ridge())
-        model_onnx = convert_sklearn(model, 'ridge regression', [FloatTensorType([1, 4])])
+        model_onnx = convert_sklearn(model, 'ridge regression', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
 
     def test_model_sgd_regressor(self):
         model = self._fit_model(linear_model.SGDRegressor())
-        model_onnx = convert_sklearn(model, 'scikit-learn SGD regression', [FloatTensorType([1, 4])])
+        model_onnx = convert_sklearn(model, 'scikit-learn SGD regression', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)

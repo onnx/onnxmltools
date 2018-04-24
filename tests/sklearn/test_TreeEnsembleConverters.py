@@ -17,28 +17,28 @@ class TestSklearnTreeEnsembleModels(unittest.TestCase):
         X = [[0, 1], [1, 1], [2, 0]]
         y = [1, 1, 1]
         model.fit(X, y)
-        model_onnx = convert_sklearn(model, 'tree-based classifier', [Int64TensorType([1, 2])])
+        model_onnx = convert_sklearn(model, 'tree-based classifier', [('input', Int64TensorType([1, 2]))])
         self.assertTrue(model_onnx is not None)
 
     def _test_binary_classification_core(self, model):
         X = [[0, 1], [1, 1], [2, 0]]
         y = ['A', 'B', 'A']
         model.fit(X, y)
-        model_onnx = convert_sklearn(model, 'tree-based binary classifier', [Int64TensorType([1, 2])])
+        model_onnx = convert_sklearn(model, 'tree-based binary classifier', [('input', Int64TensorType([1, 2]))])
         self.assertTrue(model_onnx is not None)
 
     def _test_multiple_output_core(self, model):
         X = [[0, 1], [1, 1], [2, 0]]
         y = [[100, 50], [100, 49], [100, 99]]
         model.fit(X, y)
-        model_onnx = convert_sklearn(model, 'tree-based multi-output regressor', [Int64TensorType([1, 2])])
+        model_onnx = convert_sklearn(model, 'tree-based multi-output regressor', [('input', Int64TensorType([1, 2]))])
         self.assertTrue(model_onnx is not None)
 
     def _test_single_output_core(self, model):
         X = [[0, 1], [1, 1], [2, 0]]
         y = [100, -10, 50]
         model.fit(X, y)
-        model_onnx = convert_sklearn(model, 'tree-based regressor', [Int64TensorType([1, 2])])
+        model_onnx = convert_sklearn(model, 'tree-based regressor', [('input', Int64TensorType([1, 2]))])
         self.assertTrue(model_onnx is not None)
 
     def test_decision_tree_classifier(self):
