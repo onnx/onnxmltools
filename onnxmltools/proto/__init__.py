@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 def _check_onnx_version():
-    import onnx, pkg_resources
+    import pkg_resources
     min_required_version = pkg_resources.parse_version('1.0.1')
     current_version = pkg_resources.get_distribution('onnx').parsed_version
     assert current_version >= min_required_version , 'ONNXMLTools requires ONNX version 1.0.1 or a newer one'
