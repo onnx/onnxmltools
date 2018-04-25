@@ -13,12 +13,14 @@ _check_onnx_version()
 
 # Rather than using ONNX protobuf definition throughout our codebase, we import ONNX protobuf definition here so that
 # we can conduct quick fixes by overwriting ONNX functions without changing any lines elsewhere.
-from onnx import onnx_ml_pb2 as onnx_proto
+# onnx doesn't have onnx_ml_pb2 any more. To keep compatible with old code, we set
+# alias for onnx_proto
+import onnx as onnx_proto
 from onnx import helper
 
 # Overwrite the make_tensor defined in onnx.helper because of a bug (string tensor get assigned twice)
 from onnx import mapping
-from onnx.onnx_ml_pb2 import TensorProto
+from onnx import TensorProto
 from onnx.helper import split_complex_to_pairs
 def _make_tensor_fixed(name, data_type, dims, vals, raw=False):
     '''
