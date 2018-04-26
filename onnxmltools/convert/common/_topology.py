@@ -6,7 +6,6 @@
 
 import re
 from ...proto import helper
-from ...proto import check_model
 from .data_types import *
 from ._container import ModelComponentContainer
 from . import _registration

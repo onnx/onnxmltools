@@ -6,7 +6,6 @@
 
 import six
 from ...proto import helper
-from ...proto import onnx_proto
 
 
 class RawModelContainer(object):
