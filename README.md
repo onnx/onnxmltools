@@ -25,6 +25,7 @@ or install from source:
 ```
 pip install git+https://github.com/onnx/onnxmltools
 ```
+Note: If you choose to install `onnxmltools` from source code , you must set environment variable `ONNX_ML=1` before installing `onnx` dependency package for `onnxmltools`.
 
 ## Dependencies
 This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn or Apple Core ML you need the following packages installed respectively:
