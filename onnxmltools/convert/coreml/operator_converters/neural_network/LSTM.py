@@ -194,7 +194,7 @@ def convert_unidirectional_lstm(scope, operator, container):
         # Notice shape=[1, hidden_size] should be shape=[1, 1, hidden_size] but it may cause runtime crash. It should
         # be fixed in next release.
         container.add_node('Reshape', operator.inputs[1].full_name, lstm_h_init_reshape_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[1, hidden_size])
+                           name=scope.get_unique_operator_name('Reshape'), shape=[1, 1, hidden_size])
         lstm_inputs.append(lstm_h_init_reshape_name)
         # Add a zero initializer to initial hidden state so that this variable becomes optional
         container.add_initializer(operator.inputs[1].full_name, onnx_proto.TensorProto.FLOAT,
@@ -209,7 +209,7 @@ def convert_unidirectional_lstm(scope, operator, container):
         # Notice shape=[1, hidden_size] should be shape=[1, 1, hidden_size] but it may cause runtime crash. It should
         # be fixed in next release.
         container.add_node('Reshape', operator.inputs[2].full_name, lstm_c_init_reshape_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[1, hidden_size])
+                           name=scope.get_unique_operator_name('Reshape'), shape=[1, 1, hidden_size])
         lstm_inputs.append(lstm_c_init_reshape_name)
         # Add a zero initializer to initial cell state so that this variable becomes optional
         container.add_initializer(operator.inputs[2].full_name, onnx_proto.TensorProto.FLOAT,
@@ -257,7 +257,7 @@ def convert_unidirectional_lstm(scope, operator, container):
     lstm_y_name = scope.get_unique_variable_name(lstm_op_name + '_Y')
     lstm_y_h_name = scope.get_unique_variable_name(lstm_op_name + '_Y_h')
     lstm_c_name = scope.get_unique_variable_name(lstm_op_name + '_Y_c')
-    lstm_outputs.extend([lstm_y_name, lstm_c_name, lstm_y_h_name])
+    lstm_outputs.extend([lstm_y_name, lstm_y_h_name, lstm_c_name])
     container.add_node('LSTM', lstm_inputs, lstm_outputs, **lstm_attrs)
 
     # Handle the first output of LSTM
