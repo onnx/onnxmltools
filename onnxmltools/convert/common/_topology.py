@@ -633,8 +633,8 @@ def convert_topology(topology, model_name, doc_string):
 
     # When calling ModelComponentContainer's add_initializer(...), nothing is added into the input list. However, in
     # ONNX initializers should also be model's (ModelProto) inputs. Thus, we create ValueInfoProto objects from
-    # initializers directly and then add them into model's input list.
-    extra_inputs = []
+    # initializers (type: TensorProto) directly and then add them into model's input list.
+    extra_inputs = []  # ValueInfoProto list of the initializers
     for tensor in container.initializers:
         # Initializers are always tensors so we can just call make_tensor_value_info(...)
         value_info = helper.make_tensor_value_info(tensor.name, tensor.data_type, tensor.dims)

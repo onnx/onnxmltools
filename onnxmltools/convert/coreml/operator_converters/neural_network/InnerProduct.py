@@ -15,12 +15,12 @@ def convert_inner_product(scope, operator, container):
     outputs = [variable.full_name for variable in operator.outputs]
     attrs = {'name': operator.full_name}
 
-    name_w = operator.full_name + '.W'
+    name_w = scope.get_unique_variable_name(operator.full_name + '_W')
     shape_w = [params.outputChannels, params.inputChannels]
     inputs.append(name_w)
     container.add_initializer(name_w, onnx_proto.TensorProto.FLOAT, shape_w, params.weights.floatValue)
 
-    name_b = operator.full_name + '.B'
+    name_b = scope.get_unique_variable_name(operator.full_name + '_B')
     shape_b = [params.outputChannels]
     inputs.append(name_b)
     if params.hasBias:
