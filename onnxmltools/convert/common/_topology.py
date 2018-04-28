@@ -636,6 +636,12 @@ def convert_topology(topology, model_name, doc_string):
     # initializers (type: TensorProto) directly and then add them into model's input list.
     extra_inputs = []  # ValueInfoProto list of the initializers
     for tensor in container.initializers:
+        # Sometime (especially when creating optional input values), an initializer is also one of the original model's
+        # input, so it has been added into the container's input list. If this is the case, we need to skip one
+        # iteration to avoid duplicated inputs.
+        if tensor.name in [value_info.name for value_info in container.inputs]:
+            continue
+
         # Initializers are always tensors so we can just call make_tensor_value_info(...)
         value_info = helper.make_tensor_value_info(tensor.name, tensor.data_type, tensor.dims)
         extra_inputs.append(value_info)
