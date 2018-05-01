@@ -23,13 +23,13 @@ def convert_convolution(scope, operator, container):
     if params.isDeconvolution:
         shape_w[0] = params.kernelChannels
         shape_w[1] = int(params.outputChannels / n_groups)
-    name_w = operator.full_name + '.W'
+    name_w = scope.get_unique_variable_name(operator.full_name + '_W')
     inputs.append(name_w)
     container.add_initializer(name_w, onnx_proto.TensorProto.FLOAT, shape_w, params.weights.floatValue)
 
     if params.hasBias:
         shape_b = [len(params.bias.floatValue)]
-        name_b = operator.full_name + '.B'
+        name_b = scope.get_unique_variable_name(operator.full_name + '_B')
         inputs.append(name_b)
         container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_b, params.bias.floatValue)
 
