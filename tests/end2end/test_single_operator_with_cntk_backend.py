@@ -5,8 +5,8 @@ import onnxmltools
 import numpy as np
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
-    Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, Minimum, \
-    Add, Average, Multiply, Concatenate, UpSampling2D
+    Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
+    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector
 from keras.initializers import RandomUniform
 
 
@@ -169,6 +169,18 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_two_to_one_operator_core_channels_last(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
+
+    def test_maximum_2d(self):
+        N = 2
+        C = 2
+        x_keras1, x_keras2, x_cntk1, x_cntk2 = _create_keras_and_cntk_2d_input_pair(N, C)
+        input1 = Input(shape=(C,))
+        input2 = Input(shape=(C,))
+        result = Maximum()([input1, input2])
+        model = Model(inputs=[input1, input2], output=result)
+        model.compile(optimizer='adagrad', loss='mse')
+
+        self._test_two_to_one_operator_core(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
 
     def test_dot(self):
         N = 2
@@ -389,3 +401,24 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
+
+    def test_flatten(self):
+        np.random.seed(0)
+        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 1, 2)
+
+        keras_model = Sequential()
+        keras_model.add(Flatten(input_shape=(1, 2, 3)))
+        keras_model.add(Dense(2))
+        keras_model.compile(optimizer='adagrad', loss='mse')
+
+        coreml_model = coremltools.converters.keras.convert(keras_model)
+        onnx_model = onnxmltools.convert_coreml(coreml_model)
+
+        y_keras = keras_model.predict(np.transpose(x_keras, [0, 2, 3, 1]))
+
+        temporary_onnx_model_file_name = onnx_model.graph.name + '_temp.onnx'
+        onnxmltools.utils.save_model(onnx_model, temporary_onnx_model_file_name)
+        cntk_model = cntk.Function.load(temporary_onnx_model_file_name, format=cntk.ModelFormat.ONNX)
+        y_cntk = cntk_model.eval({cntk_model.arguments[0]: x_cntk})
+
+        self.assertTrue(np.allclose(y_keras, y_cntk))

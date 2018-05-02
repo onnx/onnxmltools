@@ -1,4 +1,8 @@
+numpy
+protobuf
 codecov
+tensorflow
+keras
 coremltools
 pandas
 pytest

@@ -1,7 +1,6 @@
 dist: trusty
 language: python
 env:
-  - ONNX_VERSION="==1.0.1" ONNX_ML=1
   - ONNX_VERSION="==1.1.2" ONNX_ML=1
   - ONNX_VERSION="" ONNX_ML=1
 
@@ -32,12 +31,23 @@ install:
   - export CPATH="$HOME/miniconda/include:$CPATH"
   - export CPATH="$HOME/miniconda/include/python$PYTHON_VER:$CPATH"
   - ls $HOME/miniconda/include/python$PYTHON_VER
+  - wget https://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.2.tar.gz
+  - tar zxf openmpi-1.10.2.tar.gz
+  - echo "Configuring and building OpenMPI"
+  - cd openmpi-1.10.2
+  - mkdir build
+  - ./configure --prefix="$PWD/build" &> openmpi.configure
+  - make -j4 &> openmpi.make
+  - sudo make install &> openmpi.install
+  - export PATH="$PATH:$PWD/build/bin"
+  - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH$PWD/build/lib"
+  - cd ..
   - printenv
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
   - conda install -c conda-forge numpy
   - conda install -c conda-forge cmake
-  - cd $TRAVIS_BUILD_DIR && pip install -r requirements.txt
+  - conda install -c conda-forge openmpi
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
   - pip install -I "onnx$ONNX_VERSION"
