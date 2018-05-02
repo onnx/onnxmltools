@@ -7,5 +7,4 @@ scikit-learn
 scipy
 wheel
 xgboost
-
-
+cntk
