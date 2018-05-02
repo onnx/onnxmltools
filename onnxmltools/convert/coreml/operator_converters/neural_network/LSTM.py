@@ -191,8 +191,6 @@ def convert_unidirectional_lstm(scope, operator, container):
     if len(operator.inputs) > 1:
         # Assign a Reshape to adjust CoreML hidden state's shape [1, C]/[1, C, 1, 1] into its ONNX counterpart [1, 1, C]
         lstm_h_init_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_h_init_reshape')
-        # Notice shape=[1, hidden_size] should be shape=[1, 1, hidden_size] but it may cause runtime crash. It should
-        # be fixed in next release.
         container.add_node('Reshape', operator.inputs[1].full_name, lstm_h_init_reshape_name,
                            name=scope.get_unique_operator_name('Reshape'), shape=[1, 1, hidden_size])
         lstm_inputs.append(lstm_h_init_reshape_name)
@@ -206,8 +204,6 @@ def convert_unidirectional_lstm(scope, operator, container):
     # Provide ONNX LSTM the initial cell state when necessary
     if len(operator.inputs) > 2:
         lstm_c_init_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_c_init_reshape')
-        # Notice shape=[1, hidden_size] should be shape=[1, 1, hidden_size] but it may cause runtime crash. It should
-        # be fixed in next release.
         container.add_node('Reshape', operator.inputs[2].full_name, lstm_c_init_reshape_name,
                            name=scope.get_unique_operator_name('Reshape'), shape=[1, 1, hidden_size])
         lstm_inputs.append(lstm_c_init_reshape_name)

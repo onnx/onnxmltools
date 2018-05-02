@@ -345,9 +345,9 @@ def convert_bidirectional_lstm(scope, operator, container):
 
             container.add_node('Split', lstm_y_h_reshape_name,
                                [operator.outputs[1].full_name, operator.outputs[3].full_name],
-                               op_version=2, name=scope.get_unique_operator_name('Split'), split=[1, 1, ], axis=0)
+                               op_version=2, name=scope.get_unique_operator_name('Split'), split=[1, 1], axis=0)
     else:
-        # Here we ignore ONNX RNN's first output because it's useless. The second output of ONNX LSTM will used to
+        # Here we ignore ONNX RNN's first output because it's useless. The second output of ONNX LSTM will be used to
         # generate the first and the second outputs of CoreML LSTM.
 
         # Directly reshape ONNX LSTM's 2nd output to CoreML LSTM's 1st output.

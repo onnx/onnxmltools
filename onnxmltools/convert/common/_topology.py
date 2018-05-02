@@ -632,13 +632,13 @@ def convert_topology(topology, model_name, doc_string):
                     container.nodes[another_node_id], container.nodes[i]
 
     # When calling ModelComponentContainer's add_initializer(...), nothing is added into the input list. However, in
-    # ONNX initializers should also be model's (ModelProto) inputs. Thus, we create ValueInfoProto objects from
+    # ONNX initializers should also be model's (GraphProto) inputs. Thus, we create ValueInfoProto objects from
     # initializers (type: TensorProto) directly and then add them into model's input list.
     extra_inputs = []  # ValueInfoProto list of the initializers
     for tensor in container.initializers:
-        # Sometime (especially when creating optional input values), an initializer is also one of the original model's
-        # input, so it has been added into the container's input list. If this is the case, we need to skip one
-        # iteration to avoid duplicated inputs.
+        # Sometimes (especially when creating optional input values such as RNN's initial hidden state), an initializer
+        # is also one of the original model's input, so it has been added into the container's input list. If this is
+        # the case, we need to skip one iteration to avoid duplicated inputs.
         if tensor.name in [value_info.name for value_info in container.inputs]:
             continue
 
