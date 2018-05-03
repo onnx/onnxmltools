@@ -2,6 +2,7 @@ dist: trusty
 language: python
 env:
   - ONNX_VERSION="==1.0.1" ONNX_ML=1
+  - ONNX_VERSION="==1.1.2" ONNX_ML=1
   - ONNX_VERSION="" ONNX_ML=1
 
 addons:

@@ -41,7 +41,7 @@ def convert_unary(scope, operator, container):
     elif params.type == Params.THRESHOLD:
         op_type = 'Clip'
         op_name = scope.get_unique_operator_name(op_type)
-        attrs = {'name': op_name, 'max': params.alpha}
+        attrs = {'name': op_name, 'min': params.alpha}
         container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
     elif params.type in simple_unary_map:
         op_type = simple_unary_map[params.type]

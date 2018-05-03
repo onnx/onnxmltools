@@ -36,7 +36,7 @@ def convert_padding(scope, operator, container):
     attrs['pads'] = pads
 
     if pad_type == 'constant':
-        attrs['values'] = params.constant.value
+        attrs['value'] = params.constant.value
 
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_version=2, **attrs)
 

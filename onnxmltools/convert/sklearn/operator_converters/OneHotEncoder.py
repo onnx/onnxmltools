@@ -89,7 +89,6 @@ def convert_sklearn_one_hot_encoder(scope, operator, container):
     # Combine encoded features and passed features
     collector_type = 'FeatureVectorizer'
     collector_attrs = {'name': scope.get_unique_operator_name(collector_type)}
-    collector_attrs['inputlist'] = final_variable_names
     collector_attrs['inputdimensions'] = final_variable_lengths
     container.add_node(collector_type, final_variable_names, operator.outputs[0].full_name,
                        op_domain='ai.onnx.ml', **collector_attrs)
