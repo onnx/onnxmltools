@@ -111,7 +111,6 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
     def test_dense(self):
         x_keras, x_cntk = _create_keras_and_cntk_2d_inputs(2, 3)
 
-        np.random.seed(0)
         model = Sequential()
         model.add(Dense(2, input_dim=3))
         model.compile(optimizer='adagrad', loss='mse')
@@ -120,7 +119,7 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
 
     def test_conv_4d(self):
         x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(1, 2, 4, 3)
-        np.random.seed(0)
+
         model = Sequential()
         model.add(Conv2D(2, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(4, 3, 2),
                          data_format='channels_last'))
@@ -132,16 +131,17 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
         layers_to_be_tested = [MaxPooling2D, AveragePooling2D]
         for layer in layers_to_be_tested:
             x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(1, 2, 4, 3)
-            np.random.seed(0)
+
             model = Sequential()
             model.add(layer(2, input_shape=(4, 3, 2), data_format='channels_last'))
             model.compile(optimizer='adagrad', loss='mse')
+
             self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
 
     @unittest.skip('Skip because CNTK is not able to evaluate this model')
     def test_convolution_transpose_2d(self):
         x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 2, 1, 1)
-        np.random.seed(0)
+
         model = Sequential()
         model.add(Conv2DTranspose(2, (2, 1), input_shape=(1, 1, 2), data_format='channels_last'))
         model.compile(optimizer='adagrad', loss='mse')
@@ -180,8 +180,8 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
     def test_activation_2d(self):
         activation_to_be_tested = ['softplus', 'softsign', 'tanh', 'relu', 'elu', 'softplus', 'hard_sigmoid',
                                    'sigmoid', LeakyReLU]  # CNTK has no SELU
-        np.random.seed(0)
         x_keras, x_cntk = _create_keras_and_cntk_2d_inputs(2, 3)
+
         for activation in activation_to_be_tested:
             model = Sequential()
             if isinstance(activation, str):
@@ -195,8 +195,9 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
     def test_activation_4d(self):
         activation_to_be_tested = ['softplus', 'softsign', 'tanh', 'relu', 'elu', 'softplus', 'hard_sigmoid',
                                    'sigmoid', LeakyReLU]  # CNTK has no SELU
-        np.random.seed(0)
+
         x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
+
         for activation in activation_to_be_tested:
             model = Sequential()
             if isinstance(activation, str):
@@ -240,11 +241,7 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
 
     @unittest.skip('CNTK does not support reshape under this configuration')
     def test_gru(self):
-        np.random.seed(0)
-        N = 1
-        T = 2
-        C = 3
-        D = 2
+        N, T, C, D = 1, 2, 3, 2
         input = Input(shape=(T, C))
         rnn = GRU(D)
         result = rnn(input)
@@ -268,7 +265,6 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
 
     @unittest.skip('CNTK does not support Upsample operator')
     def test_upsample(self):
-        np.random.seed(0)
         x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 1, 2)
 
         model = Sequential()
@@ -278,7 +274,6 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
         self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
 
     def test_flatten(self):
-        np.random.seed(0)
         x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 1, 2)
 
         keras_model = Sequential()
