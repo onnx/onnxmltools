@@ -76,8 +76,7 @@ def create_legacy_pad(scope, input_name, output_name, H_in, W_in, k_h, k_w,
     #             N_end_index,   C_end_index,   H_end_index,   W_end_index]
     # Because only H- and W-axes are padded in CoreML, we leave padding amounts of N- and C-axes zeros.
     pads = [0, 0, pad_t, pad_l, 0, 0, pad_b, pad_r]
-    attrs = {'name': scope.get_unique_operator_name('Pad'), 'kernel_shape': [k_h, k_w],
-             'strides': [k_h, k_w], 'pads': pads, 'value': padded_value}
+    attrs = {'name': scope.get_unique_operator_name('Pad'), 'pads': pads, 'value': padded_value}
     container.add_node('Pad', input_name, output_name, op_version=2, **attrs)
 
 

@@ -21,8 +21,9 @@ def calculate_merge_output_shapes(operator):
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     # [TODO] Fix reduce-like shape inference. We now assume all inputs are 4-D.
-    output_shape = [0, 0, 0, 0]
-    for i in range(4):
+    n_dims = max(len(variable.type.shape) for variable in operator.inputs)
+    output_shape = [0] * n_dims
+    for i in range(n_dims):
         input_dims = [variable.type.shape[i] for variable in operator.inputs]
         if 'None' in input_dims:
             output_shape[i] = 'None'

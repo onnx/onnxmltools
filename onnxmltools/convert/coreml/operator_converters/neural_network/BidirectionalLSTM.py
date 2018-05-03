@@ -325,42 +325,39 @@ def convert_bidirectional_lstm(scope, operator, container):
     lstm_attrs['clip'] = lstm_params.cellClipThreshold
     lstm_attrs['input_forget'] = lstm_params.coupledInputAndForgetGate
 
-    # Create output part of CoreML LSTM
-    if lstm_params.sequenceOutput:
-        lstm_y_name = scope.get_unique_variable_name(lstm_op_name + '_Y')
-        lstm_outputs.append(lstm_y_name)
+    # Create the major LSTM operator. We assign a tensor name to each output of LSTM. However, variables can be
+    # undefined in some cases. For example, when output_sequence=False, the first output is not meaningful.
+    lstm_y_name = scope.get_unique_variable_name(lstm_op_name + '_Y')
+    lstm_y_h_name = scope.get_unique_variable_name(lstm_op_name + '_Y_h')
+    lstm_y_c_name = scope.get_unique_variable_name(lstm_op_name + '_Y_c')
+    lstm_outputs.extend([lstm_y_name, lstm_y_h_name, lstm_y_c_name])
+    container.add_node('LSTM', lstm_inputs, lstm_outputs, **lstm_attrs)
 
+    # Create post-processing operators for converting ONNX LSTM outputs to CoreML ones
+    if lstm_params.sequenceOutput:
         container.add_node('Reshape', lstm_y_name, operator.outputs[0].full_name,
                            name=scope.get_unique_operator_name('Reshape'), shape=[-1, 2 * hidden_size])
 
         if len(operator.outputs) > 1:
-            lstm_y_h_name = scope.get_unique_variable_name(lstm_op_name + '_Y_h')
-            lstm_outputs.append(lstm_y_h_name)
-
             lstm_y_h_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_Y_h_reshape')
             container.add_node('Reshape', lstm_y_h_name, lstm_y_h_reshape_name,
                                name=scope.get_unique_operator_name('Reshape'), shape=[2, hidden_size])
 
             container.add_node('Split', lstm_y_h_reshape_name,
                                [operator.outputs[1].full_name, operator.outputs[3].full_name],
-                               op_version=2, name=scope.get_unique_operator_name('Split'), split=[1, 1, ], axis=0)
+                               op_version=2, name=scope.get_unique_operator_name('Split'), split=[1, 1], axis=0)
     else:
-        # Here we ingore ONNX RNN's first output because it's useless.
-        lstm_outputs.append(scope.get_unique_variable_name('isolated'))
-
-        # Handle the second output of ONNX LSTM. It will become the first and the second outputs of
-        # CoreML's LSTM.
-        lstm_y_name = scope.get_unique_variable_name(lstm_op_name + '_Y')
-        lstm_outputs.append(lstm_y_name)
+        # Here we ignore ONNX RNN's first output because it's useless. The second output of ONNX LSTM will be used to
+        # generate the first and the second outputs of CoreML LSTM.
 
         # Directly reshape ONNX LSTM's 2nd output to CoreML LSTM's 1st output.
-        container.add_node('Reshape', lstm_y_name, operator.outputs[0].full_name,
+        container.add_node('Reshape', lstm_y_h_name, operator.outputs[0].full_name,
                            name=scope.get_unique_operator_name('Reshape'), shape=[1, 2 * hidden_size])
 
         if len(operator.outputs) > 1:
             lstm_y_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_Y_reshape')
 
-            container.add_node('Reshape', lstm_y_name, lstm_y_reshape_name,
+            container.add_node('Reshape', lstm_y_h_name, lstm_y_reshape_name,
                                name=scope.get_unique_operator_name('Reshape'), shape=[2, hidden_size])
 
             container.add_node('Split', lstm_y_reshape_name,
@@ -369,9 +366,6 @@ def convert_bidirectional_lstm(scope, operator, container):
 
     # Output cell state if necessary
     if len(operator.outputs) > 2:
-        lstm_y_c_name = scope.get_unique_variable_name(lstm_op_name + '_Y_c')
-        lstm_outputs.append(lstm_y_c_name)
-
         lstm_y_c_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_Y_c_reshape')
         container.add_node('Reshape', lstm_y_c_name, lstm_y_c_reshape_name,
                            name=scope.get_unique_operator_name('Reshape'), shape=[2, hidden_size])
@@ -379,9 +373,6 @@ def convert_bidirectional_lstm(scope, operator, container):
         container.add_node('Split', lstm_y_c_reshape_name,
                            [operator.outputs[2].full_name, operator.outputs[4].full_name],
                            op_version=2, name=scope.get_unique_operator_name('Split'), split=[1, 1], axis=0)
-
-    # Create the major LSTM operator
-    container.add_node('LSTM', lstm_inputs, lstm_outputs, **lstm_attrs)
 
 
 register_converter('biDirectionalLSTM', convert_bidirectional_lstm)
