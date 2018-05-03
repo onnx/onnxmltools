@@ -118,7 +118,7 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
 
         self._test_one_to_one_operator_core(model, x_keras, x_cntk)
 
-    def test_conv_2d(self):
+    def test_conv_4d(self):
         x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(1, 2, 4, 3)
         np.random.seed(0)
         model = Sequential()
@@ -128,23 +128,15 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
 
         self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
 
-    def test_max_pooling_2d(self):
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(1, 2, 4, 3)
-        np.random.seed(0)
-        model = Sequential()
-        model.add(MaxPooling2D(2, input_shape=(4, 3, 2), data_format='channels_last'))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
-
-    def test_average_pooling_2d(self):
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(1, 2, 4, 3)
-        np.random.seed(0)
-        model = Sequential()
-        model.add(AveragePooling2D(2, input_shape=(4, 3, 2), data_format='channels_last'))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
+    def test_pooling_4d(self):
+        layers_to_be_tested = [MaxPooling2D, AveragePooling2D]
+        for layer in layers_to_be_tested:
+            x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(1, 2, 4, 3)
+            np.random.seed(0)
+            model = Sequential()
+            model.add(layer(2, input_shape=(4, 3, 2), data_format='channels_last'))
+            model.compile(optimizer='adagrad', loss='mse')
+            self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
 
     @unittest.skip('Skip because CNTK is not able to evaluate this model')
     def test_convolution_transpose_2d(self):
@@ -156,99 +148,64 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
 
         self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
 
-    def test_maximum(self):
+    def test_merge_2d(self):
+        # Skip Concatenate for now because  CoreML Concatenate needs 4-D input
+        layers_to_be_tested = [Add, Maximum, Multiply, Average, Dot]
         N = 2
-        C = 2
-        H = 1
-        W = 1
-        x_keras1, x_keras2, x_cntk1, x_cntk2 = _create_keras_and_cntk_4d_input_pair(N, C, H, W)
-        input1 = Input(shape=(H, W, C))
-        input2 = Input(shape=(H, W, C))
-        result = Maximum()([input1, input2])
-        model = Model(inputs=[input1, input2], output=result)
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_two_to_one_operator_core_channels_last(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
-
-    def test_maximum_2d(self):
-        N = 2
-        C = 2
+        C = 3
         x_keras1, x_keras2, x_cntk1, x_cntk2 = _create_keras_and_cntk_2d_input_pair(N, C)
-        input1 = Input(shape=(C,))
-        input2 = Input(shape=(C,))
-        result = Maximum()([input1, input2])
-        model = Model(inputs=[input1, input2], output=result)
-        model.compile(optimizer='adagrad', loss='mse')
+        for layer in layers_to_be_tested:
+            input1 = Input(shape=(C,))
+            input2 = Input(shape=(C,))
+            if layer == Dot:
+                result = layer(axes=-1)([input1, input2])
+            else:
+                result = layer()([input1, input2])
+            model = Model(inputs=[input1, input2], output=result)
+            model.compile(optimizer='adagrad', loss='mse')
+            self._test_two_to_one_operator_core(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
 
-        self._test_two_to_one_operator_core(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
+    def test_merge_4d(self):
+        layers_to_be_tested = [Add, Maximum, Multiply, Average, Concatenate]
+        for layer in layers_to_be_tested:
+            N, C, H, W = 2, 2, 1, 3
+            x_keras1, x_keras2, x_cntk1, x_cntk2 = _create_keras_and_cntk_4d_input_pair(N, C, H, W)
+            input1 = Input(shape=(H, W, C))
+            input2 = Input(shape=(H, W, C))
+            output = layer()([input1, input2])
+            model = Model(inputs=[input1, input2], output=output)
+            model.compile(optimizer='adagrad', loss='mse')
+            self._test_two_to_one_operator_core_channels_last(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
 
-    def test_dot(self):
-        N = 2
-        C = 2
-        x_keras1, x_keras2, x_cntk1, x_cntk2 = _create_keras_and_cntk_2d_input_pair(N, C)
-        input1 = Input(shape=(C,))
-        input2 = Input(shape=(C,))
-        result = Dot(axes=-1)([input1, input2])
-        model = Model(inputs=[input1, input2], output=result)
-        model.compile(optimizer='adagrad', loss='mse')
+    def test_activation_2d(self):
+        activation_to_be_tested = ['softplus', 'softsign', 'tanh', 'relu', 'elu', 'softplus', 'hard_sigmoid',
+                                   'sigmoid', LeakyReLU]  # CNTK has no SELU
+        np.random.seed(0)
+        x_keras, x_cntk = _create_keras_and_cntk_2d_inputs(2, 3)
+        for activation in activation_to_be_tested:
+            model = Sequential()
+            if isinstance(activation, str):
+                model.add(Activation(activation, input_shape=(3,)))
+            else:
+                model.add(activation(input_shape=(3,)))
+            model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_two_to_one_operator_core(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
+            self._test_one_to_one_operator_core(model, x_keras, x_cntk)
 
-    def test_add(self):
-        N = 2
-        C = 2
-        H = 1
-        W = 1
-        x_keras1, x_keras2, x_cntk1, x_cntk2 = _create_keras_and_cntk_4d_input_pair(N, C, H, W)
-        input1 = Input(shape=(H, W, C))
-        input2 = Input(shape=(H, W, C))
-        result = Add()([input1, input2])
-        model = Model(inputs=[input1, input2], output=result)
-        model.compile(optimizer='adagrad', loss='mse')
+    def test_activation_4d(self):
+        activation_to_be_tested = ['softplus', 'softsign', 'tanh', 'relu', 'elu', 'softplus', 'hard_sigmoid',
+                                   'sigmoid', LeakyReLU]  # CNTK has no SELU
+        np.random.seed(0)
+        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
+        for activation in activation_to_be_tested:
+            model = Sequential()
+            if isinstance(activation, str):
+                model.add(Activation(activation, input_shape=(4, 5, 3)))
+            else:
+                model.add(activation(input_shape=(4, 5, 3)))
+            model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_two_to_one_operator_core_channels_last(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
-
-    def test_concatenate(self):
-        N = 2
-        C = 2
-        H = 1
-        W = 1
-        x_keras1, x_keras2, x_cntk1, x_cntk2 = _create_keras_and_cntk_4d_input_pair(N, C, H, W)
-        input1 = Input(shape=(H, W, C))
-        input2 = Input(shape=(H, W, C))
-        result = Concatenate()([input1, input2])
-        model = Model(inputs=[input1, input2], output=result)
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_two_to_one_operator_core_channels_last(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
-
-    def test_multiply(self):
-        N = 2
-        C = 2
-        H = 1
-        W = 1
-        x_keras1, x_keras2, x_cntk1, x_cntk2 = _create_keras_and_cntk_4d_input_pair(N, C, H, W)
-        input1 = Input(shape=(H, W, C))
-        input2 = Input(shape=(H, W, C))
-        result = Multiply()([input1, input2])
-        model = Model(inputs=[input1, input2], output=result)
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_two_to_one_operator_core_channels_last(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
-
-    def test_average(self):
-        N = 2
-        C = 2
-        H = 1
-        W = 1
-        x_keras1, x_keras2, x_cntk1, x_cntk2 = _create_keras_and_cntk_4d_input_pair(N, C, H, W)
-        input1 = Input(shape=(H, W, C))
-        input2 = Input(shape=(H, W, C))
-        result = Average()([input1, input2])
-        model = Model(inputs=[input1, input2], output=result)
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_two_to_one_operator_core_channels_last(model, x_keras1, x_keras2, x_cntk1, x_cntk2)
+            self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
 
     @unittest.skip('CNTK does not support integer tensor as its input')
     def test_embedding(self):
@@ -308,88 +265,6 @@ class TestKeras2CoreML2ONNXWithCNTK(unittest.TestCase):
         y_cntk = cntk_model.eval({cntk_model.arguments[0]: x_cntk})
 
         self.assertTrue(np.allclose(y_keras, y_cntk))
-
-    def test_activation_tanh(self):
-        np.random.seed(0)
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
-        model = Sequential()
-        model.add(Activation('tanh', input_shape=(4, 5, 3)))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
-
-    def test_activation_relu(self):
-        np.random.seed(0)
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
-        model = Sequential()
-        model.add(Activation('relu', input_shape=(4, 5, 3)))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
-
-    def test_activation_elu(self):
-        np.random.seed(0)
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
-        model = Sequential()
-        model.add(Activation('elu', input_shape=(4, 5, 3)))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
-
-    @unittest.skip('CNTK does not support SELU')
-    def test_activation_selu(self):
-        np.random.seed(0)
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
-        model = Sequential()
-        model.add(Activation('selu', input_shape=(4, 5, 3)))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
-
-    def test_activation_softplus(self):
-        np.random.seed(0)
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
-        model = Sequential()
-        model.add(Activation('softplus', input_shape=(4, 5, 3)))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
-
-    def test_activation_softsign(self):
-        np.random.seed(0)
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
-        model = Sequential()
-        model.add(Activation('softsign', input_shape=(4, 5, 3)))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
-
-    def test_activation_sigmoid(self):
-        np.random.seed(0)
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
-        model = Sequential()
-        model.add(Activation('sigmoid', input_shape=(4, 5, 3)))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
-
-    def test_activation_hard_sigmoid(self):
-        np.random.seed(0)
-        x_keras, x_cntk = _create_keras_and_cntk_4d_inputs(2, 3, 4, 5)
-        model = Sequential()
-        model.add(Activation('hard_sigmoid', input_shape=(4, 5, 3)))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core_channels_last(model, x_keras, x_cntk)
-
-    def test_activation_leaky_relu(self):
-        np.random.seed(0)
-        x_keras, x_cntk = _create_keras_and_cntk_2d_inputs(2, 3)
-        model = Sequential()
-        model.add(LeakyReLU(input_shape=(3,)))
-        model.compile(optimizer='adagrad', loss='mse')
-
-        self._test_one_to_one_operator_core(model, x_keras, x_cntk)
 
     @unittest.skip('CNTK does not support Upsample operator')
     def test_upsample(self):
