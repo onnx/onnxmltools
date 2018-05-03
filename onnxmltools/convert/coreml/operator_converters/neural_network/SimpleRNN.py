@@ -188,36 +188,26 @@ def convert_simple_rnn(scope, operator, container):
     rnn_attrs['output_sequence'] = params.sequenceOutput
     rnn_attrs['hidden_size'] = hidden_size
 
-    # Set up outputs' of RNN
-    rnn_outputs = []
-    if params.sequenceOutput:
-        # Create ONNX's RNN output, which needs to be reshaped to fit CoreML standard.
-        rnn_y_name = scope.get_unique_variable_name(rnn_op_name + '_Y')
-        rnn_outputs.append(rnn_y_name)
+    # We use the collected information to build ONNX's RNN
+    rnn_y_name = scope.get_unique_variable_name(rnn_op_name + '_Y')
+    rnn_h_name = scope.get_unique_variable_name(rnn_op_name + '_Y_h')
+    container.add_node('RNN', rnn_inputs, [rnn_y_name, rnn_h_name], **rnn_attrs)
 
+    # Set up outputs' of RNN
+    if params.sequenceOutput:
         # Connect ONNX's output and CoreML's output via a reshape operator
         container.add_node('Reshape', rnn_y_name, operator.outputs[0].full_name,
                            name=scope.get_unique_operator_name('Reshape'), shape=[-1, hidden_size])
 
         # Handel the second RNN output (aka last hidden state), which is optional.
         if len(operator.outputs) == 2:
-            # Create ONNX's RNN output, which needs to be reshaped to fit CoreML standard.
-            rnn_h_name = scope.get_unique_variable_name(rnn_op_name + '_Y_h')
-            rnn_outputs.append(rnn_h_name)
-
             # Connect ONNX's output and CoreML's output via a reshape operator
             container.add_node('Reshape', rnn_h_name, operator.outputs[1].full_name,
                                name=scope.get_unique_operator_name('Reshape'),
                                shape=[1, hidden_size])
     else:
-        # Here we ignore ONNX RNN's first output by assigning it an isolated name. Isolated names
-        # are not connected with anything else.
-        rnn_outputs.append(scope.get_unique_variable_name('isolated'))
-
-        # According to CoreML, the two outputs are always identical, so we just need to compute one of
-        # them and produce the other one using an identiy operator.
-        rnn_h_name = scope.get_unique_variable_name(rnn_op_name + '_Y_h')
-        rnn_outputs.append(rnn_h_name)
+        # According to CoreML, its two outputs are always identical, so we just need to compute one of them and produce
+        # the other one using an identity operator. Note that the first ONNX RNN output is undefined in this case.
 
         # Reshape last hidden state's ONNX format to its CoreML format
         container.add_node('Reshape', rnn_h_name, operator.outputs[0].full_name,
@@ -227,9 +217,6 @@ def convert_simple_rnn(scope, operator, container):
             # Copy the first output to the second output
             container.add_node('Identity', operator.outputs[0].full_name, operator.outputs[1].full_name,
                                name=scope.get_unique_operator_name('Identity'))
-
-    # Finally, we use the collected information to build ONNX's RNN
-    container.add_node('RNN', rnn_inputs, rnn_outputs, **rnn_attrs)
 
 
 register_converter('simpleRecurrent', convert_simple_rnn)

@@ -31,7 +31,6 @@ def convert_batch_normalization(scope, operator, container):
     inputs.append(bias_tensor_name)
 
     attrs['epsilon'] = params.epsilon
-    attrs['spatial'] = 1  # True
 
     if op_type == 'BatchNormalization':
         mean_tensor_name = scope.get_unique_variable_name(op_type + '_mean')
@@ -43,6 +42,7 @@ def convert_batch_normalization(scope, operator, container):
                                   params.variance.floatValue)
         inputs.append(variance_tensor_name)
         attrs['momentum'] = 0.
+        attrs['spatial'] = 1  # True
 
         if not params.instanceNormalization and params.computeMeanVar:
             # In this case, we apply batch normalization and adjust the statistics stored according the the batch
@@ -63,8 +63,6 @@ def convert_batch_normalization(scope, operator, container):
             attrs['is_test'] = 1  # True
         else:
             raise ValueError('Unsupported operation mode')
-    else:
-        attrs['is_test'] = 1  # True
 
     container.add_node(op_type, inputs, outputs, **attrs)
 
