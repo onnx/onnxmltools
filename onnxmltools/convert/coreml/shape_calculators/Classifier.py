@@ -5,14 +5,15 @@
 # --------------------------------------------------------------------------
 
 from ...common._registration import register_shape_calculator
-from ...common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type, DictionaryType, StringType
+from ...common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type, DictionaryType, StringType,\
+    SequenceType, StringTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_traditional_classifier_output_shapes(operator):
     '''
     For classifiers, allowed input/output patterns are
-        1. [N, C_1], ..., [N, C_n] ---> [N, 1], Map
+        1. [N, C_1], ..., [N, C_n] ---> [N, 1], Sequence of Map
         2. [N, C_1], ..., [N, C_n] ---> [N, 1]
 
     For regressors, allowed input/output patterns are
@@ -24,8 +25,8 @@ def calculate_traditional_classifier_output_shapes(operator):
     check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=[1, 2])
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType, FloatType, Int64Type])
 
-    if any(len(variable.type.shape) != 2 or variable.type.shape[0] != 1 for variable in operator.inputs):
-        raise RuntimeError('Input(s) must be [1,C]-tensor(s)')
+    if any(len(variable.type.shape) != 2 for variable in operator.inputs):
+        raise RuntimeError('Input(s) must be [N, C]-tensor(s)')
 
     model_type = operator.raw_operator.WhichOneof('Type')
     if model_type == 'treeEnsembleClassifier':
@@ -37,16 +38,17 @@ def calculate_traditional_classifier_output_shapes(operator):
     else:
         raise ValueError('%s has no class label' % model_type)
 
+    N = operator.inputs[0].type.shape[0]
     if class_label_type == 'stringClassLabels':
-        operator.outputs[0].type = StringType(doc_string=operator.outputs[0].type.doc_string)
+        operator.outputs[0].type = StringTensorType([N, 1], doc_string=operator.outputs[0].type.doc_string)
         if len(operator.outputs) == 2:
-            operator.outputs[1].type = DictionaryType(StringType(), FloatType(),
-                                                      doc_string=operator.outputs[1].type.doc_string)
+            operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([1]), FloatTensorType([1])),
+                                                    doc_string=operator.outputs[1].type.doc_string)
     elif class_label_type == 'int64ClassLabels':
-        operator.outputs[0].type = Int64Type(doc_string=operator.outputs[0].type.doc_string)
+        operator.outputs[0].type = Int64TensorType([N, 1], doc_string=operator.outputs[0].type.doc_string)
         if len(operator.outputs) == 2:
-            operator.outputs[1].type = DictionaryType(Int64Type(), FloatType(),
-                                                      doc_string=operator.outputs[1].type.doc_string)
+            operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([1]), FloatTensorType([1])),
+                                                    doc_string=operator.outputs[1].type.doc_string)
     else:
         raise ValueError('Traditional classifier must include label information')
 

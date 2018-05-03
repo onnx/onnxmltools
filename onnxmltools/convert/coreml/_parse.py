@@ -81,9 +81,9 @@ def parse_coreml_feature(feature_info, batch_size=1):
     elif type_name == 'dictionaryType':
         key_type = raw_type.dictionaryType.WhichOneof('KeyType')
         if key_type == 'int64KeyType':
-            return DictionaryType(Int64Type(), FloatType(), doc_string=doc_string)
+            return DictionaryType(Int64TensorType([1]), FloatTensorType([1]), doc_string=doc_string)
         elif key_type == 'stringKeyType':
-            return DictionaryType(StringType(), FloatType(), doc_string=doc_string)
+            return DictionaryType(StringTensorType([1]), FloatTensorType([1]), doc_string=doc_string)
         else:
             raise ValueError('Unsupported key type: {}'.format(key_type))
     else:
