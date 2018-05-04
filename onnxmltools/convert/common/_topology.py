@@ -659,7 +659,7 @@ def convert_topology(topology, model_name, doc_string):
     # Fill operator sets
     i = 0
     for op_domain, op_version in container.node_domain_version_pair_sets:
-        if i  == 0 and len(onnx_model.opset_import) == 1:
+        if i == 0 and len(onnx_model.opset_import) == 1:
             # Overwrite the default operator set created by helper.make_model(...)
             op_set = onnx_model.opset_import[0]
         else:

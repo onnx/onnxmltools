@@ -80,8 +80,10 @@ def convert_gru(scope, operator, container):
 
     # Resahpe CoreML variable into ONNX format for feeding it into ONNX GRU
     gru_x_reshape_name = scope.get_unique_variable_name(gru_op_name + '_X_reshape')
-    container.add_node('Reshape', operator.inputs[0].full_name, gru_x_reshape_name,
-                       name=scope.get_unique_operator_name('Reshape'), shape=[-1, 1, input_size])
+    desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+    container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [3], [-1, 1, input_size])
+    container.add_node('Reshape', [operator.inputs[0].full_name, desired_shape_name], gru_x_reshape_name, op_version=5,
+                       name=scope.get_unique_operator_name('Reshape'))
     gru_inputs.append(gru_x_reshape_name)
 
     # Create weight matrices of GRU and add it into ONNX GRU's input list
@@ -124,8 +126,10 @@ def convert_gru(scope, operator, container):
     if len(operator.inputs) == 2:
         # Change the shape of initial state in CoreML so that ONNX's GRU is willing to take it.
         gru_h_init_reshape_name = scope.get_unique_variable_name(gru_op_name + '_h_init')
-        container.add_node('Reshape', operator.inputs[1].full_name, gru_h_init_reshape_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[1, 1, hidden_size])
+        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [3], [1, 1, hidden_size])
+        container.add_node('Reshape', [operator.inputs[1].full_name, desired_shape_name], gru_h_init_reshape_name,
+                           op_version=5, name=scope.get_unique_operator_name('Reshape'))
         gru_inputs.append(gru_h_init_reshape_name)
         # Add a zero initializer to initial hidden state so that this variable becomes optional
         container.add_initializer(operator.inputs[1].full_name, onnx_proto.TensorProto.FLOAT,
@@ -165,18 +169,24 @@ def convert_gru(scope, operator, container):
     if params.sequenceOutput:
         # Again, the output shapes in ONNX's GRU is not consistent with that in CoreML, so we need
         # to adjust the result produced by ONNX according to CoreML format.
-        container.add_node('Reshape', gru_y_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, hidden_size])
+        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [2], [-1, hidden_size])
+        container.add_node('Reshape', [gru_y_name, desired_shape_name], operator.outputs[0].full_name, op_version=5,
+                           name=scope.get_unique_operator_name('Reshape'))
 
         # Handle the second output, the last hidden state of a sequence, if exists.
         if len(operator.outputs) == 2:
-            container.add_node('Reshape', gru_y_h_name, operator.outputs[1].full_name,
-                               name=scope.get_unique_operator_name('Reshape'), shape=[1, hidden_size])
+            desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+            container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [2], [1, hidden_size])
+            container.add_node('Reshape', [gru_y_h_name, desired_shape_name], operator.outputs[1].full_name,
+                               op_version=5, name=scope.get_unique_operator_name('Reshape'))
     else:
         # Recall that when sequence output is false, the first and the second outputs of GRU
         # are identical. Thus, we can ignore ONNX GRU's first output.
-        container.add_node('Reshape', gru_y_h_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[1, hidden_size])
+        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [2], [1, hidden_size])
+        container.add_node('Reshape', [gru_y_h_name, desired_shape_name], operator.outputs[0].full_name, op_version=5,
+                           name=scope.get_unique_operator_name('Reshape'))
 
         if len(operator.outputs) == 2:
             container.add_node('Identity', operator.outputs[0].full_name, operator.outputs[1].full_name,

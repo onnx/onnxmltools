@@ -129,8 +129,11 @@ def convert_simple_rnn(scope, operator, container):
 
     X_name = operator.inputs[0].full_name
     X_reshape_name = scope.get_unique_variable_name('X')
-    container.add_node('Reshape', X_name, X_reshape_name, name=scope.get_unique_operator_name('Reshape'),
-                       shape=[-1, 1, input_size])
+
+    desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+    container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [3], [-1, 1, input_size])
+    container.add_node('Reshape', [X_name, desired_shape_name], X_reshape_name, op_version=5,
+                       name=scope.get_unique_operator_name('Reshape'))
 
     rnn_op_name = scope.get_unique_operator_name('RNN')
     rnn_attrs = {'name': rnn_op_name}
@@ -164,9 +167,10 @@ def convert_simple_rnn(scope, operator, container):
     # If initial hidden state is provided, we add it into RNN's input list after adjusting its shape.
     if len(operator.inputs) == 2:
         rnn_h_init_reshape_name = scope.get_unique_variable_name(rnn_op_name + '_h_init')
-        container.add_node('Reshape', operator.inputs[1].full_name, rnn_h_init_reshape_name,
-                           name=scope.get_unique_operator_name('Reshape'),
-                           shape=[1, 1, hidden_size])
+        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [3], [1, 1, hidden_size])
+        container.add_node('Reshape', [operator.inputs[1].full_name, desired_shape_name], rnn_h_init_reshape_name,
+                           op_version=5, name=scope.get_unique_operator_name('Reshape'))
         rnn_inputs.append(rnn_h_init_reshape_name)
         # Add a zero initializer to initial hidden state so that this variable becomes optional
         container.add_initializer(operator.inputs[1].full_name, onnx_proto.TensorProto.FLOAT,
@@ -196,22 +200,27 @@ def convert_simple_rnn(scope, operator, container):
     # Set up outputs' of RNN
     if params.sequenceOutput:
         # Connect ONNX's output and CoreML's output via a reshape operator
-        container.add_node('Reshape', rnn_y_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, hidden_size])
+        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [2], [-1, hidden_size])
+        container.add_node('Reshape', [rnn_y_name, desired_shape_name], operator.outputs[0].full_name, op_version=5,
+                           name=scope.get_unique_operator_name('Reshape'))
 
         # Handel the second RNN output (aka last hidden state), which is optional.
         if len(operator.outputs) == 2:
             # Connect ONNX's output and CoreML's output via a reshape operator
-            container.add_node('Reshape', rnn_h_name, operator.outputs[1].full_name,
-                               name=scope.get_unique_operator_name('Reshape'),
-                               shape=[1, hidden_size])
+            desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+            container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [2], [1, hidden_size])
+            container.add_node('Reshape', [rnn_h_name, desired_shape_name], operator.outputs[1].full_name,
+                               op_version=5, name=scope.get_unique_operator_name('Reshape'))
     else:
         # According to CoreML, its two outputs are always identical, so we just need to compute one of them and produce
         # the other one using an identity operator. Note that the first ONNX RNN output is undefined in this case.
 
         # Reshape last hidden state's ONNX format to its CoreML format
-        container.add_node('Reshape', rnn_h_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[1, hidden_size])
+        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [2], [1, hidden_size])
+        container.add_node('Reshape', [rnn_h_name, desired_shape_name], operator.outputs[0].full_name, op_version=5,
+                           name=scope.get_unique_operator_name('Reshape'))
 
         if len(operator.outputs) == 2:
             # Copy the first output to the second output

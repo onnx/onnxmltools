@@ -16,8 +16,10 @@ def convert_embedding(scope, operator, container):
 
     # Reshape the indexes we want to embed to 1-D tensor. Otherwise, ONNX Gather's output may get wrong shape.
     reshaped_input_name = scope.get_unique_variable_name(gather_op_name + 'input_reshaped')  # 2nd input of Gather
-    container.add_node('Reshape', operator.inputs[0].full_name, reshaped_input_name,
-                       name=scope.get_unique_operator_name('Reshape'), shape=[-1])
+    desired_shape_name = scope.get_unique_variable_name('shape_tensor')
+    container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [1], [-1])
+    container.add_node('Reshape', [operator.inputs[0].full_name, desired_shape_name], reshaped_input_name, op_version=5,
+                       name=scope.get_unique_operator_name('Reshape'))
 
     # Load the embedding matrix. Its shape is outputChannels-by-inputDim.
     weights = np.array(params.weights.floatValue).reshape(params.outputChannels, params.inputDim)
