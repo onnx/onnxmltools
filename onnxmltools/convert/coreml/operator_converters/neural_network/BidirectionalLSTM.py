@@ -8,6 +8,7 @@ import numpy as np
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 from .SimpleRNN import extract_rnn_activation_info
+from .Reshape import apply_reshape
 
 
 def convert_bidirectional_lstm(scope, operator, container):
@@ -178,10 +179,7 @@ def convert_bidirectional_lstm(scope, operator, container):
     lstm_outputs = []
 
     lstm_x_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_X_reshape')
-    desired_shape_name = scope.get_unique_variable_name('shape_tensor')
-    container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [3], [-1, 1, input_size])
-    container.add_node('Reshape', [operator.inputs[0].full_name, desired_shape_name], lstm_x_reshape_name, op_version=5,
-                       name=scope.get_unique_operator_name('Reshape'))
+    apply_reshape(scope, operator.inputs[0].full_name, lstm_x_reshape_name, [-1, 1, input_size], container)
     lstm_inputs.append(lstm_x_reshape_name)
 
     # Handle LSTM's weight matrices
@@ -246,10 +244,7 @@ def convert_bidirectional_lstm(scope, operator, container):
                            lstm_h_init_name, name=scope.get_unique_operator_name('Concat'), axis=0)
 
         lstm_h_init_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_h_init_reshape')
-        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
-        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [3], [2, 1, hidden_size])
-        container.add_node('Reshape', [lstm_h_init_name, desired_shape_name], lstm_h_init_reshape_name, op_version=5,
-                           name=scope.get_unique_operator_name('Reshape'))
+        apply_reshape(scope, lstm_h_init_name, lstm_h_init_reshape_name, [2, 1, hidden_size], container)
 
         # Add zero initializers to forward and backward initial hidden states so that they become optional
         container.add_initializer(operator.inputs[1].full_name, onnx_proto.TensorProto.FLOAT,
@@ -268,13 +263,11 @@ def convert_bidirectional_lstm(scope, operator, container):
         container.add_node('Concat', [operator.inputs[2].full_name, operator.inputs[4].full_name],
                            lstm_c_init_name, name=scope.get_unique_operator_name('Concat'), axis=0)
 
+        # Reshape the Cell state so that ONNX LSTM can accept it
         lstm_c_init_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_c_init_reshape')
-        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
-        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [3], [2, 1, hidden_size])
-        container.add_node('Reshape', [lstm_c_init_name, desired_shape_name], lstm_c_init_reshape_name, op_version=5,
-                           name=scope.get_unique_operator_name('Reshape'))
-
+        apply_reshape(scope, lstm_c_init_name, lstm_c_init_reshape_name, [2, 1, hidden_size], container)
         lstm_inputs.append(lstm_c_init_reshape_name)
+
         # Add zero initializers to forward and backward initial cell states so that they become optional
         container.add_initializer(operator.inputs[2].full_name, onnx_proto.TensorProto.FLOAT,
                                   operator.inputs[2].type.shape,
@@ -341,17 +334,11 @@ def convert_bidirectional_lstm(scope, operator, container):
 
     # Create post-processing operators for converting ONNX LSTM outputs to CoreML ones
     if lstm_params.sequenceOutput:
-        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
-        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [3], [-1, 2 * hidden_size])
-        container.add_node('Reshape', [lstm_y_name, desired_shape_name], operator.outputs[0].full_name, op_version=5,
-                           name=scope.get_unique_operator_name('Reshape'))
+        apply_reshape(scope, lstm_y_name, operator.outputs[0].full_name, [-1, 2 * hidden_size], container)
 
         if len(operator.outputs) > 1:
             lstm_y_h_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_Y_h_reshape')
-            desired_shape_name = scope.get_unique_variable_name('shape_tensor')
-            container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [2], [2, hidden_size])
-            container.add_node('Reshape', [lstm_y_h_name, desired_shape_name], lstm_y_h_reshape_name, op_version=5,
-                               name=scope.get_unique_operator_name('Reshape'))
+            apply_reshape(scope, lstm_y_name, lstm_y_h_reshape_name, [2, hidden_size], container)
 
             container.add_node('Split', lstm_y_h_reshape_name,
                                [operator.outputs[1].full_name, operator.outputs[3].full_name],
@@ -361,18 +348,11 @@ def convert_bidirectional_lstm(scope, operator, container):
         # generate the first and the second outputs of CoreML LSTM.
 
         # Directly reshape ONNX LSTM's 2nd output to CoreML LSTM's 1st output.
-        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
-        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [3], [1, 2 * hidden_size])
-        container.add_node('Reshape', [lstm_y_h_name, desired_shape_name], operator.outputs[0].full_name, op_version=5,
-                           name=scope.get_unique_operator_name('Reshape'))
+        apply_reshape(scope, lstm_y_h_name, operator.outputs[0].full_name, [1, 2 * hidden_size], container)
 
         if len(operator.outputs) > 1:
             lstm_y_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_Y_reshape')
-
-            desired_shape_name = scope.get_unique_variable_name('shape_tensor')
-            container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [2], [2, hidden_size])
-            container.add_node('Reshape', [lstm_y_h_name, desired_shape_name], lstm_y_reshape_name, op_version=5,
-                               name=scope.get_unique_operator_name('Reshape'))
+            apply_reshape(scope, lstm_y_h_name, lstm_y_reshape_name, [2, hidden_size], container)
 
             container.add_node('Split', lstm_y_reshape_name,
                                [operator.outputs[1].full_name, operator.outputs[3].full_name],
@@ -381,11 +361,7 @@ def convert_bidirectional_lstm(scope, operator, container):
     # Output cell state if necessary
     if len(operator.outputs) > 2:
         lstm_y_c_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_Y_c_reshape')
-
-        desired_shape_name = scope.get_unique_variable_name('shape_tensor')
-        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [2], [2, hidden_size])
-        container.add_node('Reshape', [lstm_y_c_name, desired_shape_name], lstm_y_c_reshape_name, op_version=5,
-                           name=scope.get_unique_operator_name('Reshape'))
+        apply_reshape(scope, lstm_y_c_name, lstm_y_c_reshape_name, [2, hidden_size], container)
 
         container.add_node('Split', lstm_y_c_reshape_name,
                            [operator.outputs[2].full_name, operator.outputs[4].full_name],
