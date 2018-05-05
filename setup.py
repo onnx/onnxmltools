@@ -24,7 +24,7 @@ with open(README) as f:
 
 setup(
     name='onnxmltools',
-    version='1.0.0.0000',
+    version='1.1.2.0000',
     description="Converts Machine Learning models to ONNX",
     long_description=long_description,
     license='MIT License',
