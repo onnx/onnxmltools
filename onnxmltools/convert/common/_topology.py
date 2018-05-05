@@ -189,7 +189,7 @@ class Scope:
         '''
         This function is used to declare new local operator.
         '''
-        onnx_name = self.get_unique_operator_name(type)
+        onnx_name = self.get_unique_operator_name(str(type))
         operator = Operator(onnx_name, self.name, type, raw_model)
         self.operators[onnx_name] = operator
         return operator
@@ -496,6 +496,15 @@ class Topology:
             # copy that non-empty string to the original variable to avoid information loss.
             if not original.type.doc_string and duplicate.type.doc_string:
                 original.type.doc_string = duplicate.type.doc_string
+
+            # Sometime, shapes of duplicates are different. We try to replace the original variable's unknown dimensions
+            # as many as possible because we will get rid of the duplicate.
+            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType) and\
+                    len(original.type.shape) == len(duplicate.type.shape):
+                for i in range(len(original.type.shape)):
+                    if original.type.shape[i] != 'None':
+                        continue
+                    original.type.shape[i] = duplicate.type.shape[i]
 
             # Because we're iterating through the topology, we cannot delete any operator or variable. Otherwise,
             # the traversing function may be broken. We will delete those abandoned ones later.
