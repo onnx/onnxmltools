@@ -45,12 +45,13 @@ install:
   - printenv
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
+  - conda install -c conda-forge openmpi
   - conda install -c conda-forge numpy
   - conda install -c conda-forge cmake
-  - conda install -c conda-forge openmpi
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
+  - cd $TRAVIS_BUILD_DIR && pip install cntk
+  - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
-  - pip install -I "onnx$ONNX_VERSION"
 
 script:
     - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
