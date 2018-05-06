@@ -54,7 +54,14 @@ def convert_reshape(scope, operator, container):
     N = operator.inputs[0].type.shape[0]
     if N == 'None':
         N = -1
-    output_shape = [N] + [int(d) for d in params.targetShape]
+    if len(params.targetShape) == 4:
+        output_shape = [int(d) for d in params.targetShape]
+        output_shape[0] = N  # Overwrite bad default CoreML setting
+    elif len(params.targetShape) == 3:
+        output_shape = [N] + [int(d) for d in params.targetShape]
+    else:
+        raise ValueError('The targeted shape of Reshape (name: %s) must be 3-element or 4-element array but got %s'\
+                % (operator.full_name, params.targetShape))
 
     apply_reshape(scope=scope, input_name=intra_variable_name, output_name=operator.outputs[0].full_name,
                   desired_shape=output_shape, container=container, operator_name=operator.full_name)
