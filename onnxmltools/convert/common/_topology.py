@@ -584,18 +584,20 @@ class Topology:
         self._check_structure()
 
 
-def convert_topology(topology, model_name, doc_string):
+def convert_topology(topology, model_name, targeted_onnx_version_string, doc_string):
     '''
     This function is used to convert our Topology object defined in _parser.py into a ONNX model (type: ModelProto).
     :param topology: The Topology object we are going to convert
     :param model_name: GraphProto's name. Let "model" denote the output model. The string "model_name" would be assigned
     to "model.graph.name."
+    :param targeted_onnx_version_string: A string, which specifies the targeted ONNX version of the produced model.
+    Possible values include '1.1.2', '1.2', and so on.
     :param doc_string: A string attached to the produced model
     :return: a ONNX ModelProto
     '''
     topology._initialize_graph_status_for_traversing()
 
-    container = ModelComponentContainer()
+    container = ModelComponentContainer(targeted_onnx_version_string)
 
     # Add roots and leaves as ONNX's model inputs and outputs
     model_inputs = []

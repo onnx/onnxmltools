@@ -13,7 +13,7 @@ from . import shape_calculators
 from . import operator_converters
 
 
-def convert(model, name=None, initial_types=None, doc_string=''):
+def convert(model, name=None, initial_types=None, targeted_onnx_version_string='1.1.2', doc_string=''):
     '''
     This function produces an equivalent ONNX model of the given scikit-learn model. The supported scikit-learn
     modules are listed below.
@@ -79,6 +79,6 @@ def convert(model, name=None, initial_types=None, doc_string=''):
     topology.compile()
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
-    onnx_model = convert_topology(topology, name, doc_string)
+    onnx_model = convert_topology(topology, name, targeted_onnx_version_string, doc_string)
 
     return onnx_model

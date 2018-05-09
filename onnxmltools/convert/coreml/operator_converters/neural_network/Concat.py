@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from distutils.version import StrictVersion
 from ....common._registration import register_converter
 
 
@@ -15,7 +16,12 @@ def convert_concat(scope, operator, container):
     else:
         attrs['axis'] = 1
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    if container.targeted_onnx_version < StrictVersion('1.0'):
+        op_version = 1
+    else:
+        op_version = 4
+
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_version=op_version, **attrs)
 
 
 register_converter('concat', convert_concat)

@@ -17,7 +17,7 @@ from .operator_converters import neural_network as nn_converters
 from .shape_calculators import neural_network as nn_shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string=''):
+def convert(model, name=None, initial_types=None, targeted_onnx_version_string='1.1.2', doc_string=''):
     '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
     ONNX model name can be specified.
@@ -26,6 +26,8 @@ def convert(model, name=None, initial_types=None, doc_string=''):
     :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
     name and a type defined in data_types.py.
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
+    :param targeted_onnx_version_string: A string (for example, '1.1.2' and '1.2') used to specify the compatible ONNX
+    version of the produced model
     :param doc_string: A string attached onto the produced ONNX model
     :return: An ONNX model (type: ModelProto) which is equivalent to the input CoreML model
 
@@ -64,7 +66,7 @@ def convert(model, name=None, initial_types=None, doc_string=''):
             metadata_props.append(entry)
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
-    onnx_model = convert_topology(topology, name, doc_string)
+    onnx_model = convert_topology(topology, name, targeted_onnx_version_string, doc_string)
 
     # Edit ONNX model's attributes related to CoreML's meta information
     if len(metadata_props) > 0:

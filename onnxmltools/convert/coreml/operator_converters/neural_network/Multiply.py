@@ -4,13 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from ....common._apply_operation import apply_mul
 from ....common._registration import register_converter
 
 
 def convert_multiply(scope, operator, container):
-    op_type = 'Mul'
-    op_name = scope.get_unique_operator_name(op_type)
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, name=op_name)
+    if operator.inputs[0].type.shape != operator.inputs[1].type.shape:
+        broadcast = 1
+    else:
+        broadcast = 0
+
+    apply_mul(scope, operator.input_full_names, operator.output_full_names, container,
+              operator_name=operator.full_name, broadcast=broadcast)
 
 
 register_converter('multiply', convert_multiply)

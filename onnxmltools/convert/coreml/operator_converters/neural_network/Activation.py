@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from distutils.version import StrictVersion
 from ....common._registration import register_converter
 
 
@@ -55,7 +56,15 @@ def convert_activation(scope, operator, container):
     else:
         raise TypeError('Unsupported activation layer {0}'.format(activation_type))
 
-    container.add_node(op_type, inputs, outputs, **attrs)
+    # For some ONNX versions, some activation operators include a legacy optimization attribute.
+    op_version = 1
+    if op_type in ['LeakyRelu', 'ReLU', 'PReLU', 'ELU', 'Tanh', 'Sigmoid', 'HardSigmoid']:
+        if container.targeted_onnx_version < StrictVersion('1.0'):
+            attrs['consumed_inputs'] = [0]
+        else:
+            op_version = 6
+
+    container.add_node(op_type, inputs, outputs, op_version=op_version, **attrs)
 
 
 register_converter('activation', convert_activation)

@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import six
+from distutils.version import StrictVersion
 from ...proto import helper
 
 
@@ -83,7 +84,10 @@ class ModelComponentContainer:
     encapsulated in a ONNX ModelProto.
     '''
 
-    def __init__(self):
+    def __init__(self, targeted_onnx_version):
+        '''
+        :param targeted_onnx_version: A string, for example, '1.1.2' and '1.2'.
+        '''
         # Inputs of ONNX graph. They are ValueInfoProto in ONNX.
         self.inputs = []
         # Outputs of ONNX graph. They are ValueInfoProto in ONNX.
@@ -96,6 +100,8 @@ class ModelComponentContainer:
         self.nodes = []
         # ONNX operators' domain-version pair set. They will be added into opset_import field in the final ONNX model.
         self.node_domain_version_pair_sets = set()
+        # The targeted ONNX version. All produced operators should be supported by the targeted ONNX version.
+        self.targeted_onnx_version = StrictVersion(targeted_onnx_version)
 
     def _make_value_info(self, variable):
         value_info = helper.ValueInfoProto()
@@ -159,6 +165,9 @@ class ModelComponentContainer:
         if not isinstance(outputs, list) or not all(isinstance(s, (six.string_types, six.text_type)) for s in outputs):
             type_list = ','.join(list(str(type(s)) for s in outputs))
             raise ValueError('Outputs must be a list of string but get [%s]' % type_list)
+        for k, v in attrs.items():
+            if v is None:
+                raise ValueError('Failed to create ONNX node. Undefined attribute pair (%s, %s) found' % (k, v))
 
         node = helper.make_node(op_type, inputs, outputs, **attrs)
         node.domain = op_domain
