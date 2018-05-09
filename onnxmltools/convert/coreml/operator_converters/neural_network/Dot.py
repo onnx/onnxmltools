@@ -45,7 +45,7 @@ def convert_dot(scope, operator, container):
 
     # Sum up results from different dimensions to get the final cosine similarity
     reducer_name = scope.get_unique_operator_name('ReduceSum')
-    reducer_attrs = {'name': reducer_name, 'axes': [1], 'keepdims': 0}
+    reducer_attrs = {'name': reducer_name, 'axes': [1], 'keepdims': 1}
     container.add_node('ReduceSum', [product_name], operator.output_full_names, **reducer_attrs)
 
 
