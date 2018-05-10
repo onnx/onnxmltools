@@ -88,6 +88,9 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
 
 
 def apply_cast(scope, input_name, output_name, container, operator_name=None, to=None):
+    '''
+    :param to: enum defined in ONNX TensorProto.DataType, for example, TensorProto.FLOAT and TensorProto.INT64.
+    '''
     name = _create_name_or_use_existing_one(scope, 'Cast', operator_name)
     attrs = {'name': name}
 
@@ -260,17 +263,23 @@ def apply_transpose(scope, input_name, output_name, container, operator_name=Non
 
 
 def apply_upsample(scope, input_name, output_name, container, operator_name=None, mode='nearest', scales=None):
+    '''
+    :param mode: nearest or linear
+    :param scales: an integer list of scaling-up rate of all input dimensions
+    '''
     name = _create_name_or_use_existing_one(scope, 'Transpose', operator_name)
 
-    attrs = {'name': name, 'mode': mode}
+    attrs = {'name': name}
     if container.targeted_onnx_version < StrictVersion('1.2'):
         if len(scales) != 4:
             raise ValueError('Need to specify a 4-element list the the scales of N-, C-, H-, and W-axes')
         attrs['height_scale'] = scales[2]
         attrs['width_scale'] = scales[3]
+        attrs['mode'] = mode.upper()
         op_version = 1
     else:
         attrs['scales'] = scales
+        attrs['mode'] = mode.lower()
         op_version = 7
 
     container.add_node('Upsample', input_name, output_name, op_version=op_version, **attrs)
