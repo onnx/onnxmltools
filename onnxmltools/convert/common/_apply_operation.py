@@ -3,17 +3,23 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+# This file contains some high-level APIs for applying operations on variables specified by names. We should try our
+# best to use those functions because they can produce ONNX operators according to the ONNX version specified in the
+# `container` argument. Notice that those function behaviors are defined in a way very similar to ONNX-1.2.
 
 from distutils.version import StrictVersion
 from ...proto import onnx_proto
 
 
-def apply_abs(scope, input_name, output_name, container, operator_name=None):
-    # Create a name if not specified
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Abs')
+def _create_name_or_use_existing_one(scope, op_type, name):
+    if name is None:
+        return scope.get_unique_operator_name(op_type)
     else:
-        name = operator_name
+        return name
+
+
+def _apply_unary_operation(scope, op_type, input_name, output_name, container, operator_name):
+    name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
     attrs = {'name': name}
     if container.targeted_onnx_version <= StrictVersion('1.0'):
@@ -22,14 +28,12 @@ def apply_abs(scope, input_name, output_name, container, operator_name=None):
     else:
         op_version = 6
 
-    container.add_node('Abs', input_name, output_name, op_version=op_version, **attrs)
+    container.add_node(op_type, input_name, output_name, op_version=op_version, **attrs)
 
 
-def apply_add(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Add')
-    else:
-        name = operator_name
+def _apply_basic_numerical_operation(scope, op_type, input_names, output_name, container, operator_name,
+                                     axis, broadcast):
+    name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
     attrs = {}
     if axis is not None:
@@ -43,31 +47,53 @@ def apply_add(scope, input_names, output_name, container, operator_name=None, ax
     else:
         op_version = 6
 
-    container.add_node('Add', input_names, output_name, op_version=op_version, name=name, **attrs)
+    container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
 
 
-def apply_exp(scope, input_name, output_name, container, operator_name=None):
-    # Create a name if not specified
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Exp')
-    else:
-        name = operator_name
+def _apply_pointwise(scope, op_type, input_names, output_name, container, operator_name):
+    name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
-    attrs = {'name': name}
+    attrs = {}
     if container.targeted_onnx_version <= StrictVersion('1.0'):
-        attrs['consumed_inputs'] = [0]
+        attrs['consumed_inputs'] = [0] * len(input_names)
         op_version = 1
     else:
         op_version = 6
 
-    container.add_node('Exp', input_name, output_name, op_version=op_version, **attrs)
+    container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
+
+
+def apply_abs(scope, input_name, output_name, container, operator_name=None):
+    _apply_unary_operation(scope, 'Abs', input_name, output_name, container, operator_name=operator_name)
+
+
+def apply_add(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
+    _apply_basic_numerical_operation(scope, 'Add', input_names, output_name, container, operator_name=operator_name,
+                                     axis=axis, broadcast=broadcast)
+
+
+def apply_div(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
+    _apply_basic_numerical_operation(scope, 'Div', input_names, output_name, container, operator_name=operator_name,
+                                     axis=axis, broadcast=broadcast)
+
+
+def apply_exp(scope, input_name, output_name, container, operator_name=None):
+    _apply_unary_operation(scope, 'Exp', input_name, output_name, container, operator_name=operator_name)
+
+
+def apply_concat(scope, input_names, output_name, container, operator_name=None, axis=0):
+    name = _create_name_or_use_existing_one(scope, 'Concat', operator_name)
+
+    if container.targeted_onnx_version <= StrictVersion('1.0'):
+        op_version = 1
+    else:
+        op_version = 4
+
+    container.add_node('Concat', input_names, output_name, op_version=op_version, name=name, axis=axis)
 
 
 def apply_clip(scope, input_name, output_name, container, operator_name=None, max=None, min=None):
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Add')
-    else:
-        name = operator_name
+    name = _create_name_or_use_existing_one(scope, 'Clip', operator_name)
 
     attrs = {'name': name}
     if max is not None:
@@ -85,80 +111,28 @@ def apply_clip(scope, input_name, output_name, container, operator_name=None, ma
 
 
 def apply_log(scope, input_name, output_name, container, operator_name=None):
-    # Create a name if not specified
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Log')
-    else:
-        name = operator_name
-
-    attrs = {'name': name}
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
-        attrs['consumed_inputs'] = [0]
-        op_version = 1
-    else:
-        op_version = 6
-
-    container.add_node('Log', input_name, output_name, op_version=op_version, **attrs)
+    _apply_unary_operation(scope, 'Log', input_name, output_name, container, operator_name=operator_name)
 
 
 def apply_max(scope, input_names, output_name, container, operator_name=None):
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Max')
-    else:
-        name = operator_name
+    _apply_pointwise(scope, 'Max', input_names, output_name, container, operator_name)
 
-    attrs = {}
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
-        attrs['consumed_inputs'] = [0] * len(input_names)
-        op_version = 1
-    else:
-        op_version = 6
 
-    container.add_node('Max', input_names, output_name, op_version=op_version, name=name, **attrs)
+def apply_mean(scope, input_names, output_name, container, operator_name=None):
+    _apply_pointwise(scope, 'Mean', input_names, output_name, container, operator_name)
 
 
 def apply_min(scope, input_names, output_name, container, operator_name=None):
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Min')
-    else:
-        name = operator_name
-
-    attrs = {}
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
-        attrs['consumed_inputs'] = [0] * len(input_names)
-        op_version = 1
-    else:
-        op_version = 6
-
-    container.add_node('Min', input_names, output_name, op_version=op_version, name=name, **attrs)
+    _apply_pointwise(scope, 'Min', input_names, output_name, container, operator_name)
 
 
 def apply_mul(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Mul')
-    else:
-        name = operator_name
-
-    attrs = {'name': name}
-    if axis is not None:
-        attrs['axis'] = axis
-    if broadcast is not None:
-        attrs['broadcast'] = broadcast
-
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
-        attrs['consumed_inputs'] = [0, 0]
-        op_version = 1
-    else:
-        op_version = 6
-
-    container.add_node('Mul', input_names, output_name, op_version=op_version, **attrs)
+    _apply_basic_numerical_operation(scope, 'Mul', input_names, output_name, container, operator_name=operator_name,
+                                     axis=axis, broadcast=broadcast)
 
 
 def apply_pad(scope, input_name, output_name, container, operator_name=None, mode=None, pads=None, value=None):
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Mul')
-    else:
-        name = operator_name
+    name = _create_name_or_use_existing_one(scope, 'Pad', operator_name)
 
     attrs = {'name': name}
     if mode is not None:
@@ -176,42 +150,11 @@ def apply_pad(scope, input_name, output_name, container, operator_name=None, mod
 
 
 def apply_reciprocal(scope, input_name, output_name, container, operator_name=None):
-    # Create a name if not specified
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Reciprocal')
-    else:
-        name = operator_name
-
-    attrs = {'name': name}
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
-        attrs['consumed_inputs'] = [0]
-        op_version = 1
-    else:
-        op_version = 6
-
-    container.add_node('Reciprocal', input_name, output_name, op_version=op_version, **attrs)
+    _apply_unary_operation(scope, 'Reciprocal', input_name, output_name, container, operator_name=operator_name)
 
 
 def apply_reshape(scope, input_name, output_name, container, operator_name=None, desired_shape=None):
-    '''
-    This function create a Reshape to adjust the tensor indicated by input_name and put the result onto the tensor
-    specified by output_name.
-
-    :param scope: The Scope object we want to allocate this Reshape and its input
-    :param input_name: A string, the name of the tensor we want to reshape
-    :param output_name: A string, the name of the tensor for storing reshaped result
-    :param container: A ModelComponentContainer object used to collect all ONNX objects
-    :param operator_name: The name of the ONNX Reshape we are going to create. If not specified, we may create one.
-    :param desired_shape: A list of integers, indicating the targeted shape
-    '''
-    if desired_shape is None:
-        raise RuntimeError('Must provide a desired shape but got None')
-
-    # Create the name of ONNX Reshape if not specified
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Reshape')
-    else:
-        name = operator_name
+    name = _create_name_or_use_existing_one(scope, 'Reshape', operator_name)
 
     if container.targeted_onnx_version <= StrictVersion('1.0'):
         container.add_node('Reshape', input_name, output_name, op_version=1, name=name, shape=desired_shape,
@@ -226,28 +169,11 @@ def apply_reshape(scope, input_name, output_name, container, operator_name=None,
 
 
 def apply_sqrt(scope, input_name, output_name, container, operator_name=None):
-    # Create the name of ONNX Reshape if not specified
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Sqrt')
-    else:
-        name = operator_name
-
-    attrs = {'name': name}
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
-        attrs['consumed_inputs'] = [0]
-        op_version = 1
-    else:
-        op_version = 6
-
-    container.add_node('Sqrt', input_name, output_name, op_version=op_version, **attrs)
+    _apply_unary_operation(scope, 'Sqrt', input_name, output_name, container, operator_name=operator_name)
 
 
 def apply_pow(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
-    # Create the name of ONNX Reshape if not specified
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Pow')
-    else:
-        name = operator_name
+    name = _create_name_or_use_existing_one(scope, 'Pow', operator_name)
 
     attrs = {'name': name}
     if axis is not None:
@@ -255,29 +181,31 @@ def apply_pow(scope, input_names, output_name, container, operator_name=None, ax
     if broadcast is not None:
         attrs['broadcast'] = broadcast
 
-    container.add_node('Sqrt', input_names, output_name, **attrs)
+    container.add_node('Pow', input_names, output_name, **attrs)
+
+
+def apply_sub(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=0):
+    _apply_basic_numerical_operation(scope, 'Sub', input_names, output_name, container, operator_name=operator_name,
+                                     axis=axis, broadcast=broadcast)
+
+
+def apply_split(scope, input_name, output_names, container, operator_name=None, split=None, axis=0):
+    name = _create_name_or_use_existing_one(scope, 'Split', operator_name)
+    if container.targeted_onnx_version <= StrictVersion('1.0'):
+        op_version = 1
+    else:
+        op_version = 2
+
+    attrs = {'name': name}
+    if split is not None:
+        attrs['split'] = split
+    if axis is not None:
+        attrs['axis'] = axis
+
+    container.add_node('Split', input_name, output_names, op_version=op_version, **attrs)
 
 
 def apply_transpose(scope, input_name, output_name, container, operator_name=None, perm=None):
-    '''
-    This function create a Transpose to adjust the tensor indicated by input_name and put the result onto the tensor
-    specified by output_name.
-
-    :param scope: The Scope object we want to allocate this Reshape and its input
-    :param input_name: A string, the name of the tensor we want to reshape
-    :param output_name: A string, the name of the tensor for storing reshaped result
-    :param container: A ModelComponentContainer object used to collect all ONNX objects
-    :param operator_name: The name of the ONNX Reshape we are going to create. If not specified, we may create one.
-    :param perm: A list of integers, indicating the original coordinate indexes after permutation. For example,
-    converting [N, C, H, W] to [N, H, W, C] needs to use perm=[0, 2, 3, 1].
-    '''
-    if perm is None:
-        raise RuntimeError('Must provide perm but got None')
-
-    # Create a name if not specified
-    if operator_name is None:
-        name = scope.get_unique_operator_name('Transpose')
-    else:
-        name = operator_name
+    name = _create_name_or_use_existing_one(scope, 'Transpose', operator_name)
 
     container.add_node('Transpose', input_name, output_name, name=name, perm=perm)

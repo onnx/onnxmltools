@@ -136,6 +136,8 @@ class ModelComponentContainer:
         :param shape: Tensor shape, a list of integers.
         :param content: Flattened tensor values (i.e., a float list or a float array).
         '''
+        if any(d is None for d in shape):
+            raise ValueError('Shape of initializer cannot contain None')
         tensor = helper.make_tensor(name, onnx_type, shape, content)
         self.initializers.append(tensor)
 

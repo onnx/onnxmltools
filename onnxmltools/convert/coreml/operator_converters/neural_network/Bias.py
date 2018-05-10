@@ -14,7 +14,6 @@ from .Scale import deduce_broadcast_axis_and_shape
 def convert_bias(scope, operator, container):
     # Feed the input (which we are going to add a bias onto) into Add operator. Its shape is [C, H, W] in CoreML but
     # [N, C, H, W] in ONNX.
-
     params = operator.raw_operator.bias
 
     # Adjust CoreML's bias shape and find a proper axis for broadcasting

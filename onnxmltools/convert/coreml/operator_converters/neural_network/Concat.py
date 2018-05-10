@@ -4,24 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
+from ....common._apply_operation import apply_concat
 from ....common._registration import register_converter
 
 
 def convert_concat(scope, operator, container):
-    op_type = 'Concat'
-    attrs = {'name': operator.full_name}
     if operator.raw_operator.concat.sequenceConcat:
-        attrs['axis'] = 0
+        axis = 0
     else:
-        attrs['axis'] = 1
+        axis = 1
 
-    if container.targeted_onnx_version < StrictVersion('1.0'):
-        op_version = 1
-    else:
-        op_version = 4
-
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_version=op_version, **attrs)
+    apply_concat(scope, operator.input_full_names, operator.output_full_names, container,
+                 operator_name=operator.full_name, axis=axis)
 
 
 register_converter('concat', convert_concat)

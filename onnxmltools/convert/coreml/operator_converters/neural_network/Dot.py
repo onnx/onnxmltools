@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
+from ....common._apply_operation import apply_mul
 from ....common._registration import register_converter
 
 
@@ -33,15 +33,7 @@ def convert_dot(scope, operator, container):
 
     # Do element-wise product of the two unit-length tensors
     product_name = scope.get_unique_variable_name(intra_variable_name1 + '_multiply_' + intra_variable_name2)
-    multiplier_name = scope.get_unique_operator_name('Mul')
-    product_attrs = {'name': multiplier_name}
-    if container.targeted_onnx_version < StrictVersion('1.0'):
-        product_attrs['consumed_inputs'] = [0, 0]
-        op_version = 1
-    else:
-        op_version = 6
-    container.add_node('Mul', [intra_variable_name1, intra_variable_name2], [product_name],
-                       op_version=op_version, **product_attrs)
+    apply_mul(scope, [intra_variable_name1, intra_variable_name2], product_name, container, broadcast=0)
 
     # Sum up results from different dimensions to get the final cosine similarity
     reducer_name = scope.get_unique_operator_name('ReduceSum')
