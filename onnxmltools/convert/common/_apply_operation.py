@@ -50,7 +50,7 @@ def _apply_basic_numerical_operation(scope, op_type, input_names, output_name, c
     container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
 
 
-def _apply_pointwise(scope, op_type, input_names, output_name, container, operator_name):
+def _apply_pointwise_operation(scope, op_type, input_names, output_name, container, operator_name):
     name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
     attrs = {}
@@ -70,6 +70,21 @@ def apply_abs(scope, input_name, output_name, container, operator_name=None):
 def apply_add(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
     _apply_basic_numerical_operation(scope, 'Add', input_names, output_name, container, operator_name=operator_name,
                                      axis=axis, broadcast=broadcast)
+
+
+def apply_batch_norm(scope, input_names, output_names, container, operator_name=None,
+                     epsilon=None, is_test=None, momentum=None, spatial=None):
+    name = _create_name_or_use_existing_one(scope, 'BatchNormalization', operator_name)
+
+    attrs = {'name': name, 'epsilon': epsilon, 'is_test': is_test, 'momentum': momentum, 'spatial': spatial}
+
+    if container.targeted_onnx_version <= StrictVersion('1.0'):
+        attrs['consumed_inputs'] = [0] * len(input_names)
+        op_version = 1
+    else:
+        op_version = 6
+
+    container.add_node('BatchNormalization', input_names, output_names, op_version=op_version, **attrs)
 
 
 def apply_div(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
@@ -110,20 +125,34 @@ def apply_clip(scope, input_name, output_name, container, operator_name=None, ma
     container.add_node('Clip', input_name, output_name, op_version=op_version, **attrs)
 
 
+def apply_instance_norm(scope, input_names, output_name, container, operator_name=None, epsilon=1e-5):
+    name = _create_name_or_use_existing_one(scope, 'InstanceNormalization', operator_name)
+
+    attrs = {'name': name, 'epsilon': epsilon}
+
+    if container.targeted_onnx_version <= StrictVersion('1.0'):
+        attrs['consumed_inputs'] = [0] * len(input_names)
+        op_version = 1
+    else:
+        op_version = 6
+
+    container.add_node('InstanceNormalization', input_names, output_name, op_version=op_version, **attrs)
+
+
 def apply_log(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Log', input_name, output_name, container, operator_name=operator_name)
 
 
 def apply_max(scope, input_names, output_name, container, operator_name=None):
-    _apply_pointwise(scope, 'Max', input_names, output_name, container, operator_name)
+    _apply_pointwise_operation(scope, 'Max', input_names, output_name, container, operator_name)
 
 
 def apply_mean(scope, input_names, output_name, container, operator_name=None):
-    _apply_pointwise(scope, 'Mean', input_names, output_name, container, operator_name)
+    _apply_pointwise_operation(scope, 'Mean', input_names, output_name, container, operator_name)
 
 
 def apply_min(scope, input_names, output_name, container, operator_name=None):
-    _apply_pointwise(scope, 'Min', input_names, output_name, container, operator_name)
+    _apply_pointwise_operation(scope, 'Min', input_names, output_name, container, operator_name)
 
 
 def apply_mul(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
@@ -209,3 +238,20 @@ def apply_transpose(scope, input_name, output_name, container, operator_name=Non
     name = _create_name_or_use_existing_one(scope, 'Transpose', operator_name)
 
     container.add_node('Transpose', input_name, output_name, name=name, perm=perm)
+
+
+def apply_upsample(scope, input_name, output_name, container, operator_name=None, mode='nearest', scales=None):
+    name = _create_name_or_use_existing_one(scope, 'Transpose', operator_name)
+
+    attrs = {'name': name, 'mode': mode}
+    if container.targeted_onnx_version < StrictVersion('1.2'):
+        if len(scales) != 4:
+            raise ValueError('Need to specify a 4-element list the the scales of N-, C-, H-, and W-axes')
+        attrs['height_scale'] = scales[2]
+        attrs['width_scale'] = scales[3]
+        op_version = 1
+    else:
+        attrs['scales'] = scales
+        op_version = 7
+
+    container.add_node('Upsample', input_name, output_name, op_version=op_version, **attrs)
