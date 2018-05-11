@@ -207,7 +207,7 @@ def apply_reciprocal(scope, input_name, output_name, container, operator_name=No
 def apply_reshape(scope, input_name, output_name, container, operator_name=None, desired_shape=None):
     name = _create_name_or_use_existing_one(scope, 'Reshape', operator_name)
 
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
+    if container.targeted_onnx_version < StrictVersion('1.2'):
         container.add_node('Reshape', input_name, output_name, op_version=1, name=name, shape=desired_shape,
                            consumed_inputs=[0])
     else:
