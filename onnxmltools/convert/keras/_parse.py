@@ -65,9 +65,10 @@ def determine_tensor_type(tensor, default_batch_size, keras_shape=None):
         raise ValueError('Unable to find out a correct type for tensor %s' % tensor)
 
 
-def parse_keras(model):
+def parse_keras(model, initial_types=None):
     raw_model_container = KerasModelContainer(model)
-    topology = Topology(raw_model_container, default_batch_size=1)
+
+    topology = Topology(raw_model_container, default_batch_size=1, initial_types=initial_types)
     scope = topology.declare_scope('__root__')
 
     for node in model.inbound_nodes:
@@ -134,4 +135,3 @@ def _parse_keras(topology, parent_scope, model, inbound_node):
 
     else:
         raise RuntimeError('Unsupported Keras component %s' % type(model))
-

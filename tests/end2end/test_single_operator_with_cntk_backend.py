@@ -79,6 +79,7 @@ def _create_tensor(N, C, H=None, W=None):
 class TestKeras2CoreML2ONNX(unittest.TestCase):
 
     def _test_one_to_one_operator_core(self, keras_model, x):
+        # Verify Keras-to-CoreML-to-ONNX path
         coreml_model = coremltools.converters.keras.convert(keras_model)
         onnx_model = onnxmltools.convert_coreml(coreml_model)
 
@@ -87,8 +88,18 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced))
 
+        # Verify Keras-to-ONNX path
+        onnx_model = onnxmltools.convert_keras(keras_model)
+        y_produced = _evaluate(onnx_model, x)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
+
     def _test_one_to_one_operator_core_channels_last(self, keras_model, x):
         '''
+        There are two test paths. One is Keras-->CoreML-->ONNX and the other one is Keras-->ONNX.
+
+        Keras-->CoreML-->ONNX:
+
         Keras computation path:
             [N, C, H, W] ---> numpy transpose ---> [N, H, W, C] ---> keras convolution --->
             [N, H, W, C] ---> numpy transpose ---> [N, C, H, W]
@@ -98,25 +109,44 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         The reason for having extra transpose's in the Keras path is that CoreMLTools doesn't not handle channels_last
         flag properly. Precisely, oreMLTools always converts Conv2D under channels_first mode.
+
+        Keras-->ONNX
+
+        Keras computation path:
+            [N, C, H, W] ---> numpy transpose ---> [N, H, W, C] ---> keras convolution --->
+            [N, H, W, C]
+
+        ONNX computation path:
+            [N, C, H, W] ---> numpy transpose ---> [N, H, W, C] ---> ONNX convolution ---> [N, H, W, C]
+
         '''
+        # Verify Keras-to-CoreML-to-ONNX path
         coreml_model = coremltools.converters.keras.convert(keras_model)
-        onnx_model = onnxmltools.convert_coreml(coreml_model)
+        onnx_model_p1 = onnxmltools.convert_coreml(coreml_model)
+        onnx_model_p2 = onnxmltools.convert_keras(keras_model)
 
         if isinstance(x, list):
             x_t = [np.transpose(_, [0, 2, 3, 1]) for _ in x]
         else:
             x_t = np.transpose(x, [0, 2, 3, 1])
         y_reference = np.transpose(keras_model.predict(x_t), [0, 3, 1, 2])
-
-        y_produced = _evaluate(onnx_model, x)
+        y_produced = _evaluate(onnx_model_p1, x)
 
         self.assertTrue(np.allclose(y_reference, y_produced))
+
+        # Verify Keras-to-ONNX path
+        y_reference = np.transpose(y_reference, [0, 2, 3, 1])
+        y_produced = _evaluate(onnx_model_p2, x_t)
+
+        self.assertTrue(np.allclose(y_reference, y_produced, atol=1e-6))
 
     def test_dense(self):
         N, C = 2, 3
         x = _create_tensor(N, C)
-        model = Sequential()
-        model.add(Dense(2, input_dim=C))
+
+        input = Input(shape=(C,))
+        result = Dense(2)(input)
+        model = Model(input=input, output=result)
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core(model, x)
@@ -125,9 +155,10 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         N, C, H, W = 1, 2, 4, 3
         x = _create_tensor(N, C, H, W)
 
-        model = Sequential()
-        model.add(Conv2D(2, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
-                         data_format='channels_last'))
+        input = Input(shape=(H, W, C))
+        result = Conv2D(2, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
+                        data_format='channels_last')(input)
+        model = Model(input=input, output=result)
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(model, x)
@@ -137,8 +168,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         N, C, H, W = 1, 2, 4, 3
         x = _create_tensor(N, C, H, W)
         for layer in layers_to_be_tested:
-            model = Sequential()
-            model.add(layer(2, input_shape=(H, W, C), data_format='channels_last'))
+            input = Input(shape=(H, W, C))
+            result = layer(2, data_format='channels_last')(input)
+            model = Model(input=input, output=result)
             model.compile(optimizer='adagrad', loss='mse')
 
             self._test_one_to_one_operator_core_channels_last(model, x)
@@ -148,8 +180,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         N, C, H, W = 2, 2, 1, 1
         x = _create_tensor(N, C, H, W)
 
-        model = Sequential()
-        model.add(Conv2DTranspose(2, (2, 1), input_shape=(H, W, C), data_format='channels_last'))
+        input = Input(shape=(H, W, C))
+        result = Conv2DTranspose(2, (2, 1), data_format='channels_last')(input)
+        model = Model(input=input, output=result)
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(model, x)
@@ -190,11 +223,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         x = _create_tensor(N, C)
 
         for activation in activation_to_be_tested:
-            model = Sequential()
+            input = Input(shape=(C,))
             if isinstance(activation, str):
-                model.add(Activation(activation, input_shape=(3,)))
+                result = Activation(activation)(input)
             else:
-                model.add(activation(input_shape=(3,)))
+                result = activation()(input)
+            model = Model(input=input, output=result)
             model.compile(optimizer='adagrad', loss='mse')
 
             self._test_one_to_one_operator_core(model, x)
@@ -206,11 +240,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         x = _create_tensor(N, C, H, W)
 
         for activation in activation_to_be_tested:
-            model = Sequential()
+            input = Input(shape=(H, W, C))
             if isinstance(activation, str):
-                model.add(Activation(activation, input_shape=(H, W, C)))
+                result = Activation(activation)(input)
             else:
-                model.add(activation(input_shape=(H, W, C)))
+                result = activation()(input)
+            model = Model(input=input, output=result)
             model.compile(optimizer='adagrad', loss='mse')
 
             self._test_one_to_one_operator_core_channels_last(model, x)
@@ -234,10 +269,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         N, C, H, W = 2, 2, 3, 4
         x = _create_tensor(N, C, H, W)
         model = Sequential()
-        model.add(BatchNormalization(beta_initializer='random_uniform', gamma_initializer='random_uniform',
-                                     moving_mean_initializer='random_uniform',
-                                     moving_variance_initializer=RandomUniform(minval=0.1, maxval=0.5),
-                                     input_shape=(H, W, C)))
+        input = Input(shape=(H, W, C))
+        result = BatchNormalization(beta_initializer='random_uniform', gamma_initializer='random_uniform',
+                                    moving_mean_initializer='random_uniform',
+                                    moving_variance_initializer=RandomUniform(minval=0.1, maxval=0.5),
+                                    )(input)
+        model = Model(input=input, output=result)
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(model, x)
@@ -262,8 +299,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         N, C, H, W = 2, 3, 1, 2
         x = _create_tensor(N, C, H, W)
 
-        model = Sequential()
-        model.add(UpSampling2D(input_shape=(H, W, C)))
+        input = Input(shape=(H, W, C))
+        result = UpSampling2D(input)
+        model = Model(input=input, output=result)
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(model, x)
