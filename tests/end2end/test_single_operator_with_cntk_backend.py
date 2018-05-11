@@ -138,7 +138,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         y_reference = np.transpose(y_reference, [0, 2, 3, 1])
         y_produced = _evaluate(onnx_model_p2, x_t)
 
-        self.assertTrue(np.allclose(y_reference, y_produced, atol=1e-7))
+        self.assertTrue(np.allclose(y_reference, y_produced, atol=1e-6))
 
     def test_dense(self):
         N, C = 2, 3
@@ -259,7 +259,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         # This test is active only for CNTK
         if _find_backend() == 'caffe2':
             return 0
-        N, C, H, W = 1, 1, 3, 1
+        N, C, H, W = 2, 2, 3, 4
         x = _create_tensor(N, C, H, W)
         model = Sequential()
         model.add(BatchNormalization(beta_initializer='random_uniform', gamma_initializer='random_uniform',
