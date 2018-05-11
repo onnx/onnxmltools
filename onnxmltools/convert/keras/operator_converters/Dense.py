@@ -11,7 +11,7 @@ from ...common._registration import register_converter
 
 _activation_map = {_get_activation('sigmoid'): 'Sigmoid',
                    _get_activation('softmax'): 'Softmax',
-                   _get_activation('linear'): 'Affine',
+                   _get_activation('linear'): 'Identity',
                    _get_activation('relu'): 'Relu'}
 
 

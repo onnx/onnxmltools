@@ -79,6 +79,7 @@ def _create_tensor(N, C, H=None, W=None):
 class TestKeras2CoreML2ONNX(unittest.TestCase):
 
     def _test_one_to_one_operator_core(self, keras_model, x):
+        # Verify Keras-to-CoreML-to-ONNX path
         coreml_model = coremltools.converters.keras.convert(keras_model)
         onnx_model = onnxmltools.convert_coreml(coreml_model)
 
@@ -87,8 +88,18 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced))
 
+        # Verify Keras-to-ONNX path
+        onnx_model = onnxmltools.convert_keras(keras_model)
+        y_produced = _evaluate(onnx_model, x)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
+
     def _test_one_to_one_operator_core_channels_last(self, keras_model, x):
         '''
+        There are two test paths. One is Keras-->CoreML-->ONNX and the other one is Keras-->ONNX.
+
+        Keras-->CoreML-->ONNX:
+
         Keras computation path:
             [N, C, H, W] ---> numpy transpose ---> [N, H, W, C] ---> keras convolution --->
             [N, H, W, C] ---> numpy transpose ---> [N, C, H, W]
@@ -98,19 +109,36 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         The reason for having extra transpose's in the Keras path is that CoreMLTools doesn't not handle channels_last
         flag properly. Precisely, oreMLTools always converts Conv2D under channels_first mode.
+
+        Keras-->ONNX
+
+        Keras computation path:
+            [N, C, H, W] ---> numpy transpose ---> [N, H, W, C] ---> keras convolution --->
+            [N, H, W, C]
+
+        ONNX computation path:
+            [N, C, H, W] ---> numpy transpose ---> [N, H, W, C] ---> ONNX convolution ---> [N, H, W, C]
+
         '''
+        # Verify Keras-to-CoreML-to-ONNX path
         coreml_model = coremltools.converters.keras.convert(keras_model)
-        onnx_model = onnxmltools.convert_coreml(coreml_model)
+        onnx_model_p1 = onnxmltools.convert_coreml(coreml_model)
+        onnx_model_p2 = onnxmltools.convert_keras(keras_model)
 
         if isinstance(x, list):
             x_t = [np.transpose(_, [0, 2, 3, 1]) for _ in x]
         else:
             x_t = np.transpose(x, [0, 2, 3, 1])
         y_reference = np.transpose(keras_model.predict(x_t), [0, 3, 1, 2])
-
-        y_produced = _evaluate(onnx_model, x)
+        y_produced = _evaluate(onnx_model_p1, x)
 
         self.assertTrue(np.allclose(y_reference, y_produced))
+
+        # Verify Keras-to-ONNX path
+        y_reference = np.transpose(y_reference, [0, 2, 3, 1])
+        y_produced = _evaluate(onnx_model_p2, x_t)
+
+        self.assertTrue(np.allclose(y_reference, y_produced, atol=1e-7))
 
     def test_dense(self):
         N, C = 2, 3
@@ -231,7 +259,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         # This test is active only for CNTK
         if _find_backend() == 'caffe2':
             return 0
-        N, C, H, W = 2, 2, 3, 4
+        N, C, H, W = 1, 1, 3, 1
         x = _create_tensor(N, C, H, W)
         model = Sequential()
         model.add(BatchNormalization(beta_initializer='random_uniform', gamma_initializer='random_uniform',
