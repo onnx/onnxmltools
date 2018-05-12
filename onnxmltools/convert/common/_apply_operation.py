@@ -256,6 +256,33 @@ def apply_split(scope, input_name, output_names, container, operator_name=None, 
     container.add_node('Split', input_name, output_names, op_version=op_version, **attrs)
 
 
+def apply_tile(scope, input_name, output_name, container, operator_name=None, repeats=None):
+    name = _create_name_or_use_existing_one(scope, 'Split', operator_name)
+
+    if repeats is None or all(repeat_count == 1 for repeat_count in repeats):
+        container.add_node('Identity', input_name, output_name, name=name)
+        return
+
+    if container.targeted_onnx_version < StrictVersion('1.2'):
+        intermediate_input_name = input_name
+        intermediate_output_name = None
+
+        for axis, repeat_count in enumerate(repeats):
+            if repeat_count == 1:
+                continue
+            intermediate_output_name = scope.get_unique_variable_name(name + '_input')
+            container.add_node('Tile', intermediate_input_name, intermediate_output_name,
+                               name=name, tiles=repeat_count, axis=axis)
+            intermediate_input_name = intermediate_output_name
+            name = scope.get_unique_operator_name('Tile')  # Create a new name for next Tile
+
+        # Use the last Tile name for the name of an Identity
+        container.add_node('Identity', intermediate_output_name, output_name, op_version=1, name=name)
+    else:
+        # ONNX-1.2 has a new Tile and we use it here
+        container.add_node('Tile', input_name, output_name, op_version=7, name=name, repeats=repeats)
+
+
 def apply_transpose(scope, input_name, output_name, container, operator_name=None, perm=None):
     name = _create_name_or_use_existing_one(scope, 'Transpose', operator_name)
 
