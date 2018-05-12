@@ -13,7 +13,7 @@ from . import operator_converters
 from . import shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string=''):
+def convert(model, name=None, initial_types=None, targeted_onnx_version_string='1.1.2', doc_string=''):
     '''
     Convert Keras-Tensorflow Model and Sequence objects into Topology. Note that default batch size is 1 here instead of
     `None` used in CoreML conversion framework. To overwrite this behavior, we can specify initial_types. Assume that a
@@ -34,6 +34,6 @@ def convert(model, name=None, initial_types=None, doc_string=''):
     if name is None:
         name = str(uuid4().hex)
 
-    onnx_model = convert_topology(topology, name, doc_string)
+    onnx_model = convert_topology(topology, name, targeted_onnx_version_string, doc_string)
 
     return onnx_model

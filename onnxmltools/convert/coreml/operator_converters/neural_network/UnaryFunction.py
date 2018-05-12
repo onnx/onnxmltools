@@ -33,7 +33,7 @@ def convert_unary(scope, operator, container):
     elif params.type == Params.THRESHOLD:
         apply_clip(scope, preprocessed_variable_name, operator.output_full_names, container,
                    operator_name=operator.full_name, min=params.alpha)
-    elif params.type == params.SQRT:
+    elif params.type == Params.SQRT:
         apply_sqrt(scope, preprocessed_variable_name, operator.output_full_names, container,
                    operator_name=operator.full_name)
     elif params.type == Params.INVERSE:
