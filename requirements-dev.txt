@@ -1,4 +1,8 @@
+numpy
+protobuf
 codecov
+tensorflow
+keras==2.0.9
 coremltools
 pandas
 pytest
@@ -7,5 +11,3 @@ scikit-learn
 scipy
 wheel
 xgboost
-
-

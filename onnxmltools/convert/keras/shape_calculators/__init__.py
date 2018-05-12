@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .main import convert_coreml
-from .main import convert_sklearn
-from .main import convert_keras
+from . import Conv
+from . import Embed
+from . import Lazy
+from . import LSTM

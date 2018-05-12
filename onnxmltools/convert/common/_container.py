@@ -70,12 +70,40 @@ class SklearnModelContainer(RawModelContainer):
         return [variable.raw_name for variable in self._outputs]
 
     def add_input(self, variable):
+        # The order of adding variables matters. The final model's input names are sequentially added as this list
         if variable not in self._inputs:
             self._inputs.append(variable)
 
     def add_output(self, variable):
+        # The order of adding variables matters. The final model's output names are sequentially added as this list
         if variable not in self._outputs:
             self._outputs.append(variable)
+
+
+class KerasModelContainer(RawModelContainer):
+
+    def __init__(self, keras_model):
+        super(KerasModelContainer, self).__init__(keras_model)
+        self._input_raw_names = list()
+        self._output_raw_names = list()
+
+    def add_input_name(self, name):
+        # The order of adding strings matters. The final model's input names are sequentially added as this list
+        if name not in self._input_raw_names:
+            self._input_raw_names.append(name)
+
+    def add_output_name(self, name):
+        # The order of adding strings matters. The final model's output names are sequentially added as this list
+        if name not in self._output_raw_names:
+            self._output_raw_names.append(name)
+
+    @property
+    def input_names(self):
+        return [name for name in self._input_raw_names]
+
+    @property
+    def output_names(self):
+        return [name for name in self._output_raw_names]
 
 
 class ModelComponentContainer:
