@@ -125,7 +125,7 @@ def convert_gru(scope, operator, container):
         # Change the shape of initial state in CoreML so that ONNX's GRU is willing to take it.
         gru_h_init_reshape_name = scope.get_unique_variable_name(gru_op_name + '_h_init')
         apply_reshape(scope, operator.inputs[1].full_name, gru_h_init_reshape_name, container,
-                      desired_shape=[-1, 1, input_size])
+                      desired_shape=[1, 1, hidden_size])
         gru_inputs.append(gru_h_init_reshape_name)
 
         # Add a zero initializer to initial hidden state so that this variable becomes optional
