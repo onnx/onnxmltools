@@ -12,6 +12,15 @@ from ..common._topology import Topology
 from ..common.data_types import *
 
 
+def _extract_inbound_nodes(model):
+    if hasattr(model, 'inbound_nodes'):
+        return model.inbound_nodes
+    elif hasattr(model, '_inbound_nodes'):
+        return model._inbound_nodes
+    else:
+        raise ValueError('Failed to find inbound_nodes and _inbound_nodes when parsing Keras model')
+
+
 def extract_model_input_and_output_shapes(model, default_batch_size):
     if hasattr(model, 'input_shape'):
         if not isinstance(model.input_shape, list):
@@ -71,7 +80,7 @@ def parse_keras(model, initial_types=None):
     topology = Topology(raw_model_container, default_batch_size=1, initial_types=initial_types)
     scope = topology.declare_scope('__root__')
 
-    for node in model.inbound_nodes:
+    for node in _extract_inbound_nodes(model):
         input_shapes, output_shapes = extract_model_input_and_output_shapes(model, topology.default_batch_size)
         for tensor, shape in zip(node.input_tensors, input_shapes):
             raw_model_container.add_input_name(tensor.name)
@@ -83,7 +92,7 @@ def parse_keras(model, initial_types=None):
             tensor_type = determine_tensor_type(tensor, topology.default_batch_size, list(shape))
             scope.get_local_variable_or_declare_one(tensor.name, tensor_type)
 
-    for node in model.inbound_nodes:
+    for node in _extract_inbound_nodes(model):
         _parse_keras(topology, scope, model, node)
 
     topology.root_names = [variable.onnx_name for variable in scope.variables.values()]
@@ -95,16 +104,16 @@ def _parse_keras(topology, parent_scope, model, inbound_node):
     if isinstance(model, Model):
         scope = topology.declare_scope('scope')
         for layer in model.layers:
-            for node in layer.inbound_nodes:
+            for node in _extract_inbound_nodes(layer):
                 for tensor in node.output_tensors:
                     tensor_type = determine_tensor_type(tensor, topology.default_batch_size)
                     scope.declare_local_variable(tensor.name, tensor_type)
 
         for layer in model.layers:
-            for node in layer.inbound_nodes:
+            for node in _extract_inbound_nodes(layer):
                 _parse_keras(topology, scope, layer, node)
 
-        for parent_tensor, local_tensor in zip(inbound_node.input_tensors, model.inbound_nodes[0].input_tensors):
+        for parent_tensor, local_tensor in zip(inbound_node.input_tensors, _extract_inbound_nodes(model)[0].input_tensors):
             parent_tensor_type = determine_tensor_type(parent_tensor, topology.default_batch_size)
             local_tensor_type = determine_tensor_type(local_tensor, topology.default_batch_size)
             parent_variable = parent_scope.get_local_variable_or_declare_one(parent_tensor.name, parent_tensor_type)
@@ -113,7 +122,7 @@ def _parse_keras(topology, parent_scope, model, inbound_node):
             operator.inputs.append(parent_variable)
             operator.outputs.append(local_variable)
 
-        for parent_tensor, local_tensor in zip(inbound_node.output_tensors, model.inbound_nodes[0].output_tensors):
+        for parent_tensor, local_tensor in zip(inbound_node.output_tensors, _extract_inbound_nodes(model)[0].output_tensors):
             parent_tensor_type = determine_tensor_type(parent_tensor, topology.default_batch_size)
             local_tensor_type = determine_tensor_type(local_tensor, topology.default_batch_size)
             parent_variable = parent_scope.get_local_variable_or_declare_one(parent_tensor.name, parent_tensor_type)
