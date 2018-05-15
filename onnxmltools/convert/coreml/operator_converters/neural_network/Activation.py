@@ -16,8 +16,8 @@ def convert_activation(scope, operator, container):
     if activation_type == 'scaledTanh':
         alpha_tensor_name = scope.get_unique_variable_name(operator.full_name + '_alpha')
         beta_name = scope.get_unique_variable_name(operator.full_name + '_beta')
-        container.add_initializer(alpha_tensor_name, onnx_proto.TensorProto.FLOAT, [1], [params.scaledTanh.alpha])
-        container.add_initializer(beta_name, onnx_proto.TensorProto.FLOAT, [1], [params.scaledTanh.beta])
+        container.add_initializer(alpha_tensor_name, onnx_proto.TensorProto.FLOAT, [], [params.scaledTanh.alpha])
+        container.add_initializer(beta_name, onnx_proto.TensorProto.FLOAT, [], [params.scaledTanh.beta])
 
         intra_tensor_name1 = scope.get_unique_variable_name(operator.inputs[0].full_name + '_scaled')
         container.add_node('Mul', [operator.inputs[0].full_name, beta_name], intra_tensor_name1,
@@ -34,7 +34,7 @@ def convert_activation(scope, operator, container):
         alpha_tensor_name = scope.get_unique_variable_name(operator.full_name + '_alpha')
         container.add_initializer(alpha_tensor_name, onnx_proto.TensorProto.FLOAT, [], [params.thresholdedReLU.alpha])
 
-        container.add_node('Less', [operator.inputs[0].full_name, alpha_tensor_name], intra_tensor_name1,
+        container.add_node('Greater', [operator.inputs[0].full_name, alpha_tensor_name], intra_tensor_name1,
                            name=scope.get_unique_operator_name('Less'), broadcast=1)
 
         container.add_node('Cast', [operator.inputs[0].full_name, alpha_tensor_name], intra_tensor_name2,
@@ -49,20 +49,24 @@ def convert_activation(scope, operator, container):
         if len(alpha_value) == 1:
             alpha_broadcast_axis = None
             alpha_value = [float(alpha_value)]
+            alpha_shape = []  # Scalar shape
         else:
-            alpha_broadcast_axis = 1  # C-axis
+            alpha_broadcast_axis = 1  # along C-axi because alpha is a [C]-element vector
+            alpha_shape = [len(alpha_value)]
         if len(beta_value) == 1:
             beta_broadcast_axis = None
             beta_value = [float(beta_value)]
+            beta_shape = []  # Scalar shape
         else:
-            beta_broadcast_axis = 1  # C-axis
+            beta_broadcast_axis = 1  # along C-axis because beta is a [C]-element vector
+            beta_shape = [len(beta_value)]
 
         alpha_tensor_name = scope.get_unique_variable_name(operator.full_name + '_alpha')
         beta_tensor_name = scope.get_unique_variable_name(operator.full_name + '_beta')
         one_tensor_name = scope.get_unique_variable_name(operator.full_name + '_one')
-        container.add_initializer(alpha_tensor_name, onnx_proto.TensorProto.FLOAT, [1], alpha_value)
-        container.add_initializer(beta_tensor_name, onnx_proto.TensorProto.FLOAT, [1], beta_value)
-        container.add_initializer(one_tensor_name, onnx_proto.TensorProto.FLOAT, [1], [1.])
+        container.add_initializer(alpha_tensor_name, onnx_proto.TensorProto.FLOAT, alpha_shape, alpha_value)
+        container.add_initializer(beta_tensor_name, onnx_proto.TensorProto.FLOAT, beta_shape, beta_value)
+        container.add_initializer(one_tensor_name, onnx_proto.TensorProto.FLOAT, [], [1.])
 
         intra_tensor_name1 = scope.get_unique_variable_name(operator.inputs[0].full_name + '_beta_scaled')
         intra_tensor_name2 = scope.get_unique_variable_name(operator.inputs[0].full_name + '_exp')
