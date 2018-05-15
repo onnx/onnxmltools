@@ -14,11 +14,10 @@ def convert_crop(scope, operator, container):
 
     op_type = 'Slice'
     attrs = {'name': operator.full_name}
-    n_dims = len(operator.inputs[0].type.shape)
-    attrs['axes'] = list(i for i in range(n_dims))
+    attrs['axes'] = [2, 3]  # Only do cropping along H- (indexed by 2) and W-axes (indexed by 3)
 
-    # Mode 1: only one input is provided
     if len(operator.inputs) == 1:
+        # Mode 1: only one input is provided
         H = operator.inputs[0].type.shape[2]
         W = operator.inputs[0].type.shape[3]
         border = operator.raw_operator.crop.cropAmounts.borderAmounts
@@ -26,15 +25,16 @@ def convert_crop(scope, operator, container):
         top = border[0].startEdgeSize
         right = border[1].endEdgeSize
         bottom = border[0].endEdgeSize
-        attrs['starts'] = [0, 0, top, left]
-        attrs['ends'] = [np.iinfo(np.int32).max, np.iinfo(np.int32).max, H - bottom, W - right]
+        attrs['starts'] = [top, left]
+        attrs['ends'] = [H - bottom, W - right]
     else:
-        H_ref = operator.inputs[0].type.shape[2]
-        W_ref = operator.inputs[0].type.shape[3]
+        # Mode 2: we got two inputs. The second one provides the reference shape (along H- and W-axes).
+        H_ref = operator.inputs[1].type.shape[2]
+        W_ref = operator.inputs[1].type.shape[3]
         offset_h = operator.raw_operator.crop.offset[0]
         offset_w = operator.raw_operator.crop.offset[1]
-        attrs['starts'] = [0, 0, offset_h, offset_w]
-        attrs['ends'] = [np.iinfo(np.int32).max, np.iinfo(np.int32).max, H_ref + offset_h, W_ref + offset_w]
+        attrs['starts'] = [offset_h, offset_w]
+        attrs['ends'] = [offset_h + H_ref, offset_w + W_ref]
 
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
 
