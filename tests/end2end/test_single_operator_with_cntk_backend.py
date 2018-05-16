@@ -94,6 +94,14 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced))
 
+    def _test_one_to_one_operator_core_keras(self, keras_model, x):
+        y_reference = keras_model.predict(x)
+
+        onnx_model = onnxmltools.convert_keras(keras_model)
+        y_produced = _evaluate(onnx_model, x)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
+
     def _test_one_to_one_operator_core_channels_last(self, keras_model, x):
         '''
         There are two test paths. One is Keras-->CoreML-->ONNX and the other one is Keras-->ONNX.
@@ -335,3 +343,67 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         keras_model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(keras_model, x)
+
+    def test_sequential_model_with_multiple_operators(self):
+        N, C, H, W = 2, 3, 5, 5
+        x = _create_tensor(N, C, H, W)
+
+        model = Sequential()
+        model.add(Conv2D(2, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
+                         data_format='channels_last'))
+        model.add(Activation('relu'))
+        model.add(Conv2D(2, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
+                         data_format='channels_last'))
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format='channels_last'))
+
+        model.compile(optimizer='adagrad', loss='mse')
+
+        self._test_one_to_one_operator_core_channels_last(model, x)
+
+    def test_recursive_model(self):
+        N, C, D = 2, 3, 3
+        x = _create_tensor(N, C)
+
+        sub_input1 = Input(shape=(C,))
+        sub_mapped1 = Dense(D)(sub_input1)
+        sub_model1 = Model(input=sub_input1, output=sub_mapped1)
+
+        sub_input2 = Input(shape=(C,))
+        sub_mapped2 = Dense(D)(sub_input2)
+        sub_model2 = Model(input=sub_input2, output=sub_mapped2)
+
+        input1 = Input(shape=(D,))
+        input2 = Input(shape=(D,))
+        mapped1_2 = sub_model1(input1)
+        mapped2_2 = sub_model2(input2)
+        sub_sum = Add()([mapped1_2, mapped2_2])
+        model = Model(inputs=[input1, input2], output=sub_sum)
+
+        self._test_one_to_one_operator_core(model, [x, 2 * x])
+
+    def test_recursive_and_shared_model(self):
+        N, C, D = 2, 3, 3
+        x = _create_tensor(N, C)
+
+        sub_input1 = Input(shape=(C,))
+        sub_mapped1 = Dense(D)(sub_input1)
+        sub_output1 = Activation('sigmoid')(sub_mapped1)
+        sub_model1 = Model(input=sub_input1, output=sub_output1)
+
+        sub_input2 = Input(shape=(C,))
+        sub_mapped2 = sub_model1(sub_input2)
+        sub_output2 = Activation('tanh')(sub_mapped2)
+        sub_model2 = Model(input=sub_input2, output=sub_output2)
+
+        input1 = Input(shape=(D,))
+        input2 = Input(shape=(D,))
+        mapped1_1 = Activation('tanh')(input1)
+        mapped2_1 = Activation('sigmoid')(input2)
+        mapped1_2 = sub_model1(mapped1_1)
+        mapped1_3 = sub_model1(mapped1_2)
+        mapped2_2 = sub_model2(mapped2_1)
+        sub_sum = Add()([mapped1_3, mapped2_2])
+        model = Model(inputs=[input1, input2], output=sub_sum)
+
+        self._test_one_to_one_operator_core_keras(model, [x, 2 * x])
