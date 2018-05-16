@@ -64,7 +64,7 @@ def convert_batch_normalization(scope, operator, container):
         else:
             raise ValueError('Unsupported operation mode')
 
-    container.add_node(op_type, inputs, outputs, **attrs)
+    container.add_node(op_type, inputs, outputs, op_version=6, **attrs)
 
 
 register_converter('batchnorm', convert_batch_normalization)
