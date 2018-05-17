@@ -7,6 +7,7 @@
 import numpy as np
 from .....proto import onnx_proto
 from ....common._registration import register_converter
+from .Reshape import apply_reshape
 from .SimpleRNN import extract_rnn_activation_info
 
 
@@ -141,8 +142,8 @@ def convert_unidirectional_lstm(scope, operator, container):
 
     # Reshape input feature vector in CoreML format into ONNX format
     lstm_x_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_X_reshape')
-    container.add_node('Reshape', operator.inputs[0].full_name, lstm_x_reshape_name,
-                       name=scope.get_unique_operator_name('Reshape'), shape=[-1, 1, input_size])
+    apply_reshape(scope, operator.inputs[0].full_name, lstm_x_reshape_name, container,
+                  desired_shape=[-1, 1, input_size])
     lstm_inputs.append(lstm_x_reshape_name)
 
     # Allocate LSTM's weight matrices and add them into ONNX LSTM's input list
@@ -191,9 +192,10 @@ def convert_unidirectional_lstm(scope, operator, container):
     if len(operator.inputs) > 1:
         # Assign a Reshape to adjust CoreML hidden state's shape [1, C]/[1, C, 1, 1] into its ONNX counterpart [1, 1, C]
         lstm_h_init_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_h_init_reshape')
-        container.add_node('Reshape', operator.inputs[1].full_name, lstm_h_init_reshape_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[1, 1, hidden_size])
+        apply_reshape(scope, operator.inputs[1].full_name, lstm_h_init_reshape_name, container,
+                      desired_shape=[1, 1, hidden_size])
         lstm_inputs.append(lstm_h_init_reshape_name)
+
         # Add a zero initializer to initial hidden state so that this variable becomes optional
         container.add_initializer(operator.inputs[1].full_name, onnx_proto.TensorProto.FLOAT,
                                   operator.inputs[1].type.shape,
@@ -204,9 +206,10 @@ def convert_unidirectional_lstm(scope, operator, container):
     # Provide ONNX LSTM the initial cell state when necessary
     if len(operator.inputs) > 2:
         lstm_c_init_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_c_init_reshape')
-        container.add_node('Reshape', operator.inputs[2].full_name, lstm_c_init_reshape_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[1, 1, hidden_size])
+        apply_reshape(scope, operator.inputs[2].full_name, lstm_c_init_reshape_name, container,
+                      desired_shape=[1, 1, hidden_size])
         lstm_inputs.append(lstm_c_init_reshape_name)
+
         # Add a zero initializer to initial cell state so that this variable becomes optional
         container.add_initializer(operator.inputs[2].full_name, onnx_proto.TensorProto.FLOAT,
                                   operator.inputs[2].type.shape,
@@ -259,18 +262,16 @@ def convert_unidirectional_lstm(scope, operator, container):
     # Handle the first output of LSTM
     if lstm_params.sequenceOutput:
         # Handle the first output of LSTM
-        container.add_node('Reshape', lstm_y_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, hidden_size])
+        apply_reshape(scope, lstm_y_name, operator.outputs[0].full_name, container, desired_shape=[-1, hidden_size])
 
         # Handle the second output of LSTM
         if len(operator.outputs) > 1:
-            container.add_node('Reshape', lstm_y_h_name, operator.outputs[1].full_name,
-                               name=scope.get_unique_operator_name('Reshape'), shape=[1, hidden_size])
+            apply_reshape(scope, lstm_y_h_name, operator.outputs[1].full_name, container,
+                          desired_shape=[1, hidden_size])
     else:
         # Here we ingore ONNX RNN's first output because it's useless and use the second output of ONNX LSTM to produce
         # the first output of CoreML LSTM
-        container.add_node('Reshape', lstm_y_h_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[1, hidden_size])
+        apply_reshape(scope, lstm_y_h_name, operator.outputs[0].full_name, container, desired_shape=[1, hidden_size])
 
         # Create the second LSTM output from the first output
         if len(operator.outputs) > 1:
@@ -279,8 +280,7 @@ def convert_unidirectional_lstm(scope, operator, container):
 
     # Handle the cell state output of LSTM
     if len(operator.outputs) > 2:
-        container.add_node('Reshape', lstm_c_name, operator.outputs[2].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[1, hidden_size])
+        apply_reshape(scope, lstm_c_name, operator.outputs[2].full_name, container, desired_shape=[1, hidden_size])
 
 
 register_converter('uniDirectionalLSTM', convert_unidirectional_lstm)

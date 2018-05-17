@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import re
+from ...proto import onnx
 from ...proto import helper
 from .data_types import *
 from ._container import ModelComponentContainer
@@ -593,18 +594,26 @@ class Topology:
         self._check_structure()
 
 
-def convert_topology(topology, model_name, doc_string):
+def convert_topology(topology, model_name, doc_string, targeted_onnx):
     '''
     This function is used to convert our Topology object defined in _parser.py into a ONNX model (type: ModelProto).
     :param topology: The Topology object we are going to convert
-    :param model_name: GraphProto's name. Let "model" denote the output model. The string "model_name" would be assigned
-    to "model.graph.name."
+    :param model_name: GraphProto's name. Let "model" denote the returned model. The string "model_name" would be
+    assigned to "model.graph.name."
     :param doc_string: A string attached to the produced model
+    :param targeted_onnx: A string, which specifies the targeted ONNX version of the produced model. Possible values
+    include '1.1.2', '1.2', and so on.
     :return: a ONNX ModelProto
     '''
+    if targeted_onnx != onnx.__version__:
+        raise RuntimeError(
+            'ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
+                targeted_onnx, onnx.__version__))
+
+
     topology._initialize_graph_status_for_traversing()
 
-    container = ModelComponentContainer()
+    container = ModelComponentContainer(targeted_onnx)
 
     # Add roots and leaves as ONNX's model inputs and outputs
     model_inputs = []
@@ -668,7 +677,7 @@ def convert_topology(topology, model_name, doc_string):
     # Fill operator sets
     i = 0
     for op_domain, op_version in container.node_domain_version_pair_sets:
-        if i  == 0 and len(onnx_model.opset_import) == 1:
+        if i == 0 and len(onnx_model.opset_import) == 1:
             # Overwrite the default operator set created by helper.make_model(...)
             op_set = onnx_model.opset_import[0]
         else:

@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from ....common._apply_operation import apply_mul
 from ....common._registration import register_converter
 
 
@@ -32,13 +33,11 @@ def convert_dot(scope, operator, container):
 
     # Do element-wise product of the two unit-length tensors
     product_name = scope.get_unique_variable_name(intra_variable_name1 + '_multiply_' + intra_variable_name2)
-    multiplier_name = scope.get_unique_operator_name('Mul')
-    product_attrs = {'name': multiplier_name}
-    container.add_node('Mul', [intra_variable_name1, intra_variable_name2], [product_name], **product_attrs)
+    apply_mul(scope, [intra_variable_name1, intra_variable_name2], product_name, container, broadcast=0)
 
     # Sum up results from different dimensions to get the final cosine similarity
     reducer_name = scope.get_unique_operator_name('ReduceSum')
-    reducer_attrs = {'name': reducer_name, 'axes': [1], 'keepdims': 0}
+    reducer_attrs = {'name': reducer_name, 'axes': [1], 'keepdims': 1}
     container.add_node('ReduceSum', [product_name], operator.output_full_names, **reducer_attrs)
 
 

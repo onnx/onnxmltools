@@ -6,6 +6,7 @@
 
 import math
 import numpy as np
+from ....common._apply_operation import apply_mul, apply_div, apply_pad
 from ....common._registration import register_converter
 
 
@@ -76,8 +77,7 @@ def create_legacy_pad(scope, input_name, output_name, H_in, W_in, k_h, k_w,
     #             N_end_index,   C_end_index,   H_end_index,   W_end_index]
     # Because only H- and W-axes are padded in CoreML, we leave padding amounts of N- and C-axes zeros.
     pads = [0, 0, pad_t, pad_l, 0, 0, pad_b, pad_r]
-    attrs = {'name': scope.get_unique_operator_name('Pad'), 'pads': pads, 'value': padded_value}
-    container.add_node('Pad', input_name, output_name, op_version=2, **attrs)
+    apply_pad(scope, input_name, output_name, container, pads=pads, value=padded_value)
 
 
 # The conversion of pooling has several possible outcomes. Let's first define some symbols and then discuss their
@@ -272,7 +272,7 @@ def convert_pooling(scope, operator, container):
 
             # Element-wisely apply adjustment coefficients and create the expected CoreML output
             # Associated sub-graph of case 5: Y', Z' ---> Mul ---> Y
-            container.add_node('Mul', [Y_prime_name, Z_prime_name], Y_name, name=scope.get_unique_operator_name('Mul'))
+            apply_mul(scope, [Y_prime_name, Z_prime_name], Y_name, container, broadcast=0)
         else:
             # Create the major Pool operator
             # Associated sub-graph of case 6: X' ---> Pool ---> Y'
@@ -296,8 +296,7 @@ def convert_pooling(scope, operator, container):
 
             # Element-wisely apply adjustment coefficients and create the expected CoreML output
             # Associated sub-graph of case 6: Y', Z''  ---> Div ---> Y
-            container.add_node('Div', [Y_prime_name, Z_prime_prime_name], Y_name,
-                               name=scope.get_unique_operator_name('Div'))
+            apply_div(scope, [Y_prime_name, Z_prime_prime_name], Y_name, container, broadcast=0)
     else:
         # Create the major Pool operator
         if params.type == Params.L2:
