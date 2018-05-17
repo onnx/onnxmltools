@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 import six
-from ...proto import helper
+from ...proto import helper, onnx_proto
 
 
 class RawModelContainer(object):
@@ -111,7 +111,7 @@ class ModelComponentContainer:
     encapsulated in a ONNX ModelProto.
     '''
 
-    def __init__(self):
+    def __init__(self, float_precision=32):
         # Inputs of ONNX graph. They are ValueInfoProto in ONNX.
         self.inputs = []
         # Outputs of ONNX graph. They are ValueInfoProto in ONNX.
@@ -124,11 +124,16 @@ class ModelComponentContainer:
         self.nodes = []
         # ONNX operators' domain-version pair set. They will be added into opset_import field in the final ONNX model.
         self.node_domain_version_pair_sets = set()
+        # Precision of float numbers: 16 or 32
+        self.float_precision = float_precision
 
     def _make_value_info(self, variable):
         value_info = helper.ValueInfoProto()
         value_info.name = variable.full_name
         value_info.type.CopyFrom(variable.type.to_onnx_type())
+        if(value_info.type.tensor_type.elem_type == onnx_proto.TensorProto.FLOAT):
+            if(self.float_precision == 16) :
+                value_info.type.tensor_type.elem_type = onnx_proto.TensorProto.FLOAT16
         if variable.type.doc_string:
             value_info.doc_string = variable.type.doc_string
         return value_info
@@ -158,6 +163,8 @@ class ModelComponentContainer:
         :param shape: Tensor shape, a list of integers.
         :param content: Flattened tensor values (i.e., a float list or a float array).
         '''
+        if (self.float_precision == 16 and onnx_type == onnx_proto.TensorProto.FLOAT):
+            onnx_type = onnx_proto.TensorProto.FLOAT16
         tensor = helper.make_tensor(name, onnx_type, shape, content)
         self.initializers.append(tensor)
 
