@@ -6,3 +6,4 @@
 
 from .main import convert_coreml
 from .main import convert_sklearn
+from .main import convert_keras

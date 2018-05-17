@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from ....common._apply_operation import apply_transpose
 from ....common._registration import register_converter
 
 
@@ -14,12 +15,8 @@ def convert_flatten(scope, operator, container):
     flattened_variable_name = operator.outputs[0].full_name
 
     if operator.raw_operator.flatten.mode == Params.CHANNEL_LAST:
-        op_type = 'Transpose'
-        transpose_operator_name = scope.get_unique_operator_name(op_type)
-        transpose_attrs = {'name': transpose_operator_name, 'perm': [0, 2, 3, 1]}
         transposed_variable_name = scope.get_unique_variable_name('transposed')
-
-        container.add_node(op_type, [variable_to_be_flattened_name], [transposed_variable_name], **transpose_attrs)
+        apply_transpose(scope, variable_to_be_flattened_name, transposed_variable_name, container, perm=[0, 2, 3, 1])
         variable_to_be_flattened_name = transposed_variable_name
 
     op_type = 'Flatten'

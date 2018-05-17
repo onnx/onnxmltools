@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import re
+from ...proto import onnx
 from ...proto import helper
 from .data_types import *
 from ._container import ModelComponentContainer
@@ -189,7 +190,7 @@ class Scope:
         '''
         This function is used to declare new local operator.
         '''
-        onnx_name = self.get_unique_operator_name(type)
+        onnx_name = self.get_unique_operator_name(str(type))
         operator = Operator(onnx_name, self.name, type, raw_model)
         self.operators[onnx_name] = operator
         return operator
@@ -497,6 +498,15 @@ class Topology:
             if not original.type.doc_string and duplicate.type.doc_string:
                 original.type.doc_string = duplicate.type.doc_string
 
+            # Sometime, shapes of duplicates are different. We try to replace the original variable's unknown dimensions
+            # as many as possible because we will get rid of the duplicate.
+            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType) and\
+                    len(original.type.shape) == len(duplicate.type.shape):
+                for i in range(len(original.type.shape)):
+                    if original.type.shape[i] != 'None':
+                        continue
+                    original.type.shape[i] = duplicate.type.shape[i]
+
             # Because we're iterating through the topology, we cannot delete any operator or variable. Otherwise,
             # the traversing function may be broken. We will delete those abandoned ones later.
             duplicate.is_abandoned = True
@@ -584,18 +594,26 @@ class Topology:
         self._check_structure()
 
 
-def convert_topology(topology, model_name, doc_string):
+def convert_topology(topology, model_name, doc_string, targeted_onnx):
     '''
     This function is used to convert our Topology object defined in _parser.py into a ONNX model (type: ModelProto).
     :param topology: The Topology object we are going to convert
-    :param model_name: GraphProto's name. Let "model" denote the output model. The string "model_name" would be assigned
-    to "model.graph.name."
+    :param model_name: GraphProto's name. Let "model" denote the returned model. The string "model_name" would be
+    assigned to "model.graph.name."
     :param doc_string: A string attached to the produced model
+    :param targeted_onnx: A string, which specifies the targeted ONNX version of the produced model. Possible values
+    include '1.1.2', '1.2', and so on.
     :return: a ONNX ModelProto
     '''
+    if targeted_onnx != onnx.__version__:
+        raise RuntimeError(
+            'ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
+                targeted_onnx, onnx.__version__))
+
+
     topology._initialize_graph_status_for_traversing()
 
-    container = ModelComponentContainer()
+    container = ModelComponentContainer(targeted_onnx)
 
     # Add roots and leaves as ONNX's model inputs and outputs
     model_inputs = []
@@ -659,7 +677,7 @@ def convert_topology(topology, model_name, doc_string):
     # Fill operator sets
     i = 0
     for op_domain, op_version in container.node_domain_version_pair_sets:
-        if i  == 0 and len(onnx_model.opset_import) == 1:
+        if i == 0 and len(onnx_model.opset_import) == 1:
             # Overwrite the default operator set created by helper.make_model(...)
             op_set = onnx_model.opset_import[0]
         else:

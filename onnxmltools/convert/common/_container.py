@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import six
+from distutils.version import StrictVersion
 from ...proto import helper
 
 
@@ -69,12 +70,40 @@ class SklearnModelContainer(RawModelContainer):
         return [variable.raw_name for variable in self._outputs]
 
     def add_input(self, variable):
+        # The order of adding variables matters. The final model's input names are sequentially added as this list
         if variable not in self._inputs:
             self._inputs.append(variable)
 
     def add_output(self, variable):
+        # The order of adding variables matters. The final model's output names are sequentially added as this list
         if variable not in self._outputs:
             self._outputs.append(variable)
+
+
+class KerasModelContainer(RawModelContainer):
+
+    def __init__(self, keras_model):
+        super(KerasModelContainer, self).__init__(keras_model)
+        self._input_raw_names = list()
+        self._output_raw_names = list()
+
+    def add_input_name(self, name):
+        # The order of adding strings matters. The final model's input names are sequentially added as this list
+        if name not in self._input_raw_names:
+            self._input_raw_names.append(name)
+
+    def add_output_name(self, name):
+        # The order of adding strings matters. The final model's output names are sequentially added as this list
+        if name not in self._output_raw_names:
+            self._output_raw_names.append(name)
+
+    @property
+    def input_names(self):
+        return [name for name in self._input_raw_names]
+
+    @property
+    def output_names(self):
+        return [name for name in self._output_raw_names]
 
 
 class ModelComponentContainer:
@@ -83,7 +112,10 @@ class ModelComponentContainer:
     encapsulated in a ONNX ModelProto.
     '''
 
-    def __init__(self):
+    def __init__(self, targeted_onnx):
+        '''
+        :param targeted_onnx: A string, for example, '1.1.2' and '1.2'.
+        '''
         # Inputs of ONNX graph. They are ValueInfoProto in ONNX.
         self.inputs = []
         # Outputs of ONNX graph. They are ValueInfoProto in ONNX.
@@ -96,6 +128,8 @@ class ModelComponentContainer:
         self.nodes = []
         # ONNX operators' domain-version pair set. They will be added into opset_import field in the final ONNX model.
         self.node_domain_version_pair_sets = set()
+        # The targeted ONNX version. All produced operators should be supported by the targeted ONNX version.
+        self.targeted_onnx_version = StrictVersion(targeted_onnx)
 
     def _make_value_info(self, variable):
         value_info = helper.ValueInfoProto()
@@ -130,6 +164,8 @@ class ModelComponentContainer:
         :param shape: Tensor shape, a list of integers.
         :param content: Flattened tensor values (i.e., a float list or a float array).
         '''
+        if any(d is None for d in shape):
+            raise ValueError('Shape of initializer cannot contain None')
         tensor = helper.make_tensor(name, onnx_type, shape, content)
         self.initializers.append(tensor)
 
@@ -159,6 +195,9 @@ class ModelComponentContainer:
         if not isinstance(outputs, list) or not all(isinstance(s, (six.string_types, six.text_type)) for s in outputs):
             type_list = ','.join(list(str(type(s)) for s in outputs))
             raise ValueError('Outputs must be a list of string but get [%s]' % type_list)
+        for k, v in attrs.items():
+            if v is None:
+                raise ValueError('Failed to create ONNX node. Undefined attribute pair (%s, %s) found' % (k, v))
 
         node = helper.make_node(op_type, inputs, outputs, **attrs)
         node.domain = op_domain
