@@ -113,7 +113,7 @@ class ModelComponentContainer:
     encapsulated in a ONNX ModelProto.
     '''
 
-    def __init__(self, float_precision=32, targeted_onnx):
+    def __init__(self, targeted_onnx, float_precision=32):
         '''
         :param float_precision: precision of float number, 32 bits or 16 bits
         :param targeted_onnx: A string, for example, '1.1.2' and '1.2'.
