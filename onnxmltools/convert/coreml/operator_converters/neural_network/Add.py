@@ -6,25 +6,24 @@
 
 from .....proto import onnx_proto
 from ....common._registration import register_converter
+from ....common._apply_operation import apply_add
 
 
 def convert_add(scope, operator, container):
-    op_type = 'Add'
-    attrs = {'name': operator.full_name}
-
     if len(operator.input_full_names) == 1:
-        scaler_name = scope.get_unique_variable_name(op_type + '_B')
+        scaler_name = scope.get_unique_variable_name(operator.full_name + '_B')
         container.add_initializer(scaler_name, onnx_proto.TensorProto.FLOAT, [1], operator.raw_operator.add.alpha)
         inputs = [operator.inputs[0].full_name, scaler_name]
     else:
         inputs = operator.input_full_names
 
     if operator.inputs[0].type.shape != operator.inputs[1].type.shape:
-        attrs['broadcast'] = 1
+        broadcast = 1
     else:
-        attrs['broadcast'] = 0
+        broadcast = 0
 
-    container.add_node(op_type, inputs, operator.output_full_names, **attrs)
+    apply_add(scope, inputs, operator.output_full_names, container, operator_name=operator.full_name,
+              broadcast=broadcast)
 
 
 register_converter('add', convert_add)

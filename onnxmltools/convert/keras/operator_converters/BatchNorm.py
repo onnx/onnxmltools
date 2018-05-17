@@ -13,7 +13,7 @@ from .common import permute_tensor
 
 def convert_keras_batch_normalization(scope, operator, container):
     op = operator.raw_operator
-    if op.axis != 3:
+    if op.axis != 3 and op.axis != -1:
         adjusted_input_name = operator.inputs[0].full_name
     else:
         adjusted_input_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_transposed')
@@ -30,28 +30,31 @@ def convert_keras_batch_normalization(scope, operator, container):
     if not op.center:
         params.insert(1, np.zeros(params[1].shape, dtype=float))
 
+    gamma = params[0] / np.sqrt(params[3] + op.epsilon)
+    beta = params[1] - params[0] * params[2] / np.sqrt(params[3] + op.epsilon)
+
     scale_tensor_name = scope.get_unique_variable_name('scale')
-    container.add_initializer(scale_tensor_name, onnx_proto.TensorProto.FLOAT, params[0].shape, params[0])
+    container.add_initializer(scale_tensor_name, onnx_proto.TensorProto.FLOAT, params[0].shape, gamma)
     input_tensor_names.append(scale_tensor_name)
 
     bias_tensor_name = scope.get_unique_variable_name('bias')
-    container.add_initializer(bias_tensor_name, onnx_proto.TensorProto.FLOAT, params[1].shape, params[1])
+    container.add_initializer(bias_tensor_name, onnx_proto.TensorProto.FLOAT, params[1].shape, beta)
     input_tensor_names.append(bias_tensor_name)
 
     mean_tensor_name = scope.get_unique_variable_name('mean')
-    container.add_initializer(mean_tensor_name, onnx_proto.TensorProto.FLOAT, params[2].shape, params[2])
+    container.add_initializer(mean_tensor_name, onnx_proto.TensorProto.FLOAT, params[2].shape, 0 * params[2])
     input_tensor_names.append(mean_tensor_name)
 
     var_tensor_name = scope.get_unique_variable_name('var')
-    container.add_initializer(var_tensor_name, onnx_proto.TensorProto.FLOAT, params[3].shape, params[3])
+    container.add_initializer(var_tensor_name, onnx_proto.TensorProto.FLOAT, params[3].shape, 1 + 0 * params[3] )
     input_tensor_names.append(var_tensor_name)
 
-    attrs['epsilon'] = op.epsilon
+    attrs['epsilon'] = 0.
     attrs['momentum'] = op.momentum
     attrs['spatial'] = 1
     attrs['is_test'] = 1
 
-    if op.axis != 3:
+    if op.axis != 3 and op.axis != -1:
         # If no transpose is required, we can simply use the output of ONNX BatchNorm as the final outcome
         container.add_node(op_type, input_tensor_names, operator.output_full_names, **attrs)
     else:
@@ -64,3 +67,4 @@ def convert_keras_batch_normalization(scope, operator, container):
 
 
 register_converter(BatchNormalization, convert_keras_batch_normalization)
+

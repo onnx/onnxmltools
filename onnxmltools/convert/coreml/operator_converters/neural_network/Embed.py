@@ -5,7 +5,9 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
+from .Reshape import apply_reshape
 from .....proto import onnx_proto
+from ....common._apply_operation import apply_add
 from ....common._registration import register_converter
 
 
@@ -16,8 +18,7 @@ def convert_embedding(scope, operator, container):
 
     # Reshape the indexes we want to embed to 1-D tensor. Otherwise, ONNX Gather's output may get wrong shape.
     reshaped_input_name = scope.get_unique_variable_name(gather_op_name + 'input_reshaped')  # 2nd input of Gather
-    container.add_node('Reshape', operator.inputs[0].full_name, reshaped_input_name,
-                       name=scope.get_unique_operator_name('Reshape'), shape=[-1])
+    apply_reshape(scope, operator.inputs[0].full_name, reshaped_input_name, container, desired_shape=[-1])
 
     # Load the embedding matrix. Its shape is outputChannels-by-inputDim.
     weights = np.array(params.weights.floatValue).reshape(params.outputChannels, params.inputDim)
@@ -36,8 +37,7 @@ def convert_embedding(scope, operator, container):
         container.add_initializer(bias_name, onnx_proto.TensorProto.FLOAT,
                                   [params.outputChannels], params.bias.floatValue)
         # Create an addition operator to add bias (shape: [C]) into Gather's tensor (shape: [N, C])
-        container.add_node('Add', [gather_output_name, bias_name], operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Add'), axis=1, broadcast=1)
+        apply_add(scope, [gather_output_name, bias_name], operator.outputs[0].full_name, container, axis=1, broadcast=1)
     else:
         # This case has no bias, so we just output the result produced by the embedding node.
         container.add_node('Gather', [weights_name, reshaped_input_name], operator.output_full_names, **gather_attrs)

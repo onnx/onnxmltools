@@ -6,6 +6,8 @@
 
 import six
 from ...proto import helper, onnx_proto
+from distutils.version import StrictVersion
+from ...proto import helper
 
 
 class RawModelContainer(object):
@@ -111,7 +113,11 @@ class ModelComponentContainer:
     encapsulated in a ONNX ModelProto.
     '''
 
-    def __init__(self, float_precision=32):
+    def __init__(self, float_precision=32, targeted_onnx):
+        '''
+        :param float_precision: precision of float number, 32 bits or 16 bits
+        :param targeted_onnx: A string, for example, '1.1.2' and '1.2'.
+        '''
         # Inputs of ONNX graph. They are ValueInfoProto in ONNX.
         self.inputs = []
         # Outputs of ONNX graph. They are ValueInfoProto in ONNX.
@@ -126,6 +132,8 @@ class ModelComponentContainer:
         self.node_domain_version_pair_sets = set()
         # Precision of float numbers: 16 or 32
         self.float_precision = float_precision
+        # The targeted ONNX version. All produced operators should be supported by the targeted ONNX version.
+        self.targeted_onnx_version = StrictVersion(targeted_onnx)
 
     def _make_value_info(self, variable):
         value_info = helper.ValueInfoProto()
@@ -165,6 +173,8 @@ class ModelComponentContainer:
         '''
         if (self.float_precision == 16 and onnx_type == onnx_proto.TensorProto.FLOAT):
             onnx_type = onnx_proto.TensorProto.FLOAT16
+        if any(d is None for d in shape):
+            raise ValueError('Shape of initializer cannot contain None')
         tensor = helper.make_tensor(name, onnx_type, shape, content)
         self.initializers.append(tensor)
 
@@ -194,6 +204,9 @@ class ModelComponentContainer:
         if not isinstance(outputs, list) or not all(isinstance(s, (six.string_types, six.text_type)) for s in outputs):
             type_list = ','.join(list(str(type(s)) for s in outputs))
             raise ValueError('Outputs must be a list of string but get [%s]' % type_list)
+        for k, v in attrs.items():
+            if v is None:
+                raise ValueError('Failed to create ONNX node. Undefined attribute pair (%s, %s) found' % (k, v))
 
         node = helper.make_node(op_type, inputs, outputs, **attrs)
         node.domain = op_domain
