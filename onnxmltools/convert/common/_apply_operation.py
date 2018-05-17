@@ -18,10 +18,10 @@ def _create_name_or_use_existing_one(scope, op_type, name):
         return name
 
 
-def _apply_unary_operation(scope, op_type, input_name, output_name, container, operator_name):
+def _apply_unary_operation(scope, op_type, input_name, output_name, container, operator_name, **attrs):
     name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
-    attrs = {'name': name}
+    attrs['name'] = name
     if container.targeted_onnx_version <= StrictVersion('1.0'):
         attrs['consumed_inputs'] = [0]
         op_version = 1
@@ -310,3 +310,32 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
         op_version = 7
 
     container.add_node('Upsample', input_name, output_name, op_version=op_version, **attrs)
+
+
+def apply_leaky_relu(scope, input_name, output_name, container, operator_name=None, alpha=None):
+    _apply_unary_operation(scope, 'LeakyRelu', input_name, output_name, container, operator_name, alpha=alpha)
+
+
+def apply_relu(scope, input_name, output_name, container, operator_name=None):
+    _apply_unary_operation(scope, 'Relu', input_name, output_name, container, operator_name)
+
+
+def apply_prelu(scope, input_name, output_name, container, operator_name=None, slope=None):
+    _apply_unary_operation(scope, 'PReLU', input_name, output_name, container, operator_name, slope=slope)
+
+
+def apply_elu(scope, input_name, output_name, container, operator_name=None, alpha=None):
+    _apply_unary_operation(scope, 'Elu', input_name, output_name, container, operator_name, alpha=alpha)
+
+
+def apply_tanh(scope, input_name, output_name, container, operator_name=None):
+    _apply_unary_operation(scope, 'Tanh', input_name, output_name, container, operator_name)
+
+
+def apply_sigmoid(scope, input_name, output_name, container, operator_name=None):
+    _apply_unary_operation(scope, 'Sigmoid', input_name, output_name, container, operator_name)
+
+
+def apply_hard_sigmoid(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
+    _apply_unary_operation(scope, 'HardSigmoid', input_name, output_name, container, operator_name,
+                           alpha=alpha, beta=beta)
