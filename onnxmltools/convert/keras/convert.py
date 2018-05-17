@@ -13,7 +13,7 @@ from . import operator_converters
 from . import shape_calculators
 
 
-def convert(model, name=None, initial_types=None, targeted_onnx_version_string='1.1.2', doc_string=''):
+def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx='1.1.2'):
     '''
     Convert Keras-Tensorflow Model and Sequence objects into Topology. Note that default batch size is 1 here instead of
     `None` used in CoreML conversion framework. To overwrite this behavior, we can specify initial_types. Assume that a
@@ -26,6 +26,9 @@ def convert(model, name=None, initial_types=None, targeted_onnx_version_string='
     :param initial_types: A list providing types for some input variables. Each element is a tuple of a variable name
     and a type defined in data_types.py.
     :param doc_string: A string attached onto the produced ONNX model
+    :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
+    produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
+    :return: An ONNX model (type: ModelProto) which is equivalent to the input Keras model
     '''
     topology = parse_keras(model, initial_types)
 
@@ -34,6 +37,6 @@ def convert(model, name=None, initial_types=None, targeted_onnx_version_string='
     if name is None:
         name = str(uuid4().hex)
 
-    onnx_model = convert_topology(topology, name, targeted_onnx_version_string, doc_string)
+    onnx_model = convert_topology(topology, name, doc_string, targeted_onnx)
 
     return onnx_model
