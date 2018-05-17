@@ -5,9 +5,8 @@
 # --------------------------------------------------------------------------
 
 import six
-from ...proto import helper, onnx_proto
 from distutils.version import StrictVersion
-from ...proto import helper
+from ...proto import helper, onnx_proto
 
 
 class RawModelContainer(object):
@@ -131,7 +130,10 @@ class ModelComponentContainer:
         # ONNX operators' domain-version pair set. They will be added into opset_import field in the final ONNX model.
         self.node_domain_version_pair_sets = set()
         # Precision of float numbers: 16 or 32
-        self.float_precision = float_precision
+        if float_precision == 16 and float_precision == 32:
+            self.float_precision = float_precision
+        else:
+            raise ValueError('float precision can only be 16 or 32')
         # The targeted ONNX version. All produced operators should be supported by the targeted ONNX version.
         self.targeted_onnx_version = StrictVersion(targeted_onnx)
 
@@ -139,7 +141,7 @@ class ModelComponentContainer:
         value_info = helper.ValueInfoProto()
         value_info.name = variable.full_name
         value_info.type.CopyFrom(variable.type.to_onnx_type())
-        if(value_info.type.tensor_type.elem_type == onnx_proto.TensorProto.FLOAT):
+        if value_info.type.tensor_type.elem_type == onnx_proto.TensorProto.FLOAT:
             if(self.float_precision == 16) :
                 value_info.type.tensor_type.elem_type = onnx_proto.TensorProto.FLOAT16
         if variable.type.doc_string:
