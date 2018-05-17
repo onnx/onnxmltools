@@ -4,16 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from ....common._apply_operation import apply_tile
 from ....common._registration import register_converter
 
 
 def convert_sequence_repeat(scope, operator, container):
-    op_type = 'Tile'
-    attrs = {'name': operator.full_name}
-    attrs['tiles'] = operator.raw_operator.sequenceRepeat.nRepetitions
-    attrs['axis'] = 0
-
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    repeat_count = operator.raw_operator.sequenceRepeat.nRepetitions
+    apply_tile(scope, operator.input_full_names, operator.output_full_names, container,
+               operator_name=operator.full_name, repeats=[repeat_count])
 
 
 register_converter('sequenceRepeat', convert_sequence_repeat)

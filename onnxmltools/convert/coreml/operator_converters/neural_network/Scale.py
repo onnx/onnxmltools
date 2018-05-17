@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 from .....proto import onnx_proto
+from ....common._apply_operation import apply_add, apply_mul
 from ....common._registration import register_converter
 
 
@@ -45,39 +46,37 @@ def convert_scale(scope, operator, container):
     # Therefore, our strategy of composing ScaleLayer is to have one multiplication followed by an addition.
     params = operator.raw_operator.scale
     op1_type = 'Mul'
-    attrs1 = {'name': scope.get_unique_operator_name(op1_type)}
     scale_axis, scale_shape = deduce_broadcast_axis_and_shape(params.shapeScale)
     scale_name = scope.get_unique_variable_name(op1_type + '_B')
     container.add_initializer(scale_name, onnx_proto.TensorProto.FLOAT, scale_shape, params.scale.floatValue)
 
-    if scale_axis is not None:
-        attrs1['axis'] = scale_axis
     # CoreML is at most 3-D, so we always turn broadcasting on.
-    attrs1['broadcast'] = 1
+    scale_broadcast = 1
 
     if not params.hasBias:
         # Create a element-wise multiplication and use it to scale the input. The first input is the variable we want
         # to scale while the second input is their multipliers.
-        container.add_node(op1_type, [operator.inputs[0].full_name, scale_name], operator.output_full_names, **attrs1)
+        apply_mul(scope, [operator.inputs[0].full_name, scale_name], operator.output_full_names, container,
+                  operator_name=operator.full_name, axis=scale_axis, broadcast=scale_broadcast)
     else:
         # Declare a temporal variable to store the scaled input
         intra_variable_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_scaled')
         # Create a element-wise multiplication and use it to scale the input and save the result to a temporal variable
-        container.add_node(op1_type, [operator.inputs[0].full_name, scale_name], intra_variable_name, **attrs1)
+        apply_mul(scope, [operator.inputs[0].full_name, scale_name], intra_variable_name, container,
+                  operator_name=operator.full_name, axis=scale_axis, broadcast=scale_broadcast)
 
         # Prepare materials to build an Add operator for adding bias
-        op2_type = 'Add'
-        attrs2 = {'name': scope.get_unique_operator_name(op2_type)}
         bias_axis, bias_shape = deduce_broadcast_axis_and_shape(params.shapeBias)
-        if bias_axis is not None:
-            attrs2['axis'] = scale_axis
+
         # CoreML is at most 3-D, so we always turn broadcasting on.
-        attrs2['broadcast'] = 1
-        bias_name = scope.get_unique_variable_name(op2_type + '_B')
+        bias_broadcast = 1
+
+        bias_name = scope.get_unique_variable_name(operator.full_name + '_B')
         container.add_initializer(bias_name, onnx_proto.TensorProto.FLOAT, bias_shape, params.bias.floatValue)
         # As bias exists, we add the bias into the output of the multiplication and then use the output of addition
         # as the final output of this conversion.
-        container.add_node(op2_type, [intra_variable_name, bias_name], operator.output_full_names, **attrs2)
+        apply_add(scope, [intra_variable_name, bias_name], operator.output_full_names, container,
+                  axis=bias_axis, broadcast=bias_broadcast)
 
 
 register_converter('scale', convert_scale)

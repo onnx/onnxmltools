@@ -4,19 +4,18 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from ....common._apply_operation import apply_pad
 from ....common._registration import register_converter
 
 
 def convert_padding(scope, operator, container):
-    op_type = 'Pad'
-    attrs = {'name': operator.full_name}
     params = operator.raw_operator.padding
 
     pad_table = {'constant': 'constant', 'reflection': 'reflect', 'replication': 'edge'}
     pad_type = params.WhichOneof('PaddingType')
     if pad_type not in pad_table:
         raise ValueError('Unsupported padding mode: {}'.format(pad_type))
-    attrs['mode'] = pad_table[pad_type]
+    mode = pad_table[pad_type]
 
     # CoreML only pads for their H- and W-axes. Here we assume the shape of the tensor to be padded
     # is [N, C, H, W], so we have 8 padding amounts
@@ -33,12 +32,14 @@ def convert_padding(scope, operator, container):
         pads[6] = params.paddingAmounts.borderAmounts[0].endEdgeSize
         # Set W_end_index
         pads[7] = params.paddingAmounts.borderAmounts[1].endEdgeSize
-    attrs['pads'] = pads
 
     if pad_type == 'constant':
-        attrs['value'] = params.constant.value
+        value = params.constant.value
+    else:
+        value = None
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_version=2, **attrs)
+    apply_pad(scope, operator.input_full_names, operator.output_full_names, container, operator_name=operator.full_name,
+              mode=mode, pads=pads, value=value)
 
 
 register_converter('padding', convert_padding)

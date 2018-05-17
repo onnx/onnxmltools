@@ -19,6 +19,7 @@ __model_version__ = 0
 
 from .convert import convert_coreml
 from .convert import convert_sklearn
+from .convert import convert_keras
 
 from .utils import load_model
 from .utils import save_model
