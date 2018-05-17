@@ -130,7 +130,7 @@ class ModelComponentContainer:
         # ONNX operators' domain-version pair set. They will be added into opset_import field in the final ONNX model.
         self.node_domain_version_pair_sets = set()
         # Precision of float numbers: 16 or 32
-        if float_precision == 16 and float_precision == 32:
+        if float_precision != 16 and float_precision != 32:
             self.float_precision = float_precision
         else:
             raise ValueError('float precision can only be 16 or 32')
