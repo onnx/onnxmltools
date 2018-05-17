@@ -131,9 +131,9 @@ class ModelComponentContainer:
         self.node_domain_version_pair_sets = set()
         # Precision of float numbers: 16 or 32
         if float_precision != 16 and float_precision != 32:
-            self.float_precision = float_precision
-        else:
             raise ValueError('float precision can only be 16 or 32')
+        else:
+            self.float_precision = float_precision
         # The targeted ONNX version. All produced operators should be supported by the targeted ONNX version.
         self.targeted_onnx_version = StrictVersion(targeted_onnx)
 
