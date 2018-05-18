@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from distutils.version import StrictVersion
 from ...common._registration import register_shape_calculator
-from ...common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type, DictionaryType, StringType,\
+from ...common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type, DictionaryType, StringType, \
     SequenceType, StringTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
@@ -42,13 +43,21 @@ def calculate_traditional_classifier_output_shapes(operator):
     if class_label_type == 'stringClassLabels':
         operator.outputs[0].type = StringTensorType([N, 1], doc_string=operator.outputs[0].type.doc_string)
         if len(operator.outputs) == 2:
-            operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([1]), FloatTensorType([1])),
-                                                    doc_string=operator.outputs[1].type.doc_string)
+            if operator.targeted_onnx_version < StrictVersion('1.2'):
+                operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]),
+                                                          doc_string=operator.outputs[1].type.doc_string)
+            else:
+                operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([1]), FloatTensorType([1])),
+                                                        doc_string=operator.outputs[1].type.doc_string)
     elif class_label_type == 'int64ClassLabels':
         operator.outputs[0].type = Int64TensorType([N, 1], doc_string=operator.outputs[0].type.doc_string)
         if len(operator.outputs) == 2:
-            operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([1]), FloatTensorType([1])),
-                                                    doc_string=operator.outputs[1].type.doc_string)
+            if operator.targeted_onnx_version < StrictVersion('1.2'):
+                operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]),
+                                                          doc_string=operator.outputs[1].type.doc_string)
+            else:
+                operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([1]), FloatTensorType([1])),
+                                                        doc_string=operator.outputs[1].type.doc_string)
     else:
         raise ValueError('Traditional classifier must include label information')
 

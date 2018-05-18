@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import re
+from distutils.version import StrictVersion
 from ...proto import onnx
 from ...proto import helper
 from .data_types import *
@@ -43,7 +44,7 @@ class Variable:
 
 class Operator:
 
-    def __init__(self, onnx_name, scope, type, raw_operator):
+    def __init__(self, onnx_name, scope, type, raw_operator, targeted_onnx_version):
         '''
         :param onnx_name: A unique ID, which is a string
         :param scope: The name of the scope where this operator is declared. It's a string.
@@ -51,6 +52,7 @@ class Operator:
         pooling, if this operator is associated with a CoreML pooling layer.
         :param raw_operator: The original operator which defines this operator; for example, a scikit-learn Imputer and
         a CoreML Normalizer.
+        :param targeted_onnx_version: A StrictVersion object indicating the ONNX version used
         '''
         self.onnx_name = onnx_name  # operator name in the converted model
         self.scope = scope
@@ -60,6 +62,7 @@ class Operator:
         self.outputs = []
         self.is_evaluated = None
         self.is_abandoned = False
+        self.targeted_onnx_version = targeted_onnx_version
 
     @property
     def full_name(self):
@@ -89,18 +92,21 @@ class Operator:
 
 class Scope:
 
-    def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None):
+    def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None,
+                 targeted_onnx_version=None):
         '''
         :param name:  A string, the unique ID of this scope in a Topology object
         :param parent_scopes: A list of Scope objects. The last element should be the direct parent scope (i.e., where
         this scope is declared).
         :param variable_name_set: A set of strings serving as the name pool of variables
         :param operator_name_set: A set of strings serving as the name pool of operators
+        :param targeted_onnx_version: A StrictVersion object indicating the ONNX version used
         '''
         self.name = name
         self.parent_scopes = parent_scopes if parent_scopes else list()
         self.onnx_variable_names = variable_name_set if variable_name_set is not None else set()
         self.onnx_operator_names = operator_name_set if operator_name_set is not None else set()
+        self.targeted_onnx_version = targeted_onnx_version
 
         # An one-to-many map from raw variable name to ONNX variable names. It looks like
         #   (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ..., onnx_nameN])
@@ -191,7 +197,7 @@ class Scope:
         This function is used to declare new local operator.
         '''
         onnx_name = self.get_unique_operator_name(str(type))
-        operator = Operator(onnx_name, self.name, type, raw_model)
+        operator = Operator(onnx_name, self.name, type, raw_model, self.targeted_onnx_version)
         self.operators[onnx_name] = operator
         return operator
 
@@ -219,7 +225,7 @@ class Scope:
 class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
-                 reserved_variable_names=None, reserved_operator_names=None):
+                 reserved_variable_names=None, reserved_operator_names=None, targeted_onnx='1.1.2'):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
 
@@ -237,6 +243,7 @@ class Topology:
         self.operator_name_set = reserved_operator_names if reserved_operator_names is not None else set()
         self.initial_types = initial_types if initial_types else list()
         self.default_batch_size = default_batch_size
+        self.targeted_onnx_version = StrictVersion(targeted_onnx)
 
         # This attribute is used in optimizing the graph structure. If root_names is not empty, only the variables
         # specified will be treated as the roots (i.e., set is_fed to True in the beginning of a graph evaluation) of
@@ -277,7 +284,8 @@ class Topology:
         return Topology._generate_unique_name(seed, self.scope_names)
 
     def declare_scope(self, seed, parent_scopes=list()):
-        scope = Scope(self.get_unique_scope_name(seed), parent_scopes, self.variable_name_set, self.operator_name_set)
+        scope = Scope(self.get_unique_scope_name(seed), parent_scopes, self.variable_name_set,
+                      self.operator_name_set, self.targeted_onnx_version)
         self.scopes.append(scope)
         return scope
 
