@@ -549,16 +549,6 @@ class Topology:
                         # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
                         variable.type.shape += [1] * (4 - len(variable.type.shape))
 
-            # Rule 2 (CoreML):
-            # Some model in ONNX accepts integers while the corresponding one in CoreML only takes floats.
-            # If it is the case, we change tensor type from float to integer.
-            if operator.type == 'embedding':
-                for variable in operator.inputs:
-                    if variable.is_root:
-                        variable.type = Int64TensorType(variable.type.shape, doc_string=variable.type.doc_string)
-                    else:
-                        raise RuntimeError('Embed operator in ONNX only accepts floats but we got integers')
-
     def _prune(self):
         # Conduct a dummy evaluation of this topology. It may set all reachable operators evaluated and all reachable
         # variables fed.
