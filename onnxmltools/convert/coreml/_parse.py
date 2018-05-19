@@ -414,7 +414,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         operator.outputs.append(parent_variable)
 
 
-def parse_coreml(model, initial_types=None):
+def parse_coreml(model, initial_types=None, targted_onnx='1.1.2'):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model
@@ -437,7 +437,8 @@ def parse_coreml(model, initial_types=None):
     # Topology is shared by both of CoreML and scikit-learn conversion frameworks, so we have a wrapper class,
     # CoremlModelContainer, to make sure our topology-related functions can seamlessly handle both of CoreML and
     # scikit-learn.
-    topology = Topology(CoremlModelContainer(model), default_batch_size, initial_types, reserved_variable_names)
+    topology = Topology(CoremlModelContainer(model), default_batch_size, initial_types, reserved_variable_names,
+                        targeted_onnx=targted_onnx)
     scope = topology.declare_scope('__root__')
 
     # Instead of using CoremlModelContainer, we directly pass the model in because _parse_model is CoreML-specific.
