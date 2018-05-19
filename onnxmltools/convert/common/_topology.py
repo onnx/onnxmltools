@@ -323,23 +323,24 @@ class Topology:
         another function, unordered_operator_iterator.
         '''
         self._initialize_graph_status_for_traversing()
+        priorities = {'tensorToProbabilityMap': 2, 'tensorToLabel': 1}
         while not all(operator.is_evaluated for scope in self.scopes for operator in scope.operators.values()):
             is_evaluation_happened = False
-            for scope in self.scopes:
-                for operator in scope.operators.values():
-                    if all(variable.is_fed for variable in operator.inputs) and not operator.is_evaluated:
-                        # Check if over-writing problem occurs (i.e., multiple operators produce results on one variable).
-                        for variable in operator.outputs:
-                            # Throw an error if this variable has been treated as an output somewhere
-                            if variable.is_fed:
-                                raise RuntimeError('One variable can only be assigned once')
-                            # Mark this variable as filled
-                            variable.is_fed = True
-                        # Make this operator as handled
-                        operator.is_evaluated = True
-                        is_evaluation_happened = True
-                        # Send out an operator
-                        yield operator
+            for operator in sorted(self.unordered_operator_iterator(),
+                                   key=lambda op: priorities[op.type] if op.type in priorities else 0):
+                if all(variable.is_fed for variable in operator.inputs) and not operator.is_evaluated:
+                    # Check if over-writing problem occurs (i.e., multiple operators produce results on one variable).
+                    for variable in operator.outputs:
+                        # Throw an error if this variable has been treated as an output somewhere
+                        if variable.is_fed:
+                            raise RuntimeError('One variable can only be assigned once')
+                        # Mark this variable as filled
+                        variable.is_fed = True
+                    # Make this operator as handled
+                    operator.is_evaluated = True
+                    is_evaluation_happened = True
+                    # Send out an operator
+                    yield operator
             # After scanning through the whole computational graph, at least one operator should be evaluated. If not,
             # we need to terminate this procedure to avoid dead lock.
             if not is_evaluation_happened:
@@ -508,7 +509,7 @@ class Topology:
 
             # Sometime, shapes of duplicates are different. We try to replace the original variable's unknown dimensions
             # as many as possible because we will get rid of the duplicate.
-            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType) and\
+            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType) and \
                     len(original.type.shape) == len(duplicate.type.shape):
                 for i in range(len(original.type.shape)):
                     if original.type.shape[i] != 'None':
@@ -618,44 +619,49 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
             'ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
                 targeted_onnx, onnx.__version__))
 
-
     topology._initialize_graph_status_for_traversing()
 
     container = ModelComponentContainer(targeted_onnx)
 
-    # Add roots and leaves as ONNX's model inputs and outputs
-    model_inputs = []
-    model_outputs = []
+    # Put roots and leaves as ONNX's model into buffers. They will be added into ModelComponentContainer later.
+    tensor_inputs = {}
+    other_inputs = {}
+    tensor_outputs = {}
+    other_outputs = {}
     for scope in topology.scopes:
         for variable in scope.variables.values():
             if variable.is_root:
-                model_inputs.append(variable)
+                if isinstance(variable.type, (TensorType, Int64Type, FloatType, StringType)):
+                    tensor_inputs[variable.raw_name] = variable
+                else:
+                    other_inputs[variable.raw_name] = variable
             if variable.is_leaf:
-                model_outputs.append(variable)
-    # Add roots and leaves of the graph according to their order in the original CoreML model
+                if isinstance(variable.type, (TensorType, Int64Type, FloatType, StringType)):
+                    tensor_outputs[variable.raw_name] = variable
+                else:
+                    other_outputs[variable.raw_name] = variable
+
+    # Add roots the graph according to their order in the original model
     for name in topology.raw_model.input_names:
-        variable = next(variable for variable in model_inputs if variable.raw_name == name)
-        container.add_input(variable)
+        if name in tensor_inputs:
+            container.add_input(tensor_inputs[name])
+    for name in topology.raw_model.input_names:
+        if name in other_inputs:
+            container.add_input(other_inputs[name])
+
+    # Add leaves the graph according to their order in the original model
     for name in topology.raw_model.output_names:
-        variable = next(variable for variable in model_outputs if variable.raw_name == name)
-        container.add_output(variable)
+        if name in tensor_outputs:
+            container.add_output(tensor_outputs[name])
+    for name in topology.raw_model.output_names:
+        if name in other_outputs:
+            container.add_output(other_outputs[name])
 
     # Traverse the graph from roots to leaves
     for operator in topology.topological_operator_iterator():
+        scope = next(scope for scope in topology.scopes if scope.name == operator.scope)
         # Convert the selected operator into some ONNX objects and save them into the container
         _registration.get_converter(operator.type)(scope, operator, container)
-
-    # Move ZipMap nodes to the end of the node list. In the future, here should be a sorting function which re-orders
-    # the nodes according the model's outputs.
-    for i, node in enumerate(container.nodes):
-        if node.op_type != 'ZipMap':
-            continue
-        zipmap_node = container.nodes[i]
-        for another_node_id in range(i + 1, len(container.nodes)):
-            another_node = container.nodes[another_node_id]
-            if zipmap_node.output[0] not in another_node.input:
-                container.nodes[i], container.nodes[another_node_id] = \
-                    container.nodes[another_node_id], container.nodes[i]
 
     # When calling ModelComponentContainer's add_initializer(...), nothing is added into the input list. However, in
     # ONNX initializers should also be model's (GraphProto) inputs. Thus, we create ValueInfoProto objects from
