@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from distutils.version import StrictVersion
 from ...common._registration import register_shape_calculator
 from ...common.data_types import FloatTensorType, Int64TensorType, Int64Type, StringTensorType, StringType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
@@ -12,8 +13,7 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 def calculte_tensor_to_label_output_shapes(operator):
     '''
     Allowed input/output patterns are
-        1. [1, C] ---> [1]
-        2. [N, C] ---> [N , 1]
+        1. [N, C] ---> [N, 1]
 
     Note that N must be 1 currently because TensorToProbability doesn't support batch size larger than 1.
     '''
@@ -21,22 +21,15 @@ def calculte_tensor_to_label_output_shapes(operator):
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     N = operator.inputs[0].type.shape[0]
-    if type(operator.outputs[0].type) == Int64Type:
-        operator.outputs[0].type = Int64TensorType([1], doc_string=operator.outputs[0].type.doc_string)
-        # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
-        # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
-        # if N == 1:
-        #    operator.outputs[0].type = Int64Type()
-        # else:
-        #    operator.outputs[0].type = Int64TensorType([N, 1])
-    elif type(operator.outputs[0].type) == StringType:
-        operator.outputs[0].type = StringTensorType([1], doc_string=operator.outputs[0].type.doc_string)
-        # Due to the limitation of ZipMap, we are not able to produce label and class probability map for batch size
-        # greater than 1. It leads to that although the following code is semantically correct, we cannot use it.
-        # if N == 1:
-        #    operator.outputs[0].type = StringTensorType([N, 1])
-        # else:
-        #    operator.outputs[0].type = StringType()
+    if operator.targeted_onnx_version < StrictVersion('1.2'):
+        output_shape = [1, 1]
+    else:
+        output_shape = [N, 1]
+
+    if type(operator.outputs[0].type) in [Int64Type, Int64TensorType]:
+        operator.outputs[0].type = Int64TensorType(output_shape, doc_string=operator.outputs[0].type.doc_string)
+    elif type(operator.outputs[0].type) in [StringType, StringTensorType]:
+        operator.outputs[0].type = StringTensorType(output_shape, doc_string=operator.outputs[0].type.doc_string)
     else:
         raise ValueError('Unsupported label type')
 

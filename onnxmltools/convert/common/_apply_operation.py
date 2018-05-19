@@ -105,13 +105,15 @@ def apply_cast(scope, input_name, output_name, container, operator_name=None, to
         raise ValueError('Attribute to must be one of %s' % allowed_type_name_and_type_enum_pairs.keys())
 
     if container.targeted_onnx_version < StrictVersion('1.2'):
+        # Convert enum to string, for example, TensorProto.INT64 to 'INT64'
         attrs['to'] = allowed_type_name_and_type_enum_pairs[to]
         op_version = 1
     else:
+        # Enum, for example, TensorProto.INT64
         attrs['to'] = to
         op_version = 7
 
-    container.add_node('BatchNormalization', input_name, output_name, op_version=op_version, **attrs)
+    container.add_node('Cast', input_name, output_name, op_version=op_version, **attrs)
 
 
 def apply_div(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):

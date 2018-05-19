@@ -30,7 +30,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx='
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :return: An ONNX model (type: ModelProto) which is equivalent to the input Keras model
     '''
-    topology = parse_keras(model, initial_types)
+    topology = parse_keras(model, initial_types, targeted_onnx)
 
     topology.compile()
 

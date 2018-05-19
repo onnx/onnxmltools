@@ -46,7 +46,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx='
         name = str(uuid4().hex)
 
     # Parse CoreML model as our internal data structure (i.e., Topology)
-    topology = parse_coreml(spec, initial_types)
+    topology = parse_coreml(spec, initial_types, targeted_onnx)
 
     # Parse CoreML description, author, and license. Those information will be attached to the final ONNX model.
     metadata = spec.description.metadata
