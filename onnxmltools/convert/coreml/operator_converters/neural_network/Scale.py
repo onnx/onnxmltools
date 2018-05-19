@@ -4,34 +4,52 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._apply_operation import apply_add, apply_mul
 from ....common._registration import register_converter
 
 
-def deduce_broadcast_axis_and_shape(shape):
+def deduce_broadcast_axis_and_shape(targeted_onnx_version, shape):
     # This function is used to calculate the first axis aligned with the scalar and the scalar's ONNX shape for reduce-
     # like operators. Assuming input variable is always a 4-D tensor, we provide a few of examples. If scalar's shape
     # is [1, 2, 3] and input shape is [5, 2, 3, 8], the aligned axis is the [2] (indexed by 1 because indexes are 0-based)
     # in [5, 2, 3, 8], and the desired scalar shape in ONNX is [2, 3] # (the [1] in [1, 2, 3] is redundant and can cause
     # errors in ONNX's boardcasting). If the scaler's shape is [1], no matter what shape the input is, we leave the axis
-    # "None" because ONNX operator may automatically handle it.
+    # "None" because ONNX operator may automatically handle it. After ONNX-1.2, we adopt Numpy-style broadcasting rule.
 
-    # Input shape is [N, C, H, W]
-    if len(shape) == 1:
-        if shape[0] == 1:
-            # shape is [1], we don't specify axis because it's a scalar
-            return None, [1]
-        else:
-            # shape is [C], alignment starting at C-axis (indexed by 1)
-            return 1, shape
-    elif len(shape) == 3:
-        if shape[0] == 1:
-            # shape is [1, H, W], alignment starting at H-axis (indexed by 2)
-            return 2, [shape[1], shape[2]]
-        else:
-            # shape is [C, H, W], alignment starting at C-axis (indexed by 1)
-            return 1, shape
+    if targeted_onnx_version < StrictVersion('1.2'):
+        # Input shape is [N, C, H, W]
+        if len(shape) == 1:
+            if shape[0] == 1:
+                # shape is [1], we don't specify axis because it's a scalar
+                return None, [1]
+            else:
+                # shape is [C], alignment starting at C-axis (indexed by 1)
+                return 1, shape
+        elif len(shape) == 3:
+            if shape[0] == 1:
+                # shape is [1, H, W], alignment starting at H-axis (indexed by 2)
+                return 2, [shape[1], shape[2]]
+            else:
+                # shape is [C, H, W], alignment starting at C-axis (indexed by 1)
+                return 1, shape
+    else:
+        # Input shape is [N, C, H, W]
+        if len(shape) == 1:
+            if shape[0] == 1:
+                # shape is [1], we don't specify axis because it's a scalar
+                return None, [1]
+            else:
+                # shape is [C], alignment starting at C-axis
+                return None, [shape[0], 1, 1]
+        elif len(shape) == 3:
+            if shape[0] == 1:
+                # shape is [1, H, W], alignment starting at C-axis
+                return None, shape
+            else:
+                # shape is [C, H, W], alignment starting at C-axis
+                return None, shape
 
 
 def convert_scale(scope, operator, container):
@@ -46,7 +64,7 @@ def convert_scale(scope, operator, container):
     # Therefore, our strategy of composing ScaleLayer is to have one multiplication followed by an addition.
     params = operator.raw_operator.scale
     op1_type = 'Mul'
-    scale_axis, scale_shape = deduce_broadcast_axis_and_shape(params.shapeScale)
+    scale_axis, scale_shape = deduce_broadcast_axis_and_shape(operator.targeted_onnx_version, params.shapeScale)
     scale_name = scope.get_unique_variable_name(op1_type + '_B')
     container.add_initializer(scale_name, onnx_proto.TensorProto.FLOAT, scale_shape, params.scale.floatValue)
 
@@ -66,7 +84,7 @@ def convert_scale(scope, operator, container):
                   operator_name=operator.full_name, axis=scale_axis, broadcast=scale_broadcast)
 
         # Prepare materials to build an Add operator for adding bias
-        bias_axis, bias_shape = deduce_broadcast_axis_and_shape(params.shapeBias)
+        bias_axis, bias_shape = deduce_broadcast_axis_and_shape(operator.targeted_onnx_version, params.shapeBias)
 
         # CoreML is at most 3-D, so we always turn broadcasting on.
         bias_broadcast = 1
