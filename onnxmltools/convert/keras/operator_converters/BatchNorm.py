@@ -6,9 +6,9 @@
 
 import numpy as np
 from keras.layers import BatchNormalization
+from ...common._apply_operation import apply_batch_norm, apply_transpose
 from ...common._registration import register_converter
 from ....proto import onnx_proto
-from .common import permute_tensor
 
 
 def convert_keras_batch_normalization(scope, operator, container):
@@ -17,10 +17,8 @@ def convert_keras_batch_normalization(scope, operator, container):
         adjusted_input_name = operator.inputs[0].full_name
     else:
         adjusted_input_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_transposed')
-        permute_tensor(scope, operator.inputs[0].full_name, adjusted_input_name, [0, 3, 1, 2], container)
+        apply_transpose(scope, operator.inputs[0].full_name, adjusted_input_name, container, perm=[0, 3, 1, 2])
 
-    op_type = 'BatchNormalization'
-    attrs = {'name': operator.full_name}
     input_tensor_names = [adjusted_input_name]
 
     params = op.get_weights()
@@ -46,25 +44,28 @@ def convert_keras_batch_normalization(scope, operator, container):
     input_tensor_names.append(mean_tensor_name)
 
     var_tensor_name = scope.get_unique_variable_name('var')
-    container.add_initializer(var_tensor_name, onnx_proto.TensorProto.FLOAT, params[3].shape, 1 + 0 * params[3] )
+    container.add_initializer(var_tensor_name, onnx_proto.TensorProto.FLOAT, params[3].shape, 1 + 0 * params[3])
     input_tensor_names.append(var_tensor_name)
 
-    attrs['epsilon'] = 0.
-    attrs['momentum'] = op.momentum
-    attrs['spatial'] = 1
-    attrs['is_test'] = 1
+    epsilon = 0.0000000001
+    is_test = 1
+    momentum = op.momentum
+    spatial = 1
 
     if op.axis != 3 and op.axis != -1:
         # If no transpose is required, we can simply use the output of ONNX BatchNorm as the final outcome
-        container.add_node(op_type, input_tensor_names, operator.output_full_names, **attrs)
+        apply_batch_norm(scope, input_tensor_names, operator.output_full_names, container,
+                         operator_name=operator.full_name, epsilon=epsilon, is_test=is_test,
+                         momentum=momentum, spatial=spatial)
     else:
         # If transpose is required, we need to put BatchNorm's output to an intermediate tensor for applying a transpose
         intermediate_output_name = scope.get_unique_variable_name('batch_norm_output_buffer')
-        container.add_node(op_type, input_tensor_names, intermediate_output_name, **attrs)
+        apply_batch_norm(scope, input_tensor_names, intermediate_output_name, container,
+                         operator_name=operator.full_name, epsilon=epsilon, is_test=is_test,
+                         momentum=momentum, spatial=spatial)
 
         # Permute [N,C,H,W] to [N,H,W,C]
-        permute_tensor(scope, intermediate_output_name, operator.outputs[0].full_name, [0, 2, 3, 1], container)
+        apply_transpose(scope, intermediate_output_name, operator.outputs[0].full_name, container, perm=[0, 2, 3, 1])
 
 
 register_converter(BatchNormalization, convert_keras_batch_normalization)
-

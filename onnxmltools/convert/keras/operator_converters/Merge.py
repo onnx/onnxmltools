@@ -5,10 +5,12 @@
 # --------------------------------------------------------------------------
 
 import keras.layers
+from ...common._apply_operation import apply_add, apply_mul, apply_sub, apply_mean, apply_max
 from ...common._registration import register_converter
 
-_merge_layer_type_map = {keras.layers.Add: 'Add', keras.layers.Multiply: 'Mul', keras.layers.Subtract: 'Sub',
-                         keras.layers.Average: 'Mean', keras.layers.Maximum: 'Max'}
+_merge_layer_handlers = {keras.layers.Add: apply_add, keras.layers.Multiply: apply_mul,
+                         keras.layers.Subtract: apply_sub, keras.layers.Average: apply_mean,
+                         keras.layers.Maximum: apply_max}
 
 
 def convert_keras_merge_layer(scope, operator, container):
@@ -17,7 +19,7 @@ def convert_keras_merge_layer(scope, operator, container):
         raise RuntimeError(
             'Expected two inputs but got %s. Their names are %s' % (len(operator.inputs), operator.input_full_names))
 
-    op_type = _merge_layer_type_map[type(op)]
+    apply_merge_operation = _merge_layer_handlers[type(op)]
 
     intermediate_tensor_name = None
     for i in range(len(operator.inputs) - 1):
@@ -30,7 +32,7 @@ def convert_keras_merge_layer(scope, operator, container):
                 raise RuntimeError('Tensor name cannot be None')
             left_tensor_name = intermediate_tensor_name
             right_tensor_name = operator.inputs[i + 1].full_name
-            op_name = scope.get_unique_operator_name(op_type)
+            op_name = scope.get_unique_operator_name('Merge')
 
         if (len(operator.inputs) == 2 and i == 0) or (len(operator.inputs) > 2 and i == len(operator.inputs) - 2):
             # At the last iteration, we need to put the result to Keras layer's output tensor
@@ -38,8 +40,7 @@ def convert_keras_merge_layer(scope, operator, container):
         else:
             # Keep accumulate changes through iterations using buffer tensors
             intermediate_tensor_name = scope.get_unique_variable_name('intermediate_tensor')
-        container.add_node(op_type, [left_tensor_name, right_tensor_name], intermediate_tensor_name,
-                           name=op_name)
+        apply_merge_operation(scope, [left_tensor_name, right_tensor_name], intermediate_tensor_name, container)
 
 
 register_converter(keras.layers.Add, convert_keras_merge_layer)

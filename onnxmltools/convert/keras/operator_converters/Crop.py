@@ -5,8 +5,9 @@
 # --------------------------------------------------------------------------
 
 import keras
+from ...common._apply_operation import apply_transpose
 from ...common._registration import register_converter
-from .common import get_permutation_config, permute_tensor
+from .common import get_permutation_config
 
 
 def convert_keras_crop(scope, operator, container, n_dims):
@@ -23,7 +24,7 @@ def convert_keras_crop(scope, operator, container, n_dims):
         input_tensor_name = operator.inputs[0].full_name
     else:
         input_tensor_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_permuted')
-        permute_tensor(scope, operator.inputs[0].full_name, input_tensor_name, input_perm_axes, container)
+        apply_transpose(scope, operator.inputs[0].full_name, input_tensor_name, container, perm=input_perm_axes)
 
     param = op.cropping
     if isinstance(param, int):
@@ -47,7 +48,9 @@ def convert_keras_crop(scope, operator, container, n_dims):
     if not channels_first:
         cropped_tensor_name = scope.get_unique_variable_name(input_tensor_name + '_cropped')
         container.add_node(op_type, input_tensor_name, cropped_tensor_name, **attrs)
-        permute_tensor(scope, cropped_tensor_name, operator.outputs[0].full_name, output_perm_axes, container)
+        apply_transpose(scope, cropped_tensor_name, operator.outputs[0].full_name, container, perm=output_perm_axes)
+    else:
+        container.add_node(op_type, input_tensor_name, operator.outputs[0].full_name, **attrs)
 
 
 def convert_keras_crop_1d(scope, operator, container):

@@ -1,6 +1,7 @@
 import numpy as np
 from keras.layers import GRU
 from ....proto import onnx_proto
+from ...common._apply_operation import apply_reshape, apply_transpose
 from ...common._registration import register_converter
 from .common import extract_recurrent_activation
 
@@ -20,8 +21,7 @@ def convert_keras_gru(scope, operator, container):
     gru_input_names = []
 
     gru_x_name = scope.get_unique_variable_name('gru_x')
-    container.add_node('Reshape', operator.inputs[0].full_name, gru_x_name,
-                       name=scope.get_unique_operator_name('Reshape'), shape=[-1, 1, input_size])
+    apply_reshape(scope, operator.inputs[0].full_name, gru_x_name, container, desired_shape=[-1, 1, input_size])
     gru_input_names.append(gru_x_name)
 
     tensor_w_name = scope.get_unique_variable_name('tensor_w')
@@ -78,17 +78,15 @@ def convert_keras_gru(scope, operator, container):
     container.add_node(op_type, gru_input_names, gru_output_names, **attrs)
     if output_seq:
         intermediate_result_name = scope.get_unique_variable_name('intermediate_result')
-        container.add_node('Transpose', gru_y_name, intermediate_result_name,
-                           name=scope.get_unique_operator_name('Transpose'), perm=[1, 0, 2])
-        container.add_node('Reshape', intermediate_result_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, seq_length, hidden_size])
+        apply_transpose(scope, gru_y_name, intermediate_result_name, container, perm=[1, 0, 2])
+        apply_reshape(scope, intermediate_result_name, operator.outputs[0].full_name, container,
+                      desired_shape=[-1, seq_length, hidden_size])
     else:
         # Here we ingore ONNX GRU's first output because it's useless.
         intermediate_result_name = scope.get_unique_variable_name('intermediate_result')
-        container.add_node('Transpose', gru_h_name, intermediate_result_name,
-                           name=scope.get_unique_operator_name('Transpose'), perm=[1, 0, 2])
-        container.add_node('Reshape', intermediate_result_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, hidden_size])
+        apply_transpose(scope, gru_h_name, intermediate_result_name, container, perm=[1, 0, 2])
+        apply_reshape(scope, intermediate_result_name, operator.outputs[0].full_name, container,
+                      desired_shape=[-1, hidden_size])
 
 
 register_converter(GRU, convert_keras_gru)

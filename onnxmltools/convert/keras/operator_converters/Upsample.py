@@ -5,14 +5,16 @@
 # --------------------------------------------------------------------------
 
 import keras.layers
+from ...common._apply_operation import apply_transpose, apply_upsample
 from ...common._registration import register_converter
-from .common import get_permutation_config, permute_tensor
+from .common import get_permutation_config
 
 
 def convert_keras_upsample(scope, operator, container, n_dims):
     op = operator.raw_operator
-    op_type = 'Upsample'
-    attrs = {'name': operator.full_name, 'width_scale': float(op.size[1]), 'height_scale': float(op.size[0])}
+    height_scale = int(op.size[0])
+    width_scale = int(op.size[1])
+    scales = [1, 1, height_scale, width_scale]
 
     # Derive permutation configuration. If the Keras input format is not channels_first, this configuration may be used
     # to manipulate the input and output of ONNX Upsample.
@@ -27,16 +29,16 @@ def convert_keras_upsample(scope, operator, container, n_dims):
     else:
         # Permute the original input and then use the permuted result as the input of ONNX Upsample
         input_tensor_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_permuted')
-        permute_tensor(scope, operator.inputs[0].full_name, input_tensor_name, input_perm_axes, container)
+        apply_transpose(scope, operator.inputs[0].full_name, input_tensor_name, container, perm=input_perm_axes)
 
     # If channels_first is True, we don't need to permute the output of ONNX Upsample. Otherwise, similar to Crop's
     # conversion, a Transpose would be added.
     if channels_first:
-        container.add_node(op_type, input_tensor_name, operator.outputs[0].full_name, **attrs)
+        apply_upsample(scope, input_tensor_name, operator.outputs[0].full_name, container, scales=scales)
     else:
         upsampled_tensor_name = scope.get_unique_variable_name(input_tensor_name + '_upsampled')
-        container.add_node(op_type, input_tensor_name, upsampled_tensor_name, **attrs)
-        permute_tensor(scope, upsampled_tensor_name, operator.outputs[0].full_name, output_perm_axes, container)
+        apply_upsample(scope, input_tensor_name, upsampled_tensor_name, container, scales=scales)
+        apply_transpose(scope, upsampled_tensor_name, operator.outputs[0].full_name, container, perm=output_perm_axes)
 
 
 def convert_keras_upsample_1d(scope, operator, container):

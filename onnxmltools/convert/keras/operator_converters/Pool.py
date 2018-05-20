@@ -6,6 +6,7 @@
 
 from keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D, AveragePooling1D, AveragePooling2D, AveragePooling3D
 from keras.layers import GlobalMaxPooling1D, GlobalMaxPooling2D, GlobalAveragePooling1D, GlobalAveragePooling2D
+from ...common._apply_operation import apply_transpose
 from ...common._registration import register_converter
 from .common import get_permutation_config
 
@@ -20,10 +21,7 @@ def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
         adjusted_pooling_input = operator.inputs[0].full_name
     else:
         adjusted_pooling_input = scope.get_unique_variable_name('input_transposed')
-        preprocessor_type = 'Transpose'
-        preprocessor_attrs = {'name': scope.get_unique_operator_name(preprocessor_type), 'perm': input_perm_axes}
-        container.add_node(preprocessor_type, operator.inputs[0].full_name,
-                           adjusted_pooling_input, **preprocessor_attrs)
+        apply_transpose(scope, operator.inputs[0].full_name, adjusted_pooling_input, container, perm=input_perm_axes)
 
     op_type_prefix = 'Global' if is_global else ''
     onnx_op_type = "AveragePool" if op_type == 'Avg' else 'MaxPool'
@@ -49,10 +47,7 @@ def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
         container.add_node(op_type_prefix + onnx_op_type, adjusted_pooling_input, pooling_output_name, **attrs)
 
         # Generate a final Transpose
-        postprocessor_type = 'Transpose'
-        postprocessor_attrs = {'name': scope.get_unique_operator_name(preprocessor_type), 'perm': output_perm_axes}
-        container.add_node(postprocessor_type, pooling_output_name,
-                           operator.outputs[0].full_name, **postprocessor_attrs)
+        apply_transpose(scope, pooling_output_name, operator.outputs[0].full_name, container, perm=output_perm_axes)
 
 
 def convert_keras_max_pooling_1d(scope, operator, container):

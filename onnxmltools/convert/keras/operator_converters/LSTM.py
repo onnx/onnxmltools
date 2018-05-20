@@ -6,6 +6,7 @@
 
 import numpy as np
 from keras.layers import LSTM
+from ...common._apply_operation import apply_transpose, apply_reshape
 from ...common._registration import register_converter
 from ....proto import onnx_proto
 from .common import extract_recurrent_activation
@@ -54,9 +55,7 @@ def convert_keras_lstm(scope, operator, container):
     # Because of the format difference between Keras and ONNX LSTM's, we set up a preprocessing node to match them.
     lstm_x_name = scope.get_unique_variable_name('lstm_x')
     lstm_input_names.append(lstm_x_name)
-    container.add_node('Reshape', operator.inputs[0].full_name, lstm_x_name,
-                       name=scope.get_unique_operator_name('Reshape'),
-                       shape=[-1, 1, input_size])
+    apply_reshape(scope, operator.inputs[0].full_name, lstm_x_name, container, desired_shape=[-1, 1, input_size])
 
     # Add the weights to the final model's initializer list so that our LSTM operator can use it
     tensor_w_name = scope.get_unique_variable_name('W')
@@ -124,21 +123,17 @@ def convert_keras_lstm(scope, operator, container):
 
     if output_seq:
         lstm_y_name_transposed = scope.get_unique_variable_name('lstm_y_transposed')
-        container.add_node('Transpose', lstm_y_name, lstm_y_name_transposed,
-                           name=scope.get_unique_operator_name('Transpose'), perm=[1, 0, 2])
-        container.add_node('Reshape', lstm_y_name_transposed, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, seq_length, hidden_size])
+        apply_transpose(scope, lstm_y_name, lstm_y_name_transposed, container, perm=[1, 0, 2])
+        apply_reshape(scope, lstm_y_name_transposed, operator.outputs[0].full_name, container,
+                      desired_shape=[-1, seq_length, hidden_size])
     else:
-        container.add_node('Reshape', lstm_h_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, hidden_size])
+        apply_reshape(scope, lstm_h_name, operator.outputs[0].full_name, container, desired_shape=[-1, hidden_size])
 
     if output_state:
         # state_h
-        container.add_node('Reshape', lstm_h_name, operator.outputs[1].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, hidden_size])
+        apply_reshape(scope, lstm_h_name, operator.outputs[1].full_name, container, desired_shape=[-1, hidden_size])
         # state_c
-        container.add_node('Reshape', lstm_c_name, operator.outputs[2].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, hidden_size])
+        apply_reshape(scope, lstm_c_name, operator.outputs[2].full_name, container, desired_shape=[-1, hidden_size])
 
 
 register_converter(LSTM, convert_keras_lstm)
