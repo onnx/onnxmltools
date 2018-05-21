@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import collections
 import keras.layers
 from ...common._apply_operation import apply_transpose, apply_upsample
 from ...common._registration import register_converter
@@ -12,9 +13,24 @@ from .common import get_permutation_config
 
 def convert_keras_upsample(scope, operator, container, n_dims):
     op = operator.raw_operator
-    height_scale = int(op.size[0])
-    width_scale = int(op.size[1])
-    scales = [1, 1, height_scale, width_scale]
+    if n_dims == 1:
+        scales = [1, int(op.size), 1]
+    elif n_dims == 2:
+        # Always create the list of sampling factors in channels_first format because the input will be converted into
+        # channels_first if it's in channels_last
+        if isinstance(op.size, collections.Iterable):
+            scales = [1, 1] + list(d for d in op.size)
+        else:
+            scales = [1, 1, int(op.size), int(op.size)]
+    elif n_dims == 3:
+        # Always create the list of sampling factors in channels_first format because the input will be converted into
+        # channels_first if it's in channels_last
+        if isinstance(op.size, collections.Iterable):
+            scales = [1, 1] + list(int(d) for d in op.size)
+        else:
+            scales = [1, 1] + [int(op.size)] * 3
+    else:
+        raise ValueError('Unsupported dimension %s when converting Keras Upsampling layer' % n_dims)
 
     # Derive permutation configuration. If the Keras input format is not channels_first, this configuration may be used
     # to manipulate the input and output of ONNX Upsample.

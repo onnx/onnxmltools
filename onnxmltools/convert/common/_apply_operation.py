@@ -302,6 +302,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
     if container.targeted_onnx_version < StrictVersion('1.2'):
         if len(scales) != 4:
             raise ValueError('Need to specify a 4-element list the the scales of N-, C-, H-, and W-axes')
+
         attrs['height_scale'] = float(scales[2])
         attrs['width_scale'] = float(scales[3])
         attrs['mode'] = mode.upper()
