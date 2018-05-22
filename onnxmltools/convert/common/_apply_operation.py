@@ -362,10 +362,10 @@ def apply_identity(scope, input_name, output_name, container, operator_name=None
 
 
 def apply_softmax(scope, input_name, output_name, container, operator_name=None, axis=1):
-    name = _create_name_or_use_existing_one(scope, 'Identity', operator_name)
+    name = _create_name_or_use_existing_one(scope, 'Softmax', operator_name)
     container.add_node('Softmax', input_name, output_name, name=name, axis=axis)
 
 
 def apply_normalization(scope, input_name, output_name, container, operator_name=None, axis=1, p=2):
-    name = _create_name_or_use_existing_one(scope, 'Identity', operator_name)
+    name = _create_name_or_use_existing_one(scope, 'LpNormalization', operator_name)
     container.add_node('LpNormalization', input_name, output_name, name=name, p=p, axis=axis)
