@@ -607,7 +607,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     if targeted_onnx != onnx.__version__:
         raise RuntimeError(
             'ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
-                targeted_onnx, onnx.__version__))
+                onnx.__version__, targeted_onnx))
 
     topology._initialize_graph_status_for_traversing()
 
