@@ -22,8 +22,8 @@ def deduce_broadcast_axis_and_shape(targeted_onnx_version, shape):
         # Input shape is [N, C, H, W]
         if len(shape) == 1:
             if shape[0] == 1:
-                # shape is [1], we don't specify axis because it's a scalar
-                return None, [1]
+                # shape is [] for scalar, we don't specify axis because it's a scalar
+                return None, []
             else:
                 # shape is [C], alignment starting at C-axis (indexed by 1)
                 return 1, shape
@@ -38,7 +38,7 @@ def deduce_broadcast_axis_and_shape(targeted_onnx_version, shape):
         # Input shape is [N, C, H, W]
         if len(shape) == 1:
             if shape[0] == 1:
-                # shape is [1], we don't specify axis because it's a scalar
+                # shape is [1] for scalar, we don't specify axis because it's a scalar
                 return None, [1]
             else:
                 # shape is [C], alignment starting at C-axis
