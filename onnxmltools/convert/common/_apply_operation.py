@@ -36,16 +36,21 @@ def _apply_basic_numerical_operation(scope, op_type, input_names, output_name, c
     name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
     attrs = {}
-    if axis is not None:
-        attrs['axis'] = axis
-    if broadcast is not None:
-        attrs['broadcast'] = broadcast
+    if container.targeted_onnx_version < StrictVersion('1.2'):
+        # Before ONNX-1.2, broadcasting behavior is Caffe2-like.
+        if axis is not None:
+            attrs['axis'] = axis
+        if broadcast is not None:
+            attrs['broadcast'] = broadcast
 
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
-        attrs['consumed_inputs'] = [0, 0]
-        op_version = 1
+        if container.targeted_onnx_version <= StrictVersion('1.0'):
+            attrs['consumed_inputs'] = [0, 0]
+            op_version = 1
+        else:
+            op_version = 6
     else:
-        op_version = 6
+        # Since ONNX-1.2, broadcasting behavior is Numpy-like, so we don't need to specify any attributes
+        op_version = 7
 
     container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
 
@@ -229,12 +234,17 @@ def apply_pow(scope, input_names, output_name, container, operator_name=None, ax
     name = _create_name_or_use_existing_one(scope, 'Pow', operator_name)
 
     attrs = {'name': name}
-    if axis is not None:
-        attrs['axis'] = axis
-    if broadcast is not None:
-        attrs['broadcast'] = broadcast
-
-    container.add_node('Pow', input_names, output_name, **attrs)
+    if container.targeted_onnx_version < StrictVersion('1.2'):
+        # Before ONNX-1.2, broadcasting behavior is Caffe2-like.
+        if axis is not None:
+            attrs['axis'] = axis
+        if broadcast is not None:
+            attrs['broadcast'] = broadcast
+        op_version = 1
+    else:
+        # Since ONNX-1.2, broadcasting behavior is Numpy-like, so we don't need to specify any attributes
+        op_version = 7
+    container.add_node('Pow', input_names, output_name, op_version=op_version, **attrs)
 
 
 def apply_sub(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=0):

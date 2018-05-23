@@ -17,7 +17,7 @@ def convert_bias(scope, operator, container):
     params = operator.raw_operator.bias
 
     # Adjust CoreML's bias shape and find a proper axis for broadcasting
-    axis, shape = deduce_broadcast_axis_and_shape(params.shape)
+    axis, shape = deduce_broadcast_axis_and_shape(operator.targeted_onnx_version, params.shape)
 
     # No matter what shape it is, we need "broadcast" on because input shape is 4-D while bias is at most 3-D.
     broadcast = 1  # True

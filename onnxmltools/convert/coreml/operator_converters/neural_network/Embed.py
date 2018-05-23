@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
+from .Scale import deduce_broadcast_axis_and_shape
 from .....proto import onnx_proto
 from ....common._apply_operation import apply_add, apply_reshape, apply_cast
 from ....common._registration import register_converter
@@ -37,8 +38,9 @@ def convert_embedding(scope, operator, container):
 
         # Load the bias vector into an initializer
         bias_name = scope.get_unique_variable_name(gather_op_name + '_bias')
+        bias_axis, bias_shape = deduce_broadcast_axis_and_shape(operator.targeted_onnx_version, [params.outputChannels])
         container.add_initializer(bias_name, onnx_proto.TensorProto.FLOAT,
-                                  [params.outputChannels], params.bias.floatValue)
+                                  bias_shape, params.bias.floatValue)
         # Create an addition operator to add bias (shape: [C]) into Gather's tensor (shape: [N, C])
         apply_add(scope, [gather_output_name, bias_name], operator.outputs[0].full_name, container, axis=1, broadcast=1)
     else:
