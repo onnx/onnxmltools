@@ -305,8 +305,8 @@ def convert_pooling(scope, operator, container):
             # Associated sub-graph of case 6: Y', Z''  ---> Div ---> Y
             apply_div(scope, [Y_prime_name, Z_prime_prime_name], Y_name, container, broadcast=0)
     else:
-    # Create the major Pool operator
-    container.add_node(op_type, inputs, outputs, op_version=op_version, **attrs)
+        # Create the major Pool operator
+        container.add_node(op_type, inputs, outputs, op_version=op_version, **attrs)
 
 
 register_converter('pooling', convert_pooling)
