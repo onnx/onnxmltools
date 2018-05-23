@@ -15,3 +15,4 @@ from . import OneHotEncoder
 from . import Scaler
 from . import SVM
 from . import TreeEnsemble
+from . import LightGbm

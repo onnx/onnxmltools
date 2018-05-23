@@ -41,12 +41,14 @@ from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 
+from lightgbm import LGBMClassifier
+
 # In most cases, scikit-learn operator produces only one output. However, each classifier has basically two outputs;
 # one is the predicted label and the other one is the probabilities of all possible labels. Here is a list of supported
 # scikit-learn classifiers. In the parsing stage, we produce two outputs for objects included in the following list and
 # one output for everything not in the list.
 sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, NuSVC,
-                           GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier]
+                           GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier, LGBMClassifier]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
@@ -73,7 +75,8 @@ sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
                              RandomForestRegressor: 'SklearnRandomForestRegressor',
                              GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
-                             Binarizer: 'SklearnBinarizer'}
+                             Binarizer: 'SklearnBinarizer',
+                             LGBMClassifier: 'LgbmClassifier'}
 
 
 def _get_sklearn_operator_name(model_type):
