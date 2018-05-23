@@ -6,6 +6,7 @@
 
 import math
 import numpy as np
+from distutils.version import StrictVersion
 from ....common._apply_operation import apply_mul, apply_div, apply_pad
 from ....common._registration import register_converter
 
@@ -180,11 +181,17 @@ def convert_pooling(scope, operator, container):
     # From here to the end of this function, we will handle local pooling mode
     if params.type == Params.MAX:
         op_type = 'MaxPool'
+        op_version = 1
     elif params.type == Params.AVERAGE:
         op_type = 'AveragePool'
+        if operator.targeted_onnx_version < StrictVersion('1.2'):
+            op_version = 1
+        else:
+            op_version = 7
     elif params.type == Params.L2:
         op_type = 'LpPool'
         attrs['p'] = 2
+        op_version = 2
     else:
         raise ValueError('Unsupported pooling type: {}'.format(params.type))
 
@@ -298,11 +305,8 @@ def convert_pooling(scope, operator, container):
             # Associated sub-graph of case 6: Y', Z''  ---> Div ---> Y
             apply_div(scope, [Y_prime_name, Z_prime_prime_name], Y_name, container, broadcast=0)
     else:
-        # Create the major Pool operator
-        if params.type == Params.L2:
-            container.add_node(op_type, inputs, outputs, op_version=2, **attrs)
-        else:
-            container.add_node(op_type, inputs, outputs, **attrs)
+    # Create the major Pool operator
+    container.add_node(op_type, inputs, outputs, op_version=op_version, **attrs)
 
 
 register_converter('pooling', convert_pooling)
