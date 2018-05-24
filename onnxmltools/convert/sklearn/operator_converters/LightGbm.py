@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import copy
 import numbers, six
 import numpy as np
+from collections import Counter
 from ...common._registration import register_converter
 
 
@@ -127,23 +129,29 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
         attrs['class_treeids'].append(tree_id)
         attrs['class_nodeids'].append(node_id)
         attrs['class_ids'].append(class_id)
-        attrs['class_weights'].append(node['leaf_value'] * learning_rate)
+        attrs['class_weights'].append(float(node['leaf_value']) * learning_rate)
+        # attrs['class_weights'].append(node['leaf_index'] * 1000. * learning_rate + node['leaf_index'] + 0.3333333)
 
 
 def convert_lightgbm_classifier(scope, operator, container):
     gbm_model = operator.raw_operator
+    if gbm_model.boosting_type != 'gbdt':
+        raise ValueError('Only support LightGBM classifier with boosting_type=gbdt')
     gbm_text = gbm_model.booster_.dump_model()
 
     attrs = _get_default_attributes()
     attrs['name'] = operator.full_name
-    attrs['post_transform'] = 'NONE'
+    if gbm_model.objective_ == 'multiclass':
+        attrs['post_transform'] = 'SOFTMAX'
+    else:
+        attrs['post_transform'] = 'LOGISTIC'
     zipmap_attrs = {'name': scope.get_unique_variable_name('ZipMap')}
     n_classes = gbm_text['num_class']
-    for tree in gbm_text['tree_info']:
-        for class_id in range(n_classes):
-            tree_id = tree['tree_index']
-            learning_rate = tree['shrinkage']
-            _parse_tree_structure(tree_id, class_id, learning_rate, tree['tree_structure'], attrs)
+    for i, tree in enumerate(gbm_text['tree_info']):
+        tree_id = i
+        class_id = tree_id % n_classes
+        learning_rate = tree['shrinkage']
+        _parse_tree_structure(tree_id, class_id, learning_rate, tree['tree_structure'], attrs)
 
     if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in gbm_model.classes_):
         class_labels = [int(i) for i in gbm_model.classes_]
@@ -155,6 +163,23 @@ def convert_lightgbm_classifier(scope, operator, container):
         zipmap_attrs['classlabels_strings'] = class_labels
     else:
         raise ValueError('Only string and integer class labels are allowed')
+
+    # Sort nodes_* attributes
+    node_numbers_per_tree = Counter(attrs['nodes_treeids'])
+    tree_number = len(node_numbers_per_tree.keys())
+    accumulated_node_numbers = [0] * tree_number
+    for i in range(1, tree_number):
+        accumulated_node_numbers[i] = accumulated_node_numbers[i - 1] + node_numbers_per_tree[i - 1]
+    global_node_indexes = []
+    for i in range(len(attrs['nodes_nodeids'])):
+        tree_id = attrs['nodes_treeids'][i]
+        node_id = attrs['nodes_nodeids'][i]
+        global_node_indexes.append(accumulated_node_numbers[tree_id] + node_id)
+    for k, v in attrs.items():
+        if k.startswith('nodes_'):
+            merged_indexes = zip(copy.deepcopy(global_node_indexes), v)
+            sorted_list = [pair[1] for pair in sorted(merged_indexes, key=lambda x: x[0])]
+            attrs[k] = sorted_list
 
     probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
     container.add_node('TreeEnsembleClassifier', operator.input_full_names,
