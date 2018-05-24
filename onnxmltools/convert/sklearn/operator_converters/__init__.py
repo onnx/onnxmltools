@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+# To register converter for scikit-learn operators, import the associated module here.
 from . import Binarizer
 from . import DictVectorizer
 from . import Imputer
@@ -14,4 +15,5 @@ from . import Normalizer
 from . import OneHotEncoder
 from . import Scaler
 from . import SVM
+from . import SVD
 from . import TreeEnsemble
