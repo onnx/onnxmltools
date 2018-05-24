@@ -38,8 +38,9 @@ def convert_inner_product(scope, operator, container):
 
     #workaround for a CNTK GEMM bug
     gemm_output_name = scope.get_unique_variable_name('gemm_output_name')
-    apply_reshape(scope, operator.outputs[0].full_name, gemm_output_name, container, desired_shape=[-1, params.outputChannels])
+    outputs[0] = gemm_output_name
 
     container.add_node(op_type, inputs, outputs, **attrs)
+    apply_reshape(scope, gemm_output_name, operator.outputs[0].full_name, container, desired_shape=[-1, params.outputChannels])
 
 register_converter('innerProduct', convert_inner_product)
