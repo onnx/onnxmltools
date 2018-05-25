@@ -1,36 +1,35 @@
+image: Visual Studio 2017
+platform: x64
+configuration: Release
+
 environment:
 
-  global:
-    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
-    # /E:ON and /V:ON options are not enabled in the batch script intepreter
-    # See: http://stackoverflow.com/a/13751649/163740
-    WITH_COMPILER: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_compiler.cmd"
-
+  # To build onnx-ml.proto, set ONNX_ML to true.
+  ONNX_ML: 1
+  # Package coremltools doesn't have pipy for Python 3, so we install it from its repo.
+  COREML_PATH: git+https://github.com/apple/coremltools
+  # XGBoost wheel is not officially supported, so we use ours.
+  XGB_PATH: https://github.com/xadupre/xgboost/releases/download/0.7/xgboost-0.7-cp36-cp36m-win_amd64.whl
+ 
   matrix:
 
-    - PYTHON: "C:\\Python36-x64"
-      PYTHON_VERSION: "3.6.x"
-      PYTHON_ARCH: "64"
-
-init:
-    - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
+    - CONDA_PREFIX: "C:\\Miniconda36-x64"
+      ONNX_PATH: onnx==1.1.2
 
 install:
-    - "%PYTHON%\\python -m pip install --upgrade pip"
-    - "%PYTHON%\\Scripts\\pip install git+https://github.com/apple/coremltools"
-    - "if %PYTHON%==C:\\Python36-x64 %PYTHON%\\Scripts\\pip install https://github.com/xadupre/xgboost/releases/download/0.7/xgboost-0.7-cp36-cp36m-win_amd64.whl"
-    - "%PYTHON%\\Scripts\\pip install -r requirements-dev.txt"
-    - "%PYTHON%\\Scripts\\pip install onnx"
-    - "%PYTHON%\\Scripts\\pip install cntk"
-    - set PYTHONPATH=%~dp0
+    - cmd: SET PATH=%CONDA_PREFIX%;%CONDA_PREFIX%\Scripts;%PATH%
+    - cmd: conda install -y -c conda-forge protobuf numpy
+    - cmd: python -m pip install --upgrade pip
+    - cmd: pip install %XGB_PATH% %COREML_PATH% %ONNX_PATH% cntk
+    - cmd: pip install -r requirements-dev.txt"
 
 build: off
 
 test_script:
-    - "%PYTHON%\\python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests"
+    - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests"
 
 after_test:
-    - "%PYTHON%\\python -u setup.py bdist_wheel"
+    - python -u setup.py bdist_wheel"
     - if not exist dist mkdir dist
     - if not exist dist\htmlcov mkdir dist\htmlcov
     - xcopy htmlcov dist\htmlcov
