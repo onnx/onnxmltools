@@ -10,3 +10,4 @@ pytest-cov
 scikit-learn
 scipy
 wheel
+xgboost
