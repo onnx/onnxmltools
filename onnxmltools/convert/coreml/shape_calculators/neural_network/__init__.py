@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+# To register shape calculators for Core ML neural network operators, import associated modules here.
 from . import BatchNorm
 from . import BidirectionalLSTM
 from . import Concat

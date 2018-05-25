@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+# To register shape calculators for Keras operators, import associated modules here.
 from . import Conv
 from . import Embed
 from . import Lazy
