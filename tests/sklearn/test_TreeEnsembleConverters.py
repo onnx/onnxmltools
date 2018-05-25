@@ -11,7 +11,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
-from lightgbm import LGBMClassifier
+from lightgbm import LGBMClassifier, LGBMRegressor
 from onnxmltools import convert_sklearn
 from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType
 
@@ -81,4 +81,8 @@ class TestSklearnTreeEnsembleModels(unittest.TestCase):
     def test_lightgbm__classifier(self):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1)
         self._test_binary_classification_core(model)
+        self._test_single_output_core(model)
+
+    def test_lightgbm__regressor(self):
+        model = LGBMRegressor(n_estimators=3, min_child_samples=1)
         self._test_single_output_core(model)
