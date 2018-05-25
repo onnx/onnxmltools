@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+# To register converters for Core ML operators, import associated modules here.
 from . import ArrayFeatureExtractor
 from . import DictVectorizer
 from . import FeatureVectorizer

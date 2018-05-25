@@ -33,6 +33,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
 
 # Operators for preprocessing and feature engineering
+from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import Binarizer
 from sklearn.preprocessing import Imputer
@@ -76,7 +77,8 @@ sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
                              GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
                              Binarizer: 'SklearnBinarizer',
-                             LGBMClassifier: 'LgbmClassifier'}
+                             LGBMClassifier: 'LgbmClassifier',
+                             TruncatedSVD: 'SklearnTruncatedSVD'}
 
 
 def _get_sklearn_operator_name(model_type):

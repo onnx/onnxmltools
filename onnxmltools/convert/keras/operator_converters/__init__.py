@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+# To register converters for Keras operators, import associated modules here.
 from . import Activation
 from . import AdvancedActivation
 from . import BatchNorm
