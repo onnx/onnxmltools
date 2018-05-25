@@ -53,7 +53,6 @@ def _parse_tree_structure(tree_id, class_id, learning_rate, tree_structure, attr
     # Assume left is the true branch and right is the false branch
     attrs['nodes_truenodeids'].append(left_id)
     attrs['nodes_falsenodeids'].append(right_id)
-    attrs['nodes_hitrates'].append(1.)
     if tree_structure['default_left']:
         attrs['nodes_missing_value_tracks_true'].append(1)
     else:
@@ -78,7 +77,6 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
         # Assume left is the true branch and right is the false branch
         attrs['nodes_truenodeids'].append(left_id)
         attrs['nodes_falsenodeids'].append(right_id)
-        attrs['nodes_hitrates'].append(1.)
         if node['default_left']:
             attrs['nodes_missing_value_tracks_true'].append(1)
         else:
@@ -101,8 +99,6 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
         attrs['nodes_truenodeids'].append(0)
         # Leaf node has no child. A zero is appended but it will never be used.
         attrs['nodes_falsenodeids'].append(0)
-        # This attribute is not used, so we assign it a constant value.
-        attrs['nodes_hitrates'].append(1.)
         # Leaf node has no split function. A zero is appended but it will never be used.
         attrs['nodes_missing_value_tracks_true'].append(0)
 
