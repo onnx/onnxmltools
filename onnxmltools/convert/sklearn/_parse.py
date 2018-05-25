@@ -42,7 +42,7 @@ from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 
-from lightgbm import LGBMClassifier
+from lightgbm import LGBMClassifier, LGBMRegressor
 
 # In most cases, scikit-learn operator produces only one output. However, each classifier has basically two outputs;
 # one is the predicted label and the other one is the probabilities of all possible labels. Here is a list of supported
@@ -78,6 +78,7 @@ sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
                              Binarizer: 'SklearnBinarizer',
                              LGBMClassifier: 'LgbmClassifier',
+                             LGBMRegressor: 'LgbmRegressor',
                              TruncatedSVD: 'SklearnTruncatedSVD'}
 
 

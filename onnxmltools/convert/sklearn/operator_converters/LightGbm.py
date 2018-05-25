@@ -8,28 +8,9 @@ import copy
 import numbers, six
 import numpy as np
 from collections import Counter
+from lightgbm import LGBMClassifier, LGBMRegressor
 from ...common._registration import register_converter
-
-
-def _get_default_attributes():
-    attrs = {}
-    # Node attributes
-    attrs['nodes_treeids'] = []
-    attrs['nodes_nodeids'] = []
-    attrs['nodes_featureids'] = []
-    attrs['nodes_modes'] = []
-    attrs['nodes_values'] = []
-    attrs['nodes_truenodeids'] = []
-    attrs['nodes_falsenodeids'] = []
-    attrs['nodes_hitrates'] = []
-    attrs['nodes_missing_value_tracks_true'] = []
-
-    # Leaf attributes
-    attrs['class_ids'] = []
-    attrs['class_nodeids'] = []
-    attrs['class_treeids'] = []
-    attrs['class_weights'] = []
-    return attrs
+from .TreeEnsemble import _get_default_tree_classifier_attribute_pairs
 
 
 def _translate_split_criterion(criterion):
@@ -130,41 +111,37 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
         attrs['class_nodeids'].append(node_id)
         attrs['class_ids'].append(class_id)
         attrs['class_weights'].append(float(node['leaf_value']) * learning_rate)
-        # attrs['class_weights'].append(node['leaf_index'] * 1000. * learning_rate + node['leaf_index'] + 0.3333333)
 
 
-def convert_lightgbm_classifier(scope, operator, container):
+def convert_lightgbm(scope, operator, container):
     gbm_model = operator.raw_operator
     if gbm_model.boosting_type != 'gbdt':
         raise ValueError('Only support LightGBM classifier with boosting_type=gbdt')
     gbm_text = gbm_model.booster_.dump_model()
 
-    attrs = _get_default_attributes()
+    attrs = _get_default_tree_classifier_attribute_pairs()
     attrs['name'] = operator.full_name
-    if gbm_model.objective_ == 'multiclass':
-        attrs['post_transform'] = 'SOFTMAX'
+
+    # Create different attributes for classifier and regressor, respectively
+    if isinstance(gbm_model, LGBMClassifier):
+        n_classes = gbm_text['num_class']
+        if gbm_model.objective_ == 'multiclass':
+            attrs['post_transform'] = 'SOFTMAX'
+        else:
+            attrs['post_transform'] = 'LOGISTIC'
     else:
-        attrs['post_transform'] = 'LOGISTIC'
-    zipmap_attrs = {'name': scope.get_unique_variable_name('ZipMap')}
-    n_classes = gbm_text['num_class']
+        n_classes = 1  # Regressor has only one output variable
+        attrs['post_transform'] = 'NONE'
+
+    # Use the same algorithm to parse the tree
     for i, tree in enumerate(gbm_text['tree_info']):
         tree_id = i
         class_id = tree_id % n_classes
         learning_rate = tree['shrinkage']
         _parse_tree_structure(tree_id, class_id, learning_rate, tree['tree_structure'], attrs)
 
-    if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in gbm_model.classes_):
-        class_labels = [int(i) for i in gbm_model.classes_]
-        attrs['classlabels_int64s'] = class_labels
-        zipmap_attrs['classlabels_int64s'] = class_labels
-    elif all(isinstance(i, (six.text_type, six.string_types)) for i in gbm_model.classes_):
-        class_labels = [str(i) for i in gbm_model.classes_]
-        attrs['classlabels_strings'] = class_labels
-        zipmap_attrs['classlabels_strings'] = class_labels
-    else:
-        raise ValueError('Only string and integer class labels are allowed')
-
-    # Sort nodes_* attributes
+    # Sort nodes_* attributes. For one tree, its node indexes should appear in an ascent order in nodes_nodeids. Nodes
+    # from a tree with a smaller tree index should appear before trees with larger indexes in nodes_nodeids.
     node_numbers_per_tree = Counter(attrs['nodes_treeids'])
     tree_number = len(node_numbers_per_tree.keys())
     accumulated_node_numbers = [0] * tree_number
@@ -181,13 +158,41 @@ def convert_lightgbm_classifier(scope, operator, container):
             sorted_list = [pair[1] for pair in sorted(merged_indexes, key=lambda x: x[0])]
             attrs[k] = sorted_list
 
-    probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
-    container.add_node('TreeEnsembleClassifier', operator.input_full_names,
-                       [operator.outputs[0].full_name, probability_tensor_name],
-                       op_domain='ai.onnx.ml', **attrs)
+    # Create ONNX object
+    if isinstance(gbm_model, LGBMClassifier):
+        # Prepare label information for both of TreeEnsembleClassifier and ZipMap
+        zipmap_attrs = {'name': scope.get_unique_variable_name('ZipMap')}
+        if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in gbm_model.classes_):
+            class_labels = [int(i) for i in gbm_model.classes_]
+            attrs['classlabels_int64s'] = class_labels
+            zipmap_attrs['classlabels_int64s'] = class_labels
+        elif all(isinstance(i, (six.text_type, six.string_types)) for i in gbm_model.classes_):
+            class_labels = [str(i) for i in gbm_model.classes_]
+            attrs['classlabels_strings'] = class_labels
+            zipmap_attrs['classlabels_strings'] = class_labels
+        else:
+            raise ValueError('Only string and integer class labels are allowed')
 
-    container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
-                       op_domain='ai.onnx.ml', **zipmap_attrs)
+        # Create tree classifier
+        probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
+        container.add_node('TreeEnsembleClassifier', operator.input_full_names,
+                           [operator.outputs[0].full_name, probability_tensor_name],
+                           op_domain='ai.onnx.ml', **attrs)
+
+        # Convert probability tensor to probability map (keys are labels while values are the associated probabilities)
+        container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
+                           op_domain='ai.onnx.ml', **zipmap_attrs)
+    else:
+        # Create tree regressor
+        keys_to_be_renamed = list(k for k in attrs.keys() if k.startswith('class_'))
+        for k in keys_to_be_renamed:
+            # Rename class_* attribute to target_* because TreeEnsebmleClassifier and TreeEnsembleClassifier have
+            # different ONNX attributes
+            attrs['target' + k[5:]] = copy.deepcopy(attrs[k])
+            del attrs[k]
+        container.add_node('TreeEnsembleRegressor', operator.input_full_names,
+                           operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
 
-register_converter('LgbmClassifier', convert_lightgbm_classifier)
+register_converter('LgbmClassifier', convert_lightgbm)
+register_converter('LgbmRegressor', convert_lightgbm)
