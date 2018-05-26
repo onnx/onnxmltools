@@ -225,7 +225,7 @@ class Scope:
 class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
-                 reserved_variable_names=None, reserved_operator_names=None, targeted_onnx='1.1.2'):
+                 reserved_variable_names=None, reserved_operator_names=None, targeted_onnx=None):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
 
