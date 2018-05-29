@@ -4,10 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from ..proto import onnx
 from .common import utils
 
 
-def convert_sklearn(model, name=None, initial_types=None, doc_string='', targeted_onnx='1.1.2'):
+def convert_sklearn(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
     if not utils.sklearn_installed():
         raise RuntimeError('scikit-learn is not installed. Please install scikit-learn to use this feature.')
 
@@ -15,7 +16,7 @@ def convert_sklearn(model, name=None, initial_types=None, doc_string='', targete
     return convert(model, name=name, initial_types=initial_types, doc_string=doc_string, targeted_onnx=targeted_onnx)
 
 
-def convert_coreml(model, name=None, initial_types=None, doc_string='', targeted_onnx='1.1.2'):
+def convert_coreml(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
     if not utils.coreml_installed():
         raise RuntimeError('coremltools is not installed. Please install coremltools to use this feature.')
 
@@ -23,7 +24,7 @@ def convert_coreml(model, name=None, initial_types=None, doc_string='', targeted
     return convert(model, name=name, initial_types=initial_types, doc_string=doc_string, targeted_onnx=targeted_onnx)
 
 
-def convert_keras(model, name=None, initial_types=None, doc_string='', targeted_onnx='1.1.2'):
+def convert_keras(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
     if not utils.keras_installed():
         raise RuntimeError('keras is not installed. Please install coremltools to use this feature.')
 
