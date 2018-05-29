@@ -23,6 +23,7 @@ def calculate_sklearn_linear_regressor_output_shapes(operator):
     operator.outputs[0].type = FloatTensorType([N, 1])
 
 
+register_shape_calculator('SklearnElasticNetRegressor', calculate_sklearn_linear_regressor_output_shapes)
 register_shape_calculator('SklearnLinearRegressor', calculate_sklearn_linear_regressor_output_shapes)
 register_shape_calculator('SklearnLinearSVR', calculate_sklearn_linear_regressor_output_shapes)
 register_shape_calculator('SklearnDecisionTreeRegressor', calculate_sklearn_linear_regressor_output_shapes)
