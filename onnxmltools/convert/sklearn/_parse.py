@@ -26,6 +26,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import DecisionTreeRegressor
 
@@ -47,7 +49,8 @@ from sklearn.preprocessing import StandardScaler
 # scikit-learn classifiers. In the parsing stage, we produce two outputs for objects included in the following list and
 # one output for everything not in the list.
 sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, NuSVC,
-                           GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier]
+                           GradientBoostingClassifier, RandomForestClassifier, ExtraTreesClassifier,
+                           DecisionTreeClassifier]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
@@ -72,6 +75,8 @@ sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
                              DecisionTreeRegressor: 'SklearnDecisionTreeRegressor',
                              RandomForestClassifier: 'SklearnRandomForestClassifier',
                              RandomForestRegressor: 'SklearnRandomForestRegressor',
+                             ExtraTreesClassifier: 'SklearnExtraTreesClassifier',
+                             ExtraTreesRegressor: 'SklearnExtraTreesRegressor',
                              GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
                              Binarizer: 'SklearnBinarizer',
