@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from sklearn.preprocessing import StandardScaler, RobustScaler
 from ...common._registration import register_converter
 from .common import concatenate_variables
 
@@ -16,12 +17,19 @@ def convert_sklearn_scaler(scope, operator, container):
     else:
         feature_name = operator.inputs[0].full_name
 
+    op = operator.raw_operator
     op_type = 'Scaler'
     attrs = {'name': scope.get_unique_operator_name(op_type)}
-    attrs['scale'] = 1.0 / operator.raw_operator.scale_
-    attrs['offset'] = operator.raw_operator.mean_
+    attrs['scale'] = 1.0 / op.scale_
+    if isinstance(op, StandardScaler):
+        attrs['offset'] = op.mean_
+    elif isinstance(op, RobustScaler):
+        attrs['offset'] = op.center_
+    else:
+        raise ValueError('Only scikit-learn StandardScaler and RobustScaler are supported but got %s' % type(op))
 
     container.add_node(op_type, feature_name, operator.outputs[0].full_name, op_domain='ai.onnx.ml', **attrs)
 
 
+register_converter('SklearnRobustScaler', convert_sklearn_scaler)
 register_converter('SklearnScaler', convert_sklearn_scaler)

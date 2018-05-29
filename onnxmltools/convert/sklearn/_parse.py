@@ -40,6 +40,7 @@ from sklearn.preprocessing import Imputer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import StandardScaler
 
 # In most cases, scikit-learn operator produces only one output. However, each classifier has basically two outputs;
@@ -51,7 +52,8 @@ sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, Nu
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
-sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
+sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
+                             StandardScaler: 'SklearnScaler',
                              LogisticRegression: 'SklearnLinearClassifier',
                              SGDClassifier: 'SklearnLinearClassifier',
                              LinearSVC: 'SklearnLinearSVC',

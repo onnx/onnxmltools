@@ -40,5 +40,6 @@ def calculate_sklearn_scaler_output_shapes(operator):
     operator.outputs[0].type.shape = [N, C]
 
 
+register_shape_calculator('SklearnRobustScaler', calculate_sklearn_scaler_output_shapes)
 register_shape_calculator('SklearnScaler', calculate_sklearn_scaler_output_shapes)
 register_shape_calculator('SklearnNormalizer', calculate_sklearn_scaler_output_shapes)
