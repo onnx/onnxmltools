@@ -20,11 +20,19 @@ def convert_sklearn_scaler(scope, operator, container):
     op = operator.raw_operator
     op_type = 'Scaler'
     attrs = {'name': scope.get_unique_operator_name(op_type)}
-    attrs['scale'] = 1.0 / op.scale_
     if isinstance(op, StandardScaler):
+        attrs['scale'] = 1.0 / op.scale_
         attrs['offset'] = op.mean_
     elif isinstance(op, RobustScaler):
-        attrs['offset'] = op.center_
+        C = operator.inputs[0].type.shape[1]
+        if op.with_centering:
+            attrs['offset'] = op.center_
+        else:
+            attrs['offset'] = [0.] * C
+        if op.with_scaling:
+            attrs['scale'] = 1.0 / op.scale_
+        else:
+            attrs['scale'] = [1.] * C
     else:
         raise ValueError('Only scikit-learn StandardScaler and RobustScaler are supported but got %s' % type(op))
 
