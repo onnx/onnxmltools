@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+import unittest
 
 import coremltools
 import numpy as np
@@ -15,7 +16,6 @@ from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, C
 from keras.initializers import RandomUniform
 
 np.random.seed(0)
-
 
 def _find_backend():
     try:
@@ -62,6 +62,7 @@ def _evaluate_cntk(onnx_model, inputs):
         inputs = [inputs]
 
     adjusted_inputs = dict()
+
     for i, x in enumerate(inputs):
         onnx_name = onnx_model.graph.input[i].name
         adjusted_inputs[onnx_name] = [np.ascontiguousarray(np.squeeze(_, axis=0)) for _ in np.split(x, x.shape[0])]
