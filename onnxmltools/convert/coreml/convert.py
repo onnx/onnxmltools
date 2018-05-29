@@ -6,6 +6,7 @@
 
 import coremltools
 from uuid import uuid4
+from ...proto import onnx
 from ...proto import onnx_proto
 from ..common._topology import convert_topology
 from ._parse import parse_coreml
@@ -17,7 +18,7 @@ from .operator_converters import neural_network as nn_converters
 from .shape_calculators import neural_network as nn_shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx='1.1.2'):
+def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
     '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
     ONNX model name can be specified.
@@ -46,7 +47,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx='
         name = str(uuid4().hex)
 
     # Parse CoreML model as our internal data structure (i.e., Topology)
-    topology = parse_coreml(spec, initial_types)
+    topology = parse_coreml(spec, initial_types, targeted_onnx)
 
     # Parse CoreML description, author, and license. Those information will be attached to the final ONNX model.
     metadata = spec.description.metadata

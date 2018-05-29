@@ -33,6 +33,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
 
 # Operators for preprocessing and feature engineering
+from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import Binarizer
 from sklearn.preprocessing import Imputer
@@ -73,7 +74,8 @@ sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
                              RandomForestRegressor: 'SklearnRandomForestRegressor',
                              GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
-                             Binarizer: 'SklearnBinarizer'}
+                             Binarizer: 'SklearnBinarizer',
+                             TruncatedSVD: 'SklearnTruncatedSVD'}
 
 
 def _get_sklearn_operator_name(model_type):
@@ -148,13 +150,13 @@ def _parse_sklearn(scope, model, inputs):
         return _parse_sklearn_simple_model(scope, model, inputs)
 
 
-def parse_sklearn(model, initial_types=None):
+def parse_sklearn(model, initial_types=None, targeted_onnx=onnx.__version__):
     # Put scikit-learn object into an abstract container so that our framework can work seamlessly on models created
     # with different machine learning tools.
     raw_model_container = SklearnModelContainer(model)
 
     # Declare a computational graph. It will become a representation of the input scikit-learn model after parsing.
-    topology = Topology(raw_model_container)
+    topology = Topology(raw_model_container, initial_types=initial_types, targeted_onnx=targeted_onnx)
 
     # Declare an object to provide variables' and operators' naming mechanism. In contrast to CoreML, one global scope
     # is enough for parsing scikit-learn models.

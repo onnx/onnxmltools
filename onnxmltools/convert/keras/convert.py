@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
+from ...proto import onnx
 from ..common._topology import convert_topology
 from ._parse import parse_keras
 
@@ -13,7 +14,7 @@ from . import operator_converters
 from . import shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx='1.1.2'):
+def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
     '''
     Convert Keras-Tensorflow Model and Sequence objects into Topology. Note that default batch size is 1 here instead of
     `None` used in CoreML conversion framework. To overwrite this behavior, we can specify initial_types. Assume that a
@@ -30,7 +31,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx='
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :return: An ONNX model (type: ModelProto) which is equivalent to the input Keras model
     '''
-    topology = parse_keras(model, initial_types)
+    topology = parse_keras(model, initial_types, targeted_onnx)
 
     topology.compile()
 

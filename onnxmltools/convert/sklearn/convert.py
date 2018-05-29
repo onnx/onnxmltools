@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
+from ...proto import onnx
 from ..common._topology import convert_topology
 from ._parse import parse_sklearn
 
@@ -13,7 +14,7 @@ from . import shape_calculators
 from . import operator_converters
 
 
-def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx='1.1.2'):
+def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
     '''
     This function produces an equivalent ONNX model of the given scikit-learn model. The supported scikit-learn
     modules are listed below.
@@ -75,7 +76,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx='
         name = str(uuid4().hex)
 
     # Parse scikit-learn model as our internal data structure (i.e., Topology)
-    topology = parse_sklearn(model, initial_types)
+    topology = parse_sklearn(model, initial_types, targeted_onnx)
 
     # Infer variable shapes
     topology.compile()

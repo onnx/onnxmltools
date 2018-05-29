@@ -7,6 +7,7 @@
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import Layer, InputLayer
+from ...proto import onnx
 from ..common._container import KerasModelContainer
 from ..common._topology import Topology
 from ..common.data_types import *
@@ -74,10 +75,11 @@ def determine_tensor_type(tensor, default_batch_size, keras_shape=None):
         raise ValueError('Unable to find out a correct type for tensor %s' % tensor)
 
 
-def parse_keras(model, initial_types=None):
+def parse_keras(model, initial_types=None, targeted_onnx=onnx.__version__):
     raw_model_container = KerasModelContainer(model)
 
-    topology = Topology(raw_model_container, default_batch_size=1, initial_types=initial_types)
+    topology = Topology(raw_model_container, default_batch_size=1, initial_types=initial_types,
+                        targeted_onnx=targeted_onnx)
     scope = topology.declare_scope('__root__')
 
     for node in _extract_inbound_nodes(model):

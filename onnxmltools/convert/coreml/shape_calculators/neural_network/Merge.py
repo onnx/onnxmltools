@@ -24,7 +24,7 @@ def calculate_merge_output_shapes(operator):
     n_dims = max(len(variable.type.shape) for variable in operator.inputs)
     output_shape = [0] * n_dims
     for i in range(n_dims):
-        input_dims = [variable.type.shape[i] for variable in operator.inputs]
+        input_dims = [variable.type.shape[i] for variable in operator.inputs if len(variable.type.shape) > i]
         if 'None' in input_dims:
             output_shape[i] = 'None'
         else:

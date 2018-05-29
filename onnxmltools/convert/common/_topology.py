@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import re
+from distutils.version import StrictVersion
 from ...proto import onnx
 from ...proto import helper
 from .data_types import *
@@ -43,7 +44,7 @@ class Variable:
 
 class Operator:
 
-    def __init__(self, onnx_name, scope, type, raw_operator):
+    def __init__(self, onnx_name, scope, type, raw_operator, targeted_onnx_version):
         '''
         :param onnx_name: A unique ID, which is a string
         :param scope: The name of the scope where this operator is declared. It's a string.
@@ -51,6 +52,7 @@ class Operator:
         pooling, if this operator is associated with a CoreML pooling layer.
         :param raw_operator: The original operator which defines this operator; for example, a scikit-learn Imputer and
         a CoreML Normalizer.
+        :param targeted_onnx_version: A StrictVersion object indicating the ONNX version used
         '''
         self.onnx_name = onnx_name  # operator name in the converted model
         self.scope = scope
@@ -60,6 +62,7 @@ class Operator:
         self.outputs = []
         self.is_evaluated = None
         self.is_abandoned = False
+        self.targeted_onnx_version = targeted_onnx_version
 
     @property
     def full_name(self):
@@ -89,18 +92,21 @@ class Operator:
 
 class Scope:
 
-    def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None):
+    def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None,
+                 targeted_onnx_version=None):
         '''
         :param name:  A string, the unique ID of this scope in a Topology object
         :param parent_scopes: A list of Scope objects. The last element should be the direct parent scope (i.e., where
         this scope is declared).
         :param variable_name_set: A set of strings serving as the name pool of variables
         :param operator_name_set: A set of strings serving as the name pool of operators
+        :param targeted_onnx_version: A StrictVersion object indicating the ONNX version used
         '''
         self.name = name
         self.parent_scopes = parent_scopes if parent_scopes else list()
         self.onnx_variable_names = variable_name_set if variable_name_set is not None else set()
         self.onnx_operator_names = operator_name_set if operator_name_set is not None else set()
+        self.targeted_onnx_version = targeted_onnx_version
 
         # An one-to-many map from raw variable name to ONNX variable names. It looks like
         #   (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ..., onnx_nameN])
@@ -191,7 +197,7 @@ class Scope:
         This function is used to declare new local operator.
         '''
         onnx_name = self.get_unique_operator_name(str(type))
-        operator = Operator(onnx_name, self.name, type, raw_model)
+        operator = Operator(onnx_name, self.name, type, raw_model, self.targeted_onnx_version)
         self.operators[onnx_name] = operator
         return operator
 
@@ -219,7 +225,7 @@ class Scope:
 class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
-                 reserved_variable_names=None, reserved_operator_names=None):
+                 reserved_variable_names=None, reserved_operator_names=None, targeted_onnx=None):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
 
@@ -237,6 +243,7 @@ class Topology:
         self.operator_name_set = reserved_operator_names if reserved_operator_names is not None else set()
         self.initial_types = initial_types if initial_types else list()
         self.default_batch_size = default_batch_size
+        self.targeted_onnx_version = StrictVersion(targeted_onnx)
 
         # This attribute is used in optimizing the graph structure. If root_names is not empty, only the variables
         # specified will be treated as the roots (i.e., set is_fed to True in the beginning of a graph evaluation) of
@@ -277,7 +284,8 @@ class Topology:
         return Topology._generate_unique_name(seed, self.scope_names)
 
     def declare_scope(self, seed, parent_scopes=list()):
-        scope = Scope(self.get_unique_scope_name(seed), parent_scopes, self.variable_name_set, self.operator_name_set)
+        scope = Scope(self.get_unique_scope_name(seed), parent_scopes, self.variable_name_set,
+                      self.operator_name_set, self.targeted_onnx_version)
         self.scopes.append(scope)
         return scope
 
@@ -315,23 +323,24 @@ class Topology:
         another function, unordered_operator_iterator.
         '''
         self._initialize_graph_status_for_traversing()
+        priorities = {'tensorToProbabilityMap': 2, 'tensorToLabel': 1}
         while not all(operator.is_evaluated for scope in self.scopes for operator in scope.operators.values()):
             is_evaluation_happened = False
-            for scope in self.scopes:
-                for operator in scope.operators.values():
-                    if all(variable.is_fed for variable in operator.inputs) and not operator.is_evaluated:
-                        # Check if over-writing problem occurs (i.e., multiple operators produce results on one variable).
-                        for variable in operator.outputs:
-                            # Throw an error if this variable has been treated as an output somewhere
-                            if variable.is_fed:
-                                raise RuntimeError('One variable can only be assigned once')
-                            # Mark this variable as filled
-                            variable.is_fed = True
-                        # Make this operator as handled
-                        operator.is_evaluated = True
-                        is_evaluation_happened = True
-                        # Send out an operator
-                        yield operator
+            for operator in sorted(self.unordered_operator_iterator(),
+                                   key=lambda op: priorities[op.type] if op.type in priorities else 0):
+                if all(variable.is_fed for variable in operator.inputs) and not operator.is_evaluated:
+                    # Check if over-writing problem occurs (i.e., multiple operators produce results on one variable).
+                    for variable in operator.outputs:
+                        # Throw an error if this variable has been treated as an output somewhere
+                        if variable.is_fed:
+                            raise RuntimeError('One variable can only be assigned once')
+                        # Mark this variable as filled
+                        variable.is_fed = True
+                    # Make this operator as handled
+                    operator.is_evaluated = True
+                    is_evaluation_happened = True
+                    # Send out an operator
+                    yield operator
             # After scanning through the whole computational graph, at least one operator should be evaluated. If not,
             # we need to terminate this procedure to avoid dead lock.
             if not is_evaluation_happened:
@@ -500,7 +509,7 @@ class Topology:
 
             # Sometime, shapes of duplicates are different. We try to replace the original variable's unknown dimensions
             # as many as possible because we will get rid of the duplicate.
-            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType) and\
+            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType) and \
                     len(original.type.shape) == len(duplicate.type.shape):
                 for i in range(len(original.type.shape)):
                     if original.type.shape[i] != 'None':
@@ -548,16 +557,6 @@ class Topology:
                     if variable.is_root:
                         # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
                         variable.type.shape += [1] * (4 - len(variable.type.shape))
-
-            # Rule 2 (CoreML):
-            # Some model in ONNX accepts integers while the corresponding one in CoreML only takes floats.
-            # If it is the case, we change tensor type from float to integer.
-            if operator.type == 'embedding':
-                for variable in operator.inputs:
-                    if variable.is_root:
-                        variable.type = Int64TensorType(variable.type.shape, doc_string=variable.type.doc_string)
-                    else:
-                        raise RuntimeError('Embed operator in ONNX only accepts floats but we got integers')
 
     def _prune(self):
         # Conduct a dummy evaluation of this topology. It may set all reachable operators evaluated and all reachable
@@ -608,46 +607,51 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     if targeted_onnx != onnx.__version__:
         raise RuntimeError(
             'ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
-                targeted_onnx, onnx.__version__))
-
+                onnx.__version__, targeted_onnx))
 
     topology._initialize_graph_status_for_traversing()
 
     container = ModelComponentContainer(targeted_onnx)
 
-    # Add roots and leaves as ONNX's model inputs and outputs
-    model_inputs = []
-    model_outputs = []
+    # Put roots and leaves as ONNX's model into buffers. They will be added into ModelComponentContainer later.
+    tensor_inputs = {}
+    other_inputs = {}
+    tensor_outputs = {}
+    other_outputs = {}
     for scope in topology.scopes:
         for variable in scope.variables.values():
             if variable.is_root:
-                model_inputs.append(variable)
+                if isinstance(variable.type, (TensorType, Int64Type, FloatType, StringType)):
+                    tensor_inputs[variable.raw_name] = variable
+                else:
+                    other_inputs[variable.raw_name] = variable
             if variable.is_leaf:
-                model_outputs.append(variable)
-    # Add roots and leaves of the graph according to their order in the original CoreML model
+                if isinstance(variable.type, (TensorType, Int64Type, FloatType, StringType)):
+                    tensor_outputs[variable.raw_name] = variable
+                else:
+                    other_outputs[variable.raw_name] = variable
+
+    # Add roots the graph according to their order in the original model
     for name in topology.raw_model.input_names:
-        variable = next(variable for variable in model_inputs if variable.raw_name == name)
-        container.add_input(variable)
+        if name in tensor_inputs:
+            container.add_input(tensor_inputs[name])
+    for name in topology.raw_model.input_names:
+        if name in other_inputs:
+            container.add_input(other_inputs[name])
+
+    # Add leaves the graph according to their order in the original model
     for name in topology.raw_model.output_names:
-        variable = next(variable for variable in model_outputs if variable.raw_name == name)
-        container.add_output(variable)
+        if name in tensor_outputs:
+            container.add_output(tensor_outputs[name])
+    for name in topology.raw_model.output_names:
+        if name in other_outputs:
+            container.add_output(other_outputs[name])
 
     # Traverse the graph from roots to leaves
     for operator in topology.topological_operator_iterator():
+        scope = next(scope for scope in topology.scopes if scope.name == operator.scope)
         # Convert the selected operator into some ONNX objects and save them into the container
         _registration.get_converter(operator.type)(scope, operator, container)
-
-    # Move ZipMap nodes to the end of the node list. In the future, here should be a sorting function which re-orders
-    # the nodes according the model's outputs.
-    for i, node in enumerate(container.nodes):
-        if node.op_type != 'ZipMap':
-            continue
-        zipmap_node = container.nodes[i]
-        for another_node_id in range(i + 1, len(container.nodes)):
-            another_node = container.nodes[another_node_id]
-            if zipmap_node.output[0] not in another_node.input:
-                container.nodes[i], container.nodes[another_node_id] = \
-                    container.nodes[another_node_id], container.nodes[i]
 
     # When calling ModelComponentContainer's add_initializer(...), nothing is added into the input list. However, in
     # ONNX initializers should also be model's (GraphProto) inputs. Thus, we create ValueInfoProto objects from
