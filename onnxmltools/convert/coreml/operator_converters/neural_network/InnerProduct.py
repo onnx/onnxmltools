@@ -4,38 +4,34 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import numpy as np
 from .....proto import onnx_proto
 from ....common._registration import register_converter
-from ....common._apply_operation import apply_reshape
+from ....common._apply_operation import apply_add
+
 
 def convert_inner_product(scope, operator, container):
     params = operator.raw_operator.innerProduct
-    op_type = 'Gemm'
-    attrs = {'name': operator.full_name}
 
-    shape_a = operator.inputs[0].type.shape
-    reshaped_tensor_name = scope.get_unique_variable_name('reshape_output')
-    apply_reshape(scope, operator.inputs[0].full_name, reshaped_tensor_name, container, desired_shape=[-1, params.inputChannels])
+    name_w = scope.get_unique_variable_name(operator.full_name + '_W')
+    shape_w = [params.inputChannels, params.outputChannels]
+    weights = np.array(params.weights.floatValue).reshape(params.outputChannels, params.inputChannels).transpose()
+    container.add_initializer(name_w, onnx_proto.TensorProto.FLOAT, shape_w, weights.flatten())
 
-    name_b = scope.get_unique_variable_name(operator.full_name + '_B')
-    shape_b = [params.outputChannels, params.inputChannels]
-    container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_b, params.weights.floatValue)
+    # Do Multiply
+    matmul_output_name = scope.get_unique_variable_name('matmul_output_name')
 
-    name_c = scope.get_unique_variable_name(operator.full_name + '_C')
-    shape_c = [params.outputChannels]
+    container.add_node('MatMul', [operator.inputs[0].full_name, name_w], matmul_output_name, name=operator.full_name)
+
+    # DO Add
+    name_b = scope.get_unique_variable_name(operator.full_name + '_C')
+    shape_b = [params.outputChannels]
     if params.hasBias:
-        container.add_initializer(name_c, onnx_proto.TensorProto.FLOAT, shape_c, params.bias.floatValue)
+        container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_b, params.bias.floatValue)
     else:
-        container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_c, [0.] * shape_b[0])
-    attrs['alpha'] = 1.0
-    attrs['beta'] = 1.0
-    attrs['transA'] = 0
-    attrs['transB'] = 1
+        container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_b, [0.] * shape_b[0])
 
-    #workaround for a CNTK GEMM issue(https://github.com/Microsoft/CNTK/issues/3216)
-    gemm_output_name = scope.get_unique_variable_name('gemm_output_name')
-    container.add_node(op_type, [reshaped_tensor_name, name_b, name_c], gemm_output_name, **attrs)
-    
-    apply_reshape(scope, gemm_output_name, operator.outputs[0].full_name, container, desired_shape=[-1, params.outputChannels])
+    apply_add(scope, [matmul_output_name, name_b], operator.outputs[0].full_name, container, axis=-1, broadcast=1)
+
 
 register_converter('innerProduct', convert_inner_product)
