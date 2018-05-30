@@ -36,7 +36,7 @@ class TestGLMRegressorConverter(unittest.TestCase):
         model_onnx = convert_sklearn(model, 'scikit-learn SGD regression', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
 
-    def test_model_sgd_regressor(self):
+    def test_model_elastic_net_regressor(self):
         model = self._fit_model(linear_model.ElasticNet())
         model_onnx = convert_sklearn(model, 'scikit-learn elastic-net regression', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
