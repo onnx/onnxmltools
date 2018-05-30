@@ -81,13 +81,17 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
                      epsilon=None, is_test=None, momentum=None, spatial=None):
     name = _create_name_or_use_existing_one(scope, 'BatchNormalization', operator_name)
 
-    attrs = {'name': name, 'epsilon': epsilon, 'is_test': is_test, 'momentum': momentum, 'spatial': spatial}
+    attrs = {'name': name, 'epsilon': epsilon, 'momentum': momentum, 'spatial': spatial}
 
     if container.targeted_onnx_version <= StrictVersion('1.0'):
         attrs['consumed_inputs'] = [0] * len(input_names)
         op_version = 1
-    else:
+        attrs['is_test'] = is_test
+    elif container.targeted_onnx_version < StrictVersion('1.2'):
         op_version = 6
+        attrs['is_test'] = is_test
+    else:
+        op_version = 7
 
     container.add_node('BatchNormalization', input_names, output_names, op_version=op_version, **attrs)
 
