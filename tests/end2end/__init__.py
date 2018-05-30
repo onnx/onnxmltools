@@ -4,8 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-# To register shape calculators for Keras operators, import associated modules here.
-from . import Conv
-from . import Embed
-from . import Lazy
-from . import LSTM
+# This file allows the sharing of common functions used in end-to-end tests

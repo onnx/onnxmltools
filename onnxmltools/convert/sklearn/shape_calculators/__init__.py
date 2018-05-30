@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+# To register shape calculators for scikit-learn operators, import associated modules here.
 from . import DictVectorizer
 from . import Imputer
 from . import LabelEncoder
@@ -12,3 +13,4 @@ from . import LinearRegressor
 from . import OneHotEncoder
 from . import Scaler
 from . import SVM
+from . import SVD

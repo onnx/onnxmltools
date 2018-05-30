@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+# To register shape calculators for Core ML operators, import associated modules here.
 from . import ArrayFeatureExtractor
 from . import Classifier
 from . import DictVectorizer

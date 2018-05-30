@@ -26,6 +26,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import DecisionTreeRegressor
 
@@ -33,12 +35,14 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
 
 # Operators for preprocessing and feature engineering
+from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import Binarizer
 from sklearn.preprocessing import Imputer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import StandardScaler
 
 # In most cases, scikit-learn operator produces only one output. However, each classifier has basically two outputs;
@@ -46,11 +50,13 @@ from sklearn.preprocessing import StandardScaler
 # scikit-learn classifiers. In the parsing stage, we produce two outputs for objects included in the following list and
 # one output for everything not in the list.
 sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, NuSVC,
-                           GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier]
+                           GradientBoostingClassifier, RandomForestClassifier, ExtraTreesClassifier,
+                           DecisionTreeClassifier]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
-sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
+sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
+                             StandardScaler: 'SklearnScaler',
                              LogisticRegression: 'SklearnLinearClassifier',
                              SGDClassifier: 'SklearnLinearClassifier',
                              LinearSVC: 'SklearnLinearSVC',
@@ -71,9 +77,12 @@ sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
                              DecisionTreeRegressor: 'SklearnDecisionTreeRegressor',
                              RandomForestClassifier: 'SklearnRandomForestClassifier',
                              RandomForestRegressor: 'SklearnRandomForestRegressor',
+                             ExtraTreesClassifier: 'SklearnExtraTreesClassifier',
+                             ExtraTreesRegressor: 'SklearnExtraTreesRegressor',
                              GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
-                             Binarizer: 'SklearnBinarizer'}
+                             Binarizer: 'SklearnBinarizer',
+                             TruncatedSVD: 'SklearnTruncatedSVD'}
 
 
 def _get_sklearn_operator_name(model_type):
@@ -148,7 +157,7 @@ def _parse_sklearn(scope, model, inputs):
         return _parse_sklearn_simple_model(scope, model, inputs)
 
 
-def parse_sklearn(model, initial_types=None, targeted_onnx='1.1.2'):
+def parse_sklearn(model, initial_types=None, targeted_onnx=onnx.__version__):
     # Put scikit-learn object into an abstract container so that our framework can work seamlessly on models created
     # with different machine learning tools.
     raw_model_container = SklearnModelContainer(model)
