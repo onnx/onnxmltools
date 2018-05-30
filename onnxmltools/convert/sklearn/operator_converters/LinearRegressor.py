@@ -17,5 +17,6 @@ def convert_sklearn_linear_regressor(scope, operator, container):
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
 
+register_converter('SklearnElasticNetRegressor', convert_sklearn_linear_regressor)
 register_converter('SklearnLinearRegressor', convert_sklearn_linear_regressor)
 register_converter('SklearnLinearSVR', convert_sklearn_linear_regressor)

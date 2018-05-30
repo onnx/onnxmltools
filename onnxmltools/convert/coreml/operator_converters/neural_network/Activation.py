@@ -24,7 +24,7 @@ def convert_activation(scope, operator, container):
     elif activation_type == 'ReLU':
         apply_relu(scope, inputs, outputs, container, operator_name=attrs['name'])
     elif activation_type == 'PReLU':
-        apply_prelu(scope, inputs, outputs, container, operator_name=attrs['name'], slope=params.PReLU.alpha)
+        apply_prelu(scope, inputs, outputs, container, operator_name=attrs['name'], slope=[params.PReLU.alpha])
     elif activation_type == 'ELU':
         apply_elu(scope, inputs, outputs, container, operator_name=attrs['name'], alpha=params.ELU.alpha)
     elif activation_type == 'tanh':

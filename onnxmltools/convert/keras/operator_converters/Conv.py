@@ -6,6 +6,7 @@
 
 from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose
 from ....proto import onnx_proto
+from ...common._apply_operation import apply_identity, apply_transpose
 from ...common._registration import register_converter
 from .Dense import _activation_map
 
@@ -21,10 +22,8 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     if channels_first:
         adjusted_input_name = operator.inputs[0].full_name
     else:
-        preprocessor_type = 'Transpose'
-        preprocessor_attrs = {'name': scope.get_unique_operator_name(preprocessor_type), 'perm': input_perm_axes}
         adjusted_input_name = scope.get_unique_variable_name('adjusted_input')
-        container.add_node(preprocessor_type, operator.inputs[0].full_name, adjusted_input_name, **preprocessor_attrs)
+        apply_transpose(scope, operator.inputs[0].full_name, adjusted_input_name, container, perm=input_perm_axes)
 
     op_type = 'ConvTranspose' if is_transpose else 'Conv'
     convolution_input_names = [adjusted_input_name]
@@ -69,21 +68,16 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
 
     # The construction of convolution is done. Now, we create an activation operator to apply the activation specified
     # in this Keras layer.
-    activation_type = _activation_map[op.activation]
-    activation_attrs = {'name': scope.get_unique_operator_name(activation_type)}
+    apply_activation_function = _activation_map[op.activation]
     activation_output_name = scope.get_unique_variable_name('activation_output')
-    container.add_node(activation_type, intermediate_output_name, activation_output_name, **activation_attrs)
+    apply_activation_function(scope, intermediate_output_name, activation_output_name, container)
 
     # Permute the output back of its original format
     if not channels_first:
         # Generate a final transposer.
-        postprocessor_type = 'Transpose'
-        postprocessor_attrs = {'name': scope.get_unique_operator_name(postprocessor_type), 'perm': output_perm_axes}
-        container.add_node(postprocessor_type, activation_output_name,
-                           operator.outputs[0].full_name, **postprocessor_attrs)
+        apply_transpose(scope, activation_output_name, operator.outputs[0].full_name, container, perm=output_perm_axes)
     else:
-        container.add_node('Identity', activation_output_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Identity'))
+        apply_identity(scope, activation_output_name, operator.outputs[0].full_name, container)
 
 
 def get_converter_config(dims, is_conv_transpose):
