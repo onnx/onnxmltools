@@ -47,7 +47,7 @@ def convert_keras_batch_normalization(scope, operator, container):
     container.add_initializer(var_tensor_name, onnx_proto.TensorProto.FLOAT, params[3].shape, 1 + 0 * params[3])
     input_tensor_names.append(var_tensor_name)
 
-    epsilon = 0.0000000001
+    epsilon = op.epsilon * 1e-3  # We use a much smaller epsilon because the original epsilon is absorbed in gamma
     is_test = 1
     momentum = op.momentum
     spatial = 1
