@@ -5,8 +5,9 @@
 # --------------------------------------------------------------------------
 
 import keras.layers
+from ...common._apply_operation import apply_pad, apply_transpose
 from ...common._registration import register_converter
-from .common import permute_tensor, get_permutation_config
+from .common import get_permutation_config
 
 
 def get_padding_config(op, n_dims):
@@ -40,8 +41,6 @@ def get_padding_config(op, n_dims):
 
 def convert_keras_zero_pad(scope, operator, container, n_dims):
     op = operator.raw_operator
-    op_type = 'Pad'
-    attrs = {'name': operator.full_name}
 
     # Derive permutation configuration. If the Keras input format is not channels_first, this configuration may be used
     # to manipulate the input and output of ONNX Upsample.
@@ -56,21 +55,21 @@ def convert_keras_zero_pad(scope, operator, container, n_dims):
     else:
         # Permute the original input and then use the permuted result as the input of ONNX Upsample
         input_tensor_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_permuted')
-        permute_tensor(scope, operator.inputs[0].full_name, input_tensor_name, input_perm_axes, container)
+        apply_transpose(scope, operator.inputs[0].full_name, input_tensor_name, container, perm=input_perm_axes)
 
     # Prepare attributes for ONNX Pad
-    attrs['mode'] = 'constant'
-    attrs['pads'] = get_padding_config(op, n_dims)
-    attrs['value'] = 0.
+    mode = 'constant'
+    pads = get_padding_config(op, n_dims)
 
     # If channels_first is True, we don't need to permute the output of ONNX Upsample. Otherwise, similar to Crop's
     # conversion, a Transpose would be added.
     if channels_first:
-        container.add_node(op_type, input_tensor_name, operator.outputs[0].full_name, **attrs)
+        apply_pad(scope, input_tensor_name, operator.outputs[0].full_name, container, mode=mode, pads=pads, value=0.)
     else:
         intermediate_tensor_name = scope.get_unique_variable_name(input_tensor_name + '_padded')
-        container.add_node(op_type, input_tensor_name, intermediate_tensor_name, **attrs)
-        permute_tensor(scope, intermediate_tensor_name, operator.outputs[0].full_name, output_perm_axes, container)
+        apply_pad(scope, input_tensor_name, intermediate_tensor_name, container, mode=mode, pads=pads, value=0.)
+        apply_transpose(scope, intermediate_tensor_name, operator.outputs[0].full_name, container,
+                        perm=output_perm_axes)
 
 
 def convert_keras_zero_pad_1d(scope, operator, container):

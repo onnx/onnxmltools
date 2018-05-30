@@ -4,8 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from distutils.version import StrictVersion
 from keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D, AveragePooling1D, AveragePooling2D, AveragePooling3D
 from keras.layers import GlobalMaxPooling1D, GlobalMaxPooling2D, GlobalAveragePooling1D, GlobalAveragePooling2D
+from ...common._apply_operation import apply_transpose
 from ...common._registration import register_converter
 from .common import get_permutation_config
 
@@ -20,13 +22,21 @@ def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
         adjusted_pooling_input = operator.inputs[0].full_name
     else:
         adjusted_pooling_input = scope.get_unique_variable_name('input_transposed')
-        preprocessor_type = 'Transpose'
-        preprocessor_attrs = {'name': scope.get_unique_operator_name(preprocessor_type), 'perm': input_perm_axes}
-        container.add_node(preprocessor_type, operator.inputs[0].full_name,
-                           adjusted_pooling_input, **preprocessor_attrs)
+        apply_transpose(scope, operator.inputs[0].full_name, adjusted_pooling_input, container, perm=input_perm_axes)
 
     op_type_prefix = 'Global' if is_global else ''
-    onnx_op_type = "AveragePool" if op_type == 'Avg' else 'MaxPool'
+    if op_type == 'Avg':
+        onnx_op_type = 'AveragePool'
+        if operator.targeted_onnx_version < StrictVersion('1.2'):
+            op_version = 1
+        else:
+            op_version = 7
+    elif op_type == 'Max':
+        onnx_op_type = 'MaxPool'
+        op_version = 1
+    else:
+        raise RuntimeError('Unsupported Keras pooling type: %s' % op_type)
+
     attrs = {'name': operator.full_name}
     if not is_global:
         attrs['strides'] = list(op.strides)
@@ -41,18 +51,16 @@ def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
     if channels_first:
         # In this case, the output of our Pool operator just match what Keras produces.
         container.add_node(op_type_prefix + onnx_op_type, adjusted_pooling_input,
-                           operator.outputs[0].full_name, **attrs)
+                           operator.outputs[0].full_name, op_version=op_version, **attrs)
     else:
         # Put the output of Pool operator to an intermediate tensor. Laster we will apply a Transpose to match the
         # original Keras output format
         pooling_output_name = scope.get_unique_variable_name('pooling_output')
-        container.add_node(op_type_prefix + onnx_op_type, adjusted_pooling_input, pooling_output_name, **attrs)
+        container.add_node(op_type_prefix + onnx_op_type, adjusted_pooling_input, pooling_output_name,
+                           op_version=op_version, **attrs)
 
         # Generate a final Transpose
-        postprocessor_type = 'Transpose'
-        postprocessor_attrs = {'name': scope.get_unique_operator_name(preprocessor_type), 'perm': output_perm_axes}
-        container.add_node(postprocessor_type, pooling_output_name,
-                           operator.outputs[0].full_name, **postprocessor_attrs)
+        apply_transpose(scope, pooling_output_name, operator.outputs[0].full_name, container, perm=output_perm_axes)
 
 
 def convert_keras_max_pooling_1d(scope, operator, container):

@@ -6,6 +6,7 @@
 
 import numpy as np
 from keras.layers import Embedding
+from ...common._apply_operation import apply_reshape
 from ...common._registration import register_converter
 from ....proto import onnx_proto
 
@@ -17,11 +18,8 @@ def convert_keras_embed(scope, operator, container):
 
     # Reshape the indexes we want to embed to 1-D tensor. Otherwise, Gather's output may get wrong shape, which is the
     # same as our CoreML Embedding converter.
-    preprocessor_type = 'Reshape'
-    preprocessor_attrs = {'name': scope.get_unique_operator_name(preprocessor_type)}
-    preprocessor_attrs['shape'] = [-1]
     reshaped_input_name = scope.get_unique_variable_name('embedding_reshaped')
-    container.add_node(preprocessor_type, operator.inputs[0].full_name, reshaped_input_name, **preprocessor_attrs)
+    apply_reshape(scope, operator.inputs[0].full_name, reshaped_input_name, container, desired_shape=[-1])
 
     # Prepare the weight matrix (i.e., the vectors of all input indices) as an initializer so that the following main
     # operator can access it.

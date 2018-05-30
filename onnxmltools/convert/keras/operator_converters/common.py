@@ -10,11 +10,6 @@ def get_permutation_config(n_dims):
     return input_perm_axes, output_perm_axes
 
 
-def permute_tensor(scope, tensor_name, permuted_tensor_name, permutation_axes, container):
-    container.add_node('Transpose', tensor_name, permuted_tensor_name,
-                       name=scope.get_unique_operator_name('Transpose'), perm=permutation_axes)
-
-
 def extract_recurrent_activation(activation):
     from keras import activations
     alpha = None
