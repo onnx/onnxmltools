@@ -16,6 +16,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
 
 # Linear regressors
+from sklearn.linear_model import ElasticNet
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import SGDRegressor
@@ -69,6 +70,7 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              SVR: 'SklearnSVR',
                              NuSVR: 'SklearnSVR',
                              LinearSVR: 'SklearnLinearSVR',
+                             ElasticNet: 'SklearnElasticNetRegressor',
                              LinearRegression: 'SklearnLinearRegressor',
                              Ridge: 'SklearnLinearRegressor',
                              SGDRegressor: 'SklearnLinearRegressor',
