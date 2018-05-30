@@ -11,3 +11,4 @@ scikit-learn
 scipy
 wheel
 xgboost
+lightgbm

@@ -39,6 +39,7 @@ def _get_default_tree_regressor_attribute_pairs():
     attrs['nodes_truenodeids'] = []
     attrs['nodes_falsenodeids'] = []
     attrs['nodes_missing_value_tracks_true'] = []
+    attrs['nodes_hitrates'] = []
     attrs['target_treeids'] = []
     attrs['target_nodeids'] = []
     attrs['target_ids'] = []

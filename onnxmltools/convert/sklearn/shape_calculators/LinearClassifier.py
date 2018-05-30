@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import lightgbm
 import numpy as np
 import six, numbers
 from distutils.version import StrictVersion
@@ -65,3 +66,4 @@ register_shape_calculator('SklearnDecisionTreeClassifier', calculate_sklearn_lin
 register_shape_calculator('SklearnRandomForestClassifier', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('SklearnExtraTreesClassifier', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('SklearnGradientBoostingClassifier', calculate_sklearn_linear_classifier_output_shapes)
+register_shape_calculator('LgbmClassifier', calculate_sklearn_linear_classifier_output_shapes)
