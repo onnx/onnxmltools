@@ -6,19 +6,20 @@
 
 import collections
 import numbers
-from keras.layers import LSTM, SimpleRNN, GRU
+from keras.layers import Bidirectional
 from ...common._registration import register_shape_calculator
 
 
-def calculate_keras_lstm_output_shapes(operator):
+def calculate_keras_bidirectional_output_shapes(operator):
     op = operator.raw_operator
     if isinstance(op.output_shape[0], collections.Iterable):
         operator.outputs[0].type.shape = list(i if isinstance(i, numbers.Integral) else 'None'
                                               for i in op.output_shape[0])
+        if op.merge_mode is None:
+            operator.outputs[1].type.shape = list(i if isinstance(i, numbers.Integral) else 'None'
+                                                  for i in op.output_shape[1])
     else:
         operator.outputs[0].type.shape = list(i if isinstance(i, numbers.Integral) else 'None' for i in op.output_shape)
 
 
-register_shape_calculator(LSTM, calculate_keras_lstm_output_shapes)
-register_shape_calculator(SimpleRNN, calculate_keras_lstm_output_shapes)
-register_shape_calculator(GRU, calculate_keras_lstm_output_shapes)
+register_shape_calculator(Bidirectional, calculate_keras_bidirectional_output_shapes)
