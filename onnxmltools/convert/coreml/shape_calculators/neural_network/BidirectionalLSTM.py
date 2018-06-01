@@ -24,8 +24,8 @@ def calculate_bidirectional_lstm_output_shapes(operator):
 
     params = operator.raw_operator.biDirectionalLSTM
     # The following line is more accurate but it may break some tests
-    # output_shape = ['None', params.outputVectorSize] if params.params.sequenceOutput else [2, params.outputVectorSize]
-    output_shape = ['None', params.outputVectorSize]
+    # output_shape = ['None', params.outputVectorSize] if params.params.sequenceOutput else [1, 2 *params.outputVectorSize]
+    output_shape = ['None', 2 * params.outputVectorSize]
     state_shape = [1, params.outputVectorSize]
 
     # TODO: Changing input shapes of an operator is dangerous, this should be move to Topology's _fix_shapes function
