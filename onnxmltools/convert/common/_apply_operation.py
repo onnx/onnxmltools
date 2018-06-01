@@ -81,13 +81,17 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
                      epsilon=None, is_test=None, momentum=None, spatial=None):
     name = _create_name_or_use_existing_one(scope, 'BatchNormalization', operator_name)
 
-    attrs = {'name': name, 'epsilon': epsilon, 'is_test': is_test, 'momentum': momentum, 'spatial': spatial}
+    attrs = {'name': name, 'epsilon': epsilon, 'momentum': momentum, 'spatial': spatial}
 
     if container.targeted_onnx_version <= StrictVersion('1.0'):
         attrs['consumed_inputs'] = [0] * len(input_names)
         op_version = 1
-    else:
+        attrs['is_test'] = is_test
+    elif container.targeted_onnx_version < StrictVersion('1.2'):
         op_version = 6
+        attrs['is_test'] = is_test
+    else:
+        op_version = 7
 
     container.add_node('BatchNormalization', input_names, output_names, op_version=op_version, **attrs)
 
@@ -333,7 +337,15 @@ def apply_relu(scope, input_name, output_name, container, operator_name=None):
 
 
 def apply_prelu(scope, input_name, output_name, container, operator_name=None, slope=None):
-    _apply_unary_operation(scope, 'PReLU', input_name, output_name, container, operator_name, slope=slope)
+    name = _create_name_or_use_existing_one(scope, 'PRelu', operator_name)
+    slope_tensor_name = scope.get_unique_variable_name('slope')
+    container.add_initializer(slope_tensor_name, onnx_proto.TensorProto.FLOAT, [len(slope)], slope)
+
+    if container.targeted_onnx_version <= StrictVersion('1.0'):
+        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=1, name=name,
+                           consumed_inputs=[0, 0])
+    else:
+        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=6, name=name)
 
 
 def apply_elu(scope, input_name, output_name, container, operator_name=None, alpha=None):
@@ -348,6 +360,25 @@ def apply_sigmoid(scope, input_name, output_name, container, operator_name=None)
     _apply_unary_operation(scope, 'Sigmoid', input_name, output_name, container, operator_name)
 
 
+def apply_selu(scope, input_name, output_name, container, operator_name=None, alpha=None, gamma=None):
+    _apply_unary_operation(scope, 'Selu', input_name, output_name, container, operator_name, alpha=alpha, gamma=gamma)
+
+
 def apply_hard_sigmoid(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
     _apply_unary_operation(scope, 'HardSigmoid', input_name, output_name, container, operator_name,
                            alpha=alpha, beta=beta)
+
+
+def apply_identity(scope, input_name, output_name, container, operator_name=None):
+    name = _create_name_or_use_existing_one(scope, 'Identity', operator_name)
+    container.add_node('Identity', input_name, output_name, name=name)
+
+
+def apply_softmax(scope, input_name, output_name, container, operator_name=None, axis=1):
+    name = _create_name_or_use_existing_one(scope, 'Softmax', operator_name)
+    container.add_node('Softmax', input_name, output_name, name=name, axis=axis)
+
+
+def apply_normalization(scope, input_name, output_name, container, operator_name=None, axis=1, p=2):
+    name = _create_name_or_use_existing_one(scope, 'LpNormalization', operator_name)
+    container.add_node('LpNormalization', input_name, output_name, name=name, p=p, axis=axis)

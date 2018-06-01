@@ -1,23 +1,29 @@
-"""
-Tests scilit-learn's tree-based methods' converters.
-"""
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+
 import unittest
+from lightgbm import LGBMClassifier, LGBMRegressor
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.ensemble import ExtraTreesRegressor
 from onnxmltools import convert_sklearn
 from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType
 
 
 class TestSklearnTreeEnsembleModels(unittest.TestCase):
     def _test_one_class_classification_core(self, model):
-        X = [[0, 1], [1, 1], [2, 0]]
+        X = [[0., 1.], [1., 1.], [2., 0.]]
         y = [1, 1, 1]
         model.fit(X, y)
-        model_onnx = convert_sklearn(model, 'tree-based classifier', [('input', Int64TensorType([1, 2]))])
+        model_onnx = convert_sklearn(model, 'tree-based classifier', [('input', FloatTensorType([1, 2]))])
         self.assertTrue(model_onnx is not None)
 
     def _test_binary_classification_core(self, model):
@@ -65,6 +71,18 @@ class TestSklearnTreeEnsembleModels(unittest.TestCase):
         self._test_single_output_core(model)
         self._test_multiple_output_core(model)
 
+    def test_extra_trees_classifier(self):
+        model = ExtraTreesClassifier(n_estimators=3)
+        self._test_one_class_classification_core(model)
+        self._test_binary_classification_core(model)
+        self._test_single_output_core(model)
+        self._test_multiple_output_core(model)
+
+    def test_extra_trees_regressor(self):
+        model = ExtraTreesRegressor(n_estimators=3)
+        self._test_single_output_core(model)
+        self._test_multiple_output_core(model)
+
     def test_gradient_boosting_classifier(self):
         model = GradientBoostingClassifier(n_estimators=3)
         self._test_binary_classification_core(model)
@@ -72,4 +90,13 @@ class TestSklearnTreeEnsembleModels(unittest.TestCase):
 
     def test_gradient_boosting_regressor(self):
         model = GradientBoostingRegressor(n_estimators=3)
+        self._test_single_output_core(model)
+
+    def test_lightgbm__classifier(self):
+        model = LGBMClassifier(n_estimators=3, min_child_samples=1)
+        self._test_binary_classification_core(model)
+        self._test_single_output_core(model)
+
+    def test_lightgbm__regressor(self):
+        model = LGBMRegressor(n_estimators=3, min_child_samples=1)
         self._test_single_output_core(model)

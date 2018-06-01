@@ -5,37 +5,36 @@
 # --------------------------------------------------------------------------
 
 import keras.layers.advanced_activations as activations
+from ...common._apply_operation import apply_elu, apply_leaky_relu, apply_prelu
 from ...common._registration import register_converter
-from ....proto import onnx_proto
 
 
 def convert_keras_advanced_activation(scope, operator, container):
     op = operator.raw_operator
-    attrs = {'name': operator.full_name}
-    input_tensor_names = operator.input_full_names
     if isinstance(op, activations.LeakyReLU):
-        op_type = 'LeakyRelu'
-        attrs['alpha'] = op.get_config()['alpha']
+        alpha = op.get_config()['alpha']
+        apply_leaky_relu(scope, operator.input_full_names[0], operator.output_full_names[0], container,
+                         operator_name=operator.full_name, alpha=alpha)
     elif isinstance(op, activations.ELU):
-        op_type = 'Elu'
-        attrs['alpha'] = op.get_config()['alpha']
-    elif isinstance(op, activations.ThresholdedReLU):
-        op_type = 'ThresholdedRelu'
-        attrs['alpha'] = op.get_config()['theta']
+        alpha = op.get_config()['alpha']
+        apply_elu(scope, operator.input_full_names[0], operator.output_full_names[0], container,
+                  operator_name=operator.full_name, alpha=alpha)
     elif isinstance(op, activations.PReLU):
-        op_type = 'PRelu'
-        parameters = op.get_weights()
-        slope_tensor_name = scope.get_unique_variable_name('slope')
-        container.add_initializer(slope_tensor_name, onnx_proto.TensorProto.FLOAT,
-                                  parameters[0].shape, parameters[0].flatten())
-        input_tensor_names.append(slope_tensor_name)
-    # TODO:Following layer is not supported by the checked-in keras version and requires an upgrade of the checked-in keras
-    # elif isinstance(op, activations.Softmax):
-    #    attrs['axis'] = op.get_config()['axis']
+        weights = op.get_weights()[0].flatten()
+        apply_prelu(scope, operator.input_full_names[0], operator.output_full_names[0], container,
+                    operator_name=operator.full_name, slope=weights)
     else:
-        raise RuntimeError('Unsupported advanced layer found %s' % type(op))
+        attrs = {'name': operator.full_name}
+        input_tensor_names = [operator.input_full_names[0]]
+        if isinstance(op, activations.ThresholdedReLU):
+            op_type = 'ThresholdedRelu'
+            attrs['alpha'] = op.get_config()['theta']
+        # elif isinstance(op, activations.Softmax):
+        #    attrs['axis'] = op.get_config()['axis']
+        else:
+            raise RuntimeError('Unsupported advanced layer found %s' % type(op))
 
-    container.add_node(op_type, input_tensor_names, operator.output_full_names, **attrs)
+        container.add_node(op_type, input_tensor_names, operator.output_full_names, **attrs)
 
 
 register_converter(activations.LeakyReLU, convert_keras_advanced_activation)

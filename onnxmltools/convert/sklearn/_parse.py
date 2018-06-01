@@ -16,6 +16,7 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
 
 # Linear regressors
+from sklearn.linear_model import ElasticNet
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import SGDRegressor
@@ -26,6 +27,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import DecisionTreeRegressor
 
@@ -40,18 +43,23 @@ from sklearn.preprocessing import Imputer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import StandardScaler
+
+from lightgbm import LGBMClassifier, LGBMRegressor
 
 # In most cases, scikit-learn operator produces only one output. However, each classifier has basically two outputs;
 # one is the predicted label and the other one is the probabilities of all possible labels. Here is a list of supported
 # scikit-learn classifiers. In the parsing stage, we produce two outputs for objects included in the following list and
 # one output for everything not in the list.
 sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, NuSVC,
-                           GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier]
+                           GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier,
+                           ExtraTreesClassifier, LGBMClassifier]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
-sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
+sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
+                             StandardScaler: 'SklearnScaler',
                              LogisticRegression: 'SklearnLinearClassifier',
                              SGDClassifier: 'SklearnLinearClassifier',
                              LinearSVC: 'SklearnLinearSVC',
@@ -64,6 +72,7 @@ sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
                              SVR: 'SklearnSVR',
                              NuSVR: 'SklearnSVR',
                              LinearSVR: 'SklearnLinearSVR',
+                             ElasticNet: 'SklearnElasticNetRegressor',
                              LinearRegression: 'SklearnLinearRegressor',
                              Ridge: 'SklearnLinearRegressor',
                              SGDRegressor: 'SklearnLinearRegressor',
@@ -72,9 +81,13 @@ sklearn_operator_name_map = {StandardScaler: 'SklearnScaler',
                              DecisionTreeRegressor: 'SklearnDecisionTreeRegressor',
                              RandomForestClassifier: 'SklearnRandomForestClassifier',
                              RandomForestRegressor: 'SklearnRandomForestRegressor',
+                             ExtraTreesClassifier: 'SklearnExtraTreesClassifier',
+                             ExtraTreesRegressor: 'SklearnExtraTreesRegressor',
                              GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
                              Binarizer: 'SklearnBinarizer',
+                             LGBMClassifier: 'LgbmClassifier',
+                             LGBMRegressor: 'LgbmRegressor',
                              TruncatedSVD: 'SklearnTruncatedSVD'}
 
 

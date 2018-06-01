@@ -9,6 +9,7 @@
 
 # setup.py intermediates
 .eggs
+*.egg-info/
 dist
 
 # PyCharm files
@@ -29,3 +30,4 @@ tests/baseline/outmodels
 htmlcov
 coverage.xml
 .coverage
+temp_*.onnx

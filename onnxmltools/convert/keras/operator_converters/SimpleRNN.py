@@ -1,6 +1,7 @@
 import numpy as np
 from keras.layers import SimpleRNN
 from ....proto import onnx_proto
+from ...common._apply_operation import apply_reshape, apply_transpose
 from ...common._registration import register_converter
 from .common import extract_recurrent_activation
 
@@ -18,8 +19,7 @@ def convert_keras_simple_rnn(scope, operator, container):
     rnn_output_names = []
 
     rnn_x_name = scope.get_unique_variable_name('rnn_x')
-    container.add_node('Transpose', operator.inputs[0].full_name, rnn_x_name,
-                       name=scope.get_unique_operator_name('Transpose'), perm=[1, 0, 2])
+    apply_transpose(scope, operator.inputs[0].full_name, rnn_x_name, container, perm=[1, 0, 2])
     rnn_input_names.append(rnn_x_name)
 
     tensor_w_name = scope.get_unique_variable_name('tensor_w')
@@ -65,14 +65,12 @@ def convert_keras_simple_rnn(scope, operator, container):
 
     if output_seq:
         permuted_rnn_y_name = scope.get_unique_variable_name('rnn_y_permuted')
-        container.add_node('Transpose', rnn_y_name, permuted_rnn_y_name,
-                           name=scope.get_unique_operator_name('Transpose'), perm=[1, 0, 2])
-        container.add_node('Reshape', permuted_rnn_y_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, seq_length, hidden_size])
+        apply_transpose(scope, rnn_y_name, permuted_rnn_y_name, container, perm=[1, 0, 2])
+        apply_reshape(scope, permuted_rnn_y_name, operator.outputs[0].full_name, container,
+                      desired_shape=[-1, seq_length, hidden_size])
     else:
-        container.add_node('Reshape', rnn_h_name, operator.outputs[0].full_name,
-                           name=scope.get_unique_operator_name('Reshape'), shape=[-1, hidden_size])
         # Here we ingore ONNX RNN's first output because it's useless.
+        apply_reshape(scope, rnn_h_name, operator.outputs[0].full_name, container, desired_shape=[-1, hidden_size])
 
 
 register_converter(SimpleRNN, convert_keras_simple_rnn)

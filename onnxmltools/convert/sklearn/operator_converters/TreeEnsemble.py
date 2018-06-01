@@ -39,6 +39,7 @@ def _get_default_tree_regressor_attribute_pairs():
     attrs['nodes_truenodeids'] = []
     attrs['nodes_falsenodeids'] = []
     attrs['nodes_missing_value_tracks_true'] = []
+    attrs['nodes_hitrates'] = []
     attrs['target_treeids'] = []
     attrs['target_nodeids'] = []
     attrs['target_ids'] = []
@@ -274,5 +275,7 @@ register_converter('SklearnDecisionTreeClassifier', convert_sklearn_decision_tre
 register_converter('SklearnDecisionTreeRegressor', convert_sklearn_decision_tree_regressor)
 register_converter('SklearnRandomForestClassifier', convert_sklearn_random_forest_classifier)
 register_converter('SklearnRandomForestRegressor', convert_sklearn_random_forest_regressor_converter)
+register_converter('SklearnExtraTreesClassifier', convert_sklearn_random_forest_classifier)
+register_converter('SklearnExtraTreesRegressor', convert_sklearn_random_forest_regressor_converter)
 register_converter('SklearnGradientBoostingClassifier', convert_sklearn_gradient_boosting_classifier)
 register_converter('SklearnGradientBoostingRegressor', convert_sklearn_gradient_boosting_regressor)

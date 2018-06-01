@@ -178,7 +178,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         input = Input(shape=(H, W, C))
         result = Conv2D(2, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
                         data_format='channels_last')(input)
-        model = Model(input=input, output=result)
+        model = Model(inputs=input, outputs=result)
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(model, x)
@@ -190,7 +190,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         for layer in layers_to_be_tested:
             input = Input(shape=(H, W, C))
             result = layer(2, data_format='channels_last')(input)
-            model = Model(input=input, output=result)
+            model = Model(inputs=input, outputs=result)
             model.compile(optimizer='adagrad', loss='mse')
 
             self._test_one_to_one_operator_core_channels_last(model, x)
@@ -202,7 +202,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         input = Input(shape=(H, W, C))
         result = Conv2DTranspose(2, (2, 1), data_format='channels_last')(input)
-        model = Model(input=input, output=result)
+        model = Model(inputs=input, outputs=result)
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(model, x)
@@ -220,7 +220,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
                 result = layer(axes=-1)([input1, input2])
             else:
                 result = layer()([input1, input2])
-            model = Model(inputs=[input1, input2], output=result)
+            model = Model(inputs=[input1, input2], outputs=result)
             model.compile(optimizer='adagrad', loss='mse')
             self._test_one_to_one_operator_core(model, [x1, x2])
 
@@ -233,7 +233,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             input1 = Input(shape=(H, W, C))
             input2 = Input(shape=(H, W, C))
             output = layer()([input1, input2])
-            model = Model(inputs=[input1, input2], output=output)
+            model = Model(inputs=[input1, input2], outputs=output)
             model.compile(optimizer='adagrad', loss='mse')
             self._test_one_to_one_operator_core_channels_last(model, [x1, x2])
 
@@ -248,7 +248,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
                 result = Activation(activation)(input)
             else:
                 result = activation()(input)
-            model = Model(input=input, output=result)
+            model = Model(inputs=input, outputs=result)
             model.compile(optimizer='adagrad', loss='mse')
 
             self._test_one_to_one_operator_core(model, x)
@@ -265,7 +265,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
                 result = Activation(activation)(input)
             else:
                 result = activation()(input)
-            model = Model(input=input, output=result)
+            model = Model(inputs=input, outputs=result)
             model.compile(optimizer='adagrad', loss='mse')
 
             self._test_one_to_one_operator_core_channels_last(model, x)
@@ -294,7 +294,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
                                     moving_mean_initializer='random_uniform',
                                     moving_variance_initializer=RandomUniform(minval=0.1, maxval=0.5),
                                     )(input)
-        model = Model(input=input, output=result)
+        model = Model(inputs=input, outputs=result)
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(model, x)
@@ -321,7 +321,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         input = Input(shape=(H, W, C))
         result = UpSampling2D(input)
-        model = Model(input=input, output=result)
+        model = Model(inputs=input, outputs=result)
         model.compile(optimizer='adagrad', loss='mse')
 
         self._test_one_to_one_operator_core_channels_last(model, x)
@@ -379,11 +379,11 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         sub_input1 = Input(shape=(C,))
         sub_mapped1 = Dense(D)(sub_input1)
-        sub_model1 = Model(input=sub_input1, output=sub_mapped1)
+        sub_model1 = Model(inputs=sub_input1, outputs=sub_mapped1)
 
         sub_input2 = Input(shape=(C,))
         sub_mapped2 = Dense(D)(sub_input2)
-        sub_model2 = Model(input=sub_input2, output=sub_mapped2)
+        sub_model2 = Model(inputs=sub_input2, outputs=sub_mapped2)
 
         input1 = Input(shape=(D,))
         input2 = Input(shape=(D,))
@@ -398,8 +398,6 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         y_reference = keras_model.predict(x)
         y_produced = _evaluate(onnx_model, x).reshape(N, D)
 
-
-
     def test_recursive_and_shared_model(self):
         N, C, D = 2, 3, 3
         x = _create_tensor(N, C)
@@ -407,12 +405,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         sub_input1 = Input(shape=(C,))
         sub_mapped1 = Dense(D)(sub_input1)
         sub_output1 = Activation('sigmoid')(sub_mapped1)
-        sub_model1 = Model(input=sub_input1, output=sub_output1)
+        sub_model1 = Model(inputs=sub_input1, outputs=sub_output1)
 
         sub_input2 = Input(shape=(C,))
         sub_mapped2 = sub_model1(sub_input2)
         sub_output2 = Activation('tanh')(sub_mapped2)
-        sub_model2 = Model(input=sub_input2, output=sub_output2)
+        sub_model2 = Model(inputs=sub_input2, outputs=sub_output2)
 
         input1 = Input(shape=(D,))
         input2 = Input(shape=(D,))
@@ -422,6 +420,6 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         mapped1_3 = sub_model1(mapped1_2)
         mapped2_2 = sub_model2(mapped2_1)
         sub_sum = Add()([mapped1_3, mapped2_2])
-        model = Model(inputs=[input1, input2], output=sub_sum)
+        model = Model(inputs=[input1, input2], outputs=sub_sum)
 
         self._test_one_to_one_operator_core_keras(model, [x, 2 * x])

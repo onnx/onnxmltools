@@ -17,3 +17,4 @@ from . import Scaler
 from . import SVM
 from . import SVD
 from . import TreeEnsemble
+from . import LightGbm
