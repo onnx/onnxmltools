@@ -30,31 +30,44 @@ def convert_bidirectional(scope, operator, container):
 
     # Extract the forward transformation matrix used to adjust input features
     W_x = np.empty(shape=(4, hidden_size, input_size))
-    K_W_x = forward_layer.get_weights()[0].T
+    K_W_x = forward_layer.get_weights()[0].T  # This matrix is a concatenation of W[ifco] in Keras
+    # Set up W_i
     W_x[0:] = K_W_x[0 * hidden_size:][:hidden_size]
+    # Set up W_o
     W_x[1:] = K_W_x[3 * hidden_size:][:hidden_size]
+    # Set up W_f
     W_x[2:] = K_W_x[1 * hidden_size:][:hidden_size]
+    # Set up W_c
     W_x[3:] = K_W_x[2 * hidden_size:][:hidden_size]
 
     # Extract the forward transformation matrix used to adjust hidden state
     W_h = np.empty(shape=(4, hidden_size, hidden_size))
-    K_W_h = forward_layer.get_weights()[1].T
+    K_W_h = forward_layer.get_weights()[1].T  # This matrix is a concatenation of R[ifco] in Keras
+    # Set up W_i
     W_h[0:] = K_W_h[0 * hidden_size:][:hidden_size]
+    # Set up W_o
     W_h[1:] = K_W_h[3 * hidden_size:][:hidden_size]
+    # Set up W_f
     W_h[2:] = K_W_h[1 * hidden_size:][:hidden_size]
+    # Set up W_c
     W_h[3:] = K_W_h[2 * hidden_size:][:hidden_size]
 
     # Bias vectors of forward layer
     b = None
     if forward_layer.use_bias:
         b = np.zeros(shape=(8, hidden_size))
-        keras_b = forward_layer.get_weights()[2]
+        keras_b = forward_layer.get_weights()[2]  # This matrix is a concatenation of B[ifco] in Keras
+        # Set up B_i
         b[0:] = keras_b[0 * hidden_size:][:hidden_size]
+        # Set up B_o
         b[1:] = keras_b[3 * hidden_size:][:hidden_size]
+        # Set up B_f
         b[2:] = keras_b[1 * hidden_size:][:hidden_size]
+        # Set up B_c
         b[3:] = keras_b[2 * hidden_size:][:hidden_size]
 
-    # Extract the backward transformation matrix used to adjust input features
+    # Extract the backward transformation matrix used to adjust input features. Note that the weight format for the
+    # backward layer is identical to that of the forward layer.
     W_x_back = np.empty(shape=(4, hidden_size, input_size))
     keras_W_x = backward_layer.get_weights()[0].T
     W_x_back[0:] = keras_W_x[0 * hidden_size:][:hidden_size]
@@ -249,3 +262,4 @@ def convert_bidirectional(scope, operator, container):
 
 
 register_converter(Bidirectional, convert_bidirectional)
+
