@@ -7,31 +7,29 @@
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 
-
 def convert_inner_product(scope, operator, container):
+#TODO: deal with input with shape [N,C,1,1]
     params = operator.raw_operator.innerProduct
-    op_type = 'FC'
-    inputs = [variable.full_name for variable in operator.inputs]
-    outputs = [variable.full_name for variable in operator.outputs]
+    op_type = 'Gemm'
     attrs = {'name': operator.full_name}
 
-    name_w = scope.get_unique_variable_name(operator.full_name + '_W')
-    shape_w = [params.outputChannels, params.inputChannels]
-    inputs.append(name_w)
-    container.add_initializer(name_w, onnx_proto.TensorProto.FLOAT, shape_w, params.weights.floatValue)
+    name_a = operator.inputs[0].full_name
 
     name_b = scope.get_unique_variable_name(operator.full_name + '_B')
-    shape_b = [params.outputChannels]
-    inputs.append(name_b)
+    shape_b = [params.outputChannels, params.inputChannels]
+    container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_b, params.weights.floatValue)
+
+    name_c = scope.get_unique_variable_name(operator.full_name + '_C')
+    shape_c = [params.outputChannels]
     if params.hasBias:
-        container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_b, params.bias.floatValue)
+        container.add_initializer(name_c, onnx_proto.TensorProto.FLOAT, shape_c, params.bias.floatValue)
     else:
-        container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_b, [0.] * shape_b[0])
+        container.add_initializer(name_c, onnx_proto.TensorProto.FLOAT, shape_c, [0.] * shape_b[0])
+    attrs['alpha'] = 1.0
+    attrs['beta'] = 1.0
+    attrs['transA'] = 0
+    attrs['transB'] = 1
 
-    attrs['axis'] = 1
-    attrs['axis_w'] = 1
-
-    container.add_node(op_type, inputs, outputs, **attrs)
-
+    container.add_node(op_type, [name_a, name_b, name_c], operator.outputs[0].full_name, **attrs)
 
 register_converter('innerProduct', convert_inner_product)

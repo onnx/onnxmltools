@@ -3,11 +3,12 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+import unittest
 
 import coremltools
 import numpy as np
-import onnxmltools
 import unittest
+import onnxmltools
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
@@ -15,7 +16,6 @@ from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, C
 from keras.initializers import RandomUniform
 
 np.random.seed(0)
-
 
 def _find_backend():
     try:
@@ -62,6 +62,7 @@ def _evaluate_cntk(onnx_model, inputs):
         inputs = [inputs]
 
     adjusted_inputs = dict()
+
     for i, x in enumerate(inputs):
         onnx_name = onnx_model.graph.input[i].name
         adjusted_inputs[onnx_name] = [np.ascontiguousarray(np.squeeze(_, axis=0)) for _ in np.split(x, x.shape[0])]
@@ -155,15 +156,21 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         self.assertTrue(np.allclose(y_reference, y_produced, atol=1e-6))
 
     def test_dense(self):
-        N, C = 2, 3
+        N, C, D = 2, 3, 2
         x = _create_tensor(N, C)
 
         input = Input(shape=(C,))
-        result = Dense(2)(input)
-        model = Model(inputs=input, outputs=result)
-        model.compile(optimizer='adagrad', loss='mse')
+        result = Dense(D)(input)
+        keras_model = Model(input=input, output=result)
+        keras_model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_one_to_one_operator_core(model, x)
+        coreml_model = coremltools.converters.keras.convert(keras_model)
+        onnx_model = onnxmltools.convert_coreml(coreml_model)
+
+        y_reference = keras_model.predict(x)
+        y_produced = _evaluate(onnx_model, x).reshape(N, D)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
 
     def test_conv_4d(self):
         N, C, H, W = 1, 2, 4, 3
@@ -321,12 +328,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         self._test_one_to_one_operator_core_channels_last(model, x)
 
     def test_flatten(self):
-        N, C, H, W = 2, 3, 1, 2
+        N, C, H, W, D = 2, 3, 1, 2, 2
         x = _create_tensor(N, C, H, W)
 
         keras_model = Sequential()
         keras_model.add(Flatten(input_shape=(H, W, C)))
-        keras_model.add(Dense(2))
+        keras_model.add(Dense(D))
         keras_model.compile(optimizer='adagrad', loss='mse')
 
         coreml_model = coremltools.converters.keras.convert(keras_model)
@@ -334,7 +341,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         y_reference = keras_model.predict(np.transpose(x, [0, 2, 3, 1]))
 
-        y_produced = _evaluate(onnx_model, x)
+        y_produced = _evaluate(onnx_model, x).reshape(N, D)
 
         self.assertTrue(np.allclose(y_reference, y_produced))
 
@@ -384,9 +391,13 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         mapped1_2 = sub_model1(input1)
         mapped2_2 = sub_model2(input2)
         sub_sum = Add()([mapped1_2, mapped2_2])
-        model = Model(inputs=[input1, input2], outputs=sub_sum)
+        keras_model = Model(inputs=[input1, input2], output=sub_sum)
 
-        self._test_one_to_one_operator_core(model, [x, 2 * x])
+        coreml_model = coremltools.converters.keras.convert(keras_model)
+        onnx_model = onnxmltools.convert_coreml(coreml_model)
+        x = [x, 2*x]
+        y_reference = keras_model.predict(x)
+        y_produced = _evaluate(onnx_model, x).reshape(N, D)
 
     def test_recursive_and_shared_model(self):
         N, C, D = 2, 3, 3
