@@ -351,7 +351,7 @@ def convert_bidirectional_lstm(scope, operator, container):
             apply_reshape(scope, lstm_y_name, lstm_y_h_reshape_name, container, desired_shape=[2, hidden_size])
 
             apply_split(scope, lstm_y_h_reshape_name, [operator.outputs[1].full_name, operator.outputs[3].full_name],
-                        split=[1, 1], axis=0)
+                        container, split=[1, 1], axis=0)
     else:
         # Here we ignore ONNX RNN's first output because it's useless. The second output of ONNX LSTM will be used to
         # generate the first and the second outputs of CoreML LSTM.
@@ -365,7 +365,7 @@ def convert_bidirectional_lstm(scope, operator, container):
             apply_reshape(scope, lstm_y_h_name, lstm_y_reshape_name, container, desired_shape=[2, hidden_size])
 
             apply_split(scope, lstm_y_reshape_name, [operator.outputs[1].full_name, operator.outputs[3].full_name],
-                        split=[1, 1], axis=0)
+                        container, split=[1, 1], axis=0)
 
     # Output cell state if necessary
     if len(operator.outputs) > 2:
@@ -373,7 +373,8 @@ def convert_bidirectional_lstm(scope, operator, container):
         apply_reshape(scope, lstm_y_c_name, lstm_y_c_reshape_name, container, desired_shape=[2, hidden_size])
 
         apply_split(scope, lstm_y_c_reshape_name, [operator.outputs[2].full_name, operator.outputs[4].full_name],
-                    split=[1, 1], axis=0)
+                    container, split=[1, 1], axis=0)
 
 
 register_converter('biDirectionalLSTM', convert_bidirectional_lstm)
+
