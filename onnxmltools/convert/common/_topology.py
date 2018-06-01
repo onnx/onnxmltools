@@ -605,7 +605,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     :return: a ONNX ModelProto
     '''
     if targeted_onnx != onnx.__version__:
-        raise RuntimeError(
+         raise RuntimeError(
             'ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
                 onnx.__version__, targeted_onnx))
 
