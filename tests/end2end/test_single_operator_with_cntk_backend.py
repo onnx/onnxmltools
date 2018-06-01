@@ -7,8 +7,8 @@ import unittest
 
 import coremltools
 import numpy as np
-import onnxmltools
 import unittest
+import onnxmltools
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
@@ -171,6 +171,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         y_produced = _evaluate(onnx_model, x).reshape(N, D)
 
         self.assertTrue(np.allclose(y_reference, y_produced))
+
     def test_conv_4d(self):
         N, C, H, W = 1, 2, 4, 3
         x = _create_tensor(N, C, H, W)

@@ -6,7 +6,6 @@
 
 from .....proto import onnx_proto
 from ....common._registration import register_converter
-from ....common._apply_operation import apply_reshape
 
 def convert_inner_product(scope, operator, container):
 #TODO: deal with input with shape [N,C,1,1]
@@ -25,7 +24,7 @@ def convert_inner_product(scope, operator, container):
     if params.hasBias:
         container.add_initializer(name_c, onnx_proto.TensorProto.FLOAT, shape_c, params.bias.floatValue)
     else:
-        container.add_initializer(name_b, onnx_proto.TensorProto.FLOAT, shape_c, [0.] * shape_b[0])
+        container.add_initializer(name_c, onnx_proto.TensorProto.FLOAT, shape_c, [0.] * shape_b[0])
     attrs['alpha'] = 1.0
     attrs['beta'] = 1.0
     attrs['transA'] = 0
