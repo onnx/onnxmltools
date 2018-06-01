@@ -8,6 +8,7 @@
 from . import Activation
 from . import AdvancedActivation
 from . import BatchNorm
+from . import Bidirectional
 from . import Concat
 from . import Conv
 from . import Crop
