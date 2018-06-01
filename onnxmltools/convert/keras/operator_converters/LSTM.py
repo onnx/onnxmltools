@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
+from distutils.version import StrictVersion
 from keras.layers import LSTM
 from ...common._apply_operation import apply_transpose, apply_reshape
 from ...common._registration import register_converter
@@ -106,21 +107,28 @@ def convert_keras_lstm(scope, operator, container):
     if betas:
         lstm_attrs['activation_beta'] = betas
 
+    # Set up other attributes
     lstm_attrs['direction'] = 'reverse' if reverse_input else 'forward'
-    lstm_attrs['output_sequence'] = 1 if output_seq else 0
     lstm_attrs['hidden_size'] = hidden_size
 
-    # We declare some names to store the outputs produced by ONNX LSTM.
+    # Set up version-dependent attributes
+    if operator.targeted_onnx_version < StrictVersion('1.2'):
+        lstm_attrs['output_sequence'] = 1 if output_seq else 0
+        op_version = 1
+    else:
+        op_version = 7
+
+    # We declare some names to store the outputs produced by ONNX LSTM. Then, create ONNX LSTM. Subsequently, its
+    # outputs may be adjusted to match Keras format.
     lstm_y_name = scope.get_unique_variable_name('lstm_y')
     lstm_output_names.append(lstm_y_name)
     lstm_h_name = scope.get_unique_variable_name('lstm_h')
     lstm_output_names.append(lstm_h_name)
     lstm_c_name = scope.get_unique_variable_name('lstm_c')
     lstm_output_names.append(lstm_c_name)
+    container.add_node(lstm__type, lstm_input_names, lstm_output_names, op_version=op_version, **lstm_attrs)
 
-    # Create ONNX LSTM. Subsequently, its outputs may be adjusted to match Keras format.
-    container.add_node(lstm__type, lstm_input_names, lstm_output_names, **lstm_attrs)
-
+    # Create output-adjusting operators
     if output_seq:
         lstm_y_name_transposed = scope.get_unique_variable_name('lstm_y_transposed')
         apply_transpose(scope, lstm_y_name, lstm_y_name_transposed, container, perm=[1, 0, 2])

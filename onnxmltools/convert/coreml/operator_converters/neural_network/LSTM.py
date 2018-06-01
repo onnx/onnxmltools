@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
+from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 from .Reshape import apply_reshape
@@ -246,18 +247,25 @@ def convert_unidirectional_lstm(scope, operator, container):
     if betas:
         lstm_attrs['activation_beta'] = betas
 
+    # Set up other attributes
     lstm_attrs['direction'] = 'reverse' if params.reverseInput else 'forward'
-    lstm_attrs['output_sequence'] = lstm_params.sequenceOutput
     lstm_attrs['hidden_size'] = hidden_size
     lstm_attrs['clip'] = lstm_params.cellClipThreshold
     lstm_attrs['input_forget'] = lstm_params.coupledInputAndForgetGate
+
+    # Set up version-dependent attributes
+    if operator.targeted_onnx_version < StrictVersion('1.2'):
+        lstm_attrs['output_sequence'] = lstm_params.sequenceOutput
+        op_version = 1
+    else:
+        op_version = 7
 
     # Create the main LSTM operator
     lstm_y_name = scope.get_unique_variable_name(lstm_op_name + '_Y')
     lstm_y_h_name = scope.get_unique_variable_name(lstm_op_name + '_Y_h')
     lstm_c_name = scope.get_unique_variable_name(lstm_op_name + '_Y_c')
     lstm_outputs.extend([lstm_y_name, lstm_y_h_name, lstm_c_name])
-    container.add_node('LSTM', lstm_inputs, lstm_outputs, **lstm_attrs)
+    container.add_node('LSTM', lstm_inputs, lstm_outputs, op_version=op_version, **lstm_attrs)
 
     # Handle the first output of LSTM
     if lstm_params.sequenceOutput:
@@ -269,7 +277,7 @@ def convert_unidirectional_lstm(scope, operator, container):
             apply_reshape(scope, lstm_y_h_name, operator.outputs[1].full_name, container,
                           desired_shape=[1, hidden_size])
     else:
-        # Here we ingore ONNX RNN's first output because it's useless and use the second output of ONNX LSTM to produce
+        # Here we ingore ONNX LSTM's first output because it's useless and use the second output of ONNX LSTM to produce
         # the first output of CoreML LSTM
         apply_reshape(scope, lstm_y_h_name, operator.outputs[0].full_name, container, desired_shape=[1, hidden_size])
 

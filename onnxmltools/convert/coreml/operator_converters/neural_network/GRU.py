@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
+from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 from .Reshape import apply_reshape
@@ -153,14 +154,25 @@ def convert_gru(scope, operator, container):
     if betas:
         gru_attrs['activation_beta'] = betas
     gru_attrs['direction'] = 'reverse' if params.reverseInput else 'forward'
-    gru_attrs['output_sequence'] = params.sequenceOutput
     gru_attrs['hidden_size'] = hidden_size
+
+    # Set up version-dependent attributes
+    if operator.targeted_onnx_version < StrictVersion('1.0'):
+        gru_attrs['output_sequence'] = params.sequenceOutput
+        op_version = 1
+    elif operator.targeted_onnx_version < StrictVersion('1.2'):
+        gru_attrs['linear_before_reset'] = 0
+        gru_attrs['output_sequence'] = params.sequenceOutput
+        op_version = 3
+    else:
+        gru_attrs['linear_before_reset'] = 0
+        op_version = 7
 
     # Create the major GRU operator in ONNX.
     gru_y_name = scope.get_unique_variable_name(gru_op_name + '_Y')
     gru_y_h_name = scope.get_unique_variable_name(gru_op_name + '_Y_h')
     gru_outputs.extend([gru_y_name, gru_y_h_name])
-    container.add_node('GRU', gru_inputs, gru_outputs, **gru_attrs)
+    container.add_node('GRU', gru_inputs, gru_outputs, op_version=op_version, **gru_attrs)
 
     # To simulate CoreML LSTM, we add post-processing operators to adjust ONNX LSTM outputs
     if params.sequenceOutput:
