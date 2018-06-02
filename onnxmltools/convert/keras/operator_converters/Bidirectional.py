@@ -227,9 +227,9 @@ def convert_bidirectional(scope, operator, container):
 
             # Change (T, N, 1, C') into (T, N, C') to meet Keras spec
             container.add_node('Squeeze', forward_y_name, operator.outputs[0].full_name,
-                               name=scope.get_unique_variable_name('Squeeze'), axes=[1])
+                               name=scope.get_unique_variable_name('Squeeze'), axes=[2])
             container.add_node('Squeeze', backward_y_name, operator.outputs[1].full_name,
-                               name=scope.get_unique_variable_name('Squeeze'), axes=[1])
+                               name=scope.get_unique_variable_name('Squeeze'), axes=[2])
     else:
         if merge_concat:
             # In this case, only one Keras output with shape (N, 2 * C') should be produced
@@ -256,9 +256,9 @@ def convert_bidirectional(scope, operator, container):
 
             # Change (T, N, 1, C') into (T, N, C') to meet Keras spec
             container.add_node('Squeeze', forward_y_name, operator.outputs[0].full_name,
-                               name=scope.get_unique_variable_name('Squeeze'), axes=[1])
+                               name=scope.get_unique_variable_name('Squeeze'), axes=[2])
             container.add_node('Squeeze', backward_y_name, operator.outputs[1].full_name,
-                               name=scope.get_unique_variable_name('Squeeze'), axes=[1])
+                               name=scope.get_unique_variable_name('Squeeze'), axes=[2])
 
 
 register_converter(Bidirectional, convert_bidirectional)

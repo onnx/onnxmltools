@@ -179,7 +179,6 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced))
 
-
     def test_conv_4d(self):
         N, C, H, W = 1, 2, 4, 3
         x = _create_tensor(N, C, H, W)

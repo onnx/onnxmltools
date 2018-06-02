@@ -1,4 +1,11 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+
 import numpy as np
+from distutils.version import StrictVersion
 from keras.layers import SimpleRNN
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_reshape, apply_transpose
@@ -54,15 +61,24 @@ def convert_keras_simple_rnn(scope, operator, container):
             attrs['activation_beta'] = [beta]
 
     attrs['direction'] = 'reverse' if reverse_input else 'forward'
-    attrs['output_sequence'] = 1 if output_seq else 0
     attrs['hidden_size'] = hidden_size
 
+    # Set up version-dependent attributes
+    if operator.targeted_onnx_version < StrictVersion('1.2'):
+        attrs['output_sequence'] = 1 if output_seq else 0
+        op_version = 1
+    else:
+        op_version = 7
+
+    # We use the collected information to build ONNX's RNN. ONNX RNN's outputs will be saved onto two intermediate
+    # tensors and we will adjust them subsequently to mimic Keras output format.
     rnn_y_name = scope.get_unique_variable_name('rnn_y')
     rnn_h_name = scope.get_unique_variable_name('rnn_h')
     rnn_output_names.append(rnn_y_name)
     rnn_output_names.append(rnn_h_name)
-    container.add_node('RNN', rnn_input_names, rnn_output_names, **attrs)
+    container.add_node('RNN', rnn_input_names, rnn_output_names, op_version=op_version, **attrs)
 
+    # Create operators to adjust ONNX output to meet Keras format
     if output_seq:
         permuted_rnn_y_name = scope.get_unique_variable_name('rnn_y_permuted')
         apply_transpose(scope, rnn_y_name, permuted_rnn_y_name, container, perm=[1, 0, 2])

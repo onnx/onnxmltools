@@ -1,4 +1,11 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+
 import numpy as np
+from distutils.version import StrictVersion
 from keras.layers import GRU
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_reshape, apply_transpose
@@ -67,22 +74,37 @@ def convert_keras_gru(scope, operator, container):
     if betas:
         attrs['activation_beta'] = betas
 
+    # Set up other attributes
     attrs['direction'] = 'reverse' if reverse_input else 'forward'
-    attrs['output_sequence'] = 1 if output_seq else 0
     attrs['hidden_size'] = hidden_size
 
+    # Set up version-dependent attributes
+    if operator.targeted_onnx_version < StrictVersion('1.0'):
+        op_version = 1
+        attrs['output_sequence'] = 1 if output_seq else 0
+    elif operator.targeted_onnx_version < StrictVersion('1.2'):
+        attrs['linear_before_reset'] = 0
+        attrs['output_sequence'] = 1 if output_seq else 0
+        op_version = 3
+    else:
+        attrs['linear_before_reset'] = 0
+        op_version = 7
+
+    # We use the collected information to build ONNX's GRU. ONNX GRU's outputs will be saved onto two intermediate
+    # tensors and we will adjust them subsequently to mimic Keras output format.
     gru_y_name = scope.get_unique_variable_name('gru_y')
     gru_h_name = scope.get_unique_variable_name('gru_h')
     gru_output_names = [gru_y_name, gru_h_name]
+    container.add_node(op_type, gru_input_names, gru_output_names, op_version=op_version, **attrs)
 
-    container.add_node(op_type, gru_input_names, gru_output_names, **attrs)
+    # Create output-adjusting operators
     if output_seq:
         intermediate_result_name = scope.get_unique_variable_name('intermediate_result')
         apply_transpose(scope, gru_y_name, intermediate_result_name, container, perm=[1, 0, 2])
         apply_reshape(scope, intermediate_result_name, operator.outputs[0].full_name, container,
                       desired_shape=[-1, seq_length, hidden_size])
     else:
-        # Here we ingore ONNX GRU's first output because it's useless.
+        # Here we ignore ONNX GRU's first output because it's useless.
         intermediate_result_name = scope.get_unique_variable_name('intermediate_result')
         apply_transpose(scope, gru_h_name, intermediate_result_name, container, perm=[1, 0, 2])
         apply_reshape(scope, intermediate_result_name, operator.outputs[0].full_name, container,

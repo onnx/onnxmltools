@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
+from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 from .Reshape import apply_reshape
@@ -184,14 +185,22 @@ def convert_simple_rnn(scope, operator, container):
     if beta is not None:
         rnn_attrs['activation_beta'] = [beta]
 
+    # Set up other attributes
     rnn_attrs['direction'] = 'reverse' if params.reverseInput else 'forward'
-    rnn_attrs['output_sequence'] = params.sequenceOutput
     rnn_attrs['hidden_size'] = hidden_size
 
-    # We use the collected information to build ONNX's RNN
+    # Set up version-dependent attributes
+    if operator.targeted_onnx_version < StrictVersion('1.2'):
+        rnn_attrs['output_sequence'] = params.sequenceOutput
+        op_version = 1
+    else:
+        op_version = 7
+
+    # We use the collected information to build ONNX's RNN. ONNX RNN's outputs will be saved onto two intermediate
+    # tensors and we will adjust them subsequently to mimic Keras output format.
     rnn_y_name = scope.get_unique_variable_name(rnn_op_name + '_Y')
     rnn_h_name = scope.get_unique_variable_name(rnn_op_name + '_Y_h')
-    container.add_node('RNN', rnn_inputs, [rnn_y_name, rnn_h_name], **rnn_attrs)
+    container.add_node('RNN', rnn_inputs, [rnn_y_name, rnn_h_name], op_version=op_version, **rnn_attrs)
 
     # Set up outputs' of RNN
     if params.sequenceOutput:
