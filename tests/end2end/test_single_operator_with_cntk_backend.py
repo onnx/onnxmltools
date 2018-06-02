@@ -164,6 +164,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         keras_model = Model(input=input, output=result)
         keras_model.compile(optimizer='adagrad', loss='mse')
 
+        # Verify Keras-to-CoreML-to-ONNX path
         coreml_model = coremltools.converters.keras.convert(keras_model)
         onnx_model = onnxmltools.convert_coreml(coreml_model)
 
@@ -171,6 +172,13 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         y_produced = _evaluate(onnx_model, x).reshape(N, D)
 
         self.assertTrue(np.allclose(y_reference, y_produced))
+
+        # Verify Keras-to-ONNX path
+        onnx_model = onnxmltools.convert_keras(keras_model)
+        y_produced = _evaluate(onnx_model, x).reshape(N, D)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
+
 
     def test_conv_4d(self):
         N, C, H, W = 1, 2, 4, 3
@@ -392,12 +400,19 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         mapped2_2 = sub_model2(input2)
         sub_sum = Add()([mapped1_2, mapped2_2])
         keras_model = Model(inputs=[input1, input2], output=sub_sum)
+        x = [x, 2*x]
 
+        # Verify Keras-to-CoreML-to-ONNX path
         coreml_model = coremltools.converters.keras.convert(keras_model)
         onnx_model = onnxmltools.convert_coreml(coreml_model)
-        x = [x, 2*x]
         y_reference = keras_model.predict(x)
         y_produced = _evaluate(onnx_model, x).reshape(N, D)
+
+        # Verify Keras-to-ONNX path
+        onnx_model = onnxmltools.convert_keras(keras_model)
+        y_produced = _evaluate(onnx_model, x).reshape(N, D)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
 
     def test_recursive_and_shared_model(self):
         N, C, D = 2, 3, 3
