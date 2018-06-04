@@ -40,4 +40,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
 
     onnx_model = convert_topology(topology, name, doc_string, targeted_onnx)
 
+    # Check if model is valid
+    onnx.checker.check_model(onnx_model)
+
     return onnx_model

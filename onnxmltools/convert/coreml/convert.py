@@ -73,4 +73,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
     if len(metadata_props) > 0:
         onnx_model.metadata_props.extend(metadata_props)
 
+    # Check if model is valid
+    onnx.checker.check_model(onnx_model)
+
     return onnx_model
