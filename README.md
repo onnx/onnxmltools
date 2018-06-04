@@ -30,10 +30,11 @@ pip install git+https://github.com/onnx/onnxmltools
 If you choose to install `onnxmltools` from its source code, you must set an environment variable `ONNX_ML=1` before installing `onnx` package.
 
 ## Dependencies
-This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Apple Core ML, or Keras, you need the following packages installed respectively:
+This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Apple Core ML, Keras, or LightGBM, you need the following packages installed respectively:
 1. scikit-learn
 2. CoreMLTools
 3. Keras
+4. LightGBM (scikit-learn interface)
 
 ## Examples
 Here is a simple example to convert a CoreML model:
