@@ -421,6 +421,8 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__):
     :param model: CoreML model
     :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
     name and a type defined in data_types.py.
+    :param targeted_onnx: a version string such as `1.1.2` or `1.2.1` for specifying the ONNX version used to produce
+    the output model.
     :return: a Topology object. It's a intermediate representation of the input CoreML model
     '''
 
