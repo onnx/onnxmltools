@@ -25,29 +25,37 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
       3.  preprocessing.LabelEncoder
       4.  preprocessing.Normalizer
       5.  preprocessing.OneHotEncoder
-      6.  preprocessing.StandardScaler
+      6.  preprocessing.RobustScale
+      7.  preprocessing.StandardScaler
+      8.  decomposition.TruncatedSVD
     * Linear classification and regression:
-      7.  svm.LinearSVC
-      8.  linear_model.LogisticRegression,
-      9.  linear_model.SGDClassifier
-      10. svm.LinearSVR
-      11. linear_model.LinearRegression
-      12. linear_model.Ridge
-      13. linear_model.SGDRegressor
+      9.  svm.LinearSVC
+      10. linear_model.LogisticRegression,
+      11. linear_model.SGDClassifier
+      12. svm.LinearSVR
+      13. linear_model.LinearRegression
+      14. linear_model.Ridge
+      15. linear_model.SGDRegressor
+      16. linear_model.ElasticNet
     * Support vector machine for classification and regression
-      14. svm.SVC
-      15. svm.SVR
-      16. svm.NuSVC
-      17. svm.NuSVR
+      17. svm.SVC
+      18. svm.SVR
+      19. svm.NuSVC
+      20. svm.NuSVR
     * Tree-based models for classification and regression
-      18. tree.DecisionTreeClassifier
-      19. tree.DecisionTreeRegressor
-      20. ensemble.GradientBoostingClassifier
-      21. ensemble.GradientBoostingRegressor
-      22. ensemble.RandomForestClassifier
-      23. ensemble.RandomForestRegressor
+      21. tree.DecisionTreeClassifier
+      22. tree.DecisionTreeRegressor
+      23. ensemble.GradientBoostingClassifier
+      24. ensemble.GradientBoostingRegressor
+      25. ensemble.RandomForestClassifier
+      26. ensemble.RandomForestRegressor
+      27. ensemble.ExtraTreesClassifier
+      28. ensemble.ExtraTreesRegressor
+    * LightGBM Python module
+      29. LGBMClassifiers (http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMClassifier)
+      30. LGBMRegressor (http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMRegressor)
     * pipeline
-      24. pipeline.Pipeline
+      31. pipeline.Pipeline
 
     For pipeline conversion, user needs to make sure each component is one of our supported items (1)-(24).
 
