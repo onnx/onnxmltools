@@ -296,7 +296,9 @@ def apply_tile(scope, input_name, output_name, container, operator_name=None, re
         container.add_node('Identity', intermediate_output_name, output_name, op_version=1, name=name)
     else:
         # ONNX-1.2 has a new Tile and we use it here
-        container.add_node('Tile', input_name, output_name, op_version=7, name=name, repeats=repeats)
+        repeat_tensor_name = scope.get_unique_variable_name(name + '_repeats')
+        container.add_initializer(repeat_tensor_name, onnx_proto.TensorProto.INT64, [len(repeats)], repeats)
+        container.add_node('Tile', [input_name, repeat_tensor_name], output_name, op_version=7, name=name)
 
 
 def apply_transpose(scope, input_name, output_name, container, operator_name=None, perm=None):
@@ -310,7 +312,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
     :param mode: nearest or linear
     :param scales: an integer list of scaling-up rate of all input dimensions
     '''
-    name = _create_name_or_use_existing_one(scope, 'Transpose', operator_name)
+    name = _create_name_or_use_existing_one(scope, 'Upsample', operator_name)
 
     attrs = {'name': name}
     if container.targeted_onnx_version < StrictVersion('1.2'):
@@ -321,7 +323,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
         attrs['mode'] = mode.upper()
         op_version = 1
     else:
-        attrs['scales'] = map(float, scales)
+        attrs['scales'] = list(map(float, scales))
         attrs['mode'] = mode.lower()
         op_version = 7
 
