@@ -76,24 +76,42 @@ def determine_tensor_type(tensor, default_batch_size, keras_shape=None):
 
 
 def parse_keras(model, initial_types=None, targeted_onnx=onnx.__version__):
+    '''
+    The main parsing function of Keras Model and Sequential objects.
+
+    :param model: A Keras Model or Sequential object
+    :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
+    name and a type defined in data_types.py.
+    :param targeted_onnx: a version string such as `1.1.2` or `1.2.1` for specifying the ONNX version used to produce
+    the output model.
+    :return: a Topology object. It's a intermediate representation of the input Keras model
+    '''
     raw_model_container = KerasModelContainer(model)
 
     topology = Topology(raw_model_container, default_batch_size=1, initial_types=initial_types,
                         targeted_onnx=targeted_onnx)
     scope = topology.declare_scope('__root__')
 
+    # Each inbound node defines an evaluation of the underlining model (if the model is called multiple times, it may
+    # contain several inbound nodes). According to the tensors specified in those inbound nodes, we declare the roots
+    # and leaves of the computational graph described by the Keras input model.
     for node in _extract_inbound_nodes(model):
         input_shapes, output_shapes = extract_model_input_and_output_shapes(model, topology.default_batch_size)
+
+        # Declare inputs for a specific model execution
         for tensor, shape in zip(node.input_tensors, input_shapes):
             raw_model_container.add_input_name(tensor.name)
             tensor_type = determine_tensor_type(tensor, topology.default_batch_size, list(shape))
             scope.get_local_variable_or_declare_one(tensor.name, tensor_type)
 
+        # Declare outputs for a specific model execution
         for tensor, shape in zip(node.output_tensors, output_shapes):
             raw_model_container.add_output_name(tensor.name)
             tensor_type = determine_tensor_type(tensor, topology.default_batch_size, list(shape))
             scope.get_local_variable_or_declare_one(tensor.name, tensor_type)
 
+    # For each model execution, we call a parsing function to create a computational (sub-)graph because ONNX has no
+    # model/layer sharing.
     for node in _extract_inbound_nodes(model):
         _parse_keras(topology, scope, model, node)
 
@@ -105,16 +123,22 @@ def parse_keras(model, initial_types=None, targeted_onnx=onnx.__version__):
 def _parse_keras(topology, parent_scope, model, inbound_node):
     if isinstance(model, Model):
         scope = topology.declare_scope('scope')
+        # Declare output variables so that they can be connected with the variables produced in layers and sub-models
         for layer in model.layers:
             for node in _extract_inbound_nodes(layer):
                 for tensor in node.output_tensors:
                     tensor_type = determine_tensor_type(tensor, topology.default_batch_size)
                     scope.declare_local_variable(tensor.name, tensor_type)
 
+        # Recursively call the parsing function
         for layer in model.layers:
             for node in _extract_inbound_nodes(layer):
                 _parse_keras(topology, scope, layer, node)
 
+        # Connect the variables declared when parsing the input model and the actual model inputs. inbound_node has the
+        # actual inputs while the while graph is indeed declared only via the first inbound node of the input model.
+        # That is, for a shared (sub-)model, we may declare it several times and each time we may connect its I/O with
+        # the I/O specified in a inbound node.
         for parent_tensor, local_tensor in zip(inbound_node.input_tensors, _extract_inbound_nodes(model)[0].input_tensors):
             parent_tensor_type = determine_tensor_type(parent_tensor, topology.default_batch_size)
             local_tensor_type = determine_tensor_type(local_tensor, topology.default_batch_size)
@@ -124,6 +148,8 @@ def _parse_keras(topology, parent_scope, model, inbound_node):
             operator.inputs.append(parent_variable)
             operator.outputs.append(local_variable)
 
+        # Connect the variables declared when parsing the input model and the actual model outputs. inbound_node has the
+        # actual outputs while the while graph is indeed declared via the first inbound node of the input models.
         for parent_tensor, local_tensor in zip(inbound_node.output_tensors, _extract_inbound_nodes(model)[0].output_tensors):
             parent_tensor_type = determine_tensor_type(parent_tensor, topology.default_batch_size)
             local_tensor_type = determine_tensor_type(local_tensor, topology.default_batch_size)
@@ -137,6 +163,9 @@ def _parse_keras(topology, parent_scope, model, inbound_node):
         if isinstance(model, InputLayer):
             return
         operator = parent_scope.declare_local_operator(type(model), raw_model=model)
+
+        # Simply connect the layer's I/O with variables declared in the parent scope. Note that it may create input
+        # variables in the parent scope because we only declare output variables in the beginning of _parse_keras(...)
         for parent_tensor in inbound_node.input_tensors:
             tensor_type = determine_tensor_type(parent_tensor, topology.default_batch_size)
             operator.inputs.append(parent_scope.get_local_variable_or_declare_one(parent_tensor.name, tensor_type))
