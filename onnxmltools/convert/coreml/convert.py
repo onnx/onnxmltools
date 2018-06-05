@@ -10,7 +10,7 @@ from ...proto import onnx
 from ...proto import onnx_proto
 from ..common._topology import convert_topology
 from ._parse import parse_coreml
-from onnxmltools.utils import float16_converter
+
 # Import modules to invoke function registrations
 from . import operator_converters
 from . import shape_calculators
@@ -72,6 +72,5 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
     # Edit ONNX model's attributes related to CoreML's meta information
     if len(metadata_props) > 0:
         onnx_model.metadata_props.extend(metadata_props)
-    model_path = "C:\work\winmltools2\models\onnx_prerelease\winmlperf_coreml_SqueezeNet_prerelease.onnx"
-    return float16_converter(model_path)
-    # return onnx_model
+
+    return onnx_model
