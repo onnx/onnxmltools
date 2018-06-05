@@ -17,8 +17,8 @@ def float16_converter(model_path):
 
     ::
 
-        from onnxmltools.utils import float16_convert
-        float16_convert('c:/winmlperf_coreml_SqueezeNet_prerelease.onnx')
+        from onnxmltools.utils import float16_converter
+        float16_converter('c:/winmlperf_coreml_SqueezeNet_prerelease.onnx')
     """
     model = load_model(model_path)
     # create a queue for BFS

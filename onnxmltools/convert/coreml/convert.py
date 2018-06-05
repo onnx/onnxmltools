@@ -10,7 +10,6 @@ from ...proto import onnx
 from ...proto import onnx_proto
 from ..common._topology import convert_topology
 from ._parse import parse_coreml
-# from ...utils.float16_converter import float16_convert
 from onnxmltools.utils import float16_converter
 # Import modules to invoke function registrations
 from . import operator_converters
