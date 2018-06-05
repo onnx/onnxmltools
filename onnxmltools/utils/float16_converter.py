@@ -7,10 +7,20 @@ def npfloat16_to_int(list):
     return [int(bin(_.view('H'))[2:].zfill(16), 2) for _ in list]
 
 
-def float16_convert(file):
-    model = load_model("C:\work\winmltools2\models\onnx_prerelease\winmlperf_coreml_SqueezeNet_prerelease.onnx")
-    # model = load_model("C:\work\winmltools2\models\onnx_prerelease\winmlperf_coreml_MobileNet_prerelease.onnx")
-    # model = load_model(file)
+def float16_converter(model_path):
+    """
+    Convert TensorProto type float to float16 in ONNX model.
+    :param model_path: ONNX model path and name
+    :return model: converted ONNX model
+
+    Example:
+
+    ::
+
+        from onnxmltools.utils import float16_convert
+        float16_convert('c:/winmlperf_coreml_SqueezeNet_prerelease.onnx')
+    """
+    model = load_model(model_path)
     # create a queue for BFS
     queue = []
     if not model.graph: return None
