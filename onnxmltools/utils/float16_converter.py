@@ -1,7 +1,7 @@
 import numpy as np
 from struct import unpack
 from ..convert.common.data_types import *
-from onnxmltools.utils import load_model
+from onnxmltools.utils import load_model, save_model
 
 
 def npfloat16_to_int(np_list):
@@ -13,21 +13,23 @@ def npfloat16_to_int(np_list):
     return [int(bin(_.view('H'))[2:].zfill(16), 2) for _ in np_list]
 
 
-def float16_converter(model_path):
+def float16_converter(onnx_file, new_onnx_file):
     """
-    Convert TensorProto type float to float16 in ONNX model.
-    :param model_path: ONNX model path and name
-    :return model: converted ONNX model
+    Convert ONNX model from TensorProto type float to float16.
+    :param onnx_file: ONNX model path and name
+    :param new_onnx_file: new ONNX model path and name
 
     Example:
 
     ::
 
         from onnxmltools.utils import float16_converter
-        model_path = 'c:/winmlperf_coreml_SqueezeNet_prerelease.onnx'
-        model = float16_converter(model_path)
+        onnx_file = 'c:/winmlperf_coreml_SqueezeNet_prerelease.onnx'
+        new_onnx_file = 'c:/winmlperf_coreml_SqueezeNet_prerelease_float16.onnx'
+        float16_converter(onnx_file, new_onnx_file)
     """
-    model = load_model(model_path)
+    # read onnx file to model
+    model = load_model(onnx_file)
     # create a queue for BFS
     queue = []
     if not model.graph: return None
@@ -50,12 +52,12 @@ def float16_converter(model_path):
             if hasattr(q, 'graphs'):
                 for n in q.graphs:
                     next_level.append(n)
-            # graph.initializer  (TensorProto)
+            # if q is graph, process graph.initializer(TensorProto), input and output (ValueInfoProto)
             if hasattr(q, 'initializer'):
                 for n in q.initializer:
                     if n.data_type == onnx_proto.TensorProto.FLOAT:
                         n.data_type = onnx_proto.TensorProto.FLOAT16
-                        # convert float_data (float) to flat16 and write to int32_data
+                        # convert float_data (float) to float16 and write to int32_data
                         int_list = npfloat16_to_int(np.float16(n.float_data))
                         n.int32_data[:] = int_list
                         n.float_data[:] = []
@@ -63,7 +65,7 @@ def float16_converter(model_path):
                         float32_list = []
                         for i in range(len(n.raw_data)//4):
                             float32_list += unpack('f', n.raw_data[i*4:(i+1)*4])
-                        # convert float to flat16
+                        # convert float to float16
                         int_list = npfloat16_to_int(np.float16(float32_list))
                         # convert float16 to bytes and write back to raw_data
                         n.raw_data = b''
@@ -99,17 +101,18 @@ def float16_converter(model_path):
                     float32_list = []
                     for i in range(len(q.t.raw_data) // 4):
                         float32_list += unpack('f', q.t.raw_data[i * 4:(i + 1) * 4])
-                    # convert float to flat16
+                    # convert float to float16
                     int_list = npfloat16_to_int(np.float16(float32_list))
                     # convert float16 to bytes and write back to raw_data
                     q.t.raw_data = b''
                     for num in int_list:
                         q.t.raw_data += num.to_bytes(2, byteorder='little', signed=True)
-
             # if q is node.attribute, process node.attribute.tensors (TensorProto)
             if hasattr(q, 'tensors'):
                 for n in q.tensors:
                     if n.data_type == onnx_proto.TensorProto.FLOAT:
                         n.data_type = onnx_proto.TensorProto.FLOAT16
         queue = next_level
-    return model
+    # save converted model to new onnx file
+    save_model(model, new_onnx_file)
+
