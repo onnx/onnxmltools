@@ -57,6 +57,7 @@ def _parse_tree_structure(tree_id, class_id, learning_rate, tree_structure, attr
         attrs['nodes_missing_value_tracks_true'].append(1)
     else:
         attrs['nodes_missing_value_tracks_true'].append(0)
+    attrs['nodes_hitrates'].append(1.)
     _parse_node(tree_id, class_id, left_id, node_id_pool, learning_rate, tree_structure['left_child'], attrs)
     _parse_node(tree_id, class_id, right_id, node_id_pool, learning_rate, tree_structure['right_child'], attrs)
 
@@ -81,6 +82,7 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
             attrs['nodes_missing_value_tracks_true'].append(1)
         else:
             attrs['nodes_missing_value_tracks_true'].append(0)
+        attrs['nodes_hitrates'].append(1.)
 
         # Recursively dive into the child nodes
         _parse_node(tree_id, class_id, left_id, node_id_pool, learning_rate, node['left_child'], attrs)
@@ -101,6 +103,7 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
         attrs['nodes_falsenodeids'].append(0)
         # Leaf node has no split function. A zero is appended but it will never be used.
         attrs['nodes_missing_value_tracks_true'].append(0)
+        attrs['nodes_hitrates'].append(1.)
 
         # Leaf attributes
         attrs['class_treeids'].append(tree_id)

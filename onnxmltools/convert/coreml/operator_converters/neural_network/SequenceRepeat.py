@@ -10,7 +10,7 @@ from ....common._registration import register_converter
 
 def convert_sequence_repeat(scope, operator, container):
     repeat_count = operator.raw_operator.sequenceRepeat.nRepetitions
-    apply_tile(scope, operator.input_full_names, operator.output_full_names, container,
+    apply_tile(scope, operator.input_full_names[0], operator.output_full_names[0], container,
                operator_name=operator.full_name, repeats=[repeat_count])
 
 

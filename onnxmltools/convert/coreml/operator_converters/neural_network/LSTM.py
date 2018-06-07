@@ -250,7 +250,7 @@ def convert_unidirectional_lstm(scope, operator, container):
     # Set up other attributes
     lstm_attrs['direction'] = 'reverse' if params.reverseInput else 'forward'
     lstm_attrs['hidden_size'] = hidden_size
-    lstm_attrs['clip'] = lstm_params.cellClipThreshold
+    lstm_attrs['clip'] = float(lstm_params.cellClipThreshold)
     lstm_attrs['input_forget'] = lstm_params.coupledInputAndForgetGate
 
     # Set up version-dependent attributes

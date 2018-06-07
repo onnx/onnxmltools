@@ -85,11 +85,15 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
 
     if container.targeted_onnx_version <= StrictVersion('1.0'):
         attrs['consumed_inputs'] = [0] * len(input_names)
+        if len(input_names) > 3:
+            attrs['consumed_inputs'][3] = 1
+        if len(input_names) > 4:
+            attrs['consumed_inputs'][4] = 2
+        attrs['is_test'] = is_test
         op_version = 1
-        attrs['is_test'] = is_test
     elif container.targeted_onnx_version < StrictVersion('1.2'):
-        op_version = 6
         attrs['is_test'] = is_test
+        op_version = 6
     else:
         op_version = 7
 
@@ -286,17 +290,34 @@ def apply_tile(scope, input_name, output_name, container, operator_name=None, re
         for axis, repeat_count in enumerate(repeats):
             if repeat_count == 1:
                 continue
+
+            # Create the 2nd input of Tile
+            tile_tensor_name = scope.get_unique_variable_name(name + '_tile')
+            container.add_initializer(tile_tensor_name, onnx_proto.TensorProto.FLOAT, [1], [float(repeat_count)])
+
+            # Create the 3rd input of Tile
+            axis_tensor_name = scope.get_unique_variable_name(name + '_axis')
+            container.add_initializer(axis_tensor_name, onnx_proto.TensorProto.FLOAT, [1], [float(axis)])
+
+            # Create tile for duplicating along one axis. After ONNX-1.2, we can duplicate along multiple axes, so we
+            # don't have to iterate through all axes.
             intermediate_output_name = scope.get_unique_variable_name(name + '_input')
-            container.add_node('Tile', intermediate_input_name, intermediate_output_name,
-                               name=name, tiles=repeat_count, axis=axis)
+            container.add_node('Tile', [intermediate_input_name, tile_tensor_name, axis_tensor_name], intermediate_output_name,
+                               name=name)
+
+            # Use the output produced by this round as the input in the next iteration
             intermediate_input_name = intermediate_output_name
-            name = scope.get_unique_operator_name('Tile')  # Create a new name for next Tile
+
+            # Create a new name for next Tile
+            name = scope.get_unique_operator_name('Tile')
 
         # Use the last Tile name for the name of an Identity
         container.add_node('Identity', intermediate_output_name, output_name, op_version=1, name=name)
     else:
         # ONNX-1.2 has a new Tile and we use it here
-        container.add_node('Tile', input_name, output_name, op_version=7, name=name, repeats=repeats)
+        repeat_tensor_name = scope.get_unique_variable_name(name + '_repeats')
+        container.add_initializer(repeat_tensor_name, onnx_proto.TensorProto.INT64, [len(repeats)], repeats)
+        container.add_node('Tile', [input_name, repeat_tensor_name], output_name, op_version=7, name=name)
 
 
 def apply_transpose(scope, input_name, output_name, container, operator_name=None, perm=None):
@@ -310,7 +331,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
     :param mode: nearest or linear
     :param scales: an integer list of scaling-up rate of all input dimensions
     '''
-    name = _create_name_or_use_existing_one(scope, 'Transpose', operator_name)
+    name = _create_name_or_use_existing_one(scope, 'Upsample', operator_name)
 
     attrs = {'name': name}
     if container.targeted_onnx_version < StrictVersion('1.2'):
@@ -321,7 +342,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
         attrs['mode'] = mode.upper()
         op_version = 1
     else:
-        attrs['scales'] = map(float, scales)
+        attrs['scales'] = list(map(float, scales))
         attrs['mode'] = mode.lower()
         op_version = 7
 

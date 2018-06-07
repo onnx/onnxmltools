@@ -27,7 +27,8 @@ def calculate_split_output_shapes(operator):
 
     output_shape[1] = int(divided)
 
-    operator.outputs[0].type.shape = output_shape
+    for i in range(len(operator.outputs)):
+        operator.outputs[i].type.shape = copy.deepcopy(output_shape)
 
 
 register_shape_calculator('split', calculate_split_output_shapes)

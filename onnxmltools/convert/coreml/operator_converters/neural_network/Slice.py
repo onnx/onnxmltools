@@ -28,7 +28,8 @@ def convert_slice(scope, operator, container):
     attrs['axes'] = [1, 2, 3]
     attrs['starts'] = starts
     attrs['ends'] = ends
-    attrs['stride'] = params.stride
+    if params.stride != 1:
+        raise ValueError('Stride must be 1 but got %s' % params.stride)
 
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_version=2, **attrs)
 

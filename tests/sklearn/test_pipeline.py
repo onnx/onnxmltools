@@ -40,18 +40,3 @@ class TestSklearnPipeline(unittest.TestCase):
                                      [('input1', Int64TensorType([1, 1])), ('input2', FloatTensorType([1, 1]))])
         self.assertTrue(len(model_onnx.graph.node[-1].output) == 1)
         self.assertTrue(model_onnx is not None)
-
-    def test_combine_inputs_with_string(self):
-        from sklearn.preprocessing import OneHotEncoder
-        from sklearn.preprocessing import StandardScaler
-        from sklearn.preprocessing import LabelEncoder
-        from sklearn.pipeline import make_pipeline
-
-        model = LabelEncoder()
-        model.fit(['a', 'b', 'b', 'a', 'c'])
-
-        model_onnx = convert_sklearn(model, 'pipeline',
-                                     [('input1', StringTensorType([1, 1])), ('input2', StringTensorType([1, 4]))])
-        self.assertTrue(len(model_onnx.graph.node[-1].output) == 1)
-        self.assertTrue(model_onnx is not None)
-

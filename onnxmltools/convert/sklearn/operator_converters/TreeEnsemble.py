@@ -20,6 +20,7 @@ def _get_default_tree_classifier_attribute_pairs():
     attrs['nodes_truenodeids'] = []
     attrs['nodes_falsenodeids'] = []
     attrs['nodes_missing_value_tracks_true'] = []
+    attrs['nodes_hitrates'] = []
     attrs['class_treeids'] = []
     attrs['class_nodeids'] = []
     attrs['class_ids'] = []
@@ -57,6 +58,7 @@ def _add_node(attr_pairs, is_classifier, tree_id, tree_weight, node_id, feature_
     attr_pairs['nodes_truenodeids'].append(true_child_id)
     attr_pairs['nodes_falsenodeids'].append(false_child_id)
     attr_pairs['nodes_missing_value_tracks_true'].append(False)
+    attr_pairs['nodes_hitrates'].append(1.)
 
     # Add leaf information for making prediction
     if mode == 'LEAF':
