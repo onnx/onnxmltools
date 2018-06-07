@@ -2,7 +2,7 @@ numpy
 protobuf
 codecov
 tensorflow
-keras
+keras==2.1.6
 coremltools
 pandas
 pytest
