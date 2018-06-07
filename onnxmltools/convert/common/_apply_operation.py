@@ -92,11 +92,6 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
         attrs['is_test'] = is_test
         op_version = 1
     elif container.targeted_onnx_version < StrictVersion('1.2'):
-        attrs['consumed_inputs'] = [0] * len(input_names)
-        if len(input_names) > 3:
-            attrs['consumed_inputs'][3] = 1
-        if len(input_names) > 4:
-            attrs['consumed_inputs'][4] = 2
         attrs['is_test'] = is_test
         op_version = 6
     else:

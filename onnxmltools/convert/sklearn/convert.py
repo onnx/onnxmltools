@@ -84,7 +84,4 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
     onnx_model = convert_topology(topology, name, doc_string, targeted_onnx)
 
-    # Check if model is valid
-    onnx.checker.check_model(onnx_model)
-
     return onnx_model
