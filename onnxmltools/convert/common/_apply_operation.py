@@ -366,7 +366,7 @@ def apply_prelu(scope, input_name, output_name, container, operator_name=None, s
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=1, name=name,
                            consumed_inputs=[0, 0])
     else:
-        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=6, name=name)
+        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=7, name=name)
 
 
 def apply_elu(scope, input_name, output_name, container, operator_name=None, alpha=None):
