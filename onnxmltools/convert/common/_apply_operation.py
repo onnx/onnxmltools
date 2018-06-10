@@ -302,8 +302,8 @@ def apply_tile(scope, input_name, output_name, container, operator_name=None, re
             # Create tile for duplicating along one axis. After ONNX-1.2, we can duplicate along multiple axes, so we
             # don't have to iterate through all axes.
             intermediate_output_name = scope.get_unique_variable_name(name + '_input')
-            container.add_node('Tile', [intermediate_input_name, tile_tensor_name, axis_tensor_name], intermediate_output_name,
-                               name=name)
+            container.add_node('Tile', [intermediate_input_name, tile_tensor_name, axis_tensor_name],
+                               intermediate_output_name, name=name)
 
             # Use the output produced by this round as the input in the next iteration
             intermediate_input_name = intermediate_output_name
@@ -365,6 +365,8 @@ def apply_prelu(scope, input_name, output_name, container, operator_name=None, s
     if container.targeted_onnx_version <= StrictVersion('1.0'):
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=1, name=name,
                            consumed_inputs=[0, 0])
+    elif container.targeted_onnx_version < StrictVersion('1.2'):
+        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=6, name=name)
     else:
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=7, name=name)
 
