@@ -48,7 +48,7 @@ def convert_inner_product(scope, operator, container):
         # Input shape is [N, C, 1, 1] so we expect output is also 4-D, [N, C', 1, 1].
         buffer_tensor_name = scope.get_unique_variable_name(operator.full_name + '_buffer')
         container.add_node('Gemm', [name_a, name_b, name_c], buffer_tensor_name, **attrs)
-        apply_reshape(scope, operator.inputs[0].full_name, operator.outputs[0].full_name, container,
+        apply_reshape(scope, buffer_tensor_name, operator.outputs[0].full_name, container,
                       desired_shape=[-1, int(params.outputChannels), 1, 1])
     else:
         # Input shape is [N, C], so we don't need to change Gemm's output shape.
