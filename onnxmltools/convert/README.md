@@ -12,24 +12,28 @@ In ONNXMLTools, the conversion framework consists of several essential component
     * RawModelContainer
         * CoremlModelContainer
         * SklearnModelContainer
+        * KerasModelContainer
     * ModelComponentContainer
-* Parsers (defined in coreml/sklearn subdirectory's _parse.py)
+* Parsers (defined in coreml/sklearn/keras subdirectory's _parse.py)
     * Core ML parser
     * scikit-learn parser
+    * Keras parser
 * Compiler (defined in _topology.py)
     * Graph optimization
     * Shape inference
     * Apply post-processing rules
     * Conduct basic checks
-* Shape calculators (defined in coreml/sklearn's shape_calculators subdirectory)
+* Shape calculators (defined in coreml/sklearn/keras's shape_calculators subdirectory)
     * Core ML shape calculators
     * scikit-learn shape calculators
-* Converters (defined in coreml/sklearn's operator_converters subdirectory)
+    * Keras shape calculators
+* Converters (defined in coreml/sklearn/keras's operator_converters subdirectory)
     * Core ML converters
     * scikit-learn converters
+    * Keras converters
 * Registration (defined in _registration.py)
     * shape calculator registration
-    * converter registratoin
+    * converter registration
 
 Notice that the design concept of this intermediate representation (IR) is to have some suitable data structures required to convert a computational graph from one format to another.
 
@@ -40,9 +44,9 @@ Again, we emphasize that this IR is not a formal language. It is just a collecti
 The `Topology` class is the top-level structure of a computational graph. A `Topology` object may contain several scopes and each scope can define its own operators and variables. That is, the hierarchy relation of these objects may be `Topology` > `Scope` > `Operator` = `Variable`.
 In `Topology`, we provide some functions for processing the whole graph. For example, `topological_operator_iterator` can traverse all the operators included in a topology like we're really executing the considered graph.
 
-There are two major functionalities a `Scope` may provide. First, it includes a naming mechanism for variables/operators so that all variable/operator names are unique. Note that variables' naming mechanism is independent from that of operators so that an operator and a variable can share the same name. Second, a `Scope` works like a container of operators and variables. Because two different `Scope` objects are essentially independent, we can use them in a recursive parsing algorithm to isolate components found at different stages.
+There are two major functions a `Scope` may provide. First, it includes a naming mechanism for variables/operators so that all variable/operator names are unique. Note that variables' naming mechanism is independent from that of operators so that an operator and a variable can share the same name. Second, a `Scope` works like a container of operators and variables. Because two different `Scope` objects are essentially independent, we can use them in a recursive parsing algorithm to isolate components found at different stages.
 
-`Variable` and `Operator` are the smallest objects in a computational graph. To encode the topological dependencies between operators, each `Operator` object has an input list and an output list. The two lists are python lists of `Variable` objects. As you may expect, an operator computes its output(s) from its given input(s). One important attribute of a `Variable` object is its `type` field (i.e., a member variable in C++). Allowed `type` values such as `FloatTensorType` and `Int64TensorType` are defined in `onnxmltools.convert.common.data_types`. Shape information is also included in `type`. To access the shape of a variable, `x`, you can do `x.type.shape`, which returns a list of integers and strings. Note that the only allowed string is `'None'`, which stands for a variable-length coordinate.
+`Variable` and `Operator` are the smallest objects in a computational graph. To encode the topological dependencies between operators, each `Operator` object has an input list and an output list. The two lists are python lists of `Variable` objects. As you may expect, an operator computes its output(s) from its given input(s). The computationa is described in . One important attribute of a `Variable` object is its `type` field (i.e., a member variable in C++). Allowed `type` values such as `FloatTensorType` and `Int64TensorType` are defined in `onnxmltools.convert.common.data_types`. Shape information is also included in `type`. To access the shape of a variable, `x`, you can do `x.type.shape`, which returns a list of integers and strings. Note that the only allowed string is `'None'`, which stands for a variable-length coordinate.
 
 ## Containers
 
@@ -55,7 +59,7 @@ The second container is `ModelComponentContainer` class, which we use to store t
 ## Parsers
 
 A parser is used to translate the considered raw model (e.g., a Core ML model) into a `Topology` object. For Core ML, its parsing algorithm is defined in
-`onnxmltools.convert.coreml._parse`. For scikit-learn's, please see `onnxmltools.convert.sklearn._parse`.
+`onnxmltools.convert.coreml._parse`. For scikit-learn's, please see `onnxmltools.convert.sklearn._parse`. Keras parse is implemented in `onnxmltools.convert.keras._parse`.
 
 ## Compiler
 
@@ -88,7 +92,9 @@ If fortunately your model (e.g., Keras) includes shape information, you can regi
 
 A converter is a function used to convert an `Operator` into some ONNX components. For example, to represent a Core ML LSTM, we may create several ONNX nodes and initializers.
 
-Every converter has three input arguments, `scope`, `operator`, and `container`. The `scope` is a `Scope` object including some functions for declaring new operators and new variables. The `operator` is an `Operator` object, which is the major piece you need to convert. In addition to the two input and output lists, an `Operator` also contains the input model's operator and some other useful information. The last argument, `container`, is used to store all ONNX objects created inside this converter. Note that all the ONNX objects stored in `container` will be passed to an ONNX `ModelProto` at the end of our conversion pipeline.
+Every converter has three input arguments, `scope`, `operator`, and `container`. The `scope` is a `Scope` object including some functions for declaring new operators and new variables. The `operator` is an `Operator` object, which is the major piece you need to convert. A `operator` contains input and output lists which specify what `operator` should consume and produce, respectively. The computation (i.e., generating the outputs from the inputs) conducted by an `operator` is described by its `raw_operator` field (e.g., a scikit-learn random forest classifier) and the converter may follow `raw_operator` to create some ONNX objects (e.g., `NodeProto`). The last argument, `container`, is used to create and store all ONNX objects created inside this converter. Note that all the ONNX objects stored in `container` will be passed to an ONNX `ModelProto` at the end of our conversion pipeline.
+
+The ONNX objects created by a converter can be viewed as a sub-graph where roots and leaves are specified by `operator`'s input and output lists and `nodes` are the ONNX operators used to simulate `raw_operator`'s behavior. The converter needs to make sure that those nodes in that sub-graph are connected correctly by properly assigning input and output names. To create ONNX operator names and ONNX variable names when composing a sub-graph (we don't need to create `Variable` and `Operator` at all because having names is enough for connecting ONNX nodes), the naming functions in `scope` should be called.
 
 To invoke converters in a topological order, call `convert_topology(...)` defined in _topology.py
 
@@ -99,11 +105,7 @@ For each `Operator` type we want to support, one shape calculator and one conver
 ## A Typical Model Conversion Procedure
 
 A typical conversion process may include three steps.
-
 First, we translate the input model (commonly called a raw model in our code) into our IR by calling a suitable parser. Each operator in the input model may be mapped to one or several `Operator` objects. Also, we may declare `Variable` objects to capture that operator's input(s) and output(s).
-
 The second stage is compiling. We may try to optimize the computational graph (i.e, a topology) and then calculate the shapes of all existing variables. Also, post-processing rules and some basic checks may be applied.
-
 Third, we may call a function to invoke the conversions of all existing operators in a topological order.
-
 This procedure is implemented in both of our Core ML and scikit-learn conversions. The main Core ML conver function is `onnxmltools.convert.coreml.convert`. For scikit-learn, see `onnxmltools.convert.sklearn.convert`. Notice that each operator existing in your raw model must have one shape calculators and one converter registered (it can be an empty function if your parser is able to extract those information directly from the input model).
