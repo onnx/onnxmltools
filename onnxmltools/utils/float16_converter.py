@@ -29,20 +29,19 @@ def float16_converter(model):
     """
     # create a queue for BFS
     queue = []
-    if not model.graph: return None
     queue.append(model)
     while queue:
         next_level = []
         for q in queue:
-            # if q is model, push q.graph
+            # if q is model, push q.graph (GraphProto)
             if hasattr(q, 'graph'):
                 next_level.append(q.graph)
-            # if q is model.graph, push q.node.attribute
+            # if q is model.graph, push q.node.attribute (AttributeProto)
             if hasattr(q, 'node'):
                 for n in q.node:
                     if hasattr(n, 'attribute'):
                         next_level.append(n.attribute)
-            # if q is model.graph.node.attribute, push q.g and q.graphs
+            # if q is model.graph.node.attribute, push q.g and q.graphs (GraphProto)
             if hasattr(q, 'g'):
                 next_level.append(q.g)
 
@@ -67,7 +66,7 @@ def float16_converter(model):
                         # convert float16 to bytes and write back to raw_data
                         n.raw_data = b''
                         for num in int_list:
-                            n.raw_data += num.to_bytes(2, byteorder='little', signed=True)
+                            n.raw_data += num.to_bytes(2, byteorder='little', signed=False)
             # graph.input (ValueInfoProto)
             if hasattr(q, 'input'):
                 for n in q.input:
@@ -87,7 +86,7 @@ def float16_converter(model):
                 for n in q.value_info:
                     if n.type.tensor_type.elem_type == onnx_proto.TensorProto.FLOAT:
                         n.type.tensor_type.elem_type = onnx_proto.TensorProto.FLOAT16
-            # if q is node.attribute, process node.attribute.t (TensorProto)
+            # if q is node.attribute, process node.attribute.t and node.attribute.tensors (TensorProto)
             if hasattr(q, 't'):
                 if q.t.data_type == onnx_proto.TensorProto.FLOAT:
                     q.t.data_type = onnx_proto.TensorProto.FLOAT16
@@ -103,8 +102,7 @@ def float16_converter(model):
                     # convert float16 to bytes and write back to raw_data
                     q.t.raw_data = b''
                     for num in int_list:
-                        q.t.raw_data += num.to_bytes(2, byteorder='little', signed=True)
-            # if q is node.attribute, process node.attribute.tensors (TensorProto)
+                        q.t.raw_data += num.to_bytes(2, byteorder='little', signed=False)
             if hasattr(q, 'tensors'):
                 for n in q.tensors:
                     if n.data_type == onnx_proto.TensorProto.FLOAT:
