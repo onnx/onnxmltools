@@ -7,7 +7,7 @@ import unittest
 
 from onnxmltools.utils import load_model, save_model, save_text
 from onnxmltools.utils import set_model_version, set_model_domain, set_model_doc_string
-from onnxmltools.utils import float16_converter
+
 
 class TestUtils(unittest.TestCase):
 
@@ -69,10 +69,3 @@ class TestUtils(unittest.TestCase):
         self.assertRaises(ValueError, set_model_doc_string, onnx_model.doc_string, "sample")
         set_model_doc_string(onnx_model, "", True)
         self.assertEqual(onnx_model.doc_string, "")
-
-    def test_float16_converter(self):
-        this = os.path.dirname(__file__)
-        onnx_file = os.path.join(this, "models", "winmlperf_coreml_SqueezeNet_prerelease.onnx")
-        onnx_model = load_model(onnx_file)
-        onnx_model = float16_converter(onnx_model)
-        self.assertTrue(onnx_model is not None)
