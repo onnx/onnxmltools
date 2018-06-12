@@ -11,4 +11,4 @@ from .main import set_model_version
 from .main import set_model_domain
 from .main import set_model_doc_string
 from .visualize import visualize_model
-from .float16_converter import float16_converter
+from .float16_converter import convert_float_to_float16
