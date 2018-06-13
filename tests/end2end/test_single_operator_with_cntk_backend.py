@@ -8,7 +8,9 @@ import unittest
 import coremltools
 import numpy as np
 import unittest
+import onnx
 import onnxmltools
+from distutils.version import StrictVersion
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
@@ -328,6 +330,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         self._test_one_to_one_operator_core_channels_last(model, x)
 
     def test_flatten(self):
+        if StrictVersion(onnx.__version__) >= StrictVersion('1.2'):
+            # The latest CNTK release does not support the new ONNX Reshape
+            return 0
         N, C, H, W, D = 2, 3, 1, 2, 2
         x = _create_tensor(N, C, H, W)
 

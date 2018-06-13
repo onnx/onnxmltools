@@ -78,7 +78,8 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
     >>> initial_type = [('float_input', FloatTensorType([1, 5])), ('int64_input', Int64TensorType([1, 10]))]
     '''
     if initial_types is None:
-        raise ValueError('Initial types are required')
+        raise ValueError('Initial types are required. See usage of convert(...) in \
+                         onnxmltools.convert.sklearn.convert for details')
 
     if name is None:
         name = str(uuid4().hex)
