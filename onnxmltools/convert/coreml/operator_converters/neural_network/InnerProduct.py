@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 
@@ -30,6 +31,13 @@ def convert_inner_product(scope, operator, container):
     attrs['transA'] = 0
     attrs['transB'] = 1
 
-    container.add_node(op_type, [name_a, name_b, name_c], operator.outputs[0].full_name, **attrs)
+    if container.targeted_onnx_version <= StrictVersion('1.0'):
+        op_version = 1
+    elif container.targeted_onnx_version < StrictVersion('1.2'):
+        op_version = 6
+    else:
+        op_version = 7
+
+    container.add_node(op_type, [name_a, name_b, name_c], operator.outputs[0].full_name, op_version=op_version, **attrs)
 
 register_converter('innerProduct', convert_inner_product)
