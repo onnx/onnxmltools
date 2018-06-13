@@ -44,7 +44,7 @@ def calculate_sklearn_svm_output_shapes(operator):
                 else:
                     # New ONNX ZipMap produces Seq<Map> type
                     operator.outputs[1].type = \
-                        SequenceType(DictionaryType(StringTensorType([1]), FloatTensorType([1])), N)
+                        SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
         elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in op.classes_):
             operator.outputs[0].type = Int64TensorType([N, 1])
             if len(operator.outputs) == 2:
@@ -54,7 +54,7 @@ def calculate_sklearn_svm_output_shapes(operator):
                 else:
                     # New ONNX ZipMap produces Seq<Map> type
                     operator.outputs[1].type = \
-                        SequenceType(DictionaryType(Int64TensorType([1]), FloatTensorType([1])), N)
+                        SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
         else:
             raise RuntimeError('Class labels should be either all strings or all integers')
 

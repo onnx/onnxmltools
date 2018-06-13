@@ -33,13 +33,13 @@ def calculate_tensor_to_probability_map_output_shapes(operator):
             operator.outputs[0].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]), doc_string)
         else:
             operator.outputs[0].type = \
-                SequenceType(DictionaryType(StringTensorType([1]), FloatTensorType([1])), N, doc_string)
+                SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N, doc_string)
     elif class_label_type == 'int64ClassLabels':
         if operator.targeted_onnx_version < StrictVersion('1.2'):
             operator.outputs[0].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]), doc_string)
         else:
             operator.outputs[0].type = \
-                SequenceType(DictionaryType(Int64TensorType([1]), FloatTensorType([1])), N, doc_string)
+                SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N, doc_string)
     else:
         raise ValueError('Unsupported label type')
 
