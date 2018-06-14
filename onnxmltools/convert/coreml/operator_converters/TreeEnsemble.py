@@ -59,6 +59,7 @@ def convert_tree_ensemble_model(scope, operator, container):
         prefix = 'target'
         nodes = raw_model.treeEnsembleRegressor.treeEnsemble.nodes
         attrs['base_values'] = raw_model.treeEnsembleRegressor.treeEnsemble.basePredictionValue
+        attrs['n_targets'] = raw_model.treeEnsembleRegressor.treeEnsemble.numPredictionDimensions
         attrs['post_transform'] = get_onnx_tree_post_transform(raw_model.treeEnsembleRegressor.postEvaluationTransform)
     else:
         raise ValueError('Unknown tree model type')
