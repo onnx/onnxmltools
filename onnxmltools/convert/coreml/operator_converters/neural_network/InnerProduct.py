@@ -46,8 +46,10 @@ def convert_inner_product(scope, operator, container):
 
     # Get the correct version number for Gemm in ONNX
     if container.targeted_onnx_version <= StrictVersion('1.0'):
+        attrs['broadcast'] = 1
         op_version = 1
     elif container.targeted_onnx_version < StrictVersion('1.2'):
+        attrs['broadcast'] = 1
         op_version = 6
     else:
         op_version = 7
