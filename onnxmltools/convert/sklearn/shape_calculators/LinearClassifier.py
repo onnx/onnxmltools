@@ -41,7 +41,7 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
             if operator.targeted_onnx_version < StrictVersion('1.2'):
                 operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]))
             else:
-                operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([1]), FloatTensorType([1])), N)
+                operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
         else:
             # For binary classifier, we produce the probability of the positive class
             operator.outputs[1].type = FloatTensorType(shape=[N, 1])
@@ -52,7 +52,7 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
             if operator.targeted_onnx_version < StrictVersion('1.2'):
                 operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
             else:
-                operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([1]), FloatTensorType([1])), N)
+                operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
         else:
             # For binary classifier, we produce the probability of the positive class
             operator.outputs[1].type = FloatTensorType(shape=[N, 1])

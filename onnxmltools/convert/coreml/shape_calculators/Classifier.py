@@ -52,7 +52,7 @@ def calculate_traditional_classifier_output_shapes(operator):
                 operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]),
                                                           doc_string=operator.outputs[1].type.doc_string)
             else:
-                operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([1]), FloatTensorType([1])),
+                operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])),
                                                         doc_string=operator.outputs[1].type.doc_string)
     elif class_label_type == 'int64ClassLabels':
         operator.outputs[0].type = Int64TensorType(output_shape, doc_string=operator.outputs[0].type.doc_string)
@@ -61,7 +61,7 @@ def calculate_traditional_classifier_output_shapes(operator):
                 operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]),
                                                           doc_string=operator.outputs[1].type.doc_string)
             else:
-                operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([1]), FloatTensorType([1])),
+                operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])),
                                                         doc_string=operator.outputs[1].type.doc_string)
     else:
         raise ValueError('Traditional classifier must include label information')
