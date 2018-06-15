@@ -4,13 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from distutils.version import StrictVersion
 from ...proto import onnx
 from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
 from ..common.data_types import *
 
 
-def parse_coreml_feature(feature_info, batch_size=1):
+def _parse_coreml_feature(feature_info, targeted_onnx_version, batch_size=1):
     '''
     Encode type information from CoreML's FeatureType protobuf message in converter's type system.
 
@@ -18,6 +19,7 @@ def parse_coreml_feature(feature_info, batch_size=1):
     [batch_size, 1]-tensor. Tensor-like types such as ArrayFeature in CoreML is viewed as tensors with a prepend
     batch_size; for example, we use [batch_size, C, H, W] to denote [C, H, W]-array in CoreML.
     :param feature_info: CoreML FeatureDescription (https://apple.github.io/coremltools/coremlspecification/sections/DataStructuresAndFeatureTypes.html#featuretype)
+    :param targeted_onnx_version: a StrctVersion indicating the targeted ONNX version. E.g., StrictVersion('1.2').
     :param batch_size: default batch size prepend to scalars and tensors variables from CoreML
     :return: one of our Int64Type, FloatType, StringType, Int64TensorType, FloatTensorType, or DictionaryType
     '''
@@ -82,9 +84,15 @@ def parse_coreml_feature(feature_info, batch_size=1):
     elif type_name == 'dictionaryType':
         key_type = raw_type.dictionaryType.WhichOneof('KeyType')
         if key_type == 'int64KeyType':
-            return DictionaryType(Int64TensorType([1]), FloatTensorType([1]), doc_string=doc_string)
+            if targeted_onnx_version < StrictVersion('1.2'):
+                return DictionaryType(Int64TensorType([1]), FloatTensorType([1]), doc_string=doc_string)
+            else:
+                return DictionaryType(Int64TensorType([]), FloatTensorType([]), doc_string=doc_string)
         elif key_type == 'stringKeyType':
-            return DictionaryType(StringTensorType([1]), FloatTensorType([1]), doc_string=doc_string)
+            if targeted_onnx_version < StrictVersion('1.2'):
+                return DictionaryType(StringTensorType([1]), FloatTensorType([1]), doc_string=doc_string)
+            else:
+                return DictionaryType(StringTensorType([]), FloatTensorType([]), doc_string=doc_string)
         else:
             raise ValueError('Unsupported key type: {}'.format(key_type))
     else:
@@ -134,7 +142,8 @@ def _parse_simple_model(topology, parent_scope, model, inputs, outputs):
         # We assume that no duplicated raw name exists. Note that we set prepend=True because model inputs should
         # not hide any intermediate variables.
         variable = scope.declare_local_variable(
-            var.name, parse_coreml_feature(var, topology.default_batch_size), prepend=True)
+            var.name, _parse_coreml_feature(var, topology.targeted_onnx_version, topology.default_batch_size),
+            prepend=True)
         this_operator.inputs.append(variable)
 
     # Connect local variables and variables passed into this scope. Our assumptions are described below.
@@ -153,7 +162,7 @@ def _parse_simple_model(topology, parent_scope, model, inputs, outputs):
     for var in model.description.output:
         # We assume that no duplicated output raw name exists.
         variable = scope.declare_local_variable(
-            var.name, parse_coreml_feature(var, topology.default_batch_size))
+            var.name, _parse_coreml_feature(var, topology.targeted_onnx_version, topology.default_batch_size))
         this_operator.outputs.append(variable)
 
     # Connect local variables and variables passed into this scope. Our assumptions are described below.
@@ -203,12 +212,12 @@ def _parse_pipeline_model(topology, parent_scope, model, inputs, outputs):
         sub_inputs = []
         for var in sub_model.description.input:
             variable = scope.get_local_variable_or_declare_one(
-                var.name, parse_coreml_feature(var, topology.default_batch_size))
+                var.name, _parse_coreml_feature(var, topology.targeted_onnx_version, topology.default_batch_size))
             sub_inputs.append(variable)
         sub_outputs = []
         for var in sub_model.description.output:
             variable = scope.declare_local_variable(
-                var.name, parse_coreml_feature(var, topology.default_batch_size))
+                var.name, _parse_coreml_feature(var, topology.targeted_onnx_version, topology.default_batch_size))
             sub_outputs.append(variable)
         _parse_model(topology, scope, sub_model, sub_inputs, sub_outputs)
 
@@ -219,7 +228,8 @@ def _parse_pipeline_model(topology, parent_scope, model, inputs, outputs):
         # Create model's input variable. Note that we set prepend=True because model inputs should not hide any
         # intermediate variables.
         variable = scope.declare_local_variable(
-            var.name, parse_coreml_feature(var, topology.default_batch_size), prepend=True)
+            var.name, _parse_coreml_feature(var, topology.targeted_onnx_version, topology.default_batch_size),
+            prepend=True)
         # Feed the input to the sub-model's input. It's possible to add type conversion here by using a casting operator
         # rather than identity, but we haven't see the need of doing so in practices.
         operator = scope.declare_local_operator('identity')
@@ -238,7 +248,7 @@ def _parse_pipeline_model(topology, parent_scope, model, inputs, outputs):
         child_variable = scope.variables[scope.variable_name_mapping[var.name][-1]]
         # Create model's output variable
         variable = scope.declare_local_variable(
-            var.name, parse_coreml_feature(var, topology.default_batch_size))
+            var.name, _parse_coreml_feature(var, topology.targeted_onnx_version, topology.default_batch_size))
         # Connect the input and a sub-model's input. It's possible to add type conversion here by using a casting
         # operator rather than identity, but we haven't see the need of doing so in practices.
         operator = scope.declare_local_operator('identity')
@@ -326,7 +336,8 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
 
         # Declare model input. To prevent intermediate variables form being hidden by model inputs, prepend is True.
         variable = scope.declare_local_variable(
-            var.name, parse_coreml_feature(var, topology.default_batch_size), prepend=True)
+            var.name, _parse_coreml_feature(var, topology.targeted_onnx_version, topology.default_batch_size),
+            prepend=True)
 
         # A heuristic which forces the input of embedding to be integer tensor rather than float tensor.
         # Ideally this should be done by adding a cast operator, but ONNX doesn't have float-to-int casting.
@@ -359,7 +370,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
 
         # Create model output variable
         variable = scope.declare_local_variable(
-            var.name, parse_coreml_feature(var, topology.default_batch_size))
+            var.name, _parse_coreml_feature(var, topology.targeted_onnx_version, topology.default_batch_size))
 
         # Feed result calculated by the network to the output variable
         operator = scope.declare_local_operator('identity')
@@ -372,7 +383,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         label_variable = None
         for var in model.description.output:
             if var.name == model.description.predictedFeatureName:
-                label_type = parse_coreml_feature(var, topology.default_batch_size)
+                label_type = _parse_coreml_feature(var, topology.targeted_onnx_version, topology.default_batch_size)
                 label_variable = scope.declare_local_variable(var.name, label_type)
                 break
         operator = scope.declare_local_operator('tensorToLabel', model)
@@ -401,7 +412,8 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         # Find out the description of predicted probabilities and declare a variable for probability map
         for var in model.description.output:
             if var.name == model.description.predictedProbabilitiesName:
-                probability_type = parse_coreml_feature(var, topology.default_batch_size)
+                probability_type = _parse_coreml_feature(var, topology.targeted_onnx_version,
+                                                         topology.default_batch_size)
                 probability_variable = scope.declare_local_variable(var.name, probability_type)
                 operator.outputs.append(probability_variable)
                 break

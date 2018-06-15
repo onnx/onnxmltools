@@ -13,7 +13,7 @@ def calculate_flatten_output_shapes(operator):
     '''
     Allowed input/output patterns are
         1. [N, C] ---> [N, C]
-        2. [N, C, H, W] ---> [N, C * H * W, 1, 1]
+        2. [N, C, H, W] ---> [N, C * H * W]
     '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
@@ -25,7 +25,7 @@ def calculate_flatten_output_shapes(operator):
         raise RuntimeError('Input must be 2-D or 4-D float tensor')
 
     input_shape = input.type.shape
-    output_shape = [input_shape[0], 1, 1, 1]
+    output_shape = [input_shape[0], 1]
 
     # Calculate the multiplication of C, H, and W.
     for i in input_shape[1:]:
