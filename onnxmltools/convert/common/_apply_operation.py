@@ -277,7 +277,7 @@ def apply_split(scope, input_name, output_names, container, operator_name=None, 
 
 
 def apply_tile(scope, input_name, output_name, container, operator_name=None, repeats=None):
-    name = _create_name_or_use_existing_one(scope, 'Split', operator_name)
+    name = _create_name_or_use_existing_one(scope, 'Tile', operator_name)
 
     if repeats is None or all(repeat_count == 1 for repeat_count in repeats):
         container.add_node('Identity', input_name, output_name, name=name)

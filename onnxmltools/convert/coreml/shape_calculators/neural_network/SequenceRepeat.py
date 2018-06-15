@@ -15,9 +15,12 @@ def calculate_sequence_repeat_output_shapes(operator):
     Allowed input/output patterns are
         1. [N, C, H, W] ---> [N', C, H, W]
     '''
-
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
+
+    input_shape = operator.inputs[0].type.shape
+    if len(input_shape) not in [2, 4]:
+        raise RuntimeError('Input shape of CoreML SequenceRepeat must be either 2-D or 4-D but got %s' % input_shape)
 
     output_shape = copy.deepcopy(operator.inputs[0].type.shape)
     if output_shape[0] != None:
