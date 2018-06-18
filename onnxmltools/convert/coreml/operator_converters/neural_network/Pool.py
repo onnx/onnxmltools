@@ -220,9 +220,17 @@ def convert_pooling(scope, operator, container):
             auto_pad = 'VALID'
     elif pad_type == 'same':
         if params.same.asymmetryMode == SamePadding.BOTTOM_RIGHT_HEAVY:
-            auto_pad = 'SAME_LOWER'
-        elif params.same.asymmetryMode == SamePadding.TOP_LEFT_HEAVY:
+            # In CoreML, BOTTOM_RIGHT_HEAVY means that the extra pixel (when not dividable by 2) will be added to the
+            # end of an axis. This behavior matches ONNX's SAME_UPPER mode.
+            # Reference: https://apple.github.io/coremltools/coremlspecification/sections/NeuralNetwork.html#samepadding
+            #            https://github.com/onnx/onnx/blob/rel-1.2.1/docs/Operators.md#AveragePool
             auto_pad = 'SAME_UPPER'
+        elif params.same.asymmetryMode == SamePadding.TOP_LEFT_HEAVY:
+            # In CoreML, TOP_LEFT_HEAVY means that the extra pixel (when not dividable by 2) will be added to the
+            # beginning of an axis. This behavior matches ONNX's SAME_LOWER mode.
+            # Reference: https://apple.github.io/coremltools/coremlspecification/sections/NeuralNetwork.html#samepadding
+            #            https://github.com/onnx/onnx/blob/rel-1.2.1/docs/Operators.md#AveragePool
+            auto_pad = 'SAME_LOWER'
         else:
             raise ValueError('Unknown asymmetric mode: {}'.format(params.same.asymmetryMode))
     elif pad_type == 'includeLastPixel':

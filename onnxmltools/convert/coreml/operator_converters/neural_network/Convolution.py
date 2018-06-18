@@ -65,9 +65,9 @@ def convert_convolution(scope, operator, container):
             auto_pad = 'VALID'
     elif pad_type == 'same':
         if params.same.asymmetryMode == SamePadding.BOTTOM_RIGHT_HEAVY:
-            auto_pad = 'SAME_LOWER'
-        elif params.same.asymmetryMode == SamePadding.TOP_LEFT_HEAVY:
             auto_pad = 'SAME_UPPER'
+        elif params.same.asymmetryMode == SamePadding.TOP_LEFT_HEAVY:
+            auto_pad = 'SAME_LOWER'
         else:
             raise ValueError('Unknown asymmetric mode: {}'.format(
                 params.same.asymmetryMode))
