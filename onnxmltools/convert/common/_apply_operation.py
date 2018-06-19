@@ -220,6 +220,9 @@ def apply_reciprocal(scope, input_name, output_name, container, operator_name=No
 
 
 def apply_reshape(scope, input_name, output_name, container, operator_name=None, desired_shape=None):
+    if len(list(i for i in desired_shape if i < 0)) > 1:
+        raise ValueError('There can only be one -1 in the targeted shape of a Reshape but got %s' % desired_shape)
+
     name = _create_name_or_use_existing_one(scope, 'Reshape', operator_name)
 
     if container.targeted_onnx_version < StrictVersion('1.2'):

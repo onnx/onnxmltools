@@ -16,8 +16,8 @@ def convert_tensor_to_probability_map(scope, operator, container):
     probabilities. We assume that the elements in the given probability tensor are aligned with the class labels
     specified in the CoreML model.
 
-    Notice that we currently doesn't support a CoreML classifier with a batch size larger than one because ONNX's ZipMap
-    is not able to produce a batch of dictionaries.
+    Notice that ONNX<1.2 doesn't support a CoreML classifier with a batch size larger than one because old ONNX ZipMap
+    is not able to produce a sequence of dictionaries. This issue has been fixed in ONNX-1.2.
     '''
     attrs = {'name': scope.get_unique_operator_name('ZipMap')}
 

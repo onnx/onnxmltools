@@ -13,9 +13,15 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 def calculate_tensor_to_probability_map_output_shapes(operator):
     '''
     Allowed input/output patterns are
-        1. [N, C] ---> A sequence of maps
+    ONNX < 1.2
+        1. [1, C] ---> ---> A map
+        2. [1, C_1, ..., C_n] ---> A map
+    ONNX >= 1.2
+        1. [N, C] ---> ---> A sequence of maps
+        2. [N, C_1, ..., C_n] ---> A sequence of maps
 
-    Note that N must be 1 currently because ZipMap doesn't support batch size larger than 1.
+    Note that N must be 1 currently if you're using ONNX<1.2 because old ZipMap doesn't produce a seqneuce of map If the
+    input is not [N, C], it will be reshaped into [N, C_1 x C_2, x ... x C_n] before being fed into ONNX ZipMap.
     '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
