@@ -4,6 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import numbers
+from ...common._apply_operation import apply_reshape
 from ...common._registration import register_converter
 
 
@@ -14,8 +16,8 @@ def convert_tensor_to_probability_map(scope, operator, container):
     probabilities. We assume that the elements in the given probability tensor are aligned with the class labels
     specified in the CoreML model.
 
-    Notice that we currently doesn't support a CoreML classifier with a batch size larger than one because ONNX's ZipMap
-    is not able to produce a batch of dictionaries.
+    Notice that ONNX<1.2 doesn't support a CoreML classifier with a batch size larger than one because old ONNX ZipMap
+    is not able to produce a sequence of dictionaries. This issue has been fixed in ONNX-1.2.
     '''
     attrs = {'name': scope.get_unique_operator_name('ZipMap')}
 
@@ -39,7 +41,29 @@ def convert_tensor_to_probability_map(scope, operator, container):
     else:
         raise TypeError('Only neural network classifiers and pipeline classifiers are supported')
 
-    container.add_node('ZipMap', [operator.inputs[0].full_name], [operator.outputs[0].full_name],
+    input_shape = operator.inputs[0].type.shape
+    if len(operator.inputs[0].type.shape) != 2:
+        # Calculate the shape attribute of ONNX Reshape
+        if input_shape[0] != 'None':
+            N = input_shape[0]
+        else:
+            N = -1  # -1 means that this dimension is automatically determined in runtime and unknown in conversion time
+
+        if all(isinstance(i, numbers.Integral) for i in input_shape[1:]):
+            C = 1
+            for i in input_shape[1:]:
+                C *= int(i)
+        else:
+            C = -1  # -1 means that this dimension is automatically determined in runtime and unknown in conversion time
+
+        # ZipMap in ONNX only accepts [C] and [N, C] inputs. In cases of [N, C, 1, 1], we reshape the probability tensor
+        # into [N, C] before feeding it into ZipMap.
+        buffer_name = scope.get_unique_variable_name('buffer')
+        apply_reshape(scope, operator.inputs[0].full_name, buffer_name, container, desired_shape=[N, C])
+    else:
+        buffer_name = operator.inputs[0].full_name
+
+    container.add_node('ZipMap', buffer_name, operator.outputs[0].full_name,
                        op_domain='ai.onnx.ml', **attrs)
 
 
