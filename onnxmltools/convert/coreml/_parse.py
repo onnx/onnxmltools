@@ -60,7 +60,7 @@ def _parse_coreml_feature(feature_info, targeted_onnx_version, batch_size=1):
         shape.append(raw_type.imageType.height)
         shape.append(raw_type.imageType.width)
         color_space_map = {10: 'GRAY', 20: 'RGB', 30: 'BGR'}
-        return FloatTensorType(shape, color_space_map[color_space], doc_string=doc_string)
+        return FloatTensorType(shape, color_space_map[color_space], denotation='IMAGE', doc_string=doc_string)
     elif type_name == 'multiArrayType':
         element_type_id = raw_type.multiArrayType.dataType
         shape = [d for d in raw_type.multiArrayType.shape]
