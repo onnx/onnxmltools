@@ -1,7 +1,12 @@
+#-------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+#--------------------------------------------------------------------------
+
 import numpy as np
 from struct import unpack
-from ..convert.common.data_types import *
-
+from ..proto import onnx_proto
 
 def _npfloat16_to_int(np_list):
     '''
@@ -17,16 +22,28 @@ def convert_float_to_float16(model):
     '''
     Convert TensorProto DataType float in the ONNX model to float16.
 
-    :param model: ONNX model
-    :return: converted ONNX model
+    :param model: ONNX model ProtoBuf object
+    :return: converted ONNX model ProtoBuf object
 
     Example:
 
     ::
 
+        Example 1: Convert ONNX model ProtoBuf object:
         from onnxmltools.utils.float16_converter import convert_float_to_float16
         new_onnx_model = convert_float_to_float16(onnx_model)
+
+        Example 2: Convert ONNX model binary file:
+        from onnxmltools.utils.float16_converter import convert_float_to_float16
+        from onnxmltools.utils import load_model, save_model
+        onnx_model = load_model("model.onnx")
+        new_onnx_model = convert_float_to_float16(onnx_model)
+        save_model(new_onnx_model, "new_model.onnx")
+
     '''
+    # raise error if input is empty or not ModelProto object
+    if model is None or not isinstance(model, onnx_proto.ModelProto):
+        raise ValueError("model is not an onnx model")
     # create a queue for BFS
     queue = []
     queue.append(model)
