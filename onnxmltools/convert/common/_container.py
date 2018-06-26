@@ -6,7 +6,7 @@
 
 import six
 from distutils.version import StrictVersion
-from ...proto import helper
+from ...proto import helper, onnx_proto
 
 
 class RawModelContainer(object):
@@ -112,8 +112,9 @@ class ModelComponentContainer:
     encapsulated in a ONNX ModelProto.
     '''
 
-    def __init__(self, targeted_onnx):
+    def __init__(self, targeted_onnx, float_precision=32):
         '''
+        :param float_precision: precision of float number, 32 bits or 16 bits
         :param targeted_onnx: A string, for example, '1.1.2' and '1.2'.
         '''
         # Inputs of ONNX graph. They are ValueInfoProto in ONNX.
@@ -128,6 +129,11 @@ class ModelComponentContainer:
         self.nodes = []
         # ONNX operators' domain-version pair set. They will be added into opset_import field in the final ONNX model.
         self.node_domain_version_pair_sets = set()
+        # Precision of float numbers: 16 or 32
+        if float_precision != 16 and float_precision != 32:
+            raise ValueError('float precision can only be 16 or 32')
+        else:
+            self.float_precision = float_precision
         # The targeted ONNX version. All produced operators should be supported by the targeted ONNX version.
         self.targeted_onnx_version = StrictVersion(targeted_onnx)
 
@@ -135,6 +141,9 @@ class ModelComponentContainer:
         value_info = helper.ValueInfoProto()
         value_info.name = variable.full_name
         value_info.type.CopyFrom(variable.type.to_onnx_type())
+        if value_info.type.tensor_type.elem_type == onnx_proto.TensorProto.FLOAT:
+            if(self.float_precision == 16) :
+                value_info.type.tensor_type.elem_type = onnx_proto.TensorProto.FLOAT16
         if variable.type.doc_string:
             value_info.doc_string = variable.type.doc_string
         return value_info
@@ -164,6 +173,8 @@ class ModelComponentContainer:
         :param shape: Tensor shape, a list of integers.
         :param content: Flattened tensor values (i.e., a float list or a float array).
         '''
+        if (self.float_precision == 16 and onnx_type == onnx_proto.TensorProto.FLOAT):
+            onnx_type = onnx_proto.TensorProto.FLOAT16
         if any(d is None for d in shape):
             raise ValueError('Shape of initializer cannot contain None')
         tensor = helper.make_tensor(name, onnx_type, shape, content)
