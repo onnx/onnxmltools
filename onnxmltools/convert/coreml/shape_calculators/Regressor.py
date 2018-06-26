@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
+from distutils.version import StrictVersion
 from ...common._registration import register_shape_calculator
 from ...common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type
 from ...common.utils import check_input_and_output_types
@@ -34,8 +35,10 @@ def calculate_traditional_regressor_output_shapes(operator):
         raise ValueError('Model should be one of linear model, tree-based model, and support vector machine')
 
     N = operator.inputs[0].type.shape[0]
-    operator.outputs[0].type = FloatTensorType([N, C], doc_string=operator.outputs[0].type.doc_string)
-
+    if operator.targeted_onnx_version < StrictVersion('1.2') or C > 1:
+        operator.outputs[0].type = FloatTensorType([N, C], doc_string=operator.outputs[0].type.doc_string)
+    else:
+        operator.outputs[0].type = FloatTensorType([N], doc_string=operator.outputs[0].type.doc_string)
 
 register_shape_calculator('glmRegressor', calculate_traditional_regressor_output_shapes)
 register_shape_calculator('supportVectorRegressor', calculate_traditional_regressor_output_shapes)

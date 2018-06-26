@@ -43,7 +43,7 @@ def calculate_traditional_classifier_output_shapes(operator):
     if operator.targeted_onnx_version < StrictVersion('1.2'):
         output_shape = [1, 1]
     else:
-        output_shape = [N, 1]
+        output_shape = [N]
 
     if class_label_type == 'stringClassLabels':
         operator.outputs[0].type = StringTensorType(output_shape, doc_string=operator.outputs[0].type.doc_string)
