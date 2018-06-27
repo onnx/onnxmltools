@@ -36,7 +36,6 @@ def calculate_traditional_regressor_output_shapes(operator):
     N = operator.inputs[0].type.shape[0]
     operator.outputs[0].type = FloatTensorType([N, C], doc_string=operator.outputs[0].type.doc_string)
 
-
 register_shape_calculator('glmRegressor', calculate_traditional_regressor_output_shapes)
 register_shape_calculator('supportVectorRegressor', calculate_traditional_regressor_output_shapes)
 register_shape_calculator('treeEnsembleRegressor', calculate_traditional_regressor_output_shapes)

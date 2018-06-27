@@ -14,8 +14,8 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 def calculate_traditional_classifier_output_shapes(operator):
     '''
     For classifiers, allowed input/output patterns are
-        1. [N, C_1], ..., [N, C_n] ---> [N, 1], Sequence of Map
-        2. [N, C_1], ..., [N, C_n] ---> [N, 1]
+        1. [N, C_1], ..., [N, C_n] ---> [N], Sequence of Map
+        2. [N, C_1], ..., [N, C_n] ---> [N]
 
     For regressors, allowed input/output patterns are
         1. [N, C_1], ..., [N, C_n] ---> [N, 1]
@@ -43,7 +43,7 @@ def calculate_traditional_classifier_output_shapes(operator):
     if operator.targeted_onnx_version < StrictVersion('1.2'):
         output_shape = [1, 1]
     else:
-        output_shape = [N, 1]
+        output_shape = [N]
 
     if class_label_type == 'stringClassLabels':
         operator.outputs[0].type = StringTensorType(output_shape, doc_string=operator.outputs[0].type.doc_string)
