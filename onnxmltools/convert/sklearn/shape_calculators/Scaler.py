@@ -43,3 +43,5 @@ def calculate_sklearn_scaler_output_shapes(operator):
 register_shape_calculator('SklearnRobustScaler', calculate_sklearn_scaler_output_shapes)
 register_shape_calculator('SklearnScaler', calculate_sklearn_scaler_output_shapes)
 register_shape_calculator('SklearnNormalizer', calculate_sklearn_scaler_output_shapes)
+register_shape_calculator('SklearnMinMaxScaler', calculate_sklearn_scaler_output_shapes)
+register_shape_calculator('SklearnMaxAbsScaler', calculate_sklearn_scaler_output_shapes)
