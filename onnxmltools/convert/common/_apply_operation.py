@@ -363,7 +363,10 @@ def apply_relu(scope, input_name, output_name, container, operator_name=None):
 def apply_prelu(scope, input_name, output_name, container, operator_name=None, slope=None):
     name = _create_name_or_use_existing_one(scope, 'PRelu', operator_name)
     slope_tensor_name = scope.get_unique_variable_name('slope')
-    container.add_initializer(slope_tensor_name, onnx_proto.TensorProto.FLOAT, [len(slope)], slope)
+    s_shape = slope.shape
+    if container.targeted_onnx_version < StrictVersion('1.2'):
+        s_shape = [len(slope.flatten())]
+    container.add_initializer(slope_tensor_name, onnx_proto.TensorProto.FLOAT, s_shape, slope.flatten())
 
     if container.targeted_onnx_version <= StrictVersion('1.0'):
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=1, name=name,
