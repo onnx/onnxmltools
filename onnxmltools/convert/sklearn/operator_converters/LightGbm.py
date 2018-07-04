@@ -115,7 +115,7 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
 def convert_lightgbm(scope, operator, container):
     gbm_model = operator.raw_operator
     if gbm_model.boosting_type != 'gbdt':
-        raise ValueError('Only support LightGBM classifier with boosting_type=gbdt')
+        raise ValueError('Only support LightGBM classifier with boosting_type=gbdt, current boosting_type=' + gbm_model.boosting_type)
     gbm_text = gbm_model.booster_.dump_model()
 
     attrs = _get_default_tree_classifier_attribute_pairs()
