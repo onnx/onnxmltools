@@ -173,14 +173,15 @@ def convert_lightgbm(scope, operator, container):
             raise ValueError('Only string and integer class labels are allowed')
 
         # Create tree classifier
-        probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
+        label_tensor_name = scope.get_onnx_variable_name('label')
+        probability_tensor_name = scope.get_onnx_variable_name('Probability')
         container.add_node('TreeEnsembleClassifier', operator.input_full_names,
-                           [operator.outputs[0].full_name, probability_tensor_name],
+                           [label_tensor_name, probability_tensor_name],
                            op_domain='ai.onnx.ml', **attrs)
 
         # Convert probability tensor to probability map (keys are labels while values are the associated probabilities)
-        container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
-                           op_domain='ai.onnx.ml', **zipmap_attrs)
+        #container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
+        #                   op_domain='ai.onnx.ml', **zipmap_attrs)
     else:
         # Create tree regressor
         keys_to_be_renamed = list(k for k in attrs.keys() if k.startswith('class_'))
