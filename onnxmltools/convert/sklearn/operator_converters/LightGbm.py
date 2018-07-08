@@ -179,11 +179,11 @@ def convert_lightgbm(scope, operator, container):
             raise ValueError('Only string and integer class labels are allowed')
 
         if len(class_labels) > 2 and operator.type != 'SklearnLinearSVC':
-            probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
             # Create tree classifier
+            probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
             container.add_node('TreeEnsembleClassifier', feature_name,
-                            [operator.outputs[0].full_name, probability_tensor_name],
-                            op_domain='ai.onnx.ml', **attrs)
+                               [operator.outputs[0].full_name, probability_tensor_name],
+                               op_domain='ai.onnx.ml', **attrs)
 
             # Convert probability tensor to probability map (keys are labels while values are the associated probabilities)
             container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
@@ -191,7 +191,7 @@ def convert_lightgbm(scope, operator, container):
         else:
             # Create tree classifier
             container.add_node('TreeEnsembleClassifier', feature_name,
-                           operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
+                               operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
     else:
         # Create tree regressor

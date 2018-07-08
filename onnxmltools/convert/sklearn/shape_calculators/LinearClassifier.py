@@ -19,7 +19,8 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
     appear in this operator's output list, we should further generate a map storing all classes' probabilities.
 
     Allowed input/output patterns are
-        1. [N, C] ---> [N, 1], A sequence of map
+        1. [N, C] ---> [N], [N, E] (binary-class)
+        2. [N, C] ---> [N], A sequence of map (multi-class)
 
     Note that the second case is not allowed as long as ZipMap only produces dictionary.
     '''
