@@ -59,6 +59,7 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
     else:
         raise ValueError('Unsupported or mixed label types')
 
+
 register_shape_calculator('SklearnLinearClassifier', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('SklearnLinearSVC', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('SklearnDecisionTreeClassifier', calculate_sklearn_linear_classifier_output_shapes)
