@@ -164,7 +164,6 @@ def convert_lightgbm(scope, operator, container):
             attrs[k] = sorted_list
 
     # Create ONNX object
-    print(gbm_model.classes_)
     if isinstance(gbm_model, LGBMClassifier):
         # Prepare label information for both of TreeEnsembleClassifier and ZipMap
         zipmap_attrs = {'name': scope.get_unique_variable_name('ZipMap')}
