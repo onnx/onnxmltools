@@ -20,7 +20,9 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
 
     Allowed input/output patterns are
         1. [N, C] ---> [N], [N, E] (binary-class)
-        2. [N, C] ---> [N], A sequence of map (multi-class)
+        2. [N, 1], ..., [N, 1] ---> [N], [N, E] (binary-class)
+        3. [N, C] ---> [N], A sequence of map (multi-class)
+        4. [N, 1], ..., [N, 1] ---> [N], A sequence of map (multi-class)
 
     Note that the second case is not allowed as long as ZipMap only produces dictionary.
     '''
@@ -29,6 +31,9 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
 
     if len(operator.inputs[0].type.shape) != 2:
         raise RuntimeError('Input must be a [N, C]-tensor')
+
+    if len(operator.inputs) > 1 and all((i.type.shape[1] != 1) for i in operator.inputs):
+        raise RuntimeError('Multiple inputs must be a [N, 1]-tensors')
 
     N = operator.inputs[0].type.shape[0]
 
