@@ -165,33 +165,18 @@ def convert_lightgbm(scope, operator, container):
 
     # Create ONNX object
     if isinstance(gbm_model, LGBMClassifier):
-        # Prepare label information for both of TreeEnsembleClassifier and ZipMap
-        zipmap_attrs = {'name': scope.get_unique_variable_name('ZipMap')}
         if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in gbm_model.classes_):
             class_labels = [int(i) for i in gbm_model.classes_]
             attrs['classlabels_int64s'] = class_labels
-            zipmap_attrs['classlabels_int64s'] = class_labels
         elif all(isinstance(i, (six.text_type, six.string_types)) for i in gbm_model.classes_):
             class_labels = [str(i) for i in gbm_model.classes_]
             attrs['classlabels_strings'] = class_labels
-            zipmap_attrs['classlabels_strings'] = class_labels
         else:
             raise ValueError('Only string and integer class labels are allowed')
 
-        if len(class_labels) > 2 and operator.type != 'SklearnLinearSVC':
-            # Create tree classifier
-            probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
-            container.add_node('TreeEnsembleClassifier', feature_name,
-                               [operator.outputs[0].full_name, probability_tensor_name],
-                               op_domain='ai.onnx.ml', **attrs)
-
-            # Convert probability tensor to probability map (keys are labels while values are the associated probabilities)
-            container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
-                               op_domain='ai.onnx.ml', **zipmap_attrs)
-        else:
-            # Create tree classifier
-            container.add_node('TreeEnsembleClassifier', feature_name,
-                               operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
+        # Create tree classifier
+        container.add_node('TreeEnsembleClassifier', feature_name,
+                            operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
     else:
         # Create tree regressor

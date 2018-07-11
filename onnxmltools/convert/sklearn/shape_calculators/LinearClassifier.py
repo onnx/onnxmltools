@@ -42,26 +42,10 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
         class_labels = np.concatenate(class_labels)
     if all(isinstance(i, (six.string_types, six.text_type)) for i in class_labels):
         operator.outputs[0].type = StringTensorType(shape=[N, 1])
-        if len(class_labels) > 2 and operator.type != 'SklearnLinearSVC':
-            # For multi-class classifier, we produce a map for encoding the probabilities of all classes
-            if operator.targeted_onnx_version < StrictVersion('1.2'):
-                operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]))
-            else:
-                operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
-        else:
-            # For binary classifier, we produce the probability of the positive class
-            operator.outputs[1].type = FloatTensorType(shape=[N, len(class_labels)])
+        operator.outputs[1].type = FloatTensorType(shape=[N, len(class_labels)])
     elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
         operator.outputs[0].type = Int64TensorType(shape=[N, 1])
-        if len(class_labels) > 2 and operator.type != 'SklearnLinearSVC':
-            # For multi-class classifier, we produce a map for encoding the probabilities of all classes
-            if operator.targeted_onnx_version < StrictVersion('1.2'):
-                operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
-            else:
-                operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
-        else:
-            # For binary classifier, we produce the probability of the positive class
-            operator.outputs[1].type = FloatTensorType(shape=[N, len(class_labels)])
+        operator.outputs[1].type = FloatTensorType(shape=[N, len(class_labels)])
     else:
         raise ValueError('Unsupported or mixed label types')
 
