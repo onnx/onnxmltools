@@ -108,7 +108,7 @@ def _get_sklearn_operator_name(model_type):
     return sklearn_operator_name_map[model_type]
 
 
-def _parse_sklearn_simple_model(scope, model, inputs):
+def _parse_sklearn_simple_model(scope, model, inputs, label_variable_name, probabilities_variable_name):
     '''
     This function handles all non-pipeline models.
 
@@ -124,8 +124,8 @@ def _parse_sklearn_simple_model(scope, model, inputs):
     if type(model) in sklearn_classifier_list:
         # For classifiers, we may have two outputs, one for label and the other one for probabilities of all classes.
         # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
-        label_variable = scope.declare_local_variable('label', FloatTensorType())
-        probability_map_variable = scope.declare_local_variable('probabilities', FloatTensorType())
+        label_variable = scope.declare_local_variable('label' if label_variable_name is None else label_variable_name, FloatTensorType())
+        probability_map_variable = scope.declare_local_variable('probabilities' if probabilities_variable_name is None else probabilities_variable_name, FloatTensorType())
         this_operator.outputs.append(label_variable)
         this_operator.outputs.append(probability_map_variable)
     else:
@@ -135,7 +135,7 @@ def _parse_sklearn_simple_model(scope, model, inputs):
     return this_operator.outputs
 
 
-def _parse_sklearn_pipeline(scope, model, inputs):
+def _parse_sklearn_pipeline(scope, model, inputs, label_variable_name, probabilities_variable_name):
     '''
     The basic ideas of scikit-learn parsing:
         1. Sequentially go though all stages defined in the considered scikit-learn pipeline
@@ -148,11 +148,11 @@ def _parse_sklearn_pipeline(scope, model, inputs):
     '''
     print('pipeline: %s ' % type(model))
     for step in model.steps:
-        inputs = _parse_sklearn(scope, step[1], inputs)
+        inputs = _parse_sklearn(scope, step[1], inputs, label_variable_name, probabilities_variable_name)
     return inputs
 
 
-def _parse_sklearn(scope, model, inputs):
+def _parse_sklearn(scope, model, inputs, label_variable_name, probabilities_variable_name):
     '''
     This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
     model's type.
@@ -162,12 +162,12 @@ def _parse_sklearn(scope, model, inputs):
     :return: The output variables produced by the input model
     '''
     if isinstance(model, pipeline.Pipeline):
-        return _parse_sklearn_pipeline(scope, model, inputs)
+        return _parse_sklearn_pipeline(scope, model, inputs, label_variable_name, probabilities_variable_name)
     else:
-        return _parse_sklearn_simple_model(scope, model, inputs)
+        return _parse_sklearn_simple_model(scope, model, inputs, label_variable_name, probabilities_variable_name)
 
 
-def parse_sklearn(model, initial_types=None, targeted_onnx=onnx.__version__):
+def parse_sklearn(model, initial_types=None, targeted_onnx=onnx.__version__, label_variable_name=None, probabilities_variable_name=None):
     # Put scikit-learn object into an abstract container so that our framework can work seamlessly on models created
     # with different machine learning tools.
     raw_model_container = SklearnModelContainer(model)
@@ -190,7 +190,7 @@ def parse_sklearn(model, initial_types=None, targeted_onnx=onnx.__version__):
         raw_model_container.add_input(variable)
 
     # Parse the input scikit-learn model as a Topology object.
-    outputs = _parse_sklearn(scope, model, inputs)
+    outputs = _parse_sklearn(scope, model, inputs, label_variable_name, probabilities_variable_name)
 
     # THe object raw_model_container is a part of the topology we're going to return. We use it to store the outputs of
     # the scikit-learn's computational graph.

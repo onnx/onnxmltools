@@ -10,6 +10,7 @@ import numpy as np
 from collections import Counter
 from lightgbm import LGBMClassifier, LGBMRegressor
 from ...common._registration import register_converter
+from .common import concatenate_variables
 from .TreeEnsemble import _get_default_tree_classifier_attribute_pairs
 
 
@@ -115,8 +116,13 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
 def convert_lightgbm(scope, operator, container):
     gbm_model = operator.raw_operator
     if gbm_model.boosting_type != 'gbdt':
-        raise ValueError('Only support LightGBM classifier with boosting_type=gbdt')
+        raise ValueError('Only support LightGBM classifier with boosting_type=gbdt, requested boosting_type=' + gbm_model.boosting_type)
     gbm_text = gbm_model.booster_.dump_model()
+    
+    if len(operator.inputs) > 1:
+        feature_name = concatenate_variables(scope, operator.inputs, container)
+    else:
+        feature_name = operator.inputs[0].full_name
 
     attrs = _get_default_tree_classifier_attribute_pairs()
     attrs['name'] = operator.full_name
@@ -159,28 +165,19 @@ def convert_lightgbm(scope, operator, container):
 
     # Create ONNX object
     if isinstance(gbm_model, LGBMClassifier):
-        # Prepare label information for both of TreeEnsembleClassifier and ZipMap
-        zipmap_attrs = {'name': scope.get_unique_variable_name('ZipMap')}
         if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in gbm_model.classes_):
             class_labels = [int(i) for i in gbm_model.classes_]
             attrs['classlabels_int64s'] = class_labels
-            zipmap_attrs['classlabels_int64s'] = class_labels
         elif all(isinstance(i, (six.text_type, six.string_types)) for i in gbm_model.classes_):
             class_labels = [str(i) for i in gbm_model.classes_]
             attrs['classlabels_strings'] = class_labels
-            zipmap_attrs['classlabels_strings'] = class_labels
         else:
             raise ValueError('Only string and integer class labels are allowed')
 
         # Create tree classifier
-        probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
-        container.add_node('TreeEnsembleClassifier', operator.input_full_names,
-                           [operator.outputs[0].full_name, probability_tensor_name],
-                           op_domain='ai.onnx.ml', **attrs)
+        container.add_node('TreeEnsembleClassifier', feature_name,
+                            operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
-        # Convert probability tensor to probability map (keys are labels while values are the associated probabilities)
-        container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
-                           op_domain='ai.onnx.ml', **zipmap_attrs)
     else:
         # Create tree regressor
         keys_to_be_renamed = list(k for k in attrs.keys() if k.startswith('class_'))
@@ -189,7 +186,7 @@ def convert_lightgbm(scope, operator, container):
             # different ONNX attributes
             attrs['target' + k[5:]] = copy.deepcopy(attrs[k])
             del attrs[k]
-        container.add_node('TreeEnsembleRegressor', operator.input_full_names,
+        container.add_node('TreeEnsembleRegressor', feature_name,
                            operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
 

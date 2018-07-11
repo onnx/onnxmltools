@@ -66,7 +66,7 @@ def convert_sklearn_linear_classifier(scope, operator, container):
         normalized_probability_tensor_name = probability_tensor_name
 
     # Post-process probability tensor produced by LinearClassifier operator
-    if len(class_labels) > 2 or op.__class__.__name__ != 'LinearSVC':
+    if len(class_labels) > 2 and op.__class__.__name__ != 'LinearSVC':
         zipmap_type = 'ZipMap'
         zipmap_attrs = {'name': scope.get_unique_operator_name(zipmap_type)}
         if all(isinstance(i, (six.string_types, six.text_type)) for i in class_labels):
