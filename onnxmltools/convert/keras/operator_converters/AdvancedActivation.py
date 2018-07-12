@@ -20,7 +20,7 @@ def convert_keras_advanced_activation(scope, operator, container):
         apply_elu(scope, operator.input_full_names[0], operator.output_full_names[0], container,
                   operator_name=operator.full_name, alpha=alpha)
     elif isinstance(op, activations.PReLU):
-        weights = op.get_weights()[0].flatten()
+        weights = op.get_weights()[0]
         apply_prelu(scope, operator.input_full_names[0], operator.output_full_names[0], container,
                     operator_name=operator.full_name, slope=weights)
     else:

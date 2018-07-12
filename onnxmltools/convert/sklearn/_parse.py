@@ -45,6 +45,8 @@ from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MaxAbsScaler
 
 from lightgbm import LGBMClassifier, LGBMRegressor
 
@@ -88,7 +90,9 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              Binarizer: 'SklearnBinarizer',
                              LGBMClassifier: 'LgbmClassifier',
                              LGBMRegressor: 'LgbmRegressor',
-                             TruncatedSVD: 'SklearnTruncatedSVD'}
+                             TruncatedSVD: 'SklearnTruncatedSVD',
+                             MinMaxScaler: 'SklearnMinMaxScaler',
+                             MaxAbsScaler: 'SklearnMaxAbsScaler'}
 
 
 def _get_sklearn_operator_name(model_type):

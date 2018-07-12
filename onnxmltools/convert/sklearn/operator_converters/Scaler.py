@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from sklearn.preprocessing import StandardScaler, RobustScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler, MinMaxScaler, MaxAbsScaler
 from ...common._registration import register_converter
 from .common import concatenate_variables
 
@@ -33,6 +33,13 @@ def convert_sklearn_scaler(scope, operator, container):
             attrs['scale'] = 1.0 / op.scale_
         else:
             attrs['scale'] = [1.] * C
+    elif isinstance(op, MinMaxScaler):
+        attrs['scale'] = op.scale_
+        attrs['offset'] = -op.min_/(op.scale_ + 1e-8)  # Add 1e-8 to avoid divided by 0
+    elif isinstance(op, MaxAbsScaler):
+        C = operator.inputs[0].type.shape[1]
+        attrs['scale'] = 1.0 / op.scale_
+        attrs['offset'] = [0.] * C
     else:
         raise ValueError('Only scikit-learn StandardScaler and RobustScaler are supported but got %s' % type(op))
 
@@ -41,3 +48,5 @@ def convert_sklearn_scaler(scope, operator, container):
 
 register_converter('SklearnRobustScaler', convert_sklearn_scaler)
 register_converter('SklearnScaler', convert_sklearn_scaler)
+register_converter('SklearnMinMaxScaler', convert_sklearn_scaler)
+register_converter('SklearnMaxAbsScaler', convert_sklearn_scaler)

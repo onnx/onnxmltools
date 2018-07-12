@@ -348,7 +348,7 @@ def convert_bidirectional_lstm(scope, operator, container):
 
         if len(operator.outputs) > 1:
             lstm_y_h_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_Y_h_reshape')
-            apply_reshape(scope, lstm_y_name, lstm_y_h_reshape_name, container, desired_shape=[2, hidden_size])
+            apply_reshape(scope, lstm_y_h_name, lstm_y_h_reshape_name, container, desired_shape=[2, hidden_size])
 
             apply_split(scope, lstm_y_h_reshape_name, [operator.outputs[1].full_name, operator.outputs[3].full_name],
                         container, split=[1, 1], axis=0)
