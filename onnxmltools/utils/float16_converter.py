@@ -7,9 +7,11 @@
 import numpy as np
 import itertools
 from struct import unpack
-from ..proto import onnx, onnx_proto
-from onnx.shape_inference import infer_shapes
+from ..proto import onnx_proto
 from ..convert.common._container import ModelComponentContainer
+import onnx
+from onnx.shape_inference import infer_shapes
+
 
 
 def _npfloat16_to_int(np_list):
@@ -146,8 +148,7 @@ def convert_float_to_float16(model):
                         container = ModelComponentContainer(onnx.__version__)
                         attrs = {'name': input + 'Cast'}
                         attrs['to'] = onnx_proto.TensorProto.FLOAT
-                        op_version = 7
-                        container.add_node('Cast', input, input + '_casted', op_domain='', op_version=op_version, **attrs)
+                        container.add_node('Cast', input, input + '_casted', op_domain='', op_version=7, **attrs)
                         model.graph.node.extend(container.nodes)
                         # change current node's input name
                         node.input[i] = input + '_casted'
@@ -179,7 +180,7 @@ def convert_float_to_float16(model):
             # Create operator set for cast node
             op_set = model.opset_import.add()
             op_set.domain = ""
-            op_set.version = op_version
+            op_set.version = 7
         return model
     elif isinstance(model, onnx_proto.TensorProto):
         # create a queue for BFS
