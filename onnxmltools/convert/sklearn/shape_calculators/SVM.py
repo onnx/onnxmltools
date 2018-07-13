@@ -61,7 +61,7 @@ def calculate_sklearn_svm_output_shapes(operator):
     if operator.type in ['SklearnSVR']:
         check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=1)
 
-        operator.outputs[0].type = FloatTensorType([N])
+        operator.outputs[0].type = FloatTensorType([N, 1])
 
 
 register_shape_calculator('SklearnSVC', calculate_sklearn_svm_output_shapes)
