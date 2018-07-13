@@ -10,9 +10,6 @@ from struct import unpack
 from ..proto import onnx_proto
 from ..convert.common._container import ModelComponentContainer
 import onnx
-from onnx.shape_inference import infer_shapes
-
-
 
 def _npfloat16_to_int(np_list):
     '''
@@ -47,6 +44,9 @@ def convert_float_to_float16(model):
         save_model(new_onnx_model, 'new_model.onnx')
 
     '''
+    if onnx.__version__ >= '1.2':
+        from onnx.shape_inference import infer_shapes
+
     domain_flag = 0
     if isinstance(model, onnx_proto.ModelProto):
         # create black list
@@ -59,7 +59,8 @@ def convert_float_to_float16(model):
         value_info_list = []
         node_list = []
         # type inference on input model
-        model = infer_shapes(model)
+        if onnx.__version__ >= '1.2':
+            model = infer_shapes(model)
         queue.append(model)
         while queue:
             next_level = []
