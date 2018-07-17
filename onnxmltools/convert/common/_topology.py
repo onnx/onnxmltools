@@ -6,6 +6,7 @@
 
 import re
 from distutils.version import StrictVersion
+from ...utils.metadata_props import add_metadata_props
 from ...proto import onnx
 from ...proto import helper
 from .data_types import *
@@ -651,15 +652,24 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
 
     # Add roots the graph according to their order in the original model
     for name in topology.raw_model.input_names:
-        tensor = tensor_inputs.get(name)
-        if tensor:
-            container.add_input(tensor)
-            if tensor.type.denotation == 'IMAGE':
-                metadata_props.update({
-                    'Image.BitmapPixelFormat': 'Bgr8',
-                    'Image.ColorSpaceGamma': 'SRGB',
-                    'Image.NominalPixelRange': 'NominalRange_0_255',
-                })
+        if name in tensor_inputs:
+            container.add_input(tensor_inputs[name])
+    for variable in topology.find_root_and_sink_variables():
+        color_space = getattr(variable.type, 'color_space', None)
+        if color_space:
+            color_space_to_pixel_format = {
+                'BGR': 'Bgr8',
+                'RGB': 'Rgb8',
+                'GRAY': 'Gray8',
+            }
+            pixel_format = color_space_to_pixel_format[color_space]
+            if metadata_props.get('Image.BitmapPixelFormat', pixel_format) != pixel_format:
+                print('Warning: conflicting pixel formats found. In ONNX, all input/output images must use the same pixel format.')
+            metadata_props = {
+                'Image.BitmapPixelFormat': pixel_format,
+                'Image.ColorSpaceGamma': 'SRGB',
+                'Image.NominalPixelRange': 'NominalRange_0_255',
+            }
     for name in topology.raw_model.input_names:
         if name in other_inputs:
             container.add_input(other_inputs[name])
@@ -728,8 +738,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
         i += 1
 
     # Add extra information
-    onnx_model.metadata_props.extend(onnx_proto.StringStringEntryProto(key=key, value=value)
-                                     for key, value in metadata_props.items())
+    add_metadata_props(onnx_model, metadata_props)
     onnx_model.ir_version = onnx_proto.IR_VERSION
     onnx_model.producer_name = utils.get_producer()
     onnx_model.producer_version = utils.get_producer_version()

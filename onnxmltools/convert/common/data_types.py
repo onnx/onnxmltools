@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from itertools import repeat
 import numbers
 from ...proto import onnx_proto
 
@@ -57,7 +56,6 @@ class StringType(DataType):
 class TensorType(DataType):
     def __init__(self, shape=None, doc_string=''):
         super(TensorType, self).__init__([] if not shape else shape, doc_string)
-        self.denotation = None
 
     def _get_element_onnx_type(self):
         raise NotImplementedError()
@@ -65,25 +63,14 @@ class TensorType(DataType):
     def to_onnx_type(self):
         onnx_type = onnx_proto.TypeProto()
         onnx_type.tensor_type.elem_type = self._get_element_onnx_type()
-        channel_denotations = repeat(None)
-        if self.denotation:
-            onnx_type.denotation = self.denotation
-        if self.denotation == 'IMAGE':
-            # In images, assume NCWH or NWH ordering and add denotations to each channels
-            if len(self.shape) == 4:
-                channel_denotations = ['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE']
-            elif len(self.shape) == 3:
-                channel_denotations = ['DATA_BATCH', 'DATA_FEATURE', 'DATA_FEATURE']
-        for dimension, denotation in zip(self.shape, channel_denotations):
+        for d in self.shape:
             s = onnx_type.tensor_type.shape.dim.add()
-            if isinstance(dimension, numbers.Integral):
-                s.dim_value = dimension
-            elif isinstance(dimension, str):
+            if isinstance(d, numbers.Integral):
+                s.dim_value = d
+            elif isinstance(d, str):
                 s.dim_param = 'None'
             else:
-                raise ValueError('Unsupported dimension type: %s' % type(dimension))
-            if denotation:
-                s.denotation = denotation
+                raise ValueError('Unsupported dimension type: %s' % type(d))
         return onnx_type
 
 
@@ -96,10 +83,9 @@ class Int64TensorType(TensorType):
 
 
 class FloatTensorType(TensorType):
-    def __init__(self, shape=None, color_space=None, denotation=None, doc_string=''):
+    def __init__(self, shape=None, color_space=None, doc_string=''):
         super(FloatTensorType, self).__init__(shape, doc_string)
         self.color_space = color_space
-        self.denotation = denotation
 
     def _get_element_onnx_type(self):
         return onnx_proto.TensorProto.FLOAT
