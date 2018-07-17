@@ -6,7 +6,7 @@
 
 import re
 from distutils.version import StrictVersion
-from ...utils.metadata_props import add_metadata_props
+from ...utils.metadata_props import add_metadata_props, set_denotation
 from ...proto import onnx
 from ...proto import helper
 from .data_types import *
@@ -630,7 +630,6 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     topology._initialize_graph_status_for_traversing()
 
     container = ModelComponentContainer(targeted_onnx)
-    metadata_props = {}
 
     # Put roots and leaves as ONNX's model into buffers. They will be added into ModelComponentContainer later.
     tensor_inputs = {}
@@ -654,9 +653,17 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     for name in topology.raw_model.input_names:
         if name in tensor_inputs:
             container.add_input(tensor_inputs[name])
+    for name in topology.raw_model.input_names:
+        if name in other_inputs:
+            container.add_input(other_inputs[name])
+
+    # Add metadata properties and channel denotation to image tensors
+    metadata_props = {}
+    image_inputs = []
     for variable in topology.find_root_and_sink_variables():
         color_space = getattr(variable.type, 'color_space', None)
         if color_space:
+            image_inputs.append(variable.raw_name)
             color_space_to_pixel_format = {
                 'BGR': 'Bgr8',
                 'RGB': 'Rgb8',
@@ -670,9 +677,6 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
                 'Image.ColorSpaceGamma': 'SRGB',
                 'Image.NominalPixelRange': 'NominalRange_0_255',
             }
-    for name in topology.raw_model.input_names:
-        if name in other_inputs:
-            container.add_input(other_inputs[name])
 
     # Add leaves the graph according to their order in the original model
     for name in topology.raw_model.output_names:
@@ -739,6 +743,8 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
 
     # Add extra information
     add_metadata_props(onnx_model, metadata_props)
+    for image in image_inputs:
+        set_denotation(onnx_model, image, 'IMAGE', dimension_denotation=['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE'])
     onnx_model.ir_version = onnx_proto.IR_VERSION
     onnx_model.producer_name = utils.get_producer()
     onnx_model.producer_version = utils.get_producer_version()
