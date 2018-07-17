@@ -28,3 +28,17 @@ def add_metadata_props(onnx_model, metadata_props):
     _validate_metadata(metadata_props)
     onnx_model.metadata_props.extend(onnx_proto.StringStringEntryProto(key=key, value=value)
                                      for key, value in metadata_props.items())
+
+
+def set_denotation(onnx_model, input_name, denotation, dimension_denotation=None):
+    for graph_input in onnx_model.graph.input:
+        if graph_input.name == input_name:
+            graph_input.type.denotation = denotation
+            if dimension_denotation:
+                dimensions = graph_input.type.tensor_type.shape.dim
+                if len(dimension_denotation) != len(dimensions):
+                    raise RuntimeError('Wrong number of dimensions: input "{}" has {} dimensions'.format(input_name, len(dimensions)))
+                for dimension, channel_denotation in zip(dimensions, dimension_denotation):
+                    dimension.denotation = channel_denotation
+            return onnx_model
+    raise RuntimeError('Input "{}" not found'.format(input_name))
