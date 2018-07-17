@@ -26,6 +26,12 @@ def _validate_metadata(metadata_props):
 
 def add_metadata_props(onnx_model, metadata_props):
     _validate_metadata(metadata_props)
+
+    # Overwrite old properties (case insensitive)
+    new_props = [x.lower() for x in metadata_props]
+    for prop in onnx_model.metadata_props:
+        if prop.key.lower() in new_props:
+            onnx_model.metadata_props.remove(prop)
     onnx_model.metadata_props.extend(onnx_proto.StringStringEntryProto(key=key, value=value)
                                      for key, value in metadata_props.items())
 
