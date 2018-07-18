@@ -6,7 +6,7 @@
 
 import re
 from distutils.version import StrictVersion
-from ...utils.metadata_props import add_metadata_props, set_denotation
+from ...utils.metadata_props import add_metadata_props, color_space_to_pixel_format, set_denotation
 from ...proto import onnx
 from ...proto import helper
 from .data_types import *
@@ -664,12 +664,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
         color_space = getattr(variable.type, 'color_space', None)
         if color_space:
             image_inputs.append(variable.raw_name)
-            color_space_to_pixel_format = {
-                'BGR': 'Bgr8',
-                'RGB': 'Rgb8',
-                'GRAY': 'Gray8',
-            }
-            pixel_format = color_space_to_pixel_format[color_space]
+            pixel_format = color_space_to_pixel_format(color_space)
             if metadata_props.get('Image.BitmapPixelFormat', pixel_format) != pixel_format:
                 print('Warning: conflicting pixel formats found. In ONNX, all input/output images must use the same pixel format.')
             metadata_props = {
@@ -744,7 +739,8 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     # Add extra information
     add_metadata_props(onnx_model, metadata_props)
     for image in image_inputs:
-        set_denotation(onnx_model, image, 'IMAGE', dimension_denotation=['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE'])
+        set_denotation(onnx_model, image, 'IMAGE',
+                       dimension_denotation=['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE'])
     onnx_model.ir_version = onnx_proto.IR_VERSION
     onnx_model.producer_name = utils.get_producer()
     onnx_model.producer_version = utils.get_producer_version()

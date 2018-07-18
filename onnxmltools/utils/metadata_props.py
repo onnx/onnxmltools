@@ -1,4 +1,5 @@
-from ..proto import onnx_proto
+from ..proto import onnx, onnx_proto
+from ..convert.common.utils import version_string_to_tuple
 
 
 def _get_case_insensitive(iterable, key):
@@ -23,8 +24,21 @@ def _validate_metadata(metadata_props):
     if image_metadata_props and valid_metadata_props:
         print('Warning: incomplete image metadata is being added. Keys {} are missing.'.format(', '.join(valid_metadata_props)))
 
+COLOR_SPACE_TO_PIXEL_FORMAT = {
+    'BGR': 'Bgr8',
+    'RGB': 'Rgb8',
+    'GRAY': 'Gray8',
+}
 
-def add_metadata_props(onnx_model, metadata_props):
+
+def color_space_to_pixel_format(color_space):
+    return COLOR_SPACE_TO_PIXEL_FORMAT[color_space]
+
+
+def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version__):
+    if version_string_to_tuple(targeted_onnx) < (1, 2, 1) or onnx_model.ir_version < 3:
+        print('Metadata properties are not supported in this model')
+        return
     _validate_metadata(metadata_props)
     # Overwrite old properties (case insensitive)
     new_props = [x.lower() for x in metadata_props]
@@ -36,7 +50,10 @@ def add_metadata_props(onnx_model, metadata_props):
                                      for key, value in metadata_props.items())
 
 
-def set_denotation(onnx_model, input_name, denotation, dimension_denotation=None):
+def set_denotation(onnx_model, input_name, denotation, dimension_denotation=None, targeted_onnx=onnx.__version__):
+    if version_string_to_tuple(targeted_onnx) < (1, 2, 1) or onnx_model.ir_version < 3:
+        print('Metadata properties are not supported in this model')
+        return
     for graph_input in onnx_model.graph.input:
         if graph_input.name == input_name:
             graph_input.type.denotation = denotation
