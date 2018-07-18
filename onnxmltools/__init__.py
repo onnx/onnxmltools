@@ -16,6 +16,7 @@ __producer_version__ = __version__
 __domain__ = "onnxml"
 __model_version__ = 0
 
+from .convert.common.interface import *
 
 from .convert import convert_coreml
 from .convert import convert_sklearn

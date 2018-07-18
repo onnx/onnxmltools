@@ -14,7 +14,7 @@ from . import shape_calculators
 from . import operator_converters
 
 
-def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__, custom_conversion={}):
+def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__, custom_conversions={}):
     '''
     This function produces an equivalent ONNX model of the given scikit-learn model. The supported scikit-learn
     modules are listed below.
@@ -68,6 +68,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
     :param doc_string: A string attached onto the produced ONNX model
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
+    :param custom_conversions: a dictionary for specifying the user customized conversion function
     :return: An ONNX model (type: ModelProto) which is equivalent to the input scikit-learn model
 
     Example of initial_types:
@@ -88,7 +89,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
     topology = parse_sklearn(model, initial_types, targeted_onnx)
 
     # Infer variable shapes
-    topology.compile()
+    topology.compile(custom_conversions)
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
     onnx_model = convert_topology(topology, name, doc_string, targeted_onnx)
