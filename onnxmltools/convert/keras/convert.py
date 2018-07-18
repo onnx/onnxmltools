@@ -7,14 +7,18 @@
 from uuid import uuid4
 from ...proto import onnx
 from ..common._topology import convert_topology
+from ..common._registration import register_converter
+from ..common._registration import register_shape_calculator
+from ..common._registration import unregister_converter
 from ._parse import parse_keras
+from ._default import default_shape_calculator
 
 # Register conversion functions and shape inference functions
 from . import operator_converters
 from . import shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
+def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__, custom_conversion={}):
     '''
     Convert Keras-Tensorflow Model and Sequence objects into Topology. Note that default batch size is 1 here instead of
     `None` used in CoreML conversion framework. To overwrite this behavior, we can specify initial_types. Assume that a
@@ -31,13 +35,22 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :return: An ONNX model (type: ModelProto) which is equivalent to the input Keras model
     '''
-    topology = parse_keras(model, initial_types, targeted_onnx)
+    try:
+        for conversion_func in custom_conversion:
+            register_converter(conversion_func, custom_conversion[conversion_func])
+            register_shape_calculator(conversion_func, default_shape_calculator, True)
 
-    topology.compile()
+        topology = parse_keras(model, initial_types, targeted_onnx)
 
-    if name is None:
-        name = str(uuid4().hex)
+        topology.compile()
 
-    onnx_model = convert_topology(topology, name, doc_string, targeted_onnx)
+        if name is None:
+            name = str(uuid4().hex)
+
+        onnx_model = convert_topology(topology, name, doc_string, targeted_onnx)
+
+    finally:
+        for conversion_func in custom_conversion:
+            unregister_converter(conversion_func)
 
     return onnx_model
