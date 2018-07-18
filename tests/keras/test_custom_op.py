@@ -1,3 +1,5 @@
+import sys
+
 import onnxmltools
 import numpy as np
 import unittest
@@ -23,12 +25,16 @@ class ScaledTanh(keras.layers.Layer):
     def compute_output_shape(self, input_shape):
         return input_shape
 
-
-def custom_activation(scope, operator, container):
-    #operator: OperatorBase
-    #container: ModelContainer
-    container.add_node('ScaledTanh', operator.input_full_names, operator.output_full_names,
-                       op_version=1, alpha=operator.original_operator.alpha, beta=operator.original_operator.beta)
+if sys.version_info[0] < 3:
+    def custom_activation(scope, operator, container):
+        #operator: OperatorBase
+        #container: ModelContainer
+        container.add_node('ScaledTanh', operator.input_full_names, operator.output_full_names,
+                           op_version=1, alpha=operator.original_operator.alpha, beta=operator.original_operator.beta)
+else:
+    def custom_activation(scope, operator: OperatorBase, container: ModelContainer):
+        container.add_node('ScaledTanh', operator.input_full_names, operator.output_full_names,
+                           op_version=1, alpha=operator.original_operator.alpha, beta=operator.original_operator.beta)
 
 
 class TestKerasConverter(unittest.TestCase):
@@ -44,9 +50,8 @@ class TestKerasConverter(unittest.TestCase):
 
         model.compile(optimizer='sgd', loss='mse')
         actual = model.predict(x)
+        self.assertIsNotNone(actual)
 
         converted_model = onnxmltools.convert_keras(model, custom_conversion={ScaledTanh: custom_activation})
         self.assertIsNotNone(converted_model)
-
-        # print(actual)
-        print(str(converted_model))
+        # print(str(converted_model))

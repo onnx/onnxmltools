@@ -10,8 +10,8 @@ from ..common._topology import convert_topology
 from ..common._registration import register_converter
 from ..common._registration import register_shape_calculator
 from ..common._registration import unregister_converter
+from ..common._registration import unregister_shape_calculator
 from ._parse import parse_keras
-from ._default import default_shape_calculator
 
 # Register conversion functions and shape inference functions
 from . import operator_converters
@@ -38,7 +38,7 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
     try:
         for conversion_func in custom_conversion:
             register_converter(conversion_func, custom_conversion[conversion_func])
-            register_shape_calculator(conversion_func, default_shape_calculator, True)
+            register_shape_calculator(conversion_func)
 
         topology = parse_keras(model, initial_types, targeted_onnx)
 
@@ -52,5 +52,6 @@ def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=o
     finally:
         for conversion_func in custom_conversion:
             unregister_converter(conversion_func)
+            unregister_shape_calculator(conversion_func)
 
     return onnx_model
