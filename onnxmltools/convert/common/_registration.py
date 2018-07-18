@@ -64,7 +64,7 @@ def register_shape_calculator(operator_name, calculator_function=default_shape_c
 
 def unregister_shape_calculator(operator_name):
     '''
-    Unregister a converter function from the pool.
+    Unregister a converter shape function from the pool.
     '''
     if not _shape_calculator_pool.pop(operator_name):
         raise ValueError('Unregister non-existing operator {}'.format(str(operator_name)))

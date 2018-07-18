@@ -7,7 +7,7 @@
 import six
 from distutils.version import StrictVersion
 from ...proto import helper
-from .base import ModelContainer
+from .interface import ModelContainer
 
 
 class RawModelContainer(object):

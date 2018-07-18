@@ -427,7 +427,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         operator.outputs.append(parent_variable)
 
 
-def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__):
+def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversions={}):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model
@@ -435,6 +435,7 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__):
     name and a type defined in data_types.py.
     :param targeted_onnx: a version string such as `1.1.2` or `1.2.1` for specifying the ONNX version used to produce
     the output model.
+    :param custom_conversions: a dictionary for specifying the user customized conversion function
     :return: a Topology object. It's a intermediate representation of the input CoreML model
     '''
 
@@ -458,7 +459,7 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__):
 
     # Instead of using CoremlModelContainer, we directly pass the model in because _parse_model is CoreML-specific.
     _parse_model(topology, scope, model)
-    topology.compile()
+    topology.compile(custom_conversions)
 
     # Use original CoreML names for model-level input(s)/output(s)
     for variable in topology.find_root_and_sink_variables():

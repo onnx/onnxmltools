@@ -13,7 +13,7 @@ from .data_types import *
 from ._container import ModelComponentContainer
 from . import _registration
 from . import utils
-from .base import OperatorBase
+from .interface import OperatorBase
 
 class Variable:
 
@@ -252,6 +252,7 @@ class Topology:
         self.initial_types = initial_types if initial_types else list()
         self.default_batch_size = default_batch_size
         self.targeted_onnx_version = StrictVersion(targeted_onnx)
+        self.custom_conversions = {}
 
         # This attribute is used in optimizing the graph structure. If root_names is not empty, only the variables
         # specified will be treated as the roots (i.e., set is_fed to True in the beginning of a graph evaluation) of
@@ -483,7 +484,12 @@ class Topology:
 
         # Traverse the graph from roots to leaves
         for operator in self.topological_operator_iterator():
-            operator.infer_types()
+            if operator.type in self.custom_conversions:
+                cconv = self.custom_conversions[operator.type]
+                if isinstance(cconv, tuple) and len(cconv) > 1:  # user customized shape calculator.
+                    cconv[1](operator)
+            else:
+                operator.infer_types()
 
     def _resolve_duplicates(self):
         '''
@@ -589,11 +595,13 @@ class Topology:
             for onnx_name in abandoned_variable_names:
                 scope.delete_local_variable(onnx_name)
 
-    def compile(self):
+    def compile(self, custom_conversions):
         '''
         This function aims at giving every operator enough information so that all operator conversions can happen
         independently. We also want to check, fix, and simplify the network structure here.
+        :param custom_conversions: the dictionary of the user customized conversion functions.
         '''
+        self.custom_conversions = custom_conversions
         self._prune()
         self._resolve_duplicates()
         self._fix_shapes()
@@ -658,8 +666,14 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     # Traverse the graph from roots to leaves
     for operator in topology.topological_operator_iterator():
         scope = next(scope for scope in topology.scopes if scope.name == operator.scope)
-        # Convert the selected operator into some ONNX objects and save them into the container
-        _registration.get_converter(operator.type)(scope, operator, container)
+        if operator.type in topology.custom_conversions:
+            cconv = topology.custom_conversions[operator.type]
+            if isinstance(cconv, tuple):
+                cconv = cconv[0]
+            cconv(scope, operator, container)
+        else:
+            # Convert the selected operator into some ONNX objects and save them into the container
+            _registration.get_converter(operator.type)(scope, operator, container)
 
     # When calling ModelComponentContainer's add_initializer(...), nothing is added into the input list. However, in
     # ONNX initializers should also be model's (GraphProto) inputs. Thus, we create ValueInfoProto objects from
