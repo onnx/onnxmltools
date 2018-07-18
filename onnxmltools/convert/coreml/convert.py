@@ -18,7 +18,7 @@ from .operator_converters import neural_network as nn_converters
 from .shape_calculators import neural_network as nn_shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
+def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__, custom_conversion={}):
     '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
     ONNX model name can be specified.

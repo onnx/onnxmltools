@@ -26,6 +26,12 @@ def register_converter(operator_name, conversion_function, overwrite=False):
         raise ValueError('We do not overwrite registrated converter by default')
     _converter_pool[operator_name] = conversion_function
 
+def unregister_converter(operator_name):
+    '''
+    Unregister a converter function from the pool.
+    '''
+    if not _converter_pool.pop(operator_name):
+        raise ValueError('We do not overwrite registrated converter by default')
 
 def get_converter(operator_name):
     '''

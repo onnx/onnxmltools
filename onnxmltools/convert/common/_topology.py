@@ -6,13 +6,14 @@
 
 import re
 from distutils.version import StrictVersion
+
 from ...proto import onnx
 from ...proto import helper
 from .data_types import *
 from ._container import ModelComponentContainer
 from . import _registration
 from . import utils
-
+from .base import OperatorBase
 
 class Variable:
 
@@ -42,7 +43,7 @@ class Variable:
         return self.onnx_name
 
 
-class Operator:
+class Operator(OperatorBase):
 
     def __init__(self, onnx_name, scope, type, raw_operator, targeted_onnx_version):
         '''
@@ -81,9 +82,16 @@ class Operator:
     @property
     def output_full_names(self):
         '''
-        Return all outpu variables' names
+        Return all output variables' names
         '''
         return [variable.full_name for variable in self.outputs]
+
+    @property
+    def original_operator(self):
+        '''
+        Return the original operator/layer
+        '''
+        return self.raw_operator
 
     def infer_types(self):
         # Invoke a core inference function

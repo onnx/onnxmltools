@@ -75,7 +75,7 @@ def determine_tensor_type(tensor, default_batch_size, keras_shape=None):
         raise ValueError('Unable to find out a correct type for tensor %s' % tensor)
 
 
-def parse_keras(model, initial_types=None, targeted_onnx=onnx.__version__):
+def parse_keras(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion={}):
     '''
     The main parsing function of Keras Model and Sequential objects.
 

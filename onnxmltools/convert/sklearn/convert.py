@@ -14,7 +14,7 @@ from . import shape_calculators
 from . import operator_converters
 
 
-def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
+def convert(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__, custom_conversion={}):
     '''
     This function produces an equivalent ONNX model of the given scikit-learn model. The supported scikit-learn
     modules are listed below.
