@@ -14,6 +14,8 @@ _converter_pool = {}
 # is the callable object used to infer the output shape(s) for the operator specified by the key.
 _shape_calculator_pool = {}
 
+def default_shape_calculator(operator):
+    pass
 
 def register_converter(operator_name, conversion_function, overwrite=False):
     '''
@@ -31,7 +33,7 @@ def unregister_converter(operator_name):
     Unregister a converter function from the pool.
     '''
     if not _converter_pool.pop(operator_name):
-        raise ValueError('We do not overwrite registrated converter by default')
+        raise ValueError('Unregister non-existing operator {}'.format(str(operator_name)))
 
 def get_converter(operator_name):
     '''
@@ -48,7 +50,7 @@ def get_converter(operator_name):
     return _converter_pool[operator_name]
 
 
-def register_shape_calculator(operator_name, calculator_function, overwrite=False):
+def register_shape_calculator(operator_name, calculator_function=default_shape_calculator, overwrite=False):
     '''
     :param operator_name: A unique operator ID. It is usually a string but you can use a type as well
     :param calculator_function: A callable object
@@ -59,6 +61,13 @@ def register_shape_calculator(operator_name, calculator_function, overwrite=Fals
         raise ValueError('We do not overwrite registrated shape calculator by default')
     _shape_calculator_pool[operator_name] = calculator_function
 
+
+def unregister_shape_calculator(operator_name):
+    '''
+    Unregister a converter function from the pool.
+    '''
+    if not _shape_calculator_pool.pop(operator_name):
+        raise ValueError('Unregister non-existing operator {}'.format(str(operator_name)))
 
 def get_shape_calculator(operator_name):
     '''
