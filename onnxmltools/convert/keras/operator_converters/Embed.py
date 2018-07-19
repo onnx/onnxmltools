@@ -41,7 +41,9 @@ def convert_keras_embed(scope, operator, container):
     # Create a Gather operator to extract the latent representation of each index
     op_type = 'Gather'
     attrs = {'name': operator.full_name}
-    container.add_node(op_type, [embedding_tensor_name, reshaped_input_name], operator.output_full_names, **attrs)
+    gather_name = scope.get_unique_variable_name('embedding_gather1')
+    container.add_node(op_type, [embedding_tensor_name, reshaped_input_name], gather_name, **attrs)
+    apply_reshape(scope, gather_name, operator.output_full_names, container, desired_shape=operator.outputs[0].type.shape)
 
 
 register_converter(Embedding, convert_keras_embed)
