@@ -25,14 +25,10 @@ class ScaledTanh(keras.layers.Layer):
         return input_shape
 
 
-if sys.version_info[0] < 3:
-    def custom_activation(scope, operator, container):  #scope: ScopeBase, operator: OperatorBase, container: ModelContainer
-        container.add_node('ScaledTanh', operator.input_full_names, operator.output_full_names,
-                           op_version=1, alpha=operator.original_operator.alpha, beta=operator.original_operator.beta)
-else:
-    def custom_activation(scope: onnxmltools.ScopeBase, operator: onnxmltools.OperatorBase, container: onnxmltools.ModelContainer):
-        container.add_node('ScaledTanh', operator.input_full_names, operator.output_full_names,
-                           op_version=1, alpha=operator.original_operator.alpha, beta=operator.original_operator.beta)
+def custom_activation(scope, operator, container):
+    # type:(ScopeBase, OperatorBase, ModelContainer) -> None
+    container.add_node('ScaledTanh', operator.input_full_names, operator.output_full_names,
+                       op_version=1, alpha=operator.original_operator.alpha, beta=operator.original_operator.beta)
 
 class TestKerasConverter(unittest.TestCase):
     def test_custom_op(self):
