@@ -9,8 +9,6 @@ from ...proto import onnx
 from ..common._topology import convert_topology
 from ..common._registration import register_converter
 from ..common._registration import register_shape_calculator
-from ..common._registration import unregister_converter
-from ..common._registration import unregister_shape_calculator
 from ._parse import parse_keras
 
 # Register conversion functions and shape inference functions
