@@ -88,10 +88,10 @@ def convert(model, name=None, initial_types=None, doc_string='',
         name = str(uuid4().hex)
 
     # Parse scikit-learn model as our internal data structure (i.e., Topology)
-    topology = parse_sklearn(model, initial_types, targeted_onnx)
+    topology = parse_sklearn(model, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
 
     # Infer variable shapes
-    topology.compile(custom_conversion_functions, custom_shape_calculators)
+    topology.compile()
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
     onnx_model = convert_topology(topology, name, doc_string, targeted_onnx)
