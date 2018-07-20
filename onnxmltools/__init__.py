@@ -16,11 +16,12 @@ __producer_version__ = __version__
 __domain__ = "onnxml"
 __model_version__ = 0
 
-from .convert.common.interface import *
 
 from .convert import convert_coreml
 from .convert import convert_sklearn
 from .convert import convert_keras
+
+from .convert.common.interface import *
 
 from .utils import load_model
 from .utils import save_model

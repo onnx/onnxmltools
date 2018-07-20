@@ -45,6 +45,6 @@ class TestKerasConverter(unittest.TestCase):
         actual = model.predict(x)
         self.assertIsNotNone(actual)
 
-        converted_model = onnxmltools.convert_keras(model, custom_conversions={ScaledTanh: custom_activation})
+        converted_model = onnxmltools.convert_keras(model, custom_conversion_functions={ScaledTanh: custom_activation})
         self.assertIsNotNone(converted_model)
-        # print(str(converted_model))
+        print(str(converted_model))
