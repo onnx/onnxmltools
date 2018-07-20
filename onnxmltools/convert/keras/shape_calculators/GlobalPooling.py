@@ -9,7 +9,7 @@ from ...common._registration import register_shape_calculator
 
 def calculate_keras_global_pooling_output_shapes(operator):
     d_len = len(operator.raw_operator.input_shape)
-    d_app = [1 for i in range(d_len -2)]
+    d_app = [1 for i in range(d_len - 2)]
     operator.outputs[0].type.shape = operator.outputs[0].type.shape + d_app
 
 
