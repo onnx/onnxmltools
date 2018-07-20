@@ -82,4 +82,3 @@ register_shape_calculator(keras.layers.ZeroPadding3D, calculate_lazy_output_shap
 
 # RepeatVector
 register_shape_calculator(keras.layers.RepeatVector, calculate_lazy_output_shapes)
-

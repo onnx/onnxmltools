@@ -6,13 +6,13 @@
 
 from keras.layers import Embedding
 from ...common._registration import register_shape_calculator
-from ...common.data_types import Int64TensorType
+from ...common.data_types import FloatTensorType
 
 
 def calculate_keras_embed_output_shapes(operator):
-    shape = operator.inputs[0].type.shape
     doc_string = operator.inputs[0].type.doc_string
-    operator.inputs[0].type = Int64TensorType(shape, doc_string)
+    shape = operator.raw_operator.output_shape
+    operator.outputs[0].type = FloatTensorType(['None' if dim == None else dim for dim in shape], doc_string)
 
 
 register_shape_calculator(Embedding, calculate_keras_embed_output_shapes)
