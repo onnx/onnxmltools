@@ -10,4 +10,3 @@ from . import Conv
 from . import Embed
 from . import Lazy
 from . import LSTM
-from . import GlobalPooling

@@ -38,7 +38,12 @@ register_shape_calculator(keras.layers.AveragePooling1D, calculate_lazy_output_s
 register_shape_calculator(keras.layers.AveragePooling2D, calculate_lazy_output_shapes)
 register_shape_calculator(keras.layers.AveragePooling3D, calculate_lazy_output_shapes)
 
+# Global Pooling
+register_shape_calculator(keras.layers.GlobalMaxPooling1D, calculate_lazy_output_shapes)
+register_shape_calculator(keras.layers.GlobalMaxPooling2D, calculate_lazy_output_shapes)
 
+register_shape_calculator(keras.layers.GlobalAveragePooling1D, calculate_lazy_output_shapes)
+register_shape_calculator(keras.layers.GlobalAveragePooling2D, calculate_lazy_output_shapes)
 
 # Flatten
 register_shape_calculator(keras.layers.Flatten, calculate_lazy_output_shapes)
