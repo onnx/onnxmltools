@@ -7,6 +7,7 @@
 import six
 from distutils.version import StrictVersion
 from ...proto import helper
+from .interface import ModelContainer
 
 
 class RawModelContainer(object):
@@ -106,7 +107,7 @@ class KerasModelContainer(RawModelContainer):
         return [name for name in self._output_raw_names]
 
 
-class ModelComponentContainer:
+class ModelComponentContainer(ModelContainer):
     '''
     In the conversion phase, this class is used to collect all materials required to build an ONNX GraphProto, which is
     encapsulated in a ONNX ModelProto.
