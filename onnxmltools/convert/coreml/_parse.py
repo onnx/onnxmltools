@@ -427,7 +427,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         operator.outputs.append(parent_variable)
 
 
-def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions={}, custom_shape_calculators={}):
+def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model

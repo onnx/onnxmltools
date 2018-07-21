@@ -167,7 +167,7 @@ def _parse_sklearn(scope, model, inputs):
         return _parse_sklearn_simple_model(scope, model, inputs)
 
 
-def parse_sklearn(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions={}, custom_shape_calculators={}):
+def parse_sklearn(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     # Put scikit-learn object into an abstract container so that our framework can work seamlessly on models created
     # with different machine learning tools.
     raw_model_container = SklearnModelContainer(model)
