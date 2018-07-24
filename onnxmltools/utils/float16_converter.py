@@ -150,11 +150,10 @@ def convert_float_to_float16(model):
             for value_info in value_info_list:
                 if input == value_info.name:
                     # create new value_info for current node's new input name
-                    new_value_info = onnx_proto.ValueInfoProto()
+                    new_value_info = model.graph.value_info.add()
                     new_value_info.CopyFrom(value_info)
                     new_value_info.name = input + '_casted'
                     new_value_info.type.tensor_type.elem_type = onnx_proto.TensorProto.FLOAT
-                    model.graph.value_info._values.append(new_value_info)
                     # add Cast node (from tensor(float16) to tensor(float) before current node
                     container = ModelComponentContainer(onnx.__version__)
                     attrs = {'name': input + 'Cast'}
@@ -172,11 +171,10 @@ def convert_float_to_float16(model):
             for value_info in value_info_list:
                 if output == value_info.name:
                     # create new value_info for current node's new output
-                    new_value_info = onnx_proto.ValueInfoProto()
+                    new_value_info = model.graph.value_info.add()
                     new_value_info.CopyFrom(value_info)
                     new_value_info.name = output + '_casted'
                     new_value_info.type.tensor_type.elem_type = onnx_proto.TensorProto.FLOAT
-                    model.graph.value_info._values.append(new_value_info)
                     # add Cast node (from tensor(float) to tensor(float16) after current node
                     container = ModelComponentContainer(onnx.__version__)
                     attrs = {'name': output + 'Cast'}
