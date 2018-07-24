@@ -12,7 +12,7 @@ from .data_types import *
 from ._container import ModelComponentContainer
 from . import _registration
 from . import utils
-
+from .interface import OperatorBase
 
 class Variable:
 
@@ -42,7 +42,7 @@ class Variable:
         return self.onnx_name
 
 
-class Operator:
+class Operator(OperatorBase):
 
     def __init__(self, onnx_name, scope, type, raw_operator, targeted_onnx_version):
         '''
@@ -81,9 +81,16 @@ class Operator:
     @property
     def output_full_names(self):
         '''
-        Return all outpu variables' names
+        Return all output variables' names
         '''
         return [variable.full_name for variable in self.outputs]
+
+    @property
+    def original_operator(self):
+        '''
+        Return the original operator/layer
+        '''
+        return self.raw_operator
 
     def infer_types(self):
         # Invoke a core inference function
@@ -225,7 +232,8 @@ class Scope:
 class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
-                 reserved_variable_names=None, reserved_operator_names=None, targeted_onnx=None):
+                 reserved_variable_names=None, reserved_operator_names=None, targeted_onnx=None,
+                 custom_conversion_functions=None, custom_shape_calculators=None):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
 
@@ -235,6 +243,8 @@ class Topology:
         name and a type defined in data_types.py.
         :param reserved_variable_names: A set of strings which are not allowed to be used as a variable name
         :param reserved_operator_names: A set of strings which are not allowed to be used as a operator name
+        :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
+        :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
         '''
         self.scopes = []
         self.raw_model = model
@@ -244,6 +254,8 @@ class Topology:
         self.initial_types = initial_types if initial_types else list()
         self.default_batch_size = default_batch_size
         self.targeted_onnx_version = StrictVersion(targeted_onnx)
+        self.custom_conversion_functions = custom_conversion_functions if custom_conversion_functions else {}
+        self.custom_shape_calculators = custom_shape_calculators if custom_shape_calculators else {}
 
         # This attribute is used in optimizing the graph structure. If root_names is not empty, only the variables
         # specified will be treated as the roots (i.e., set is_fed to True in the beginning of a graph evaluation) of
@@ -475,7 +487,12 @@ class Topology:
 
         # Traverse the graph from roots to leaves
         for operator in self.topological_operator_iterator():
-            operator.infer_types()
+            if operator.type in self.custom_shape_calculators:
+                self.custom_shape_calculators[operator.type](operator)
+            elif operator.type in self.custom_conversion_functions:
+                pass  # in Keras converter, the shape calculator can be optional.
+            else:
+                operator.infer_types()
 
     def _resolve_duplicates(self):
         '''
@@ -650,8 +667,11 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     # Traverse the graph from roots to leaves
     for operator in topology.topological_operator_iterator():
         scope = next(scope for scope in topology.scopes if scope.name == operator.scope)
-        # Convert the selected operator into some ONNX objects and save them into the container
-        _registration.get_converter(operator.type)(scope, operator, container)
+        if operator.type in topology.custom_conversion_functions:
+            topology.custom_conversion_functions[operator.type](scope, operator, container)
+        else:
+            # Convert the selected operator into some ONNX objects and save them into the container
+            _registration.get_converter(operator.type)(scope, operator, container)
 
     # When calling ModelComponentContainer's add_initializer(...), nothing is added into the input list. However, in
     # ONNX initializers should also be model's (GraphProto) inputs. Thus, we create ValueInfoProto objects from

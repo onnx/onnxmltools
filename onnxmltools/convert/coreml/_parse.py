@@ -427,7 +427,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         operator.outputs.append(parent_variable)
 
 
-def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__):
+def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model
@@ -435,6 +435,8 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__):
     name and a type defined in data_types.py.
     :param targeted_onnx: a version string such as `1.1.2` or `1.2.1` for specifying the ONNX version used to produce
     the output model.
+    :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
+    :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
     :return: a Topology object. It's a intermediate representation of the input CoreML model
     '''
 
@@ -453,7 +455,8 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__):
     # CoremlModelContainer, to make sure our topology-related functions can seamlessly handle both of CoreML and
     # scikit-learn.
     topology = Topology(CoremlModelContainer(model), default_batch_size, initial_types, reserved_variable_names,
-                        targeted_onnx=targeted_onnx)
+                        targeted_onnx=targeted_onnx, custom_conversion_functions=custom_conversion_functions,
+                        custom_shape_calculators=custom_shape_calculators)
     scope = topology.declare_scope('__root__')
 
     # Instead of using CoremlModelContainer, we directly pass the model in because _parse_model is CoreML-specific.
