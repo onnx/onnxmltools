@@ -1,5 +1,6 @@
+from distutils.version import StrictVersion
+
 from ..proto import onnx, onnx_proto
-from ..convert.common.utils import version_string_to_tuple
 
 
 def _get_case_insensitive(iterable, key):
@@ -36,7 +37,7 @@ def color_space_to_pixel_format(color_space):
 
 
 def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version__):
-    if version_string_to_tuple(targeted_onnx) < (1, 2, 1) or onnx_model.ir_version < 3:
+    if StrictVersion(targeted_onnx) < StrictVersion('1.2.1'):
         print('Metadata properties are not supported in this model')
         return
     _validate_metadata(metadata_props)
@@ -51,7 +52,7 @@ def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version_
 
 
 def set_denotation(onnx_model, input_name, denotation, dimension_denotation=None, targeted_onnx=onnx.__version__):
-    if version_string_to_tuple(targeted_onnx) < (1, 2, 1) or onnx_model.ir_version < 3:
+    if StrictVersion(targeted_onnx) < StrictVersion('1.2.1'):
         print('Metadata properties are not supported in this model')
         return
     for graph_input in onnx_model.graph.input:

@@ -213,12 +213,6 @@ def convert_to_list(var):
         raise TypeError('Unable to flatten variable')
 
 
-def version_string_to_tuple(version):
-    version = version.split('.')
-    assert 2 <= len(version) <= 3
-    return tuple(int(x) for x in version)
-
-
 def check_input_and_output_numbers(operator, input_count_range=None, output_count_range=None):
     '''
     Check if the number of input(s)/output(s) is correct
