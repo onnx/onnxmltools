@@ -28,8 +28,8 @@ def calculate_crop_output_shapes(operator):
             output_shape[3] -= params.cropAmounts.borderAmounts[1].startEdgeSize
             output_shape[3] -= params.cropAmounts.borderAmounts[1].endEdgeSize
     elif len(operator.inputs) == 2:
-        output_shape[2] = operator.raw_operator.inputs[1].type.shape[2]
-        output_shape[3] = operator.raw_operator.inputs[1].type.shape[3]
+        output_shape[2] = operator.inputs[1].type.shape[2]
+        output_shape[3] = operator.inputs[1].type.shape[3]
     else:
         raise RuntimeError('Too many inputs for Crop operator')
 
