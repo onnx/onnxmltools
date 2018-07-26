@@ -19,7 +19,7 @@ ONNXMLTools enables you to convert models from different machine
 learning toolkits into `ONNX <https://onnx.ai>`_. 
 Currently the following toolkits are supported:
 
-* Apple CoreML
+* Apple Core ML
 * scikit-learn (subset of models convertible to ONNX)
 * Keras (version 2.0.0 or higher)
 * LightGBM (through its scikit-learn interface)
@@ -42,7 +42,7 @@ This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from 
 Example
 =======
 
-Here is a simple example to convert a CoreML model:
+Here is a simple example to convert a Core ML model:
 
 ::
 
