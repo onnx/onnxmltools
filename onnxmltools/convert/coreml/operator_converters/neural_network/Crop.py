@@ -18,14 +18,15 @@ def convert_crop(scope, operator, container):
     if len(border):
         left = border[1].startEdgeSize
         top = border[0].startEdgeSize
+        right = border[1].endEdgeSize
         bottom = border[0].endEdgeSize
     else:
         offset = operator.raw_operator.crop.offset
         shape = operator.outputs[0].type.shape
-        left = offset[0]
-        top = offset[1]
-        right = offset[0] + shape[2]
-        bottom = offset[1] + shape[3]
+        left = offset[1]
+        top = offset[0]
+        right = left + shape[3]
+        bottom = top + shape[2]
 
     attrs['border'] = [left, top, right, bottom]
 
