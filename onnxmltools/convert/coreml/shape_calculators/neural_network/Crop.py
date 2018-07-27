@@ -14,6 +14,7 @@ def calculate_crop_output_shapes(operator):
     '''
     Allowed input/output patterns are
         1. [N, C, H, W] ---> [N, C, H', W']
+        2. [N, C, H, W],  shape-ref [N', C', H', W'] ---> [N, C, H', W']
     '''
     check_input_and_output_numbers(operator, input_count_range=[1, 2], output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
