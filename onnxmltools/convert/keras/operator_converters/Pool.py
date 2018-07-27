@@ -6,7 +6,8 @@
 
 from distutils.version import StrictVersion
 from keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D, AveragePooling1D, AveragePooling2D, AveragePooling3D
-from keras.layers import GlobalMaxPooling1D, GlobalMaxPooling2D, GlobalAveragePooling1D, GlobalAveragePooling2D
+from keras.layers import GlobalMaxPooling1D, GlobalMaxPooling2D, GlobalMaxPooling3D
+from keras.layers import GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D
 from ...common._apply_operation import apply_reshape
 from ...common._apply_operation import apply_transpose
 from ...common._registration import register_converter
@@ -119,6 +120,10 @@ def convert_keras_global_max_pooling_2d(scope, operator, container):
     convert_keras_pooling_core(scope, operator, container, is_global=True, n_dims=2, op_type='Max',
                                input_perm_axes=input_perm_axes, output_perm_axes=output_perm_axes)
 
+def convert_keras_global_max_pooling_3d(scope, operator, container):
+    input_perm_axes, output_perm_axes = get_permutation_config(3)
+    convert_keras_pooling_core(scope, operator, container, is_global=True, n_dims=3, op_type='Max',
+                               input_perm_axes=input_perm_axes, output_perm_axes=output_perm_axes)
 
 def convert_keras_global_average_1d(scope, operator, container):
     input_perm_axes, output_perm_axes = get_permutation_config(1)
@@ -129,6 +134,11 @@ def convert_keras_global_average_1d(scope, operator, container):
 def convert_keras_global_average_2d(scope, operator, container):
     input_perm_axes, output_perm_axes = get_permutation_config(2)
     convert_keras_pooling_core(scope, operator, container, is_global=True, n_dims=2, op_type='Avg',
+                               input_perm_axes=input_perm_axes, output_perm_axes=output_perm_axes)
+
+def convert_keras_global_average_3d(scope, operator, container):
+    input_perm_axes, output_perm_axes = get_permutation_config(3)
+    convert_keras_pooling_core(scope, operator, container, is_global=True, n_dims=3, op_type='Avg',
                                input_perm_axes=input_perm_axes, output_perm_axes=output_perm_axes)
 
 
@@ -142,6 +152,8 @@ register_converter(AveragePooling3D, convert_keras_average_pooling_3d)
 
 register_converter(GlobalMaxPooling1D, convert_keras_global_max_pooling_1d)
 register_converter(GlobalMaxPooling2D, convert_keras_global_max_pooling_2d)
+register_converter(GlobalMaxPooling3D, convert_keras_global_max_pooling_3d)
 
 register_converter(GlobalAveragePooling1D, convert_keras_global_average_1d)
 register_converter(GlobalAveragePooling2D, convert_keras_global_average_2d)
+register_converter(GlobalAveragePooling3D, convert_keras_global_average_3d)
