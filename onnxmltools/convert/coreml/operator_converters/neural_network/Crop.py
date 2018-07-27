@@ -14,12 +14,22 @@ def convert_crop(scope, operator, container):
     op_type = 'Crop'
     attrs = {'name': operator.full_name}
     border = operator.raw_operator.crop.cropAmounts.borderAmounts
-    left = border[1].startEdgeSize
-    top = border[0].startEdgeSize
-    right = border[1].endEdgeSize
-    bottom = border[0].endEdgeSize
+    left_border, top_border, right_border, bottom_border = (None,) * 4
+    if len(border):
+        left_border = border[1].startEdgeSize
+        top_border = border[0].startEdgeSize
+        right_border = border[1].endEdgeSize
+        bottom_border = border[0].endEdgeSize
+    else:
+        offset = operator.raw_operator.crop.offset
+        in_shape = operator.inputs[0].type.shape
+        out_shape = operator.outputs[0].type.shape
+        left_border = offset[1]
+        top_border = offset[0]
+        right_border = in_shape[3] - left_border - out_shape[3]
+        bottom_border = in_shape[2] - top_border - out_shape[2]
 
-    attrs['border'] = [left, top, right, bottom]
+    attrs['border'] = [left_border, top_border, right_border, bottom_border]
 
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
 
