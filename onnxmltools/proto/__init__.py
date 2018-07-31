@@ -14,6 +14,8 @@ _check_onnx_version()
 # Rather than using ONNX protobuf definition throughout our codebase, we import ONNX protobuf definition here so that
 # we can conduct quick fixes by overwriting ONNX functions without changing any lines elsewhere.
 import onnx
+import onnx.utils
+
 from onnx import onnx_pb as onnx_proto
 from onnx import helper
 
