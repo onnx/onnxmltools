@@ -6,6 +6,7 @@
 
 from distutils.version import StrictVersion
 from ...proto import onnx
+from ...utils.metadata_props import color_space_to_pixel_format
 from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
 from ..common.data_types import *
@@ -60,7 +61,8 @@ def _parse_coreml_feature(feature_info, targeted_onnx_version, batch_size=1):
         shape.append(raw_type.imageType.height)
         shape.append(raw_type.imageType.width)
         color_space_map = {10: 'GRAY', 20: 'RGB', 30: 'BGR'}
-        return FloatTensorType(shape, color_space_map[color_space], doc_string=doc_string)
+        return FloatTensorType(shape, color_space_map[color_space], doc_string=doc_string,
+                               denotation='IMAGE', channel_denotations=['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE'])
     elif type_name == 'multiArrayType':
         element_type_id = raw_type.multiArrayType.dataType
         shape = [d for d in raw_type.multiArrayType.shape]
@@ -463,8 +465,18 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, cust
     _parse_model(topology, scope, model)
     topology.compile()
 
-    # Use original CoreML names for model-level input(s)/output(s)
     for variable in topology.find_root_and_sink_variables():
+        color_space = getattr(variable.type, 'color_space', None)
+        if color_space:
+            pixel_format = color_space_to_pixel_format(color_space)
+            if topology.metadata_props.get('Image.BitmapPixelFormat', pixel_format) != pixel_format:
+                print('Warning: conflicting pixel formats found. In ONNX, all input/output images must use the same pixel format.')
+            topology.metadata_props = {
+                'Image.BitmapPixelFormat': pixel_format,
+                'Image.ColorSpaceGamma': 'SRGB',
+                'Image.NominalPixelRange': 'NominalRange_0_255',
+            }
+        # Use original CoreML names for model-level input(s)/output(s)
         if variable.raw_name not in reserved_variable_names:
             continue
         topology.rename_variable(variable.onnx_name, variable.raw_name)

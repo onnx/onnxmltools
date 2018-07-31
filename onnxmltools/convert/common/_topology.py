@@ -8,7 +8,7 @@ import re
 from distutils.version import StrictVersion
 from ...proto import onnx
 from ...proto import helper
-from ...utils.metadata_props import add_metadata_props, color_space_to_pixel_format, set_denotation
+from ...utils.metadata_props import add_metadata_props
 from .data_types import *
 from ._container import ModelComponentContainer
 from . import _registration
@@ -234,7 +234,7 @@ class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
                  reserved_variable_names=None, reserved_operator_names=None, targeted_onnx=None,
-                 custom_conversion_functions=None, custom_shape_calculators=None):
+                 custom_conversion_functions=None, custom_shape_calculators=None, metadata_props={}):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
 
@@ -257,6 +257,7 @@ class Topology:
         self.targeted_onnx_version = StrictVersion(targeted_onnx)
         self.custom_conversion_functions = custom_conversion_functions if custom_conversion_functions else {}
         self.custom_shape_calculators = custom_shape_calculators if custom_shape_calculators else {}
+        self.metadata_props = metadata_props
 
         # This attribute is used in optimizing the graph structure. If root_names is not empty, only the variables
         # specified will be treated as the roots (i.e., set is_fed to True in the beginning of a graph evaluation) of
@@ -657,22 +658,6 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
         if name in other_inputs:
             container.add_input(other_inputs[name])
 
-    # Add metadata properties and channel denotation to image tensors
-    metadata_props = {}
-    image_inputs = []
-    for variable in topology.find_root_and_sink_variables():
-        color_space = getattr(variable.type, 'color_space', None)
-        if color_space:
-            image_inputs.append(variable.raw_name)
-            pixel_format = color_space_to_pixel_format(color_space)
-            if metadata_props.get('Image.BitmapPixelFormat', pixel_format) != pixel_format:
-                print('Warning: conflicting pixel formats found. In ONNX, all input/output images must use the same pixel format.')
-            metadata_props = {
-                'Image.BitmapPixelFormat': pixel_format,
-                'Image.ColorSpaceGamma': 'SRGB',
-                'Image.NominalPixelRange': 'NominalRange_0_255',
-            }
-
     # Add leaves the graph according to their order in the original model
     for name in topology.raw_model.output_names:
         if name in tensor_outputs:
@@ -737,10 +722,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
         i += 1
 
     # Add extra information
-    add_metadata_props(onnx_model, metadata_props)
-    for image in image_inputs:
-        set_denotation(onnx_model, image, 'IMAGE',
-                       dimension_denotation=['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE'])
+    add_metadata_props(onnx_model, topology.metadata_props)
     onnx_model.ir_version = onnx_proto.IR_VERSION
     onnx_model.producer_name = utils.get_producer()
     onnx_model.producer_version = utils.get_producer_version()
