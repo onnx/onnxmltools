@@ -31,7 +31,7 @@ def convert_crop(scope, operator, container):
 
     attrs['border'] = [left_border, top_border, right_border, bottom_border]
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
+    container.add_node(op_type, operator.input_full_names[0:1], operator.output_full_names, **attrs)
 
 
 register_converter('crop', convert_crop)
