@@ -6,9 +6,9 @@
 
 import re
 from distutils.version import StrictVersion
-from ...utils.metadata_props import add_metadata_props, color_space_to_pixel_format, set_denotation
 from ...proto import onnx
 from ...proto import helper
+from ...utils.metadata_props import add_metadata_props, color_space_to_pixel_format, set_denotation
 from .data_types import *
 from ._container import ModelComponentContainer
 from . import _registration
