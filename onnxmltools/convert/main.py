@@ -19,6 +19,7 @@ def convert_sklearn(model, name=None, initial_types=None, doc_string='',
     if targeted_onnx < StrictVersion('1.2'):
         return onnx_model
     else:
+        import onnx.utils
         return onnx.utils.polish_model(onnx_model)
 
 def convert_coreml(model, name=None, initial_types=None, doc_string='',
@@ -32,6 +33,7 @@ def convert_coreml(model, name=None, initial_types=None, doc_string='',
     if targeted_onnx < StrictVersion('1.2'):
         return onnx_model
     else:
+        import onnx.utils
         return onnx.utils.polish_model(onnx_model)
 
 def convert_keras(model, name=None, initial_types=None, doc_string='',
@@ -45,4 +47,5 @@ def convert_keras(model, name=None, initial_types=None, doc_string='',
     if targeted_onnx < StrictVersion('1.2'):
         return onnx_model
     else:
+        import onnx.utils
         return onnx.utils.polish_model(onnx_model)
