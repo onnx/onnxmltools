@@ -24,21 +24,10 @@ def _validate_metadata(metadata_props):
     if image_metadata_props and valid_metadata_props:
         print('Warning: incomplete image metadata is being added. Keys {} are missing.'.format(', '.join(valid_metadata_props)))
 
-COLOR_SPACE_TO_PIXEL_FORMAT = {
-    'BGR': 'Bgr8',
-    'RGB': 'Rgb8',
-    'GRAY': 'Gray8',
-}
-
-
-def color_space_to_pixel_format(color_space):
-    return COLOR_SPACE_TO_PIXEL_FORMAT[color_space]
-
 
 def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version__):
     if StrictVersion(targeted_onnx) < StrictVersion('1.2.1'):
-        print('Metadata properties are not supported in targeted ONNX-%s' % targeted_onnx)
-        return
+        raise RuntimeError('Metadata properties are not supported in targeted ONNX-%s' % targeted_onnx)
     _validate_metadata(metadata_props)
     # Overwrite old properties (case insensitive)
     new_props = [x.lower() for x in metadata_props]
@@ -47,13 +36,12 @@ def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version_
         if prop.key.lower() in new_props:
             model_metadata.remove(prop)
     model_metadata.extend(onnx_proto.StringStringEntryProto(key=key, value=value)
-                                     for key, value in metadata_props.items())
+                          for key, value in metadata_props.items())
 
 
 def set_denotation(onnx_model, input_name, denotation, dimension_denotation=None, targeted_onnx=onnx.__version__):
     if StrictVersion(targeted_onnx) < StrictVersion('1.2.1'):
-        print('Metadata properties are not supported in targeted ONNX-%s' % targeted_onnx)
-        return
+        raise RuntimeError('Metadata properties are not supported in targeted ONNX-%s' % targeted_onnx)
     for graph_input in onnx_model.graph.input:
         if graph_input.name == input_name:
             graph_input.type.denotation = denotation
