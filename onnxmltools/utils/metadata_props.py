@@ -1,29 +1,31 @@
+import warnings
 from ..convert.common.case_insensitive_dict import CaseInsensitiveDict
 from ..proto import onnx, onnx_proto
 from distutils.version import StrictVersion
 
 
-def _get_case_insensitive(iterable, key):
-    return next((x for x in iterable if x.lower() == key.lower()), None)
-
-
 def _validate_metadata(metadata_props):
+    '''
+    Validate metadata properties and possibly show warnings or throw exceptions.
+
+    :param metadata_props: A dictionary of metadata properties, with property names and values
+    '''
+    case_insensitive_metadata_props = CaseInsensitiveDict(metadata_props)
+    if len(case_insensitive_metadata_props) != len(metadata_props):
+        raise RuntimeError('Duplicate metadata props found')
+
     valid_image_metadata_props = {
         'Image.BitmapPixelFormat': ['Gray8', 'Rgb8', 'Bgr8', 'Rgba8', 'Bgra8'],
         'Image.ColorSpaceGamma': ['Linear', 'SRGB'],
         'Image.NominalPixelRange': ['NominalRange_0_255', 'Normalized_0_1', 'Normalized_1_1', 'NominalRange_16_235'],
     }
-    case_insensitive_metadata_props = CaseInsensitiveDict(metadata_props)
-    if len(case_insensitive_metadata_props) != len(metadata_props):
-        raise RuntimeError('Duplicate metadata props found')
-
     for key, value in metadata_props.items():
         valid_values = valid_image_metadata_props.pop(key)
         if valid_values and value.casefold() not in (x.casefold() for x in valid_values):
-            print('Warning: value {} is invalid. Valid values are {}'.format(value, valid_values))
+            warnings.warn('Key {} has invalid value {}. Valid values are {}'.format(key, value, valid_values))
 
     if 0 < len(valid_image_metadata_props) < 3:
-        print('Warning: incomplete image metadata is being added. Keys {} are missing.'.format(', '.join(valid_image_metadata_props)))
+        warnings.warn('Warning: incomplete image metadata is being added. Keys {} are missing.'.format(', '.join(valid_image_metadata_props)))
 
 
 def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version__):

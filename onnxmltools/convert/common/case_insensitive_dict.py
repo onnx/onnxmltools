@@ -1,6 +1,6 @@
 try:
     from collections.abc import Mapping, MutableMapping
-except:
+except ImportError:
     from collections import Mapping, MutableMapping
 from collections import OrderedDict
 

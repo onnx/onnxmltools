@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 from distutils.version import StrictVersion
+import warnings
 from ...proto import onnx
 from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
@@ -468,7 +469,7 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, cust
         color_space = getattr(variable.type, 'color_space', None)
         if color_space:
             if topology.metadata_props.get('Image.BitmapPixelFormat', color_space) != color_space:
-                print('Warning: conflicting pixel formats found. In ONNX, all input/output images must use the same pixel format.')
+                warnings.warn('Conflicting pixel formats found. In ONNX, all input/output images must use the same pixel format.')
             topology.metadata_props = {
                 'Image.BitmapPixelFormat': color_space,
                 'Image.ColorSpaceGamma': 'SRGB',
