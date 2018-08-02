@@ -234,7 +234,7 @@ class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
                  reserved_variable_names=None, reserved_operator_names=None, targeted_onnx=None,
-                 custom_conversion_functions=None, custom_shape_calculators=None, metadata_props={}):
+                 custom_conversion_functions=None, custom_shape_calculators=None, metadata_props=None):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
 
@@ -253,11 +253,11 @@ class Topology:
         self.variable_name_set = reserved_variable_names if reserved_variable_names is not None else set()
         self.operator_name_set = reserved_operator_names if reserved_operator_names is not None else set()
         self.initial_types = initial_types if initial_types else list()
+        self.metadata_props = metadata_props if metadata_props else dict()
         self.default_batch_size = default_batch_size
         self.targeted_onnx_version = StrictVersion(targeted_onnx)
         self.custom_conversion_functions = custom_conversion_functions if custom_conversion_functions else {}
         self.custom_shape_calculators = custom_shape_calculators if custom_shape_calculators else {}
-        self.metadata_props = metadata_props
 
         # This attribute is used in optimizing the graph structure. If root_names is not empty, only the variables
         # specified will be treated as the roots (i.e., set is_fed to True in the beginning of a graph evaluation) of
