@@ -468,13 +468,8 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, cust
     for variable in topology.find_root_and_sink_variables():
         color_space = getattr(variable.type, 'color_space', None)
         if color_space:
-            if topology.metadata_props.get('Image.BitmapPixelFormat', color_space) != color_space:
+            if topology.metadata_props.setdefault('Image.BitmapPixelFormat', color_space) != color_space:
                 warnings.warn('Conflicting pixel formats found. In ONNX, all input/output images must use the same pixel format.')
-            topology.metadata_props = {
-                'Image.BitmapPixelFormat': color_space,
-                'Image.ColorSpaceGamma': 'SRGB',
-                'Image.NominalPixelRange': 'NominalRange_0_255',
-            }
         # Use original CoreML names for model-level input(s)/output(s)
         if variable.raw_name not in reserved_variable_names:
             continue

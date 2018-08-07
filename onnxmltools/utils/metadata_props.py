@@ -4,11 +4,11 @@ from ..proto import onnx, onnx_proto
 from distutils.version import StrictVersion
 
 
-VALID_IMAGE_METADATA_PROPS = {
+KNOWN_METADATA_PROPS = CaseInsensitiveDict({
     'Image.BitmapPixelFormat': ['gray8', 'rgb8', 'bgr8', 'rgba8', 'bgra8'],
     'Image.ColorSpaceGamma': ['linear', 'srgb'],
     'Image.NominalPixelRange': ['nominalrange_0_255', 'normalized_0_1', 'normalized_1_1', 'nominalrange_16_235'],
-}
+})
 
 
 def _validate_metadata(metadata_props):
@@ -20,14 +20,10 @@ def _validate_metadata(metadata_props):
     if len(CaseInsensitiveDict(metadata_props)) != len(metadata_props):
         raise RuntimeError('Duplicate metadata props found')
 
-    image_metadata_props = CaseInsensitiveDict(VALID_IMAGE_METADATA_PROPS)
     for key, value in metadata_props.items():
-        valid_values = image_metadata_props.pop(key)
+        valid_values = KNOWN_METADATA_PROPS.get(key)
         if valid_values and value.lower() not in valid_values:
             warnings.warn('Key {} has invalid value {}. Valid values are {}'.format(key, value, valid_values))
-
-    if 0 < len(image_metadata_props) < len(VALID_IMAGE_METADATA_PROPS):
-        warnings.warn('Warning: incomplete image metadata is being added. Keys {} are missing.'.format(', '.join(image_metadata_props)))
 
 
 def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version__):
@@ -37,10 +33,11 @@ def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version_
     _validate_metadata(metadata_props)
     new_metadata = CaseInsensitiveDict({x.key: x.value for x in onnx_model.metadata_props})
     new_metadata.update(metadata_props)
-    model_metadata = [
+    del onnx_model.metadata_props[:]
+    onnx_model.metadata_props.extend(
         onnx_proto.StringStringEntryProto(key=key, value=value)
         for key, value in metadata_props.items()
-    ]
+    )
 
 
 def set_denotation(onnx_model, input_name, denotation, dimension_denotation=None, targeted_onnx=onnx.__version__):
