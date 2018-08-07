@@ -209,9 +209,14 @@ def convert_bidirectional(scope, operator, container):
             transposed_y_name = scope.get_unique_variable_name(operator.full_name + '_Y_transposed')
             apply_transpose(scope, lstm_y_name_fixed, transposed_y_name, container, perm=[0, 2, 1, 3])
 
-            # Flatten ONNX (T, N, D, C') into (T, N, D * C')
-            container.add_node('Flatten', transposed_y_name, operator.outputs[0].full_name,
+            # Flatten ONNX (T, N, D, C') into (T * N, D * C')
+            flatten_y_name = scope.get_unique_variable_name(operator.full_name + '_Y_flatten')
+            container.add_node('Flatten', transposed_y_name, flatten_y_name,
                                name=scope.get_unique_variable_name('Flatten'), axis=2)
+
+            # Change 2D shape to 3D to meet Keras spec
+            apply_reshape(scope, flatten_y_name, operator.outputs[0].full_name, container,
+                          desired_shape=[-1, seq_length, 2 * hidden_size])
         else:
             # If merge_mode=None, two tensors should be generated. The first/second tensor is the output of
             # forward/backward pass.
