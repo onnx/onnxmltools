@@ -14,7 +14,7 @@ from distutils.version import StrictVersion
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
-    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape
+    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout
 from keras.initializers import RandomUniform
 
 np.random.seed(0)
@@ -163,7 +163,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         input = Input(shape=(C,))
         result = Dense(D)(input)
-        keras_model = Model(input=input, output=result)
+        keras_model = Model(inputs=input, outputs=result)
         keras_model.compile(optimizer='adagrad', loss='mse')
 
         coreml_model = coremltools.converters.keras.convert(keras_model)
@@ -173,6 +173,19 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         y_produced = _evaluate(onnx_model, x).reshape(N, D)
 
         self.assertTrue(np.allclose(y_reference, y_produced))
+
+    def test_dense_with_dropout(self):
+        N, C, D = 2, 3, 2
+        x = _create_tensor(N, C)
+
+        input = Input(shape=(C,))
+        hidden = Dense(D, activation='relu')(input)
+        result = Dropout(0.2)(hidden)
+
+        keras_model = Model(inputs=input, outputs=result)
+        keras_model.compile(optimizer='sgd', loss='mse')
+
+        self._test_one_to_one_operator_core_keras(keras_model, x)
 
     def test_conv_4d(self):
         N, C, H, W = 1, 2, 4, 3

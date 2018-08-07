@@ -14,6 +14,7 @@ from . import Conv
 from . import Crop
 from . import Dense
 from . import Dot
+from . import Dropout
 from . import Embed
 from . import Flatten
 from . import GRU
@@ -26,4 +27,3 @@ from . import Reshape
 from . import SimpleRNN
 from . import Upsample
 from . import ZeroPad
-
