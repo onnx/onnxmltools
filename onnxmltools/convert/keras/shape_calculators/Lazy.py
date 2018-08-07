@@ -84,3 +84,9 @@ register_shape_calculator(keras.layers.ZeroPadding3D, calculate_lazy_output_shap
 
 # RepeatVector
 register_shape_calculator(keras.layers.RepeatVector, calculate_lazy_output_shapes)
+
+# Dropout
+register_shape_calculator(keras.layers.Dropout, calculate_lazy_output_shapes)
+register_shape_calculator(keras.layers.SpatialDropout1D, calculate_lazy_output_shapes)
+register_shape_calculator(keras.layers.SpatialDropout2D, calculate_lazy_output_shapes)
+register_shape_calculator(keras.layers.SpatialDropout3D, calculate_lazy_output_shapes)

@@ -14,7 +14,7 @@ from distutils.version import StrictVersion
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
-    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape
+    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout
 from keras.initializers import RandomUniform
 
 np.random.seed(0)
@@ -162,12 +162,15 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         x = _create_tensor(N, C)
 
         input = Input(shape=(C,))
-        result = Dense(D)(input)
-        keras_model = Model(input=input, output=result)
+        hidden = Dense(D, activation='relu')(input)
+        result = Dropout(0.2)(hidden)
+
+        keras_model = Model(inputs=input, outputs=result)
         keras_model.compile(optimizer='adagrad', loss='mse')
 
-        coreml_model = coremltools.converters.keras.convert(keras_model)
-        onnx_model = onnxmltools.convert_coreml(coreml_model)
+        # coremltool cannot convert this kind of model.
+        # coreml_model = coremltools.converters.keras.convert(keras_model)
+        onnx_model = onnxmltools.convert_keras(keras_model)
 
         y_reference = keras_model.predict(x)
         y_produced = _evaluate(onnx_model, x).reshape(N, D)

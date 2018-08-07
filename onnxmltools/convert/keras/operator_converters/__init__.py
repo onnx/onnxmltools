@@ -26,4 +26,4 @@ from . import Reshape
 from . import SimpleRNN
 from . import Upsample
 from . import ZeroPad
-
+from . import Dropout
