@@ -6,8 +6,8 @@
 
 from keras.layers import Dropout, SpatialDropout1D, SpatialDropout2D, SpatialDropout3D
 
-from ...common._registration import register_converter
 from ...common._apply_operation import apply_identity
+from ...common._registration import register_converter
 
 
 def convert_keras_drop(scope, operator, container):

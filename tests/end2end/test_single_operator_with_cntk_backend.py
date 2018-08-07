@@ -162,20 +162,30 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         x = _create_tensor(N, C)
 
         input = Input(shape=(C,))
-        hidden = Dense(D, activation='relu')(input)
-        result = Dropout(0.2)(hidden)
-
+        result = Dense(D)(input)
         keras_model = Model(inputs=input, outputs=result)
         keras_model.compile(optimizer='adagrad', loss='mse')
 
-        # coremltool cannot convert this kind of model.
-        # coreml_model = coremltools.converters.keras.convert(keras_model)
-        onnx_model = onnxmltools.convert_keras(keras_model)
+        coreml_model = coremltools.converters.keras.convert(keras_model)
+        onnx_model = onnxmltools.convert_coreml(coreml_model)
 
         y_reference = keras_model.predict(x)
         y_produced = _evaluate(onnx_model, x).reshape(N, D)
 
         self.assertTrue(np.allclose(y_reference, y_produced))
+
+    def test_dense_with_dropout(self):
+        N, C, D = 2, 3, 2
+        x = _create_tensor(N, C)
+
+        input = Input(shape=(C,))
+        hidden = Dense(D, activation='relu')(input)
+        result = Dropout(0.2)(hidden)
+
+        keras_model = Model(inputs=input, outputs=result)
+        keras_model.compile(optimizer='sgd', loss='mse')
+
+        self._test_one_to_one_operator_core_keras(keras_model, x)
 
     def test_conv_4d(self):
         N, C, H, W = 1, 2, 4, 3
