@@ -12,13 +12,13 @@ class CaseInsensitiveDict(MutableMapping):
             self.update(data, **kwargs)
 
     def __setitem__(self, key, value):
-        self._dict[key.casefold()] = (key, value)
+        self._dict[key.lower()] = (key, value)
 
     def __getitem__(self, key):
-        return self._dict[key.casefold()][1]
+        return self._dict[key.lower()][1]
 
     def __delitem__(self, key):
-        del self._dict[key.casefold()]
+        del self._dict[key.lower()]
 
     def __iter__(self):
         return (key for key, _ in self._dict.values())
@@ -26,11 +26,11 @@ class CaseInsensitiveDict(MutableMapping):
     def __len__(self):
         return len(self._dict)
 
-    def casefolded(self):
-        """Like iteritems(), but casefolded."""
+    def lower_key_iteritems(self):
+        """Like iteritems(), but with lowercase keys."""
         return (
-            (casefolded_key, keyval[1])
-            for casefolded_key, keyval
+            (lower_key, keyval[1])
+            for lower_key, keyval
             in self._dict.items()
         )
 
@@ -39,7 +39,7 @@ class CaseInsensitiveDict(MutableMapping):
             other = CaseInsensitiveDict(other)
         else:
             return NotImplemented
-        return dict(self.casefolded()) == dict(other.casefolded())
+        return dict(self.lower_key_iteritems()) == dict(other.lower_key_iteritems())
 
     def copy(self):
          return CaseInsensitiveDict(self._dict.values())
