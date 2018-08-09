@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import re
+import warnings
 from distutils.version import StrictVersion
 from ...proto import onnx
 from ...proto import helper
@@ -648,6 +649,19 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
                 else:
                     other_outputs[variable.raw_name] = variable
 
+    # Check input and output naming convention
+    for name in topology.raw_model.input_names:
+        input_name = name.replace('_', '')
+        if input_name[0].isnumeric() or (not input_name.isalnum()):
+            warnings.warn('Input name is not compliant with ONNX naming convention.')
+            break
+
+    for name in topology.raw_model.output_names:
+        output_name = name.replace('_', '')
+        if output_name[0].isnumeric() or (not output_name.isalnum()):
+            warnings.warn('Output name is not compliant with ONNX naming convention.')
+            break
+            
     # Add roots the graph according to their order in the original model
     for name in topology.raw_model.input_names:
         if name in tensor_inputs:
