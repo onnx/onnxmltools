@@ -649,31 +649,32 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
                 else:
                     other_outputs[variable.raw_name] = variable
 
-    # Check input and output naming convention
-    for name in topology.raw_model.input_names:
-        input_name = name.replace('_', '')
-        if input_name[0].isdigit() or (not input_name.isalnum()):
-            warnings.warn('Input name is not compliant with ONNX naming convention.')
-            break
-
-    for name in topology.raw_model.output_names:
-        output_name = name.replace('_', '')
-        if output_name[0].isdigit() or (not output_name.isalnum()):
-            warnings.warn('Output name is not compliant with ONNX naming convention.')
-            break
-            
     # Add roots the graph according to their order in the original model
+    flag = 0
     for name in topology.raw_model.input_names:
+        # Check input naming convention
+        input_name = name.replace('_', '')
+        if input_name and (input_name[0].isdigit() or (not input_name.isalnum())):
+            flag = 1
         if name in tensor_inputs:
             container.add_input(tensor_inputs[name])
+    if flag:
+        warnings.warn('Input name is not compliant with ONNX naming convention.')
     for name in topology.raw_model.input_names:
         if name in other_inputs:
             container.add_input(other_inputs[name])
 
     # Add leaves the graph according to their order in the original model
+    flag = 0
     for name in topology.raw_model.output_names:
+        # Check output naming convention
+        output_name = name.replace('_', '')
+        if output_name and (output_name[0].isdigit() or (not output_name.isalnum())):
+            flag = 1
         if name in tensor_outputs:
             container.add_output(tensor_outputs[name])
+    if flag:
+        warnings.warn('Output name is not compliant with ONNX naming convention.')
     for name in topology.raw_model.output_names:
         if name in other_outputs:
             container.add_output(other_outputs[name])
