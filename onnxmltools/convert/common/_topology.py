@@ -652,13 +652,13 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     # Check input and output naming convention
     for name in topology.raw_model.input_names:
         input_name = name.replace('_', '')
-        if input_name[0].isnumeric() or (not input_name.isalnum()):
+        if input_name[0].isdigit() or (not input_name.isalnum()):
             warnings.warn('Input name is not compliant with ONNX naming convention.')
             break
 
     for name in topology.raw_model.output_names:
         output_name = name.replace('_', '')
-        if output_name[0].isnumeric() or (not output_name.isalnum()):
+        if output_name[0].isdigit() or (not output_name.isalnum()):
             warnings.warn('Output name is not compliant with ONNX naming convention.')
             break
             
