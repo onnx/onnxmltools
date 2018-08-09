@@ -659,7 +659,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
         if name in tensor_inputs:
             container.add_input(tensor_inputs[name])
     if invalid_name:
-        warnings.warn('The input names are not compliant with ONNX naming convention: %s' % invalid_name)
+        warnings.warn('Some input names are not compliant with ONNX naming convention: %s' % invalid_name)
     for name in topology.raw_model.input_names:
         if name in other_inputs:
             container.add_input(other_inputs[name])
@@ -674,7 +674,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
         if name in tensor_outputs:
             container.add_output(tensor_outputs[name])
     if invalid_name:
-        warnings.warn('The output names are not compliant with ONNX naming convention: %s' % invalid_name)
+        warnings.warn('Some output names are not compliant with ONNX naming convention: %s' % invalid_name)
     for name in topology.raw_model.output_names:
         if name in other_outputs:
             container.add_output(other_outputs[name])
