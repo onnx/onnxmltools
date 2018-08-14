@@ -461,15 +461,12 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         for coreml_colorspace, onnx_colorspace in (('RGB', 'Rgb8'), ('BGR', 'Bgr8'), ('GRAYSCALE', 'Gray8')):
             input.type.imageType.colorSpace = ImageFeatureType.ColorSpace.Value(coreml_colorspace)
             model_onnx = convert_coreml(spec)
+            dims = [(d.dim_param or d.dim_value) for d in model_onnx.graph.input[0].type.tensor_type.shape.dim]
+            self.assertEqual(dims, ['None', 1 if onnx_colorspace == 'Gray8' else 3, 15, 25])
 
             if StrictVersion(onnx.__version__) >= StrictVersion('1.2.1'):
                 metadata = {prop.key: prop.value for prop in model_onnx.metadata_props}
                 self.assertEqual(metadata, { 'Image.BitmapPixelFormat': onnx_colorspace })
                 self.assertEqual(model_onnx.graph.input[0].type.denotation, 'IMAGE')
-                dims = [(d.dim_param or d.dim_value, d.denotation) for d in model_onnx.graph.input[0].type.tensor_type.shape.dim]
-                self.assertEqual(dims, [
-                    ('None', 'DATA_BATCH'),
-                    (1 if onnx_colorspace == 'Gray8' else 3, 'DATA_CHANNEL'),
-                    (15, 'DATA_FEATURE'),
-                    (25, 'DATA_FEATURE'),
-                ])
+                channel_denotations = [d.denotation for d in model_onnx.graph.input[0].type.tensor_type.shape.dim]
+                self.assertEqual(channel_denotations, ['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE'])

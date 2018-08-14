@@ -72,11 +72,12 @@ class TestUtils(unittest.TestCase):
         set_model_doc_string(onnx_model, "", True)
         self.assertEqual(onnx_model.doc_string, "")
 
+    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.2.1'),
+                     "not supported in this ONNX version")
     def test_set_denotation(self):
         this = os.path.dirname(__file__)
         onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
         onnx_model = load_model(onnx_file)
         set_denotation(onnx_model, "1", "IMAGE", dimension_denotation=["DATA_FEATURE"])
-        if StrictVersion(onnx.__version__) >= StrictVersion('1.2.1'):
-            self.assertEqual(onnx_model.graph.input[0].type.denotation, "IMAGE")
-            self.assertEqual(onnx_model.graph.input[0].type.tensor_type.shape.dim[0].denotation, "DATA_FEATURE")
+        self.assertEqual(onnx_model.graph.input[0].type.denotation, "IMAGE")
+        self.assertEqual(onnx_model.graph.input[0].type.tensor_type.shape.dim[0].denotation, "DATA_FEATURE")
