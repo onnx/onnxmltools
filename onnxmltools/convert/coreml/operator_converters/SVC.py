@@ -83,7 +83,7 @@ def convert_svm_classifier(scope, operator, container):
         attrs['classlabels_ints'] = class_labels
         zipmap_attrs['classlabels_int64s'] = class_labels
     elif svc_classes == 'stringClassLabels':
-        class_labels = list(str(s).encode('ascii') for s in params.stringClassLabels.vector)
+        class_labels = list(str(s).encode('utf-8') for s in params.stringClassLabels.vector)
         attrs['classlabels_strings'] = class_labels
         zipmap_attrs['classlabels_strings'] = class_labels
     else:

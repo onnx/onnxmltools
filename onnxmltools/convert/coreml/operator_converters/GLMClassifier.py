@@ -72,7 +72,7 @@ def convert_glm_classifier(scope, operator, container):
         matrix_w[i, :] = w.value
 
     if glm.WhichOneof('ClassLabels') == 'stringClassLabels':
-        class_labels = list(s.encode('ascii') for s in glm.stringClassLabels.vector)
+        class_labels = list(s.encode('utf-8') for s in glm.stringClassLabels.vector)
         attrs['classlabels_strings'] = class_labels
         zipmap_attrs['classlabels_strings'] = class_labels
     elif glm.WhichOneof('ClassLabels') == 'int64ClassLabels':
