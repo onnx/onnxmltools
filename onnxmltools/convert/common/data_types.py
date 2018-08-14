@@ -65,8 +65,6 @@ class TensorType(DataType):
     def to_onnx_type(self):
         onnx_type = onnx_proto.TypeProto()
         onnx_type.tensor_type.elem_type = self._get_element_onnx_type()
-        if self.denotation:
-            onnx_type.denotation = self.denotation
         for d in self.shape:
             s = onnx_type.tensor_type.shape.dim.add()
             if isinstance(d, numbers.Integral):
@@ -75,10 +73,13 @@ class TensorType(DataType):
                 s.dim_param = 'None'
             else:
                 raise ValueError('Unsupported dimension type: %s' % type(d))
-        if self.channel_denotations:
-            for d, denotation in zip(onnx_type.tensor_type.shape.dim, self.channel_denotations):
-                if denotation:
-                    d.denotation = denotation
+        if getattr(onnx_type, 'denotation', None) is not None:
+            if self.denotation:
+                onnx_type.denotation = self.denotation
+            if self.channel_denotations:
+                for d, denotation in zip(onnx_type.tensor_type.shape.dim, self.channel_denotations):
+                    if denotation:
+                        d.denotation = denotation
         return onnx_type
 
 
