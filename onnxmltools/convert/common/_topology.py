@@ -521,10 +521,20 @@ class Topology:
                             continue
                         another_operator.inputs[i] = original
 
-            # When original variable's document string is empty but duplicate's document string is not, we
-            # copy that non-empty string to the original variable to avoid information loss.
+            # When original variable's documentation string or denotation is empty but duplicate's is not, we
+            # copy that field to the original variable to avoid information loss.
             if not original.type.doc_string and duplicate.type.doc_string:
                 original.type.doc_string = duplicate.type.doc_string
+            if not original.type.denotation and duplicate.type.denotation:
+                original.type.denotation = duplicate.type.denotation
+            if not original.type.channel_denotations:
+                original.type.channel_denotations = duplicate.type.channel_denotations
+            elif duplicate.type.channel_denotations:
+                # Merge the channel denotations if available in both the original and the duplicate
+                for i in range(len(original.type.channel_denotations)):
+                    if original.type.channel_denotations[i]:
+                        continue
+                    original.type.channel_denotations[i] = duplicate.type.channel_denotations[i]
 
             # Sometime, shapes of duplicates are different. We try to replace the original variable's unknown dimensions
             # as many as possible because we will get rid of the duplicate.
