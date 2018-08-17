@@ -525,25 +525,25 @@ class Topology:
             # copy that field to the original variable to avoid information loss.
             if not original.type.doc_string and duplicate.type.doc_string:
                 original.type.doc_string = duplicate.type.doc_string
-            if not original.type.denotation and duplicate.type.denotation:
-                original.type.denotation = duplicate.type.denotation
-            if not original.type.channel_denotations:
-                original.type.channel_denotations = duplicate.type.channel_denotations
-            elif duplicate.type.channel_denotations:
-                # Merge the channel denotations if available in both the original and the duplicate
-                for i in range(len(original.type.channel_denotations)):
-                    if original.type.channel_denotations[i]:
-                        continue
-                    original.type.channel_denotations[i] = duplicate.type.channel_denotations[i]
 
-            # Sometime, shapes of duplicates are different. We try to replace the original variable's unknown dimensions
-            # as many as possible because we will get rid of the duplicate.
-            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType) and \
-                    len(original.type.shape) == len(duplicate.type.shape):
-                for i in range(len(original.type.shape)):
-                    if original.type.shape[i] != 'None':
-                        continue
-                    original.type.shape[i] = duplicate.type.shape[i]
+            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType):
+                if not original.type.denotation and duplicate.type.denotation:
+                    original.type.denotation = duplicate.type.denotation
+                if not original.type.channel_denotations:
+                    original.type.channel_denotations = duplicate.type.channel_denotations
+                elif duplicate.type.channel_denotations:
+                    # Merge the channel denotations if available in both the original and the duplicate
+                    for i in range(len(original.type.channel_denotations)):
+                        if original.type.channel_denotations[i]:
+                            continue
+                        original.type.channel_denotations[i] = duplicate.type.channel_denotations[i]
+                # Sometime, shapes of duplicates are different. We try to replace the original variable's unknown dimensions
+                # as many as possible because we will get rid of the duplicate.
+                if len(original.type.shape) == len(duplicate.type.shape):
+                    for i in range(len(original.type.shape)):
+                        if original.type.shape[i] != 'None':
+                            continue
+                        original.type.shape[i] = duplicate.type.shape[i]
 
             # Because we're iterating through the topology, we cannot delete any operator or variable. Otherwise,
             # the traversing function may be broken. We will delete those abandoned ones later.
