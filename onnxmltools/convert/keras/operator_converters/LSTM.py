@@ -95,7 +95,7 @@ def convert_keras_lstm(scope, operator, container):
         extract_recurrent_activation(op.activation)]
 
     for (activation_type, alpha, beta) in extracted_activations:
-        activation_types.append(activation_type.encode('ascii'))
+        activation_types.append(activation_type.encode('utf-8'))
         if alpha is not None:
             alphas.append(alpha)
         if beta is not None:

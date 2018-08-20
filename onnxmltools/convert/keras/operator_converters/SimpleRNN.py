@@ -54,7 +54,7 @@ def convert_keras_simple_rnn(scope, operator, container):
 
     if hasattr(op, 'activation'):
         activation_type, alpha, beta = extract_recurrent_activation(op.activation)
-        attrs['activations'] = [activation_type.encode('ascii')]
+        attrs['activations'] = [activation_type.encode('utf-8')]
         if alpha is not None:
             attrs['activation_alpha'] = [alpha]
         if beta is not None:

@@ -303,14 +303,14 @@ def convert_bidirectional_lstm(scope, operator, container):
     betas = []
     for activation in params.activationsForwardLSTM:
         activation_type, alpha, beta = extract_rnn_activation_info(activation)
-        activation_types.append(activation_type.encode('ascii'))
+        activation_types.append(activation_type.encode('utf-8'))
         if alpha is not None:
             alphas.append(alpha)
         if beta is not None:
             betas.append(beta)
     for activation in params.activationsBackwardLSTM:
         activation_type, alpha, beta = extract_rnn_activation_info(activation)
-        activation_types.append(activation_type.encode('ascii'))
+        activation_types.append(activation_type.encode('utf-8'))
         if alpha is not None:
             alphas.append(alpha)
         if beta is not None:

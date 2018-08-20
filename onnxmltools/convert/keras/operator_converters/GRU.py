@@ -62,7 +62,7 @@ def convert_keras_gru(scope, operator, container):
     betas = []
     for (activation_type, alpha, beta) in \
             [extract_recurrent_activation(op.recurrent_activation), extract_recurrent_activation(op.activation)]:
-        activation_types.append(activation_type.encode('ascii'))
+        activation_types.append(activation_type.encode('utf-8'))
         if alpha is not None:
             alphas.append(alpha)
         if beta is not None:
