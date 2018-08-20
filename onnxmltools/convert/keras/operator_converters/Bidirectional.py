@@ -157,7 +157,7 @@ def convert_bidirectional(scope, operator, container):
         extract_recurrent_activation(backward_layer.activation)]
 
     for (activation_type, alpha, beta) in extracted_activations:
-        activation_types.append(activation_type.encode('ascii'))
+        activation_types.append(activation_type.encode('utf-8'))
         if alpha is not None:
             alphas.append(alpha)
         if beta is not None:

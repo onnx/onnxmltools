@@ -51,7 +51,7 @@ def convert_tree_ensemble_model(scope, operator, container):
             attrs['classlabels_int64s'] = class_labels
             zipmap_attrs['classlabels_int64s'] = class_labels
         else:
-            class_labels = list(s.encode('ascii') for s in raw_model.treeEnsembleClassifier.stringClassLabels.vector)
+            class_labels = list(s.encode('utf-8') for s in raw_model.treeEnsembleClassifier.stringClassLabels.vector)
             attrs['classlabels_strings'] = class_labels
             zipmap_attrs['classlabels_strings'] = class_labels
     elif raw_model.WhichOneof('Type') == 'treeEnsembleRegressor':

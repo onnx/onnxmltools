@@ -179,7 +179,7 @@ def convert_simple_rnn(scope, operator, container):
 
     # Add RNN's information of activation function
     activation, alpha, beta = extract_rnn_activation_info(params.activation)
-    rnn_attrs['activations'] = [activation.encode('ascii')]
+    rnn_attrs['activations'] = [activation.encode('utf-8')]
     if alpha is not None:
         rnn_attrs['activation_alpha'] = [alpha]
     if beta is not None:
