@@ -14,11 +14,11 @@ def convert_preprocessing_scaler(scope, operator, container):
 
     attrs = {'name': operator.full_name, 'scale': params.channelScale}
     color_space = operator.inputs[0].type.color_space
-    if color_space == 'GRAY':
+    if color_space == 'Gray8':
         attrs['bias'] = [params.grayBias]
-    elif color_space == 'RGB':
+    elif color_space == 'Rgb8':
         attrs['bias'] = [params.redBias, params.greenBias, params.blueBias]
-    elif color_space == 'BGR':
+    elif color_space == 'Bgr8':
         attrs['bias'] = [params.blueBias, params.greenBias, params.redBias]
     else:
         raise ValueError('Unknown color space for tensor {}'.format(operator.inputs[0].full_name))

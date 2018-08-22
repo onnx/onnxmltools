@@ -9,6 +9,7 @@ import warnings
 from distutils.version import StrictVersion
 from ...proto import onnx
 from ...proto import helper
+from ...utils.metadata_props import add_metadata_props
 from .data_types import *
 from ._container import ModelComponentContainer
 from . import _registration
@@ -234,7 +235,7 @@ class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
                  reserved_variable_names=None, reserved_operator_names=None, targeted_onnx=None,
-                 custom_conversion_functions=None, custom_shape_calculators=None):
+                 custom_conversion_functions=None, custom_shape_calculators=None, metadata_props=None):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
 
@@ -253,6 +254,7 @@ class Topology:
         self.variable_name_set = reserved_variable_names if reserved_variable_names is not None else set()
         self.operator_name_set = reserved_operator_names if reserved_operator_names is not None else set()
         self.initial_types = initial_types if initial_types else list()
+        self.metadata_props = metadata_props if metadata_props else dict()
         self.default_batch_size = default_batch_size
         self.targeted_onnx_version = StrictVersion(targeted_onnx)
         self.custom_conversion_functions = custom_conversion_functions if custom_conversion_functions else {}
@@ -520,19 +522,29 @@ class Topology:
                             continue
                         another_operator.inputs[i] = original
 
-            # When original variable's document string is empty but duplicate's document string is not, we
-            # copy that non-empty string to the original variable to avoid information loss.
+            # When original variable's documentation string or denotation is empty but duplicate's is not, we
+            # copy that field to the original variable to avoid information loss.
             if not original.type.doc_string and duplicate.type.doc_string:
                 original.type.doc_string = duplicate.type.doc_string
 
-            # Sometime, shapes of duplicates are different. We try to replace the original variable's unknown dimensions
-            # as many as possible because we will get rid of the duplicate.
-            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType) and \
-                    len(original.type.shape) == len(duplicate.type.shape):
-                for i in range(len(original.type.shape)):
-                    if original.type.shape[i] != 'None':
-                        continue
-                    original.type.shape[i] = duplicate.type.shape[i]
+            if isinstance(original.type, TensorType) and isinstance(duplicate.type, TensorType):
+                if not original.type.denotation and duplicate.type.denotation:
+                    original.type.denotation = duplicate.type.denotation
+                if not original.type.channel_denotations:
+                    original.type.channel_denotations = duplicate.type.channel_denotations
+                elif duplicate.type.channel_denotations:
+                    # Merge the channel denotations if available in both the original and the duplicate
+                    for i in range(len(original.type.channel_denotations)):
+                        if original.type.channel_denotations[i]:
+                            continue
+                        original.type.channel_denotations[i] = duplicate.type.channel_denotations[i]
+                # Sometime, shapes of duplicates are different. We try to replace the original variable's unknown dimensions
+                # as many as possible because we will get rid of the duplicate.
+                if len(original.type.shape) == len(duplicate.type.shape):
+                    for i in range(len(original.type.shape)):
+                        if original.type.shape[i] != 'None':
+                            continue
+                        original.type.shape[i] = duplicate.type.shape[i]
 
             # Because we're iterating through the topology, we cannot delete any operator or variable. Otherwise,
             # the traversing function may be broken. We will delete those abandoned ones later.
@@ -735,6 +747,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
         i += 1
 
     # Add extra information
+    add_metadata_props(onnx_model, topology.metadata_props)
     onnx_model.ir_version = onnx_proto.IR_VERSION
     onnx_model.producer_name = utils.get_producer()
     onnx_model.producer_version = utils.get_producer_version()

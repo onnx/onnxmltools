@@ -2,7 +2,10 @@ import unittest
 import numpy
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from coremltools.models import datatypes
+from coremltools.proto.FeatureTypes_pb2 import ImageFeatureType
+from distutils.version import StrictVersion
 from onnxmltools import convert_coreml
+from onnxmltools.proto import onnx
 
 class TestNeuralNetworkLayerConverter(unittest.TestCase):
 
@@ -444,3 +447,26 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         model_onnx = convert_coreml(builder.spec)
         self.assertTrue(model_onnx is not None)
 
+    def test_image_input_type_converter(self):
+        dim = (3, 15, 25)
+        inputs = [('input', datatypes.Array(*dim))]
+        outputs = [('output', datatypes.Array(*dim))]
+        builder = NeuralNetworkBuilder(inputs, outputs)
+        builder.add_elementwise(name='Identity', input_names=['input'],
+                                output_name='output', mode='ADD', alpha=0.0)
+        spec = builder.spec
+        input = spec.description.input[0]
+        input.type.imageType.height = dim[1]
+        input.type.imageType.width = dim[2]
+        for coreml_colorspace, onnx_colorspace in (('RGB', 'Rgb8'), ('BGR', 'Bgr8'), ('GRAYSCALE', 'Gray8')):
+            input.type.imageType.colorSpace = ImageFeatureType.ColorSpace.Value(coreml_colorspace)
+            model_onnx = convert_coreml(spec)
+            dims = [(d.dim_param or d.dim_value) for d in model_onnx.graph.input[0].type.tensor_type.shape.dim]
+            self.assertEqual(dims, ['None', 1 if onnx_colorspace == 'Gray8' else 3, 15, 25])
+
+            if StrictVersion(onnx.__version__) >= StrictVersion('1.2.1'):
+                metadata = {prop.key: prop.value for prop in model_onnx.metadata_props}
+                self.assertEqual(metadata, { 'Image.BitmapPixelFormat': onnx_colorspace })
+                self.assertEqual(model_onnx.graph.input[0].type.denotation, 'IMAGE')
+                channel_denotations = [d.denotation for d in model_onnx.graph.input[0].type.tensor_type.shape.dim]
+                self.assertEqual(channel_denotations, ['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE'])

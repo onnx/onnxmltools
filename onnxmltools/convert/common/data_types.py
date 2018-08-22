@@ -54,8 +54,10 @@ class StringType(DataType):
 
 
 class TensorType(DataType):
-    def __init__(self, shape=None, doc_string=''):
+    def __init__(self, shape=None, doc_string='', denotation=None, channel_denotations=None):
         super(TensorType, self).__init__([] if not shape else shape, doc_string)
+        self.denotation = denotation
+        self.channel_denotations = channel_denotations
 
     def _get_element_onnx_type(self):
         raise NotImplementedError()
@@ -71,6 +73,13 @@ class TensorType(DataType):
                 s.dim_param = 'None'
             else:
                 raise ValueError('Unsupported dimension type: %s' % type(d))
+        if getattr(onnx_type, 'denotation', None) is not None:
+            if self.denotation:
+                onnx_type.denotation = self.denotation
+            if self.channel_denotations:
+                for d, denotation in zip(onnx_type.tensor_type.shape.dim, self.channel_denotations):
+                    if denotation:
+                        d.denotation = denotation
         return onnx_type
 
 
@@ -83,8 +92,8 @@ class Int64TensorType(TensorType):
 
 
 class FloatTensorType(TensorType):
-    def __init__(self, shape=None, color_space=None, doc_string=''):
-        super(FloatTensorType, self).__init__(shape, doc_string)
+    def __init__(self, shape=None, color_space=None, doc_string='', denotation=None, channel_denotations=None):
+        super(FloatTensorType, self).__init__(shape, doc_string, denotation, channel_denotations)
         self.color_space = color_space
 
     def _get_element_onnx_type(self):
