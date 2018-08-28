@@ -35,7 +35,12 @@ from sklearn.tree import DecisionTreeRegressor
 # Support vector machines
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
 
+# K-nearest neighbors
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsRegressor
+
 # Operators for preprocessing and feature engineering
+from sklearn.decomposition import PCA 
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import Binarizer
@@ -87,9 +92,12 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              ExtraTreesRegressor: 'SklearnExtraTreesRegressor',
                              GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
+                             KNeighborsClassifier: 'SklearnKNeighborsClassifier',
+                             KNeighborsRegressor: 'SklearnKNeighborsRegressor',
                              Binarizer: 'SklearnBinarizer',
                              LGBMClassifier: 'LgbmClassifier',
                              LGBMRegressor: 'LgbmRegressor',
+                             PCA: 'SklearnPCA',
                              TruncatedSVD: 'SklearnTruncatedSVD',
                              MinMaxScaler: 'SklearnMinMaxScaler',
                              MaxAbsScaler: 'SklearnMaxAbsScaler'}
