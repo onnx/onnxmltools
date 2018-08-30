@@ -36,26 +36,28 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
         class_labels = np.concatenate(class_labels)
     if all(isinstance(i, (six.string_types, six.text_type)) for i in class_labels):
         operator.outputs[0].type = StringTensorType(shape=[N])
-        if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
-            # For multi-class classifier, we produce a map for encoding the probabilities of all classes
-            if operator.targeted_onnx_version < StrictVersion('1.2'):
-                operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]))
+        if operator.type != 'SklearnKNeighborsClassifier':
+            if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
+                # For multi-class classifier, we produce a map for encoding the probabilities of all classes
+                if operator.targeted_onnx_version < StrictVersion('1.2'):
+                    operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]))
+                else:
+                    operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
             else:
-                operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
-        else:
-            # For binary classifier, we produce the probability of the positive class
-            operator.outputs[1].type = FloatTensorType(shape=[N, 1])
+                # For binary classifier, we produce the probability of the positive class
+                operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
         operator.outputs[0].type = Int64TensorType(shape=[N])
-        if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
-            # For multi-class classifier, we produce a map for encoding the probabilities of all classes
-            if operator.targeted_onnx_version < StrictVersion('1.2'):
-                operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
+        if operator.type != 'SklearnKNeighborsClassifier':
+            if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
+                # For multi-class classifier, we produce a map for encoding the probabilities of all classes
+                if operator.targeted_onnx_version < StrictVersion('1.2'):
+                    operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
+                else:
+                    operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
             else:
-                operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
-        else:
-            # For binary classifier, we produce the probability of the positive class
-            operator.outputs[1].type = FloatTensorType(shape=[N, 1])
+                # For binary classifier, we produce the probability of the positive class
+                operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     else:
         raise ValueError('Unsupported or mixed label types')
 
@@ -67,3 +69,4 @@ register_shape_calculator('SklearnRandomForestClassifier', calculate_sklearn_lin
 register_shape_calculator('SklearnExtraTreesClassifier', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('SklearnGradientBoostingClassifier', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('LgbmClassifier', calculate_sklearn_linear_classifier_output_shapes)
+register_shape_calculator('SklearnKNeighborsClassifier', calculate_sklearn_linear_classifier_output_shapes)

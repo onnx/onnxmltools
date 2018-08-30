@@ -15,9 +15,8 @@ from . import LinearClassifier
 from . import LinearRegressor
 from . import Normalizer
 from . import OneHotEncoder
-from . import PCA 
 from . import Scaler
 from . import SVM
-from . import SVD
+from . import SVDAndPCA
 from . import TreeEnsemble
 from . import LightGbm
