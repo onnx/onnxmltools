@@ -12,6 +12,7 @@ from . import KNN
 from . import LabelEncoder
 from . import LinearClassifier
 from . import LinearRegressor
+from . import NaiveBayes
 from . import Normalizer
 from . import OneHotEncoder
 from . import Scaler

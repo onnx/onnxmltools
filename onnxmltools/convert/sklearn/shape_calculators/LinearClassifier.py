@@ -36,7 +36,7 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
         class_labels = np.concatenate(class_labels)
     if all(isinstance(i, (six.string_types, six.text_type)) for i in class_labels):
         operator.outputs[0].type = StringTensorType(shape=[N])
-        if operator.type != 'SklearnKNeighborsClassifier':
+        if operator.type != 'SklearnKNeighborsClassifier' and 'NB' not in operator.type:
             if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
                 # For multi-class classifier, we produce a map for encoding the probabilities of all classes
                 if operator.targeted_onnx_version < StrictVersion('1.2'):
@@ -48,7 +48,7 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
                 operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
         operator.outputs[0].type = Int64TensorType(shape=[N])
-        if operator.type != 'SklearnKNeighborsClassifier':
+        if operator.type != 'SklearnKNeighborsClassifier' and 'NB' not in operator.type:
             if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
                 # For multi-class classifier, we produce a map for encoding the probabilities of all classes
                 if operator.targeted_onnx_version < StrictVersion('1.2'):
@@ -70,3 +70,5 @@ register_shape_calculator('SklearnExtraTreesClassifier', calculate_sklearn_linea
 register_shape_calculator('SklearnGradientBoostingClassifier', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('LgbmClassifier', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('SklearnKNeighborsClassifier', calculate_sklearn_linear_classifier_output_shapes)
+register_shape_calculator('SklearnBernoulliNB', calculate_sklearn_linear_classifier_output_shapes)
+register_shape_calculator('SklearnMultinomialNB', calculate_sklearn_linear_classifier_output_shapes)

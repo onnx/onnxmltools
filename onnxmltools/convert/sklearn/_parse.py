@@ -39,6 +39,10 @@ from sklearn.svm import SVC, SVR, NuSVC, NuSVR
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neighbors import KNeighborsRegressor
 
+# Naive Bayes
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import MultinomialNB
+
 # Operators for preprocessing and feature engineering
 from sklearn.decomposition import PCA 
 from sklearn.decomposition import TruncatedSVD
@@ -94,6 +98,8 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
                              KNeighborsClassifier: 'SklearnKNeighborsClassifier',
                              KNeighborsRegressor: 'SklearnKNeighborsRegressor',
+                             MultinomialNB: 'SklearnMultinomialNB',
+                             BernoulliNB: 'SklearnBernoulliNB',
                              Binarizer: 'SklearnBinarizer',
                              LGBMClassifier: 'LgbmClassifier',
                              LGBMRegressor: 'LgbmRegressor',
