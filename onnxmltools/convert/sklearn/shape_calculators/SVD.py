@@ -9,7 +9,7 @@ from ...common.data_types import FloatTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
-def calculate_sklearn_pca_and_truncated_svd_output_shapes(operator):
+def calculate_sklearn_truncated_svd_output_shapes(operator):
     '''
     Allowed input/output patterns are
         1. [N, C] ---> [N, K]
@@ -28,5 +28,5 @@ def calculate_sklearn_pca_and_truncated_svd_output_shapes(operator):
     operator.outputs[0].type.shape = [N, K]
 
 
-register_shape_calculator('SklearnPCA', calculate_sklearn_pca_and_truncated_svd_output_shapes)
-register_shape_calculator('SklearnTruncatedSVD', calculate_sklearn_pca_and_truncated_svd_output_shapes)
+register_shape_calculator('SklearnPCA', calculate_sklearn_truncated_svd_output_shapes)
+register_shape_calculator('SklearnTruncatedSVD', calculate_sklearn_truncated_svd_output_shapes)

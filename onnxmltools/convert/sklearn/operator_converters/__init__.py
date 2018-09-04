@@ -17,6 +17,6 @@ from . import Normalizer
 from . import OneHotEncoder
 from . import Scaler
 from . import SVM
-from . import SVDAndPCA
+from . import SVD
 from . import TreeEnsemble
 from . import LightGbm
