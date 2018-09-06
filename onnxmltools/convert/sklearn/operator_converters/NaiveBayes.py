@@ -11,12 +11,13 @@ import numpy as np
 
 def convert_sklearn_naive_bayes(scope, operator, container):
     nb = operator.raw_operator
-    class_log_prior = nb.class_log_prior_
-    feature_log_prob = nb.feature_log_prob_.T
+    class_log_prior = nb.class_log_prior_.astype('float32')
+    feature_log_prob = nb.feature_log_prob_.T.astype('float32')
 
     class_log_prior_name = scope.get_unique_variable_name('class_log_prior')
     feature_log_prob_name = scope.get_unique_variable_name('feature_log_prob')
     sum_result_name = scope.get_unique_variable_name('sum_result')
+    cast_result_name = scope.get_unique_variable_name('cast_result')
 
     container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
                               class_log_prior.shape, class_log_prior)
@@ -28,7 +29,9 @@ def convert_sklearn_naive_bayes(scope, operator, container):
 
         container.add_node('MatMul', [operator.inputs[0].full_name, feature_log_prob_name],
                            matmul_result_name, name='MatMul')
-        container.add_node('Sum', [matmul_result_name, class_log_prior_name],
+        container.add_node('Cast', matmul_result_name, 
+                            cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
+        container.add_node('Sum', [cast_result_name, class_log_prior_name],
                            sum_result_name, name='Sum', op_version=8)
     else:
         constant_name = scope.get_unique_variable_name('constant')
@@ -52,7 +55,9 @@ def convert_sklearn_naive_bayes(scope, operator, container):
                            sum_neg_prob_name, name='ReduceSum', axes=[0])
         container.add_node('MatMul', [operator.inputs[0].full_name, neg_prob_name],
                            inp_neg_prob_prod_name, name='MatMul')
-        container.add_node('Sub', [sum_neg_prob_name, inp_neg_prob_prod_name],
+        container.add_node('Cast', inp_neg_prob_prod_name, 
+                            cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
+        container.add_node('Sub', [sum_neg_prob_name, cast_result_name],
                            difference_matrix_name, name='Sub2')
         container.add_node('Sum', [difference_matrix_name, class_log_prior_name],
                            sum_result_name, name='Sum', op_version=8)

@@ -13,6 +13,7 @@ def convert_sklearn_knn(scope, operator, container):
     knn = operator.raw_operator
     training_examples = knn._fit_X
     training_labels = knn._y
+    length = [1, len(training_labels)]
     distance_power = knn.p
 
     training_examples_name = scope.get_unique_variable_name('training_examples')
@@ -24,11 +25,15 @@ def convert_sklearn_knn(scope, operator, container):
     topk_values_name = scope.get_unique_variable_name('topk_values')
     topk_indices_name = scope.get_unique_variable_name('topk_indices')
     topk_labels_name = scope.get_unique_variable_name('topk_labels')
+    length_name = scope.get_unique_variable_name('length')
+    reshaped_name = scope.get_unique_variable_name('reshaped')
     
     container.add_initializer(training_examples_name, onnx_proto.TensorProto.FLOAT,
                               training_examples.shape, training_examples.flatten())
     container.add_initializer(distance_power_name, onnx_proto.TensorProto.FLOAT,
                               [], [distance_power])
+    container.add_initializer(length_name, onnx_proto.TensorProto.INT64,
+                              [len(length)], length)
 
     if operator.type == 'SklearnKNeighborsRegressor':
         container.add_initializer(training_labels_name, onnx_proto.TensorProto.FLOAT,
@@ -40,7 +45,9 @@ def convert_sklearn_knn(scope, operator, container):
                        distance_name, name='Pow')
     container.add_node('ReduceSum', distance_name,
                        reduced_sum_name, name='ReduceSum', axes=[1])
-    container.add_node('TopK', reduced_sum_name,
+    container.add_node('Reshape', [reduced_sum_name, length_name],
+                       reshaped_name, name='Reshape')
+    container.add_node('TopK', reshaped_name,
                        [topk_values_name, topk_indices_name], name='TopK', k=knn.n_neighbors)
 
     if operator.type == 'SklearnKNeighborsClassifier':
@@ -60,6 +67,8 @@ def convert_sklearn_knn(scope, operator, container):
             class_type = onnx_proto.TensorProto.FLOAT
         elif np.issubdtype(knn.classes_.dtype, int):
             class_type = onnx_proto.TensorProto.INT32
+        else:
+            classes = classes.astype(np.dtype('S'))
 
         for i in range(len(classes)):
             labels_name[i] = scope.get_unique_variable_name('class_labels_{}'.format(i))
@@ -88,11 +97,14 @@ def convert_sklearn_knn(scope, operator, container):
                            concat_labels_name, name='Concat', axis=0, op_version=7)
         container.add_node('ArgMax', concat_labels_name, 
                            predicted_label_name, name='ArgMax')
-        container.add_node('ArrayFeatureExtractor', [classes_name, predicted_label_name],
-                           final_label_name, name='ArrayFeatureExtractor2', op_domain='ai.onnx.ml')
-        if class_type != onnx_proto.TensorProto.INT32:
+        if class_type == onnx_proto.TensorProto.INT32:
+            container.add_node('ArrayFeatureExtractor', [classes_name, predicted_label_name],
+                               final_label_name, name='ArrayFeatureExtractor2', op_domain='ai.onnx.ml')
             container.add_node('Cast', final_label_name,
                                 operator.outputs[0].full_name, to=onnx_proto.TensorProto.INT64, op_version=7)
+        else:
+            container.add_node('ArrayFeatureExtractor', [classes_name, predicted_label_name],
+                               operator.outputs[0].full_name, name='ArrayFeatureExtractor2', op_domain='ai.onnx.ml')
     elif operator.type == 'SklearnKNeighborsRegressor':
         container.add_node('ArrayFeatureExtractor', [training_labels_name, topk_indices_name],
                            topk_labels_name, name='ArrayFeatureExtractor', op_domain='ai.onnx.ml')

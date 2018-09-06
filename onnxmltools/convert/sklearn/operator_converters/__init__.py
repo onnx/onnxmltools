@@ -10,6 +10,7 @@ from . import DictVectorizer
 from . import Imputer
 from . import KNN
 from . import LabelEncoder
+from . import LeastSquares
 from . import LinearClassifier
 from . import LinearRegressor
 from . import NaiveBayes
