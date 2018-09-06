@@ -665,7 +665,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     invalid_name = []
     for name in topology.raw_model.input_names:
         # Check input naming convention
-        input_name = name.replace('_', '')
+        input_name = name.replace('_', '').replace(":", "").replace("/", "")
         if input_name and (input_name[0].isdigit() or (not input_name.isalnum())):
             invalid_name.append(name)
         if name in tensor_inputs:
@@ -680,7 +680,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     invalid_name = []
     for name in topology.raw_model.output_names:
         # Check output naming convention
-        output_name = name.replace('_', '')
+        output_name = name.replace('_', '').replace(":", "").replace("/", "")
         if output_name and (output_name[0].isdigit() or (not output_name.isalnum())):
             invalid_name.append(name)
         if name in tensor_outputs:
