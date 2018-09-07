@@ -18,14 +18,14 @@ from .operator_converters import neural_network as nn_converters
 from .shape_calculators import neural_network as nn_shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='',
+def convert(model, name=None, input_features=None, doc_string='',
             targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
     ONNX model name can be specified.
     :param model: A CoreML model (https://apple.github.io/coremltools/coremlspecification/sections/Model.html#model) or
     a CoreML MLModel object
-    :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
+    :param input_features: A list providing some types for some root variables. Each element is a tuple of a variable
     name and a type defined in data_types.py.
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
@@ -35,11 +35,11 @@ def convert(model, name=None, initial_types=None, doc_string='',
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
     :return: An ONNX model (type: ModelProto) which is equivalent to the input CoreML model
 
-    Example of initial types:
+    Example of input features:
     Assume that 'A' and 'B' are two root variable names used in the CoreML model you want to convert. We can specify
     their types via
     >>> from onnxmltools.convert.common.data_types import FloatTensorType
-    >>> initial_type = [('A', FloatTensorType([40, 12, 1, 1])), ('B', FloatTensorType([1, 32, 1, 1]))]
+    >>> input_features = [('A', FloatTensorType([40, 12, 1, 1])), ('B', FloatTensorType([1, 32, 1, 1]))]
     '''
     if isinstance(model, coremltools.models.MLModel):
         spec = model.get_spec()
@@ -50,7 +50,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
         name = str(uuid4().hex)
 
     # Parse CoreML model as our internal data structure (i.e., Topology)
-    topology = parse_coreml(spec, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_coreml(spec, input_features, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
 
     # Parse CoreML description, author, and license. Those information will be attached to the final ONNX model.
     metadata = spec.description.metadata
