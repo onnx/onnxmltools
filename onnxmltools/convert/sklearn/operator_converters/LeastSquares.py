@@ -22,14 +22,14 @@ def convert_sklearn_least_squares(scope, operator, container):
     container.add_initializer(coef_name, onnx_proto.TensorProto.FLOAT,
                               coef.shape, coef)
     container.add_initializer(intercept_name, onnx_proto.TensorProto.FLOAT,
-                              [], [intercept])
+                              [1], [intercept])
 
     container.add_node('MatMul', [operator.inputs[0].full_name, coef_name],
                        matmul_result_name, name='MatMul')
     container.add_node('Cast', matmul_result_name, 
                         cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
     container.add_node('Sum', [cast_result_name, intercept_name],
-                        operator.outputs[0].full_name, name='Sum', op_version=8)
+                        operator.outputs[0].full_name, name='Sum')
 
 
 register_converter('SklearnLassoLars', convert_sklearn_least_squares)
