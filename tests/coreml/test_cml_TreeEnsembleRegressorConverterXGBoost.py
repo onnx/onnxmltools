@@ -16,8 +16,8 @@ class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
         this = os.path.dirname(__file__)
         data_train = pandas.read_csv(os.path.join(this, "xgboost.model.xgb.n4.d3.train.txt"), header=None)
 
-        X = data_train.iloc[:, 1:].as_matrix()
-        y = data_train.iloc[:, 0].as_matrix()
+        X = data_train.iloc[:, 1:].values
+        y = data_train.iloc[:, 0].values
 
         params = dict(n_estimator=4, max_depth=3)
         model = XGBRegressor(**params).fit(X, y)
