@@ -48,6 +48,3 @@ class TestKerasConverter(unittest.TestCase):
         converted_model = onnxmltools.convert_keras(model, custom_conversion_functions={ScaledTanh: custom_activation})
         self.assertIsNotNone(converted_model)
         # to check the model, you can print(str(converted_model))
-
-if __name__ == "__main__":
-    unittest.main()
