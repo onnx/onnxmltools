@@ -10,6 +10,51 @@ import numpy as np
 
 
 def convert_sklearn_knn(scope, operator, container):
+    #   input ----> SUB <---- training_examples
+    #                |
+    #                V
+    #           sub_results ----> POW <---- distance_power
+    #                              |
+    #                              V
+    # n_neighbor ----> TOPK <---- distance
+    #                   |    
+    #                  / \
+    #                 /   \
+    #                 |    |
+    #                 V    V
+    #       topk_indices   topk_values
+    #           |
+    #           V
+    #   ARRAYFEATUREEXTRACTOR <- training_labels
+    #           |
+    #           V           (KNN Regressor)
+    #          topk_labels ------------------> REDUCEMEAN --> final_label 
+    #                    | 
+    #                   /|\
+    #                  / | \(KNN Classifier)
+    #                 /  |  \
+    #                /   |   \
+    #               /    |    \__
+    #               |    |       |
+    #               V    V       V
+    # label0 -> EQUAL  EQUAL ... EQUAL <- labeln
+    #            |       |          |
+    #            V       V          V
+    #      ReduceSum  ReduceSum ... ReduceSum
+    #           \        |           /
+    #            \____   |      ____/ 
+    #                 \  |  ___/ 
+    #                  \ | / 
+    #                   \|/
+    #                    V
+    #                 CONCAT --> concat_labels
+    #                               |
+    #                               V
+    #                           ARGMAX --> predicted_label 
+    #                                       |
+    #                                       V
+    #            final_label <--- ARRAYFEATUREEXTRACTOR <- training_labels
+
     knn = operator.raw_operator
     training_examples = knn._fit_X
     training_labels = knn._y

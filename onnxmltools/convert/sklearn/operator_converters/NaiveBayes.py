@@ -6,10 +6,15 @@
 
 from ....proto import onnx_proto
 from ...common._registration import register_converter
-import numpy as np
 
 
 def convert_sklearn_naive_bayes(scope, operator, container):
+    # Multinomial NB
+    # y = argmax (class_log_prior + X . feature_log_prob^T)
+    # Bernoulli NB
+    # y = argmax (class_log_prior + Σ neg_prob - X . neg_prob)
+    # neg_prob = log( 1 - e ^ feature_log_prob)
+
     nb = operator.raw_operator
     class_log_prior = nb.class_log_prior_.astype('float32')
     feature_log_prob = nb.feature_log_prob_.T.astype('float32')
@@ -44,6 +49,7 @@ def convert_sklearn_naive_bayes(scope, operator, container):
 
         container.add_node('MatMul', [operator.inputs[0].full_name, feature_log_prob_name],
                            matmul_result_name, name='MatMul')
+        # Cast is required here as Sum op doesn't work with Float64
         container.add_node('Cast', matmul_result_name, 
                             cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
         container.add_node('Sum', [cast_result_name, reshaped_result_name],
@@ -70,6 +76,7 @@ def convert_sklearn_naive_bayes(scope, operator, container):
                            sum_neg_prob_name, name='ReduceSum', axes=[0])
         container.add_node('MatMul', [operator.inputs[0].full_name, neg_prob_name],
                            inp_neg_prob_prod_name, name='MatMul')
+        # Cast is required here as Sub op doesn't work with Float64
         container.add_node('Cast', inp_neg_prob_prod_name, 
                             cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
         container.add_node('Sub', [sum_neg_prob_name, cast_result_name],

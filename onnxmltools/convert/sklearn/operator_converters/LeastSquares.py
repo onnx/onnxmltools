@@ -6,10 +6,11 @@
 
 from ....proto import onnx_proto
 from ...common._registration import register_converter
-import numpy as np
 
 
 def convert_sklearn_least_squares(scope, operator, container):
+    # y = X . Coef^T + intercept 
+
     ols = operator.raw_operator
     coef = ols.coef_.T.astype('float32')
     intercept = ols.intercept_.astype('float32')
@@ -26,6 +27,7 @@ def convert_sklearn_least_squares(scope, operator, container):
 
     container.add_node('MatMul', [operator.inputs[0].full_name, coef_name],
                        matmul_result_name, name='MatMul')
+    # Cast is required here as Sum op doesn't work with Float64
     container.add_node('Cast', matmul_result_name, 
                         cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
     container.add_node('Sum', [cast_result_name, intercept_name],
