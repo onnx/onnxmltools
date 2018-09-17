@@ -35,7 +35,10 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
     if all(isinstance(i, np.ndarray) for i in class_labels):
         class_labels = np.concatenate(class_labels)
     if all(isinstance(i, (six.string_types, six.text_type)) for i in class_labels):
-        operator.outputs[0].type = StringTensorType(shape=[N])
+        if operator.type == 'SklearnKNeighborsClassifier': 
+            operator.outputs[0].type = StringTensorType(shape=[N, 1])
+        else:
+            operator.outputs[0].type = StringTensorType(shape=[N])
         if operator.type != 'SklearnKNeighborsClassifier' and 'NB' not in operator.type:
             if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
                 # For multi-class classifier, we produce a map for encoding the probabilities of all classes
@@ -47,7 +50,10 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
                 # For binary classifier, we produce the probability of the positive class
                 operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
-        operator.outputs[0].type = Int64TensorType(shape=[N])
+        if operator.type == 'SklearnKNeighborsClassifier': 
+            operator.outputs[0].type = Int64TensorType(shape=[N, 1])
+        else:
+            operator.outputs[0].type = Int64TensorType(shape=[N])
         if operator.type != 'SklearnKNeighborsClassifier' and 'NB' not in operator.type:
             if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
                 # For multi-class classifier, we produce a map for encoding the probabilities of all classes

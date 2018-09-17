@@ -150,19 +150,19 @@ def convert_sklearn_knn(scope, operator, container):
         elif np.issubdtype(knn.classes_.dtype, int):
             class_type = onnx_proto.TensorProto.INT32
         else:
-            classes = classes.astype(np.dtype('S'))
+            classes = np.array([s.encode('utf-8') for s in classes])
 
         for i in range(len(classes)):
             labels_name[i] = scope.get_unique_variable_name('class_labels_{}'.format(i))
-            container.add_initializer(labels_name[i], class_type, 
-                                  [], [classes[i]])
+            container.add_initializer(labels_name[i], onnx_proto.TensorProto.INT32,
+                                  [], [i])
             output_label_name[i] = scope.get_unique_variable_name('output_label_{}'.format(i))
             output_cast_label_name[i] = scope.get_unique_variable_name('output_cast_label_{}'.format(i))
             output_label_reduced_name[i] = scope.get_unique_variable_name('output_label_reduced_{}'.format(i))
 
         container.add_initializer(classes_name, class_type, 
                                   classes.shape, classes)
-        container.add_initializer(training_labels_name, class_type,
+        container.add_initializer(training_labels_name, onnx_proto.TensorProto.INT32,
                                   training_labels.shape, training_labels)
 
         container.add_node('ArrayFeatureExtractor', [training_labels_name, topk_indices_name],
