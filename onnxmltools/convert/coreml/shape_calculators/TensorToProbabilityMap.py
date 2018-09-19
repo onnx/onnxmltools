@@ -4,10 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
 from ...common._registration import register_shape_calculator
 from ...common.data_types import DictionaryType, FloatTensorType, SequenceType, StringTensorType, Int64TensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types, compare_strict_version
 
 
 def calculate_tensor_to_probability_map_output_shapes(operator):
@@ -35,13 +34,13 @@ def calculate_tensor_to_probability_map_output_shapes(operator):
     N = operator.inputs[0].type.shape[0]
     doc_string = operator.outputs[0].type.doc_string
     if class_label_type == 'stringClassLabels':
-        if operator.targeted_onnx_version < StrictVersion('1.2'):
+        if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
             operator.outputs[0].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]), doc_string)
         else:
             operator.outputs[0].type = \
                 SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N, doc_string)
     elif class_label_type == 'int64ClassLabels':
-        if operator.targeted_onnx_version < StrictVersion('1.2'):
+        if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
             operator.outputs[0].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]), doc_string)
         else:
             operator.outputs[0].type = \

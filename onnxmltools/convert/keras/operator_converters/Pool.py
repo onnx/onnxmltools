@@ -4,13 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
 from keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D, AveragePooling1D, AveragePooling2D, AveragePooling3D
 from keras.layers import GlobalMaxPooling1D, GlobalMaxPooling2D, GlobalMaxPooling3D
 from keras.layers import GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D
 from ...common._apply_operation import apply_reshape
 from ...common._apply_operation import apply_transpose
 from ...common._registration import register_converter
+from ...common.utils import compare_strict_version
 from .common import get_permutation_config
 
 
@@ -29,7 +29,7 @@ def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
     op_type_prefix = 'Global' if is_global else ''
     if op_type == 'Avg':
         onnx_op_type = 'AveragePool'
-        if operator.targeted_onnx_version < StrictVersion('1.2'):
+        if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
             op_version = 1
         else:
             op_version = 7

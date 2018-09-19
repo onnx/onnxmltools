@@ -7,7 +7,7 @@
 import numbers, six
 import numpy as np
 import warnings
-from distutils.version import LooseVersion
+from distutils.version import LooseVersion, StrictVersion
 
 
 def sklearn_installed():
@@ -284,3 +284,16 @@ def check_input_and_output_types(operator, good_input_types=None, good_output_ty
                 raise RuntimeError('Operator %s (type: %s) got an output %s with a wrong type %s. Only %s are allowed' \
                                    % (operator.full_name, operator.type, variable.full_name, type(variable.type),
                                       good_output_types))
+
+
+def compare_strict_version(v1, v2):
+    if v1 is None:
+        return 1
+    if isinstance(v1, str):
+        v1 = StrictVersion(v1)
+    if not hasattr(v1, 'version'):
+        return 1
+    if isinstance(v2, str):
+        v2 = StrictVersion(v2)
+    return -1 if v1 < v2 else (0 if v1 == v2 else 1)
+

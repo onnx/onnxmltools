@@ -4,10 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._apply_operation import apply_add, apply_mul
 from ....common._registration import register_converter
+from ....common.utils import compare_strict_version
 
 
 def deduce_broadcast_axis_and_shape(targeted_onnx_version, shape):
@@ -18,7 +18,7 @@ def deduce_broadcast_axis_and_shape(targeted_onnx_version, shape):
     # errors in ONNX's boardcasting). If the scaler's shape is [1], no matter what shape the input is, we leave the axis
     # "None" because ONNX operator may automatically handle it. After ONNX-1.2, we adopt Numpy-style broadcasting rule.
 
-    if targeted_onnx_version < StrictVersion('1.2'):
+    if compare_strict_version(targeted_onnx_version, '1.2') < 0:
         # Input shape is [N, C, H, W]
         if len(shape) == 1:
             if shape[0] == 1:

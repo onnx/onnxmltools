@@ -6,7 +6,6 @@
 
 import re
 import warnings
-from distutils.version import StrictVersion
 from ...proto import onnx
 from ...proto import helper
 from ...utils.metadata_props import add_metadata_props
@@ -14,6 +13,7 @@ from .data_types import *
 from ._container import ModelComponentContainer
 from . import _registration
 from . import utils
+from .utils import compare_strict_version
 from .interface import OperatorBase
 
 class Variable:
@@ -256,7 +256,10 @@ class Topology:
         self.initial_types = initial_types if initial_types else list()
         self.metadata_props = metadata_props if metadata_props else dict()
         self.default_batch_size = default_batch_size
-        self.targeted_onnx_version = StrictVersion(targeted_onnx)
+        if targeted_onnx is None: 
+            self.targeted_onnx_version = None 
+        else: 
+            self.targeted_onnx_version = targeted_onnx
         self.custom_conversion_functions = custom_conversion_functions if custom_conversion_functions else {}
         self.custom_shape_calculators = custom_shape_calculators if custom_shape_calculators else {}
 
@@ -634,7 +637,7 @@ def convert_topology(topology, model_name, doc_string, targeted_onnx):
     include '1.1.2', '1.2', and so on.
     :return: a ONNX ModelProto
     '''
-    if targeted_onnx != onnx.__version__:
+    if targeted_onnx is not None and compare_strict_version(targeted_onnx, onnx.__version__) != 0:
         raise RuntimeError(
             'ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
                 onnx.__version__, targeted_onnx))

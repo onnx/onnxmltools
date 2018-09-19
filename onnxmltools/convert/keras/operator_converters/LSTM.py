@@ -5,10 +5,10 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
-from distutils.version import StrictVersion
 from keras.layers import LSTM
 from ...common._apply_operation import apply_transpose, apply_reshape
 from ...common._registration import register_converter
+from ...common.utils import compare_strict_version
 from ....proto import onnx_proto
 from .common import extract_recurrent_activation
 
@@ -112,7 +112,7 @@ def convert_keras_lstm(scope, operator, container):
     lstm_attrs['hidden_size'] = hidden_size
 
     # Set up version-dependent attributes
-    if operator.targeted_onnx_version < StrictVersion('1.2'):
+    if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
         lstm_attrs['output_sequence'] = 1 if output_seq else 0
         op_version = 1
     else:
