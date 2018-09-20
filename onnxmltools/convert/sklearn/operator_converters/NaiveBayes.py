@@ -6,6 +6,7 @@
 
 from ....proto import onnx_proto
 from ...common._registration import register_converter
+import numpy as np
 
 
 def convert_sklearn_naive_bayes(scope, operator, container):
@@ -39,17 +40,17 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     #                                V
     #                    cast_result[M, C] -> SUM <- class_log_prior[1, C]
     #                                          |
-    #                                          V
-    #                             sum_result[M, C] -> ARGMAX -> argmax_output[M, 1]
-    #                                                            |
-    #                                                            V
-    #      output_shape[1] -> RESHAPE <- cast2_result[M, 1] <- CAST <- onnx_proto.TensorProto.FLOAT
-    #                          |
-    #                          V
-    #                       reshaped_result[M,]
-    #                          |
-    #                          V
-    #           output[M,] <- CAST <- onnx_proto.TensorProto.INT64
+    #                                          V                                    (string labels)
+    #                             sum_result[M, C] -> ARGMAX -> argmax_output[M, 1] --------------------|
+    #                                               (int labels) |                                      |
+    #                                                            V                                      |
+    #      output_shape[1] -> RESHAPE <- cast2_result[M, 1] <- CAST <- onnx_proto.TensorProto.FLOAT     |
+    #                          |                                                                        |
+    #                          V                                                                        V
+    #                       reshaped_result[M,]             |------------------------------------- RESHAPE
+    #                                   |                   |
+    #                                   V                   V
+    #  onnx_proto.TensorProto.INT64 -> CAST --------> output[M,]
     #
     # Bernoulli NB
     # Equation:
@@ -79,17 +80,24 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     #                       sum_result[M, C] -> ARGMAX -> argmax_output[M, 1] 
     #                                                            |
     #                                                            V
-    #      output_shape[1] -> RESHAPE <- cast2_result[M, 1] <- CAST <- onnx_proto.TensorProto.FLOAT
-    #                          |
-    #                          V
-    #                       reshaped_result[M,]
-    #                          |
-    #                          V
-    #           output[M,] <- CAST <- onnx_proto.TensorProto.INT64
+    #                              classes[C] -------> ARRAYFEATUREEXTRACTOR
+    #                                                            |
+    #                                                            V          (string labels)
+    #                                  array_feature_extractor_result[M, 1] ----------------------------
+    #                                               (int labels) |                                     | 
+    #                                                            V                                     |
+    #      output_shape[1] -> RESHAPE <- cast2_result[M, 1] <- CAST <- onnx_proto.TensorProto.FLOAT    | 
+    #                          |                                                                       |
+    #                          V                                                                       |
+    #                       reshaped_result[M,]             --------------------------------------RESHAPE
+    #                                   |                   |
+    #                                   V                   |
+    #  onnx_proto.TensorProto.INT64 -> CAST -> output[M,] <-|
 
     nb = operator.raw_operator
     class_log_prior = nb.class_log_prior_.astype('float32').reshape((1, -1))
     feature_log_prob = nb.feature_log_prob_.T.astype('float32')
+    classes = nb.classes_
     output_shape = [-1,]
 
     class_log_prior_name = scope.get_unique_variable_name('class_log_prior')
@@ -100,6 +108,23 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     argmax_output_name = scope.get_unique_variable_name('argmax_output')
     cast2_result_name = scope.get_unique_variable_name('cast2_result')
     reshaped_result_name = scope.get_unique_variable_name('reshaped_result')
+    classes_name = scope.get_unique_variable_name('classes')
+    reduce_log_sum_exp_result_name = scope.get_unique_variable_name('reduce_log_sum_exp_result')
+    log_prob_name = scope.get_unique_variable_name('log_prob')
+    prob_tensor_name = scope.get_unique_variable_name('prob_tensor')
+
+    class_type = onnx_proto.TensorProto.STRING
+    zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
+    if np.issubdtype(nb.classes_.dtype, float):
+        class_type = onnx_proto.TensorProto.INT32
+        classes = np.array(list(map(lambda x: int(x), classes)))
+        zipmap_attrs['classlabels_int64s'] = classes 
+    elif np.issubdtype(nb.classes_.dtype, int):
+        class_type = onnx_proto.TensorProto.INT32
+        zipmap_attrs['classlabels_int64s'] = classes
+    else:
+        zipmap_attrs['classlabels_strings'] = classes
+        classes = np.array([s.encode('utf-8') for s in classes])
 
     container.add_initializer(output_shape_name, onnx_proto.TensorProto.INT64,
                               [len(output_shape)], output_shape)
@@ -107,6 +132,8 @@ def convert_sklearn_naive_bayes(scope, operator, container):
                               class_log_prior.shape, class_log_prior.flatten())
     container.add_initializer(feature_log_prob_name, onnx_proto.TensorProto.FLOAT,
                               feature_log_prob.shape, feature_log_prob.flatten())
+    container.add_initializer(classes_name, class_type, 
+                              classes.shape, classes)
 
     if operator.type == 'SklearnMultinomialNB':
         matmul_result_name = scope.get_unique_variable_name('matmul_result')
@@ -150,14 +177,33 @@ def convert_sklearn_naive_bayes(scope, operator, container):
 
     container.add_node('ArgMax', sum_result_name,
                        argmax_output_name, name=scope.get_unique_operator_name('ArgMax'), axis=1)
+
+    # Following four add_node() statements are for predicting probabilities
+    container.add_node('ReduceLogSumExp', sum_result_name,
+                       reduce_log_sum_exp_result_name, name=scope.get_unique_operator_name('ReduceLogSumExp'), axes=[1], keepdims=0)
+    container.add_node('Sub', [sum_result_name, reduce_log_sum_exp_result_name],
+                       log_prob_name, name=scope.get_unique_operator_name('Sub'))
+    container.add_node('Exp', log_prob_name, 
+                       prob_tensor_name, name=scope.get_unique_operator_name('Exp'), op_version=6)
+    container.add_node('ZipMap', prob_tensor_name, operator.outputs[1].full_name,
+                           op_domain='ai.onnx.ml', **zipmap_attrs)
+
+    array_feature_extractor_result_name = scope.get_unique_variable_name('array_feature_extractor_result')
+
+    container.add_node('ArrayFeatureExtractor', [classes_name, argmax_output_name],
+                       array_feature_extractor_result_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
     # Reshape op does not seem to handle INT64 tensor even though it is listed as one of the
     # supported types in the doc, so Cast was required here.
-    container.add_node('Cast', argmax_output_name, 
-                        cast2_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
-    container.add_node('Reshape', [cast2_result_name, output_shape_name], 
-                        reshaped_result_name, name=scope.get_unique_operator_name('Reshape2'))
-    container.add_node('Cast', reshaped_result_name, 
-                        operator.outputs[0].full_name, to=onnx_proto.TensorProto.INT64, op_version=7)
+    if class_type == onnx_proto.TensorProto.INT32: # int labels
+        container.add_node('Cast', array_feature_extractor_result_name, 
+                            cast2_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
+        container.add_node('Reshape', [cast2_result_name, output_shape_name], 
+                            reshaped_result_name, name=scope.get_unique_operator_name('Reshape'))
+        container.add_node('Cast', reshaped_result_name, 
+                            operator.outputs[0].full_name, to=onnx_proto.TensorProto.INT64, op_version=7)
+    else: # string labels
+        container.add_node('Reshape', [array_feature_extractor_result_name, output_shape_name], 
+                            operator.outputs[0].full_name, name=scope.get_unique_operator_name('Reshape'), op_version=7)
 
 
 register_converter('SklearnMultinomialNB', convert_sklearn_naive_bayes)

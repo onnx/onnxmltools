@@ -66,7 +66,8 @@ from lightgbm import LGBMClassifier, LGBMRegressor
 # one output for everything not in the list.
 sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, NuSVC,
                            GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier,
-                           ExtraTreesClassifier, LGBMClassifier]
+                           ExtraTreesClassifier, LGBMClassifier, KNeighborsClassifier, BernoulliNB,
+                           MultinomialNB]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
