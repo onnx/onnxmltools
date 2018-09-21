@@ -37,7 +37,6 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
 
 # K-nearest neighbors
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neighbors import KNeighborsRegressor
 
 # Naive Bayes
@@ -66,8 +65,7 @@ from lightgbm import LGBMClassifier, LGBMRegressor
 # one output for everything not in the list.
 sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, NuSVC,
                            GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier,
-                           ExtraTreesClassifier, LGBMClassifier, KNeighborsClassifier, BernoulliNB,
-                           MultinomialNB]
+                           ExtraTreesClassifier, LGBMClassifier, BernoulliNB, MultinomialNB]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
@@ -99,7 +97,6 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              ExtraTreesRegressor: 'SklearnExtraTreesRegressor',
                              GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
-                             KNeighborsClassifier: 'SklearnKNeighborsClassifier',
                              KNeighborsRegressor: 'SklearnKNeighborsRegressor',
                              MultinomialNB: 'SklearnMultinomialNB',
                              BernoulliNB: 'SklearnBernoulliNB',
