@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ....proto import onnx_proto
+from ...common._apply_operation import apply_abs, apply_reshape, apply_sub
 from ...common._registration import register_converter
 import numpy as np
 
@@ -35,7 +36,7 @@ def convert_sklearn_knn(scope, operator, container):
     # reduced_sum[M] <--- REDUCESUM <--- distance[M, N]
     #            |
     #            V
-    # length -> RESHAPE -> reshaped[1, M]
+    # length -> RESHAPE -> reshaped_result[1, M]
     #                       |
     #                       V
     # n_neighbors[1] ----> TOPK
@@ -105,36 +106,29 @@ def convert_sklearn_knn(scope, operator, container):
     topk_values_name = scope.get_unique_variable_name('topk_values')
     topk_indices_name = scope.get_unique_variable_name('topk_indices')
     topk_labels_name = scope.get_unique_variable_name('topk_labels')
-    length_name = scope.get_unique_variable_name('length')
-    reshaped_name = scope.get_unique_variable_name('reshaped')
+    reshaped_result_name = scope.get_unique_variable_name('reshaped_result')
     
     container.add_initializer(training_examples_name, onnx_proto.TensorProto.FLOAT,
                               training_examples.shape, training_examples.flatten())
     container.add_initializer(distance_power_name, onnx_proto.TensorProto.FLOAT,
                               [], [distance_power])
-    container.add_initializer(length_name, onnx_proto.TensorProto.INT64,
-                              [len(length)], length)
 
     if operator.type == 'SklearnKNeighborsRegressor':
         container.add_initializer(training_labels_name, onnx_proto.TensorProto.FLOAT,
                                   training_labels.shape, training_labels)
 
-    container.add_node('Sub', [operator.inputs[0].full_name, training_examples_name],
-                       sub_results_name, name=scope.get_unique_operator_name('Sub'), op_version=7)
-    container.add_node('Abs', sub_results_name,
-                       abs_results_name, name=scope.get_unique_operator_name('Abs'), op_version=6)
+    apply_sub(scope, [operator.inputs[0].full_name, training_examples_name], sub_results_name, container, broadcast=1)
+    apply_abs(scope, sub_results_name, abs_results_name, container)
     container.add_node('Pow', [abs_results_name, distance_power_name],
                        distance_name, name=scope.get_unique_operator_name('Pow'))
     container.add_node('ReduceSum', distance_name,
                        reduced_sum_name, name=scope.get_unique_operator_name('ReduceSum'), axes=[1])
-    container.add_node('Reshape', [reduced_sum_name, length_name],
-                       reshaped_name, name=scope.get_unique_operator_name('Reshape'))
-    container.add_node('TopK', reshaped_name,
+    apply_reshape(scope, reduced_sum_name, reshaped_result_name, container, desired_shape=length)
+    container.add_node('TopK', reshaped_result_name,
                        [topk_values_name, topk_indices_name], name=scope.get_unique_operator_name('TopK'), k=knn.n_neighbors)
 
     if operator.type == 'SklearnKNeighborsClassifier':
-        # To be implemented
-        pass
+        raise NotImplementedError
     elif operator.type == 'SklearnKNeighborsRegressor':
         container.add_node('ArrayFeatureExtractor', [training_labels_name, topk_indices_name],
                            topk_labels_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
