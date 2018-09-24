@@ -11,4 +11,4 @@ scikit-learn
 scipy
 wheel
 xgboost
-lightgbm
+lightgbm==2.1.2
