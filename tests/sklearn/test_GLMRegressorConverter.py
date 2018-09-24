@@ -4,7 +4,6 @@ Tests GLMRegressor converter.
 import unittest
 from sklearn import datasets
 from sklearn import linear_model
-from sklearn.linear_model import LassoLars, Ridge 
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import LinearSVR
 from onnxmltools import convert_sklearn
@@ -49,11 +48,6 @@ class TestGLMRegressorConverter(unittest.TestCase):
         self.assertIsNotNone(model_onnx)
 
     def test_model_lasso_lars(self):
-        model = self._fit_model(LassoLars(alpha=0.01))
+        model = self._fit_model(linear_model.LassoLars(alpha=0.01))
         model_onnx = convert_sklearn(model, 'lasso lars', [('input', FloatTensorType([1, 4]))])
-        self.assertIsNotNone(model_onnx)
-
-    def test_model_ridge(self):
-        model = self._fit_model(Ridge())
-        model_onnx = convert_sklearn(model, 'ridge', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
