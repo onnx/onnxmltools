@@ -49,7 +49,7 @@ install:
   - conda install -c conda-forge cmake
   - conda install -c conda-forge openmpi
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
-  - cd $TRAVIS_BUILD_DIR && pip install cntk
+  - cd $TRAVIS_BUILD_DIR && pip install cntk==2.5.1
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
 
