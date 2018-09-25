@@ -62,7 +62,7 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     #
     # Bernoulli NB
     # Equation:
-    #   y = argmax (class_log_prior + Σ neg_prob - X . neg_prob)
+    #   y = argmax (class_log_prior + \sum neg_prob - X . neg_prob)
     #   neg_prob = log( 1 - e ^ feature_log_prob)
     #
     #   Graph:
