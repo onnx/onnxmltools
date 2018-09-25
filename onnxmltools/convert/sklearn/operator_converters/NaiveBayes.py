@@ -23,7 +23,8 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     # N: Number of features
     # C: Number of classes
     # input(or x): test set input
-    # output(or y): test set output 
+    # output(or y): test set output (There are two paths for producing output, one for
+    #               string labels and the other one for int labels) 
     # feature_log_prob: Empirical log probability of features given a class, P(x_i|y)
     # class_log_prior: Smoothed empirical log probability for each class
     #
