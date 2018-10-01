@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ....proto import onnx_proto
-from ...common._apply_operation import apply_abs, apply_reshape, apply_sub
+from ...common._apply_operation import apply_abs, apply_mul, apply_reshape, apply_sub
 from ...common._registration import register_converter
 import numpy as np
 
@@ -107,11 +107,15 @@ def convert_sklearn_knn(scope, operator, container):
     topk_indices_name = scope.get_unique_variable_name('topk_indices')
     topk_labels_name = scope.get_unique_variable_name('topk_labels')
     reshaped_result_name = scope.get_unique_variable_name('reshaped_result')
+    negate_name = scope.get_unique_variable_name('negate')
+    negated_reshaped_result_name = scope.get_unique_variable_name('negated_reshaped_result')
     
     container.add_initializer(training_examples_name, onnx_proto.TensorProto.FLOAT,
                               training_examples.shape, training_examples.flatten())
     container.add_initializer(distance_power_name, onnx_proto.TensorProto.FLOAT,
                               [], [distance_power])
+    container.add_initializer(negate_name, onnx_proto.TensorProto.FLOAT,
+                              [], [-1])
 
     if operator.type == 'SklearnKNeighborsRegressor':
         container.add_initializer(training_labels_name, onnx_proto.TensorProto.FLOAT,
@@ -124,7 +128,8 @@ def convert_sklearn_knn(scope, operator, container):
     container.add_node('ReduceSum', distance_name,
                        reduced_sum_name, name=scope.get_unique_operator_name('ReduceSum'), axes=[1])
     apply_reshape(scope, reduced_sum_name, reshaped_result_name, container, desired_shape=length)
-    container.add_node('TopK', reshaped_result_name,
+    apply_mul(scope, [reshaped_result_name, negate_name], negated_reshaped_result_name, container, broadcast=1)
+    container.add_node('TopK', negated_reshaped_result_name,
                        [topk_values_name, topk_indices_name], name=scope.get_unique_operator_name('TopK'), k=knn.n_neighbors)
 
     if operator.type == 'SklearnKNeighborsClassifier':
