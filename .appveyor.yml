@@ -23,7 +23,7 @@ install:
     - cmd: SET PATH=%CONDA_PREFIX%;%CONDA_PREFIX%\Scripts;%PATH%
     - cmd: conda install -y -c conda-forge protobuf numpy
     - cmd: python -m pip install --upgrade pip
-    - cmd: pip install %XGB_PATH% %COREML_PATH% %ONNX_PATH% cntk
+    - cmd: pip install %XGB_PATH% %COREML_PATH% %ONNX_PATH% cntk==2.5.1
     - cmd: pip install -r requirements-dev.txt"
 
 build: off
