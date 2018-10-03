@@ -59,7 +59,7 @@ def convert_keras_batch_normalization(scope, operator, container):
                          operator_name=operator.full_name, epsilon=epsilon, is_test=is_test,
                          momentum=momentum, spatial=spatial)
     else:
-        # If transpose is required, we need to put BatchNorm's output
+        # If transpose is required, we need to put BatchNorm's output to an intermediate tensor for applying a transpose
         intermediate_output_name = scope.get_unique_variable_name('batch_norm_output_buffer')
         apply_batch_norm(scope, input_tensor_names, intermediate_output_name, container,
                          operator_name=operator.full_name, epsilon=epsilon, is_test=is_test,
