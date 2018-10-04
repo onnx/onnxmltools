@@ -6,7 +6,8 @@
 
 import lightgbm
 import numpy as np
-import six, numbers
+import numbers
+import six
 from distutils.version import StrictVersion
 from ...common._registration import register_shape_calculator
 from ...common.data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType, SequenceType
@@ -67,3 +68,5 @@ register_shape_calculator('SklearnRandomForestClassifier', calculate_sklearn_lin
 register_shape_calculator('SklearnExtraTreesClassifier', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('SklearnGradientBoostingClassifier', calculate_sklearn_linear_classifier_output_shapes)
 register_shape_calculator('LgbmClassifier', calculate_sklearn_linear_classifier_output_shapes)
+register_shape_calculator('SklearnBernoulliNB', calculate_sklearn_linear_classifier_output_shapes)
+register_shape_calculator('SklearnMultinomialNB', calculate_sklearn_linear_classifier_output_shapes)
