@@ -289,11 +289,13 @@ def check_input_and_output_types(operator, good_input_types=None, good_output_ty
 def compare_strict_version(v1, v2):
     if v1 is None:
         return 1
-    if isinstance(v1, str):
+    if v2 is None:
+        raise ValueError("v2 must not be None.")
+    if isinstance(v1, six.string_types):
         v1 = StrictVersion(v1)
     if not hasattr(v1, 'version'):
         return 1
-    if isinstance(v2, str):
+    if isinstance(v2, six.string_types):
         v2 = StrictVersion(v2)
     return -1 if v1 < v2 else (0 if v1 == v2 else 1)
 
