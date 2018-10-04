@@ -17,6 +17,7 @@ from sklearn.svm import LinearSVC
 
 # Linear regressors
 from sklearn.linear_model import ElasticNet
+from sklearn.linear_model import LassoLars
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import SGDRegressor
@@ -35,7 +36,15 @@ from sklearn.tree import DecisionTreeRegressor
 # Support vector machines
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
 
+# K-nearest neighbors
+from sklearn.neighbors import KNeighborsRegressor
+
+# Naive Bayes
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import MultinomialNB
+
 # Operators for preprocessing and feature engineering
+from sklearn.decomposition import PCA 
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import Binarizer
@@ -56,7 +65,7 @@ from lightgbm import LGBMClassifier, LGBMRegressor
 # one output for everything not in the list.
 sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, NuSVC,
                            GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier,
-                           ExtraTreesClassifier, LGBMClassifier]
+                           ExtraTreesClassifier, LGBMClassifier, BernoulliNB, MultinomialNB]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
@@ -76,7 +85,8 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              LinearSVR: 'SklearnLinearSVR',
                              ElasticNet: 'SklearnElasticNetRegressor',
                              LinearRegression: 'SklearnLinearRegressor',
-                             Ridge: 'SklearnLinearRegressor',
+                             LassoLars: 'SklearnLassoLars',
+                             Ridge: 'SklearnRidge',
                              SGDRegressor: 'SklearnLinearRegressor',
                              Normalizer: 'SklearnNormalizer',
                              DecisionTreeClassifier: 'SklearnDecisionTreeClassifier',
@@ -87,9 +97,13 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              ExtraTreesRegressor: 'SklearnExtraTreesRegressor',
                              GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
                              GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
+                             KNeighborsRegressor: 'SklearnKNeighborsRegressor',
+                             MultinomialNB: 'SklearnMultinomialNB',
+                             BernoulliNB: 'SklearnBernoulliNB',
                              Binarizer: 'SklearnBinarizer',
                              LGBMClassifier: 'LgbmClassifier',
                              LGBMRegressor: 'LgbmRegressor',
+                             PCA: 'SklearnPCA',
                              TruncatedSVD: 'SklearnTruncatedSVD',
                              MinMaxScaler: 'SklearnMinMaxScaler',
                              MaxAbsScaler: 'SklearnMaxAbsScaler'}
