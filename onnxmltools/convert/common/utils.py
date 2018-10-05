@@ -287,10 +287,23 @@ def check_input_and_output_types(operator, good_input_types=None, good_output_ty
 
 
 def compare_strict_version(v1, v2):
-    if v1 is None:
-        return 1
+    """
+    Compares two versions of ONNX.
+    :param v1: targeted version, usually equal to the current 
+        version of ONNX module
+    :param v2: one specific ONNX version (usually one 
+        which introduced an API change)
+    :return: -1 (targeted is less recent), 0 for equal
+        or 1 (targeted is more recent)
+
+    The function always returns 1 if v1 is None,
+    it is used to set the targeted version
+    to a development version of ONNX.
+    """
     if v2 is None:
         raise ValueError("v2 must not be None.")
+    if v1 is None:
+        return 1
     if isinstance(v1, six.string_types):
         v1 = StrictVersion(v1)
     if not hasattr(v1, 'version'):
