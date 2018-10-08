@@ -52,7 +52,8 @@ install:
   - cd $TRAVIS_BUILD_DIR && pip install cntk==2.5.1
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
+  - pip install onnxruntime
 
 script:
     - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
-
+    - python -m pytest tests_backend
