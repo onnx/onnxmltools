@@ -75,11 +75,13 @@ def determine_tensor_type(tensor, default_batch_size, keras_shape=None):
         raise ValueError('Unable to find out a correct type for tensor %s' % tensor)
 
 
-def parse_keras(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+def parse_keras(model, default_batch_size=1, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None,
+                custom_shape_calculators=None):
     '''
     The main parsing function of Keras Model and Sequential objects.
 
     :param model: A Keras Model or Sequential object
+    :param default_batch_size: default batch size of produced ONNX model
     :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
     name and a type defined in data_types.py.
     :param targeted_onnx: a version string such as `1.1.2` or `1.2.1` for specifying the ONNX version used to produce
@@ -90,7 +92,7 @@ def parse_keras(model, initial_types=None, targeted_onnx=onnx.__version__, custo
     '''
     raw_model_container = KerasModelContainer(model)
 
-    topology = Topology(raw_model_container, default_batch_size=1, initial_types=initial_types, targeted_onnx=targeted_onnx,
+    topology = Topology(raw_model_container, default_batch_size=default_batch_size, initial_types=initial_types, targeted_onnx=targeted_onnx,
                         custom_conversion_functions=custom_conversion_functions, custom_shape_calculators=custom_shape_calculators)
     scope = topology.declare_scope('__root__')
 

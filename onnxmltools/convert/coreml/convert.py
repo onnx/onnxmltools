@@ -18,7 +18,7 @@ from .operator_converters import neural_network as nn_converters
 from .shape_calculators import neural_network as nn_shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='',
+def convert(model, name=None, default_batch_size=1, initial_types=None, doc_string='',
             targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
@@ -27,6 +27,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
     a CoreML MLModel object
     :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
     name and a type defined in data_types.py.
+    :param default_batch_size: default batch size of produced ONNX model
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
@@ -50,7 +51,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
         name = str(uuid4().hex)
 
     # Parse CoreML model as our internal data structure (i.e., Topology)
-    topology = parse_coreml(spec, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_coreml(spec, default_batch_size, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
 
     # Parse CoreML description, author, and license. Those information will be attached to the final ONNX model.
     metadata = spec.description.metadata

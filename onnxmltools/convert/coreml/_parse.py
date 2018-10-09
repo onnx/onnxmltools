@@ -429,10 +429,12 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         operator.outputs.append(parent_variable)
 
 
-def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+def parse_coreml(model, default_batch_size=1, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None,
+                 custom_shape_calculators=None):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model
+    :param default_batch_size: default batch size of produced ONNX model
     :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
     name and a type defined in data_types.py.
     :param targeted_onnx: a version string such as `1.1.2` or `1.2.1` for specifying the ONNX version used to produce
@@ -450,8 +452,8 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, cust
 
     # Determine the batch size for parsing CoreML model's input and output features. Note that batch size is always
     # missing in all CoreML models.
-    default_batch_size = 1 if model.WhichOneof('Type') not in \
-                              ['neuralNetworkClassifier', 'neuralNetworkRegressor', 'neuralNetwork'] else 'None'
+    if model.WhichOneof('Type') in ['neuralNetworkClassifier', 'neuralNetworkRegressor', 'neuralNetwork']:
+        default_batch_size = 'None'
 
     # Topology is shared by both of CoreML and scikit-learn conversion frameworks, so we have a wrapper class,
     # CoremlModelContainer, to make sure our topology-related functions can seamlessly handle both of CoreML and

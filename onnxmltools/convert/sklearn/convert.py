@@ -14,7 +14,7 @@ from . import shape_calculators
 from . import operator_converters
 
 
-def convert(model, name=None, initial_types=None, doc_string='',
+def convert(model, name=None, default_batch_size=1, initial_types=None, doc_string='',
             targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     This function produces an equivalent ONNX model of the given scikit-learn model. The supported scikit-learn
@@ -66,6 +66,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
     :param model: A scikit-learn model
     :param initial_types: a python list. Each element is a tuple of a variable name and a type defined in data_types.py
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
+    :param default_batch_size: default batch size of produced ONNX model
     :param doc_string: A string attached onto the produced ONNX model
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
@@ -88,7 +89,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
         name = str(uuid4().hex)
 
     # Parse scikit-learn model as our internal data structure (i.e., Topology)
-    topology = parse_sklearn(model, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_sklearn(model, default_batch_size, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
 
     # Infer variable shapes
     topology.compile()

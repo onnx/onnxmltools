@@ -16,12 +16,13 @@ from . import operator_converters
 from . import shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='',
+def convert(model, name=None, default_batch_size=1, initial_types=None, doc_string='',
             targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     Convert Keras-Tensorflow Model and Sequence objects into Topology. Note that default batch size is 1 here instead of
-    `None` used in CoreML conversion framework. To overwrite this behavior, we can specify initial_types. Assume that a
-    Keras tensor is named input:0 and its shape is [None, 3]. If the desired batch size is 10, we can specify
+    `None` used in CoreML conversion framework. To overwrite this behavior, set default_batch_size. Alternatively we can
+    specify initial_types. Assume that a Keras tensor is named input:0 and its shape is [None, 3]. If the desired batch
+    size is 10, we can specify
     >>> from onnxmltools.convert.common.data_types import FloatTensorType
     >>> initial_types=[('input:0', FloatTensorType([10, 3]))]
 
@@ -29,6 +30,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
     :param name: Optional graph name of the produced ONNX model
     :param initial_types: A list providing types for some input variables. Each element is a tuple of a variable name
     and a type defined in data_types.py.
+    :param default_batch_size: default batch size of produced ONNX model
     :param doc_string: A string attached onto the produced ONNX model
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
@@ -37,7 +39,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
     :return: An ONNX model (type: ModelProto) which is equivalent to the input Keras model
     '''
 
-    topology = parse_keras(model, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_keras(model, default_batch_size, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
 
     topology.compile()
 
