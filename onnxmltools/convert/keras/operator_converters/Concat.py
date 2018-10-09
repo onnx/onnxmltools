@@ -14,7 +14,7 @@ def convert_keras_conv(scope, operator, container):
     if axis < 0:
         axis += len(operator.raw_operator.output.shape)
     apply_concat(scope, operator.input_full_names, operator.output_full_names, container,
-                 operator_name=operator.full_name, axis=axis)
+                 operator_name=scope.get_unique_operator_name(operator.raw_operator.name), axis=axis)
 
 
 register_converter(Concatenate, convert_keras_conv)

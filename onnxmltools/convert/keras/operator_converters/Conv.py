@@ -15,6 +15,9 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
                             output_perm_axes, weight_perm_axes):
     op = operator.raw_operator
 
+    keras_name = scope.get_unique_operator_name(operator.raw_operator.name)
+    name_prefix = '{}_'.format(keras_name)
+
     channels_first = n_dims > 1 and op.data_format == 'channels_first'
 
     # Unless channels_first is the Keras data format, the inputs and weights in Keras v.s. ONNX
@@ -22,12 +25,12 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     if channels_first:
         adjusted_input_name = operator.inputs[0].full_name
     else:
-        adjusted_input_name = scope.get_unique_variable_name('adjusted_input')
-        apply_transpose(scope, operator.inputs[0].full_name, adjusted_input_name, container, perm=input_perm_axes)
+        adjusted_input_name = scope.get_unique_variable_name(name_prefix + 'transposed_input')
+        apply_transpose(scope, operator.inputs[0].full_name, adjusted_input_name, container, operator_name=scope.get_unique_operator_name(name_prefix + "Transpose"), perm=input_perm_axes)
 
     op_type = 'ConvTranspose' if is_transpose else 'Conv'
     convolution_input_names = [adjusted_input_name]
-    attrs = {'name': operator.full_name}
+    attrs = {'name': keras_name}
 
     parameters = op.get_weights()
     assert (len(parameters) == 2 if op.use_bias else 1)
@@ -38,13 +41,13 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     assert (kernel_size == op.kernel_size)
     weight_params = weight_params.transpose(weight_perm_axes)
 
-    weight_tensor_name = scope.get_unique_variable_name('W')
+    weight_tensor_name = scope.get_unique_variable_name(name_prefix + 'W')
     container.add_initializer(weight_tensor_name, onnx_proto.TensorProto.FLOAT,
                               weight_params.shape, weight_params.flatten())
     convolution_input_names.append(weight_tensor_name)
 
     if len(parameters) == 2:
-        bias_tensor_name = scope.get_unique_variable_name('B')
+        bias_tensor_name = scope.get_unique_variable_name(name_prefix + 'B')
         container.add_initializer(bias_tensor_name, onnx_proto.TensorProto.FLOAT,
                                   parameters[1].shape, parameters[1].flatten())
         convolution_input_names.append(bias_tensor_name)
@@ -71,22 +74,22 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     else:
         raise RuntimeError("Unsupported padding type '{}'".format(op.padding))
 
-    intermediate_output_name = scope.get_unique_variable_name('convolution_output')
+    intermediate_output_name = scope.get_unique_variable_name(name_prefix + 'convolution_output')
     container.add_node(op_type, convolution_input_names,
                        intermediate_output_name, **attrs)
 
     # The construction of convolution is done. Now, we create an activation operator to apply the activation specified
     # in this Keras layer.
     apply_activation_function = _activation_map[op.activation]
-    activation_output_name = scope.get_unique_variable_name('activation_output')
-    apply_activation_function(scope, intermediate_output_name, activation_output_name, container)
+    activation_output_name = scope.get_unique_variable_name(name_prefix + 'activation_output')
+    apply_activation_function(scope, intermediate_output_name, activation_output_name, container, operator_name=scope.get_unique_operator_name(name_prefix + 'activation'))
 
     # Permute the output back of its original format
     if not channels_first:
         # Generate a final transposer.
-        apply_transpose(scope, activation_output_name, operator.outputs[0].full_name, container, perm=output_perm_axes)
+        apply_transpose(scope, activation_output_name, operator.outputs[0].full_name, container, operator_name=scope.get_unique_operator_name(name_prefix + "Transpose"), perm=output_perm_axes)
     else:
-        apply_identity(scope, activation_output_name, operator.outputs[0].full_name, container)
+        apply_identity(scope, activation_output_name, operator.outputs[0].full_name, container, operator_name=scope.get_unique_operator_name(name_prefix + "Identity"))
 
 
 def get_converter_config(dims, is_conv_transpose):

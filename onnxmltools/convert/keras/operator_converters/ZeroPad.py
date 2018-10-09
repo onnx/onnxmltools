@@ -42,6 +42,9 @@ def get_padding_config(op, n_dims):
 def convert_keras_zero_pad(scope, operator, container, n_dims):
     op = operator.raw_operator
 
+    keras_name = scope.get_unique_operator_name(operator.raw_operator.name)
+    name_prefix = '{}_'.format(keras_name)
+
     # Derive permutation configuration. If the Keras input format is not channels_first, this configuration may be used
     # to manipulate the input and output of ONNX Upsample.
     input_perm_axes, output_perm_axes = get_permutation_config(n_dims)
@@ -54,8 +57,8 @@ def convert_keras_zero_pad(scope, operator, container, n_dims):
         input_tensor_name = operator.inputs[0].full_name
     else:
         # Permute the original input and then use the permuted result as the input of ONNX Upsample
-        input_tensor_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_permuted')
-        apply_transpose(scope, operator.inputs[0].full_name, input_tensor_name, container, perm=input_perm_axes)
+        input_tensor_name = scope.get_unique_variable_name(name_prefix + 'transposed_input')
+        apply_transpose(scope, operator.inputs[0].full_name, input_tensor_name, container, operator_name=scope.get_unique_operator_name(name_prefix + "Transpose"), perm=input_perm_axes)
 
     # Prepare attributes for ONNX Pad
     mode = 'constant'
@@ -67,8 +70,8 @@ def convert_keras_zero_pad(scope, operator, container, n_dims):
         apply_pad(scope, input_tensor_name, operator.outputs[0].full_name, container, mode=mode, pads=pads, value=0.)
     else:
         intermediate_tensor_name = scope.get_unique_variable_name(input_tensor_name + '_padded')
-        apply_pad(scope, input_tensor_name, intermediate_tensor_name, container, mode=mode, pads=pads, value=0.)
-        apply_transpose(scope, intermediate_tensor_name, operator.outputs[0].full_name, container,
+        apply_pad(scope, input_tensor_name, intermediate_tensor_name, container, operator_name=scope.get_unique_operator_name(name_prefix + "Pad"), mode=mode, pads=pads, value=0.)
+        apply_transpose(scope, intermediate_tensor_name, operator.outputs[0].full_name, container, operator_name=scope.get_unique_operator_name(name_prefix + "Transpose"),
                         perm=output_perm_axes)
 
 

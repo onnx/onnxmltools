@@ -21,6 +21,9 @@ def convert_keras_batch_normalization(scope, operator, container):
 
     input_tensor_names = [adjusted_input_name]
 
+    keras_name = scope.get_unique_operator_name(operator.raw_operator.name)
+    name_prefix = '{}_'.format(keras_name)
+
     params = op.get_weights()
     # If scale and/or center flag is set in keras node, use keras default values for gamma and/or beta
     if not op.scale:
@@ -31,19 +34,19 @@ def convert_keras_batch_normalization(scope, operator, container):
     gamma = params[0] / np.sqrt(params[3] + op.epsilon)
     beta = params[1] - params[0] * params[2] / np.sqrt(params[3] + op.epsilon)
 
-    scale_tensor_name = scope.get_unique_variable_name('scale')
+    scale_tensor_name = scope.get_unique_variable_name(name_prefix + 'scale')
     container.add_initializer(scale_tensor_name, onnx_proto.TensorProto.FLOAT, params[0].shape, gamma)
     input_tensor_names.append(scale_tensor_name)
 
-    bias_tensor_name = scope.get_unique_variable_name('bias')
+    bias_tensor_name = scope.get_unique_variable_name(name_prefix + 'bias')
     container.add_initializer(bias_tensor_name, onnx_proto.TensorProto.FLOAT, params[1].shape, beta)
     input_tensor_names.append(bias_tensor_name)
 
-    mean_tensor_name = scope.get_unique_variable_name('mean')
+    mean_tensor_name = scope.get_unique_variable_name(name_prefix + 'mean')
     container.add_initializer(mean_tensor_name, onnx_proto.TensorProto.FLOAT, params[2].shape, 0 * params[2])
     input_tensor_names.append(mean_tensor_name)
 
-    var_tensor_name = scope.get_unique_variable_name('var')
+    var_tensor_name = scope.get_unique_variable_name(name_prefix + 'var')
     container.add_initializer(var_tensor_name, onnx_proto.TensorProto.FLOAT, params[3].shape, 1 + 0 * params[3])
     input_tensor_names.append(var_tensor_name)
 
@@ -55,17 +58,17 @@ def convert_keras_batch_normalization(scope, operator, container):
     if op.axis != 3 and op.axis != -1:
         # If no transpose is required, we can simply use the output of ONNX BatchNorm as the final outcome
         apply_batch_norm(scope, input_tensor_names, operator.output_full_names, container,
-                         operator_name=operator.full_name, epsilon=epsilon, is_test=is_test,
+                         operator_name=keras_name, epsilon=epsilon, is_test=is_test,
                          momentum=momentum, spatial=spatial)
     else:
         # If transpose is required, we need to put BatchNorm's output to an intermediate tensor for applying a transpose
-        intermediate_output_name = scope.get_unique_variable_name('batch_norm_output_buffer')
+        intermediate_output_name = scope.get_unique_variable_name(name_prefix + 'batch_norm_output_buffer')
         apply_batch_norm(scope, input_tensor_names, intermediate_output_name, container,
-                         operator_name=operator.full_name, epsilon=epsilon, is_test=is_test,
+                         operator_name=keras_name, epsilon=epsilon, is_test=is_test,
                          momentum=momentum, spatial=spatial)
 
         # Permute [N,C,H,W] to [N,H,W,C]
-        apply_transpose(scope, intermediate_output_name, operator.outputs[0].full_name, container, perm=[0, 2, 3, 1])
+        apply_transpose(scope, intermediate_output_name, operator.outputs[0].full_name, container, operator_name=scope.get_unique_operator_name(name_prefix + 'Transpose'), perm=[0, 2, 3, 1])
 
 
 register_converter(BatchNormalization, convert_keras_batch_normalization)

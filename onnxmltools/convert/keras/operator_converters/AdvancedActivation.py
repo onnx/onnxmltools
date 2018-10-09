@@ -11,20 +11,21 @@ from ...common._registration import register_converter
 
 def convert_keras_advanced_activation(scope, operator, container):
     op = operator.raw_operator
+    keras_name = scope.get_unique_operator_name(operator.raw_operator.name)
     if isinstance(op, activations.LeakyReLU):
         alpha = op.get_config()['alpha']
         apply_leaky_relu(scope, operator.input_full_names[0], operator.output_full_names[0], container,
-                         operator_name=operator.full_name, alpha=alpha)
+                         operator_name=keras_name, alpha=alpha)
     elif isinstance(op, activations.ELU):
         alpha = op.get_config()['alpha']
         apply_elu(scope, operator.input_full_names[0], operator.output_full_names[0], container,
-                  operator_name=operator.full_name, alpha=alpha)
+                  operator_name=keras_name, alpha=alpha)
     elif isinstance(op, activations.PReLU):
         weights = op.get_weights()[0]
         apply_prelu(scope, operator.input_full_names[0], operator.output_full_names[0], container,
-                    operator_name=operator.full_name, slope=weights)
+                    operator_name=keras_name, slope=weights)
     else:
-        attrs = {'name': operator.full_name}
+        attrs = {'name': keras_name}
         input_tensor_names = [operator.input_full_names[0]]
         if isinstance(op, activations.ThresholdedReLU):
             op_type = 'ThresholdedRelu'

@@ -13,7 +13,11 @@ from .common import get_permutation_config
 def convert_keras_crop(scope, operator, container, n_dims):
     op = operator.raw_operator
     op_type = 'Crop'
-    attrs = {'name': operator.full_name}
+
+    keras_name = scope.get_unique_operator_name(operator.raw_operator.name)
+    name_prefix = '{}_'.format(keras_name)
+
+    attrs = {'name': keras_name}
 
     input_perm_axes, output_perm_axes = get_permutation_config(n_dims)
     channels_first = n_dims > 1 and op.data_format == 'channels_first'
@@ -23,7 +27,7 @@ def convert_keras_crop(scope, operator, container, n_dims):
     if channels_first:
         input_tensor_name = operator.inputs[0].full_name
     else:
-        input_tensor_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_permuted')
+        input_tensor_name = scope.get_unique_variable_name(name_prefix + 'transposed_input')
         apply_transpose(scope, operator.inputs[0].full_name, input_tensor_name, container, perm=input_perm_axes)
 
     param = op.cropping

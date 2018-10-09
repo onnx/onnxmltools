@@ -17,14 +17,18 @@ from .common import get_permutation_config
 def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
                                op_type, input_perm_axes, output_perm_axes):
     op = operator.raw_operator
+
+    keras_name = scope.get_unique_operator_name(operator.raw_operator.name)
+    name_prefix = '{}_'.format(keras_name)
+
     channels_first = n_dims > 1 and op.data_format == 'channels_first'
 
     # TODO: extract this piece of code to be a common method.
     if channels_first:
         adjusted_pooling_input = operator.inputs[0].full_name
     else:
-        adjusted_pooling_input = scope.get_unique_variable_name('input_transposed')
-        apply_transpose(scope, operator.inputs[0].full_name, adjusted_pooling_input, container, perm=input_perm_axes)
+        adjusted_pooling_input = scope.get_unique_variable_name(name_prefix + 'transposed_input')
+        apply_transpose(scope, operator.inputs[0].full_name, adjusted_pooling_input, container, operator_name=scope.get_unique_operator_name(name_prefix + "Transpose"), perm=input_perm_axes)
 
     op_type_prefix = 'Global' if is_global else ''
     if op_type == 'Avg':
@@ -39,7 +43,7 @@ def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
     else:
         raise RuntimeError('Unsupported Keras pooling type: %s' % op_type)
 
-    attrs = {'name': operator.full_name}
+    attrs = {'name': keras_name}
     if not is_global:
         attrs['strides'] = list(op.strides)
         attrs['kernel_shape'] = op.pool_size
@@ -52,7 +56,7 @@ def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
 
     # The output_tensor_name is used to store the Keras result produced by ONNX operators.
     # For global pooling, a Reshape op is needed to match the actual Keras's output shape.
-    output_tensor_name = scope.get_unique_variable_name('pooling_for_reshape') if is_global else operator.outputs[0].full_name
+    output_tensor_name = scope.get_unique_variable_name(name_prefix + 'pooling_for_reshape') if is_global else operator.outputs[0].full_name
 
     if channels_first:
         # In this case, the output of our Pool operator just match what Keras produces.
@@ -66,11 +70,11 @@ def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
                            op_version=op_version, **attrs)
 
         # Generate a final Transpose
-        apply_transpose(scope, pooling_output_name, output_tensor_name, container, perm=output_perm_axes)
+        apply_transpose(scope, pooling_output_name, output_tensor_name, container, operator_name=scope.get_unique_operator_name(name_prefix + "Transpose"), perm=output_perm_axes)
 
     if is_global:
         apply_reshape(scope, output_tensor_name,
-                      operator.outputs[0].full_name, container, desired_shape=operator.outputs[0].type.shape)
+                      operator.outputs[0].full_name, container, operator_name=scope.get_unique_operator_name(name_prefix + "Reshape"), desired_shape=operator.outputs[0].type.shape)
 
 
 def convert_keras_max_pooling_1d(scope, operator, container):

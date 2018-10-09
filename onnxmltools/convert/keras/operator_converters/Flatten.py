@@ -10,7 +10,7 @@ from ...common._registration import register_converter
 
 def convert_keras_flatten(scope, operator, container):
     op_type = 'Flatten'
-    attrs = {'name': operator.full_name, 'axis': 0}
+    attrs = {'name': scope.get_unique_operator_name(operator.raw_operator.name), 'axis': 0}
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, **attrs)
 
 
