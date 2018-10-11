@@ -27,7 +27,6 @@ install:
   - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
   - export LIBRARY_PATH="$HOME/miniconda/lib:$LIBRARY_PATH"
   - export CPATH="$HOME/miniconda/include:$CPATH"
-  - ls $HOME/miniconda/include/python$PYTHON_VER
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
   - conda install -c conda-forge numpy
