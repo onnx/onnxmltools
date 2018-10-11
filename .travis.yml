@@ -1,7 +1,6 @@
 dist: xenial
 language: python
 env:
-  - ONNX_VERSION="==1.1.2" ONNX_ML=1
   - ONNX_VERSION="" ONNX_ML=1
 
 addons:
@@ -15,21 +14,19 @@ python:
     - "2.7"
     - "3.5"
     - "3.6"
+    - "3.7"
 
 install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
-      PYTHON_VER="2.7";
+      curl -L https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -o $HOME/miniconda.sh;
     else
-      curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
-      PYTHON_VER="3.6m";
+      curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o $HOME/miniconda.sh;
     fi
   - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
   - export LIBRARY_PATH="$HOME/miniconda/lib:$LIBRARY_PATH"
   - export CPATH="$HOME/miniconda/include:$CPATH"
-  - export CPATH="$HOME/miniconda/include/python$PYTHON_VER:$CPATH"
   - ls $HOME/miniconda/include/python$PYTHON_VER
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
