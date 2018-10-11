@@ -85,6 +85,17 @@ def _create_tensor(N, C, H=None, W=None):
         raise ValueError('This function only produce 2-D or 4-D tensor')
 
 
+def skip_relu6():        
+    import keras as _keras
+    if _keras.__version__ >= StrictVersion('2.2.0'):
+        try:
+            from keras_applications.mobilenet import relu6
+            return False
+        except ImportError as e:
+            return True
+    return False
+
+
 class TestKeras2CoreML2ONNX(unittest.TestCase):
 
     def _test_one_to_one_operator_core(self, keras_model, x):
@@ -157,6 +168,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced, atol=1e-6))
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_dense(self):
         N, C, D = 2, 3, 2
         x = _create_tensor(N, C)
@@ -174,6 +186,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced))
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_dense_with_dropout(self):
         N, C, D = 2, 3, 2
         x = _create_tensor(N, C)
@@ -187,6 +200,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_core_keras(keras_model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_conv_4d(self):
         N, C, H, W = 1, 2, 4, 3
         x = _create_tensor(N, C, H, W)
@@ -199,6 +213,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_core_channels_last(model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_pooling_4d(self):
         layers_to_be_tested = [MaxPooling2D, AveragePooling2D]
         N, C, H, W = 1, 2, 4, 3
@@ -223,6 +238,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_core_channels_last(model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_merge_2d(self):
         # Skip Concatenate for now because  CoreML Concatenate needs 4-D input
         layers_to_be_tested = [Add, Maximum, Multiply, Average, Dot]
@@ -240,6 +256,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             model.compile(optimizer='adagrad', loss='mse')
             self._test_one_to_one_operator_core(model, [x1, x2])
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_merge_4d(self):
         layers_to_be_tested = [Add, Maximum, Multiply, Average, Concatenate]
         N, C, H, W = 2, 2, 1, 3
@@ -253,6 +270,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             model.compile(optimizer='adagrad', loss='mse')
             self._test_one_to_one_operator_core_channels_last(model, [x1, x2])
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_activation_2d(self):
         activation_to_be_tested = ['tanh', 'relu', 'sigmoid', 'softsign', 'elu', 'softplus', LeakyReLU]
         N, C = 2, 3
@@ -269,6 +287,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
             self._test_one_to_one_operator_core(model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_activation_4d(self):
         activation_to_be_tested = ['tanh', 'relu', 'sigmoid', 'softsign', 'elu', 'softplus', LeakyReLU]
 
@@ -286,6 +305,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
             self._test_one_to_one_operator_core_channels_last(model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_embedding(self):
         # This test is active only for Caffe2
         if _find_backend() == 'cntk':
@@ -298,6 +318,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_core(model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_batch_normalization(self):
         # This test is active only for CNTK
         if _find_backend() == 'caffe2':
@@ -327,6 +348,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         x = np.random.rand(N, T, C)
         self._test_one_to_one_operator_core(model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_upsample(self):
         # This test is only active for Caffe2
         if _find_backend() == 'cntk':
@@ -342,6 +364,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_core_channels_last(model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_flatten(self):
         if StrictVersion(onnx.__version__) >= StrictVersion('1.2'):
             # The latest CNTK release does not support the new ONNX Reshape
@@ -363,6 +386,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced))
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_reshape(self):
         if _find_backend() == 'cntk':
             return 0
@@ -375,6 +399,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_core_channels_last(keras_model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_sequential_model_with_multiple_operators(self):
         N, C, H, W = 2, 3, 5, 5
         x = _create_tensor(N, C, H, W)
@@ -392,6 +417,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_core_channels_last(model, x)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_recursive_model(self):
         N, C, D = 2, 3, 3
         x = _create_tensor(N, C)
@@ -417,6 +443,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         y_reference = keras_model.predict(x)
         y_produced = _evaluate(onnx_model, x).reshape(N, D)
 
+    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_recursive_and_shared_model(self):
         N, C, D = 2, 3, 3
         x = _create_tensor(N, C)

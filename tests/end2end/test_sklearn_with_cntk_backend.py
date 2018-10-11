@@ -4,9 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import unittest
+from distutils.version import StrictVersion as _StrictVersion
 import onnxmltools
 import numpy as np
-import unittest
 from onnxmltools.convert.common.data_types import FloatTensorType
 from sklearn.decomposition import TruncatedSVD
 
@@ -18,6 +19,13 @@ from .test_single_operator_with_cntk_backend import _create_tensor, _evaluate
 class TestSklearn2ONNX(unittest.TestCase):
 
     def test_truncated_svd(self):
+        import keras as _keras
+        if _keras.__version__ >= _StrictVersion('2.2.0'):
+            try:
+                from keras_applications.mobilenet import relu6
+            except ImportError as e:
+                warnings.warn("Unable to run this test due to {}".format(e))
+                return
         N, C, K = 2, 3, 2
         x = _create_tensor(N, C)
 

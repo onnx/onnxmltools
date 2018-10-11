@@ -41,7 +41,7 @@ install:
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
   - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
-      pip install onnxruntime fi;
+      pip install onnxruntime;
     fi
 
 script:
