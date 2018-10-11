@@ -53,12 +53,42 @@ def load_data_and_model(items_as_dict):
     return res
 
 
+def extract_options(name):
+    """
+    Extracts comparison option from filename.
+    As example, ``Binarizer-NoDimStrict`` means
+    options *NoDimStrict* is enabled. 
+    ``(1, 2)`` and ``(2,)`` are considered equal.
+    Available options:
+    
+    * `'SkipDim1'`: reshape arrays by skipping 1-dimension: ``(1, 2)`` --> ``(2,)``
+    * `'OneOff'`: inputs comes in a list for the predictions are computed with a call for each of them,
+        not with one call
+    """
+    opts = name.replace("\\", "/").split("/")[-1].split('.')[0].split('-')
+    if len(opts) == 1:
+        return {}
+    else:
+        res = {}
+        for opt in opts[1:]:
+            if opt in ("SkipDim1", "OneOff"):
+                res[opt] = True
+            else:
+                raise NameError("Unable to parse option '{}'".format(opts[1:]))
+        return res
+
+
 def compare(expected, output, **kwargs):
     """
     Compares expected values and output.
     Returns None if no error, an exception message otherwise.
     """
+    SkipDim1 = kwargs.pop("SkipDim1", False)
+    
     if isinstance(expected, numpy.ndarray) and isinstance(output, numpy.ndarray):
+        if SkipDim1:
+            expected = expected.reshape(tuple([d for d in expected.shape if d > 1]))
+            output = output.reshape(tuple([d for d in expected.shape if d > 1]))
         try:
             assert_array_almost_equal(expected, output, **kwargs)
         except Exception as e:
