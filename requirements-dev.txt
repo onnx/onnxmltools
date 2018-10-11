@@ -1,8 +1,8 @@
 numpy
 protobuf
 codecov
-tensorflow==1.9.0
-keras==2.1.6
+tensorflow
+keras
 coremltools
 pandas
 pytest
@@ -11,4 +11,4 @@ scikit-learn
 scipy
 wheel
 xgboost
-lightgbm==2.1.2
+lightgbm
