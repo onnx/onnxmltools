@@ -36,9 +36,9 @@ install:
   - echo "Configuring and building OpenMPI"
   - cd openmpi-1.10.2
   - mkdir build
-  - ./configure --prefix="$PWD/build" &> openmpi.configure
-  - make -j4 &> openmpi.make
-  - sudo make install &> openmpi.install
+  - ./configure --prefix="$PWD/build"
+  - make -j4
+  - sudo make install
   - export PATH="$PATH:$PWD/build/bin"
   - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH$PWD/build/lib"
   - cd ..
