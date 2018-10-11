@@ -6,6 +6,7 @@
 
 import unittest
 from distutils.version import StrictVersion as _StrictVersion
+import warnings
 import onnxmltools
 import numpy as np
 from onnxmltools.convert.common.data_types import FloatTensorType
