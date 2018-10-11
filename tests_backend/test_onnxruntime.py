@@ -40,7 +40,7 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                         failures.append((name, e))
             status.append(msg)
         # To let the status be displayed by pytest.
-        warnings.warn("\n" + "\n".join(msg) + "\n")
+        warnings.warn("\n" + "\n".join(status) + "\n")
         if len(failures) > 0:
             raise failures[0][1]
     
