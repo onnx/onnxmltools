@@ -19,6 +19,7 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         alltests = search_converted_models()
         assert len(alltests) >= 1
         failures = []
+        status = []
         for test in alltests:
             if not isinstance(test, dict):
                 raise TypeError("Unexpected type '{0}'".format(type(test)))
@@ -29,14 +30,17 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                 warnings.simplefilter("ignore", PendingDeprecationWarning)                
                 try:
                     self._compare_model(test)
-                    print("RT-OK   {}".format(name))
+                    msg = "RT-OK   {}".format(name)
                 except Exception as e:
                     if "DictVectorizer" in name:
                         msg = "RT-WARN {} - No suitable kernel definition found for op DictVectorizer (node DictVectorizer) - {}"
-                        print(msg.format(name, str(e).replace("\n", " ").replace("\r", "")))
+                        msg = msg.format(name, str(e).replace("\n", " ").replace("\r", ""))
                     else:
-                        print("RT-FAIL {} - {}".format(name, str(e).replace("\n", " ").replace("\r", "")))
+                        msg = "RT-FAIL {} - {}".format(name, str(e).replace("\n", " ").replace("\r", ""))
                         failures.append((name, e))
+            status.append(msg)
+        # To let the status be displayed by pytest.
+        warnings.warn("\n" + "\n".join(msg) + "\n")
         if len(failures) > 0:
             raise failures[0][1]
     
