@@ -149,9 +149,9 @@ def apply_clip(scope, input_name, output_name, container, operator_name=None, ma
 
     attrs = {'name': name}
     if max is not None:
-        attrs['max'] = float(max)
+        attrs['max'] = max
     if min is not None:
-        attrs['min'] = float(min)
+        attrs['min'] = min
 
     if compare_strict_version(container.targeted_onnx_version, '1.0') < 0:
         attrs['consumed_inputs'] = [0]
