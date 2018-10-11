@@ -52,8 +52,8 @@ install:
   - cd $TRAVIS_BUILD_DIR && pip install cntk==2.5.1
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
-  - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then pip install onnxruntime fi
+  - if [ "$TRAVIS_PYTHON_VERSION" != "2.7" ]; then pip install onnxruntime fi
 
 script:
     - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
-    - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then python -m pytest tests_backend fi
+    - if [ "$TRAVIS_PYTHON_VERSION" != "2.7" ]; then python -m pytest tests_backend fi
