@@ -43,5 +43,5 @@ install:
 script:
     - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
     - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
-        python -m pytest tests_backend;
+        python -m pytest tests_backend --show-capture=stdout;
       fi
