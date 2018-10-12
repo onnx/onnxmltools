@@ -34,6 +34,18 @@ def convert_sklearn_linear_classifier(scope, operator, container):
     classifier_attrs['multi_class'] = 1 if multi_class == 2 else 0
     if op.__class__.__name__ == 'LinearSVC':
         classifier_attrs['post_transform'] = 'NONE'
+    elif op.__class__.__name__ == 'LogisticRegression':
+        if multi_class == 2:
+            if len(op.classes_) == 2:
+                # See method _predict_proba_lr.
+                # When number if classes is two, the function
+                # is not SOFTMAX.
+                # https://github.com/scikit-learn/scikit-learn/blob/bac89c253b35a8f1a3827389fbee0f5bebcbc985/sklearn/linear_model/base.py#L300
+                classifier_attrs['post_transform'] = 'LOGISTIC'
+            else:
+                classifier_attrs['post_transform'] = 'SOFTMAX'
+        else:
+            classifier_attrs['post_transform'] = 'LOGISTIC'
     else:
         if multi_class == 2:
             classifier_attrs['post_transform'] = 'SOFTMAX'
