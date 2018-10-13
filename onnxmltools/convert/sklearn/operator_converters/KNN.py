@@ -138,6 +138,7 @@ def convert_sklearn_knn(scope, operator, container):
         classes_name = scope.get_unique_variable_name('classes')
         predicted_label_name = scope.get_unique_variable_name('predicted_label')
         final_label_name = scope.get_unique_variable_name('final_label')
+        reshaped_final_label_name = scope.get_unique_variable_name('reshaped_final_label')
         
         class_type = onnx_proto.TensorProto.STRING
         labels_name = [None] * len(classes)
@@ -188,7 +189,8 @@ def convert_sklearn_knn(scope, operator, container):
         if class_type == onnx_proto.TensorProto.INT32:
             container.add_node('ArrayFeatureExtractor', [classes_name, predicted_label_name],
                                final_label_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
-            container.add_node('Cast', final_label_name,
+            apply_reshape(scope, final_label_name, reshaped_final_label_name, container, desired_shape=[-1,])
+            container.add_node('Cast', reshaped_final_label_name,
                                 operator.outputs[0].full_name, to=onnx_proto.TensorProto.INT64, op_version=7)
         else:
             container.add_node('ArrayFeatureExtractor', [classes_name, predicted_label_name],
@@ -197,52 +199,48 @@ def convert_sklearn_knn(scope, operator, container):
         weights_shape = [-1,]
         n_samples = 1
         repeats = [n_samples, 1]
-        normaliser_shape = [-1, 1]
+        normaliser_shape = [1, -1]
         _y = training_labels.reshape((-1,))
 
         _y_name = scope.get_unique_variable_name('_y')
         weights_name = scope.get_unique_variable_name('weights')
         reshaped_weights_name = scope.get_unique_variable_name('reshaped_weights')
         pred_label_name = scope.get_unique_variable_name('pred_label')
-        zero_padding_length_name = scope.get_unique_variable_name('zero_padding_length')
         zero_padding_name = scope.get_unique_variable_name('zero_padding')
         concatenated_weights_name = scope.get_unique_variable_name('concatenated_weights')
+        reshaped_concatenated_weights_name = scope.get_unique_variable_name('concatenated_weights')
         prob_k_name = scope.get_unique_variable_name('prob_k')
         normaliser_name = scope.get_unique_variable_name('normaliser')
         reshaped_normaliser_name = scope.get_unique_variable_name('reshaped_normaliser')
         normalised_prob_name = scope.get_unique_variable_name('normalised_prob')
         repeats_name = scope.get_unique_variable_name('repeats')
         weights_shape_name = scope.get_unique_variable_name('weights_shape')
-        classes_size_name = scope.get_unique_variable_name('classes_size')
         weights_length_name = scope.get_unique_variable_name('weights_length')
+        cast_weights_length_name = scope.get_unique_variable_name('cast_weights_length')
         normaliser_shape_name = scope.get_unique_variable_name('normaliser_shape')
 
         container.add_initializer(_y_name, class_type, 
                                   _y.shape, _y)
-        container.add_initializer(weights_shape_name, onnx_proto.TensorProto.INT32,
+        container.add_initializer(weights_shape_name, onnx_proto.TensorProto.INT64,
                                   [1], weights_shape)
-        container.add_initializer(repeats_name, onnx_proto.TensorProto.INT32,
+        container.add_initializer(repeats_name, onnx_proto.TensorProto.INT64,
                                   [2], repeats)
-        container.add_initializer(classes_size_name, onnx_proto.TensorProto.INT32,
-                                  [1], [len(classes)])
-        container.add_initializer(normaliser_shape_name, onnx_proto.TensorProto.INT32,
+        container.add_initializer(normaliser_shape_name, onnx_proto.TensorProto.INT64,
                                   [len(normaliser_shape)], normaliser_shape)
 
         container.add_node('ConstantLike', topk_indices_name, 
-                           weights_name, name=scope.get_unique_operator_name('ConstantLike'), value=1.0, op_version=9) 
+                           weights_name, name=scope.get_unique_operator_name('ConstantLike'), value=1.0, dtype=onnx_proto.TensorProto.FLOAT, op_version=9) 
         container.add_node('Reshape', [weights_name, weights_shape_name], 
                            reshaped_weights_name, name=scope.get_unique_operator_name('Reshape'))
         container.add_node('ArrayFeatureExtractor', [_y_name, topk_indices_name],
                            pred_label_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
-        container.add_node('Size', weights_name,
-                           weights_length_name, name=scope.get_unique_operator_name('Size'))
-        container.add_node('Sub', [classes_size_name, weights_length_name], 
-                           zero_padding_length_name, name=scope.get_unique_operator_name('Sub'))
-        container.add_node('ConstantLike', [], zero_padding_name, 
-                           name=scope.get_unique_operator_name('ConstantLike'), shape=zero_padding_length_name, op_version=9)
-        container.add_node('Concat', [reshaped_weights_name, zero_padding_name], 
-                           concatenated_weights_name, name=scope.get_unique_operator_name('Concat'))
-        container.add_node('Tile', [concatenated_weights_name, repeats_name], 
+        container.add_node('ConstantLike', [], zero_padding_name,
+                           name=scope.get_unique_operator_name('ConstantLike'), shape=[classes.size - knn.n_neighbors], dtype=onnx_proto.TensorProto.FLOAT, op_version=9)
+        container.add_node('Concat', [reshaped_weights_name, zero_padding_name],
+                           concatenated_weights_name, name=scope.get_unique_operator_name('Concat'), axis=0)
+        container.add_node('Reshape', [concatenated_weights_name, normaliser_shape_name], 
+                           reshaped_concatenated_weights_name, name=scope.get_unique_operator_name('Reshape'))
+        container.add_node('Tile', [reshaped_concatenated_weights_name, repeats_name],
                            prob_k_name, name=scope.get_unique_operator_name('Tile'))
         container.add_node('ReduceSum', prob_k_name, 
                            normaliser_name, name=scope.get_unique_operator_name('ReduceSum'), axes=[1])
