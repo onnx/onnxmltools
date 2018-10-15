@@ -34,8 +34,9 @@ def search_converted_models(root=None):
             if not os.path.exists(v):
                 ok = False
         if ok:
-            keep.append(res)
-    return keep
+            keep.append((basename, res))
+    keep.sort()
+    return [_[1] for _ in keep]
     
 
 def load_data_and_model(items_as_dict):
@@ -107,6 +108,8 @@ def compare(expected, output, **kwargs):
                 pass
             else:
                 raise NotImplementedError("No good shape: {0} != {1}".format(expected.shape, output.shape))
+        if len(expected.shape) == 1 and len(output.shape) == 2 and output.shape[1] == 1:
+            output = output.ravel()
         try:
             assert_array_almost_equal(expected, output, **kwargs)
         except Exception as e:

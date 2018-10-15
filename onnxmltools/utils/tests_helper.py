@@ -30,9 +30,14 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
     
     if hasattr(model, "predict"):
         if hasattr(model, "predict_proba"):
+            # Classifier
             prediction = [model.predict(data), model.predict_proba(data)]
-        else:
+        elif hasattr(model, "decision_function"):
+            # Classifier without probabilities
             prediction = [model.predict(data), model.decision_function(data)]
+        else:
+            # Regressor
+            prediction = [model.predict(data)]
     elif hasattr(model, "transform"):
         prediction = model.transform(data)
     else:
