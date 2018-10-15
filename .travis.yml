@@ -32,6 +32,7 @@ install:
   - conda install -c conda-forge numpy
   - conda install -c conda-forge cmake
   - conda install -c conda-forge openmpi
+  - conda install -c conda-forge tensorflow
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
   - cd $TRAVIS_BUILD_DIR && pip install cntk
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
