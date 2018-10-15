@@ -1,10 +1,13 @@
 """
 Tests onnx conversion with onnxruntime.
 """
+import math
 import os
 import unittest
 import warnings
 import numpy
+import pandas
+from onnxmltools.convert.common.data_types import FloatTensorType
 try:
     from .utils_backend import compare, search_converted_models, load_data_and_model, extract_options
 except ImportError: 
@@ -51,6 +54,8 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         try:
             sess = onnxruntime.InferenceSession(onnx)
         except Exception as e:
+            # from onnxmltools import convert_sklearn
+            #on = convert_sklearn(model, "name", [('input', FloatTensorType([1, 3]))])            
             raise Exception("Unable to load onnx '{0}'".format(onnx)) from e
         
         input = load["data"]
@@ -90,11 +95,23 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
             except Exception as e:
                 raise Exception("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
         
-        self._compare_expected(load["expected"], output, sess, onnx, decimal=decimal, **options)
+        try:
+            self._compare_expected(load["expected"], output, sess, onnx, decimal=decimal, **options)
+        except Exception as e:
+            raise AssertionError("Model '{0}' has discrepencies.\n{0}".format(onnx, e))
         
     def _compare_expected(self, expected, output, sess, onnx, decimal=5, **kwargs):
         tested = 0
-        if isinstance(expected, dict):
+        if isinstance(expected, list):
+            if isinstance(output, list):
+                if len(expected) != len(output):
+                    raise ValueError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
+                for exp, out in zip(expected, output):
+                    self._compare_expected(exp, out, sess, onnx, decimal=5, **kwargs)
+                    tested += 1
+            else:
+                raise TypeError("Type mismatch for '{0}', output type is {1}".format(onnx, type(output)))
+        elif isinstance(expected, dict):
             if not isinstance(output, dict):
                 raise TypeError("Type mismatch for '{0}'".format(onnx))                
             for k, v in output.items():
@@ -105,6 +122,11 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                     raise ValueError("Unexpected output '{0}' in model '{1}'\n{2}".format(k, onnx, msg))
                 tested += 1
         elif isinstance(expected, numpy.ndarray):
+            if isinstance(output, list):
+                if expected.shape[0] == len(output) and isinstance(output[0], dict):
+                    output = pandas.DataFrame(output)
+                    output = output[list(sorted(output.columns))]
+                    output = output.values
             if isinstance(output, (dict, list)):
                 if len(output) != 1:
                     raise ValueError("More than one output when 1 is expected for onnx '{0}'".format(onnx))

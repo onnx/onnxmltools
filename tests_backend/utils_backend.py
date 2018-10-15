@@ -71,7 +71,7 @@ def extract_options(name):
     else:
         res = {}
         for opt in opts[1:]:
-            if opt in ("SkipDim1", "OneOff"):
+            if opt in ("SkipDim1", "OneOff", "NoProb", "Dec4", "Dec3"):
                 res[opt] = True
             else:
                 raise NameError("Unable to parse option '{}'".format(opts[1:]))
@@ -84,15 +84,34 @@ def compare(expected, output, **kwargs):
     Returns None if no error, an exception message otherwise.
     """
     SkipDim1 = kwargs.pop("SkipDim1", False)
+    NoProb = kwargs.pop("NoProb", False)
+    Dec4 = kwargs.pop("Dec4", False)
+    Dec3 = kwargs.pop("Dec3", False)
     
+    if Dec4:
+        kwargs["decimal"] = min(kwargs["decimal"], 4)
+    if Dec3:
+        kwargs["decimal"] = min(kwargs["decimal"], 3)
     if isinstance(expected, numpy.ndarray) and isinstance(output, numpy.ndarray):
         if SkipDim1:
+            # Arrays like (2, 1, 2, 3) becomes (2, 2, 3) as one dimension is useless.
             expected = expected.reshape(tuple([d for d in expected.shape if d > 1]))
             output = output.reshape(tuple([d for d in expected.shape if d > 1]))
+        if NoProb:
+            # One vector is (N,) with scores, negative for class 0
+            # positive for class 1
+            # The other vector is (N, 2) score in two columns.
+            if len(output.shape) == 2 and output.shape[1] == 2 and len(expected.shape) == 1:
+                output = output[:, 1]
+            elif len(output.shape) == 1 and len(expected.shape) == 1:
+                pass
+            else:
+                raise NotImplementedError("No good shape: {0} != {1}".format(expected.shape, output.shape))
         try:
             assert_array_almost_equal(expected, output, **kwargs)
         except Exception as e:
-            return e
+            diff = numpy.abs(expected.ravel() - output.ravel()).max()            
+            return AssertionError("max diff(expected, output)={0}\n{1}".format(diff, e))
     else:
         return TypeError("Unexpected types {0} != {1}".format(type(expected), type(output)))
     return None

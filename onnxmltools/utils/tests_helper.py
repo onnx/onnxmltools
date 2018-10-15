@@ -29,7 +29,10 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
         os.makedirs(folder)
     
     if hasattr(model, "predict"):
-        prediction = model.predict(data)
+        if hasattr(model, "predict_proba"):
+            prediction = [model.predict(data), model.predict_proba(data)]
+        else:
+            prediction = [model.predict(data), model.decision_function(data)]
     elif hasattr(model, "transform"):
         prediction = model.transform(data)
     else:

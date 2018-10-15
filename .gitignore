@@ -32,3 +32,4 @@ coverage.xml
 .coverage
 temp_*.onnx
 tests/sklearn/tests/*
+tests_backend/*.onnx

@@ -1,7 +1,7 @@
 numpy
 protobuf
 codecov
-tensorflow
+tensorflow==1.9.0
 keras
 coremltools
 pandas
