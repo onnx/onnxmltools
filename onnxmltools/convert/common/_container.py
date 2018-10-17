@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 
 import six
-from distutils.version import StrictVersion
 from ...proto import helper
 from .interface import ModelContainer
 
@@ -130,7 +129,7 @@ class ModelComponentContainer(ModelContainer):
         # ONNX operators' domain-version pair set. They will be added into opset_import field in the final ONNX model.
         self.node_domain_version_pair_sets = set()
         # The targeted ONNX version. All produced operators should be supported by the targeted ONNX version.
-        self.targeted_onnx_version = StrictVersion(targeted_onnx)
+        self.targeted_onnx_version = targeted_onnx
 
     def _make_value_info(self, variable):
         value_info = helper.ValueInfoProto()

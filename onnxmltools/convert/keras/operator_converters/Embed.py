@@ -9,8 +9,8 @@ from keras.layers import Embedding
 from ...common._apply_operation import apply_reshape
 from ...common._apply_operation import apply_cast
 from ...common._registration import register_converter
+from ...common.utils import compare_strict_version
 from ....proto import onnx_proto
-from distutils.version import StrictVersion
 
 
 def convert_keras_embed(scope, operator, container):
@@ -21,7 +21,7 @@ def convert_keras_embed(scope, operator, container):
     # Reshape the indexes we want to embed to 1-D tensor. Otherwise, Gather's output may get wrong shape, which is the
     # same as our CoreML Embedding converter.
     reshaped_input_name = scope.get_unique_variable_name('embedding_reshaped')
-    if operator.targeted_onnx_version < StrictVersion('1.2'):
+    if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
         apply_reshape(scope, operator.inputs[0].full_name, reshaped_input_name, container, desired_shape=[-1])
     else:
         cast0_name = scope.get_unique_variable_name('embedding_cast0')

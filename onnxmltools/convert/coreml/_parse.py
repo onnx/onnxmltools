@@ -4,11 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
 import warnings
 from ...proto import onnx
 from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
+from ..common.utils import compare_strict_version
 from ..common.data_types import *
 
 
@@ -86,12 +86,12 @@ def _parse_coreml_feature(feature_info, targeted_onnx_version, batch_size=1):
     elif type_name == 'dictionaryType':
         key_type = raw_type.dictionaryType.WhichOneof('KeyType')
         if key_type == 'int64KeyType':
-            if targeted_onnx_version < StrictVersion('1.2'):
+            if compare_strict_version(targeted_onnx_version, '1.2') < 0:
                 return DictionaryType(Int64TensorType([1]), FloatTensorType([1]), doc_string=doc_string)
             else:
                 return DictionaryType(Int64TensorType([]), FloatTensorType([]), doc_string=doc_string)
         elif key_type == 'stringKeyType':
-            if targeted_onnx_version < StrictVersion('1.2'):
+            if compare_strict_version(targeted_onnx_version, '1.2') < 0:
                 return DictionaryType(StringTensorType([1]), FloatTensorType([1]), doc_string=doc_string)
             else:
                 return DictionaryType(StringTensorType([]), FloatTensorType([]), doc_string=doc_string)

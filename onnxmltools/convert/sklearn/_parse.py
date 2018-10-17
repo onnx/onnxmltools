@@ -117,8 +117,7 @@ def _get_sklearn_operator_name(model_type):
     :return: A string which stands for the type of the input model in our conversion framework
     '''
     if model_type not in sklearn_operator_name_map:
-        print(sklearn_operator_name_map)
-        raise ValueError('No proper operator name found for %s' % model_type)
+        raise ValueError("No proper operator name found for '%s'" % model_type)
     return sklearn_operator_name_map[model_type]
 
 
@@ -131,7 +130,6 @@ def _parse_sklearn_simple_model(scope, model, inputs):
     :param inputs: A list of variables
     :return: A list of output variables which will be passed to next stage
     '''
-    print('simple model: %s ' % type(model))
     this_operator = scope.declare_local_operator(_get_sklearn_operator_name(type(model)), model)
     this_operator.inputs = inputs
 
@@ -160,7 +158,6 @@ def _parse_sklearn_pipeline(scope, model, inputs):
     :param inputs: A list of Variable objects
     :return: A list of output variables produced by the input pipeline
     '''
-    print('pipeline: %s ' % type(model))
     for step in model.steps:
         inputs = _parse_sklearn(scope, step[1], inputs)
     return inputs

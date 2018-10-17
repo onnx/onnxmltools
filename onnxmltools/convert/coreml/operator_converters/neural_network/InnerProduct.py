@@ -4,10 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._apply_operation import apply_reshape
 from ....common._registration import register_converter
+from ....common.utils import compare_strict_version
 
 
 def convert_inner_product(scope, operator, container):
@@ -45,10 +45,10 @@ def convert_inner_product(scope, operator, container):
     attrs['transB'] = 1
 
     # Get the correct version number for Gemm in ONNX
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
+    if compare_strict_version(container.targeted_onnx_version, '1.0') <= 0:
         attrs['broadcast'] = 1
         op_version = 1
-    elif container.targeted_onnx_version < StrictVersion('1.2'):
+    elif compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
         attrs['broadcast'] = 1
         op_version = 6
     else:

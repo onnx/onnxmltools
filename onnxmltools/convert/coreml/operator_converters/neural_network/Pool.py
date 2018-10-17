@@ -6,9 +6,9 @@
 
 import math
 import numpy as np
-from distutils.version import StrictVersion
 from ....common._apply_operation import apply_mul, apply_div, apply_pad
 from ....common._registration import register_converter
+from ....common.utils import compare_strict_version
 
 
 def calculate_legacy_pad_amount(H_in, pad_h, k_h, s_h):
@@ -184,7 +184,7 @@ def convert_pooling(scope, operator, container):
         op_version = 1
     elif params.type == Params.AVERAGE:
         op_type = 'AveragePool'
-        if operator.targeted_onnx_version < StrictVersion('1.2'):
+        if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
             op_version = 1
         else:
             op_version = 7

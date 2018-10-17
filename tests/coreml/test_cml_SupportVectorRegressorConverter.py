@@ -12,7 +12,7 @@ class TestCoreMLSupportVectorRegressorConverter(unittest.TestCase):
     def test_support_vector_regressor(self):
         X, y = make_regression(n_features=4, random_state=0)
      
-        svm = SVR()
+        svm = SVR(gamma=1./len(X))
         svm.fit(X, y)
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec())
