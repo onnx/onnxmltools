@@ -88,6 +88,8 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         options = extract_options(onnx)
         try:
             sess = onnxruntime.InferenceSession(onnx)
+        except ExpectedAssertionError as expe:
+            raise expe
         except Exception as e:
             raise Exception("Unable to load onnx '{0}'".format(onnx)) from e
         
@@ -118,6 +120,8 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
             for input in values:
                 try:
                     one = sess.run(None, {name: input})
+                except ExpectedAssertionError as expe:
+                    raise expe
                 except Exception as e:
                     raise Exception("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
                 res.append(one)
@@ -125,6 +129,8 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         else:
             try:
                 output = sess.run(None, inputs)
+            except ExpectedAssertionError as expe:
+                raise expe
             except Exception as e:
                 raise Exception("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
         
