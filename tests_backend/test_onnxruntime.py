@@ -38,10 +38,11 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                     if "DictVectorizer" in name:
                         msg = "RT-WARN {} - No suitable kernel definition found for op DictVectorizer (node DictVectorizer) - {}"
                         msg = msg.format(name, str(e).replace("\n", " ").replace("\r", ""))
+                    elif isinstance(e, ExpectedAssertionError):
+                        msg = "RT-WARN {} - {}".format(name, str(e).replace("\n", " ").replace("\r", ""))
                     else:
                         msg = "RT-FAIL {} - {}".format(name, str(e).replace("\n", " ").replace("\r", ""))
-                        if not isinstance(e, ExpectedAssertionError):
-                            failures.append((name, e))
+                        failures.append((name, e))
             status.append(msg)
         # To let the status be displayed by pytest.
         warnings.warn("\n" + "\n".join(status) + "\n")

@@ -28,7 +28,7 @@ class TestNaiveBayesConverter(unittest.TestCase):
         model, X = self._fit_model_binary_classification(MultinomialNB())
         model_onnx = convert_sklearn(model, 'multinomial naive bayes', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinMultinomialNB-OneOff")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinMultinomialNB-OneOff-Disc")
 
     def test_model_bernoulli_nb_binary_classification(self):
         model, X = self._fit_model_binary_classification(BernoulliNB())
@@ -40,7 +40,7 @@ class TestNaiveBayesConverter(unittest.TestCase):
         model, X = self._fit_model_multiclass_classification(MultinomialNB())
         model_onnx = convert_sklearn(model, 'multinomial naive bayes', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X, model, model_onnx, basename="SklearnMclMultinomialNB-OneOff")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnMclMultinomialNB-OneOff-Disc")
 
     def test_model_bernoulli_nb_multiclass(self):
         model, X = self._fit_model_multiclass_classification(BernoulliNB())
