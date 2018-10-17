@@ -139,7 +139,7 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         except ExpectedAssertionError as expe:
             raise expe
         except Exception as e:
-            raise AssertionError("Model '{0}' has discrepencies.\n{0}".format(onnx, e))
+            raise AssertionError("Model '{0}' has discrepencies.\n{1}: {2}".format(onnx, type(e), e))
         
     def _compare_expected(self, expected, output, sess, onnx, decimal=5, **kwargs):
         tested = 0
