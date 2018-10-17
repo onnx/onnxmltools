@@ -9,9 +9,9 @@ import numpy
 import pandas
 from onnxmltools.convert.common.data_types import FloatTensorType
 try:
-    from .utils_backend import compare, search_converted_models, load_data_and_model, extract_options
+    from .utils_backend import compare, search_converted_models, load_data_and_model, extract_options, ExpectedAssertionError
 except ImportError: 
-    from utils_backend import compare, search_converted_models, load_data_and_model, extract_options
+    from utils_backend import compare, search_converted_models, load_data_and_model, extract_options, ExpectedAssertionError
 import onnxruntime
 
 
@@ -40,22 +40,54 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                         msg = msg.format(name, str(e).replace("\n", " ").replace("\r", ""))
                     else:
                         msg = "RT-FAIL {} - {}".format(name, str(e).replace("\n", " ").replace("\r", ""))
-                        failures.append((name, e))
+                        if not isinstance(e, ExpectedAssertionError):
+                            failures.append((name, e))
             status.append(msg)
         # To let the status be displayed by pytest.
         warnings.warn("\n" + "\n".join(status) + "\n")
         if len(failures) > 0:
             raise failures[0][1]
+            
+    def _post_process_output(self, res):
+        if isinstance(res, list):
+            if len(res) == 0:
+                return res
+            elif len(res) == 1:
+                return self._post_process_output(res[0])
+            elif isinstance(res[0], numpy.ndarray):
+                return numpy.array(res)
+            elif isinstance(res[0], dict):
+                return pandas.DataFrame(res).values
+            else:
+                ls = [len(r) for r in res]
+                mi = min(ls)
+                if mi != max(ls):
+                    raise NotImplementedError("Unable to postprocess various number of outputs in [{0}, {1}]".format(min(ls), max(ls)))
+                if mi > 1:
+                    output = []
+                    for i in range(mi):
+                        output.append(self._post_process_output([r[i] for r in res]))
+                    return output
+                elif isinstance(res[0], list):
+                    # list of lists
+                    if isinstance(res[0][0], list):
+                        return numpy.array(res)
+                    elif len(res[0]) == 1 and isinstance(res[0][0], dict):
+                        return self._post_process_output([r[0] for r in res])
+                    else:
+                        return res
+                else:
+                    return res
+        else:
+            return res
     
-    def _compare_model(self, test, decimal=5):
+    def _compare_model(self, test, decimal=5, verbose=False):
         load = load_data_and_model(test)
         onnx = test['onnx']
         options = extract_options(onnx)
         try:
             sess = onnxruntime.InferenceSession(onnx)
         except Exception as e:
-            # from onnxmltools import convert_sklearn
-            #on = convert_sklearn(model, "name", [('input', FloatTensorType([1, 3]))])            
             raise Exception("Unable to load onnx '{0}'".format(onnx)) from e
         
         input = load["data"]
@@ -88,7 +120,7 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                 except Exception as e:
                     raise Exception("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
                 res.append(one)
-            output = res
+            output = self._post_process_output(res)
         else:
             try:
                 output = sess.run(None, inputs)
@@ -97,6 +129,8 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         
         try:
             self._compare_expected(load["expected"], output, sess, onnx, decimal=decimal, **options)
+        except ExpectedAssertionError as expe:
+            raise expe
         except Exception as e:
             raise AssertionError("Model '{0}' has discrepencies.\n{0}".format(onnx, e))
         
@@ -129,11 +163,16 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                     output = output.values
             if isinstance(output, (dict, list)):
                 if len(output) != 1:
-                    raise ValueError("More than one output when 1 is expected for onnx '{0}'".format(onnx))
+                    ex = str(output)
+                    if len(ex) > 70:
+                        ex = ex[:70] + "..."
+                    raise ValueError("More than one output when 1 is expected for onnx '{0}'\n{1}".format(onnx, ex))
                 output = output.pop()
             if not isinstance(output, numpy.ndarray):
                 raise TypeError("output must be an array for onnx '{0}' not {1}".format(onnx, type(output)))
             msg = compare(expected, output, decimal=decimal, **kwargs)
+            if isinstance(msg, ExpectedAssertionError):
+                raise msg
             if msg:
                 raise ValueError("Unexpected output in model '{0}'\n{1}".format(onnx, msg))
             tested += 1

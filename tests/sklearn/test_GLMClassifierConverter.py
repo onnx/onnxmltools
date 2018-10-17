@@ -29,38 +29,38 @@ class TestGLMClassifierConverter(unittest.TestCase):
         model, X = self._fit_model_binary_classification(linear_model.LogisticRegression())
         model_onnx = convert_sklearn(model, 'logistic regression', [('input', FloatTensorType([1, 3]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="LogitisticRegressionBinary")
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnLogitisticRegressionBinary")
 
     def test_model_logistic_regression_multi_class(self):
         model, X = self._fit_model_multiclass_classification(linear_model.LogisticRegression())
         model_onnx = convert_sklearn(model, 'maximum entropy classifier', [('input', FloatTensorType([1, 3]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="LogitisticRegressionMulti")
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnLogitisticRegressionMulti")
 
     def test_model_linear_svc_binary_class(self):
         model, X = self._fit_model_binary_classification(LinearSVC())
         model_onnx = convert_sklearn(model, 'linear SVC', [('input', FloatTensorType([1, 3]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="LinearSVCBinary-NoProb")
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnLinearSVCBinary-NoProb")
 
     def test_model_linear_svc_multi_class(self):
         model, X = self._fit_model_multiclass_classification(LinearSVC())
         model_onnx = convert_sklearn(model, 'multi-class linear SVC', [('input', FloatTensorType([1, 3]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="LinearSVCMulti")
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnLinearSVCMulti")
 
     def test_model_sgd_binary_class(self):
         model, X = self._fit_model_binary_classification(linear_model.SGDClassifier())
         model_onnx = convert_sklearn(model, 'scikit-learn SGD binary classifier', [('input', FloatTensorType([1, 3]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SGDClassifierBinary-NoProb-Dec4")
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnSGDClassifierBinary-NoProb-Dec4")
 
     def test_model_sgd_multi_class(self):
         model, X = self._fit_model_multiclass_classification(linear_model.SGDClassifier())
         model_onnx = convert_sklearn(model, 'scikit-learn SGD multi-class classifier',
                                      [('input', FloatTensorType([1, 3]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SGDClassifierMulti-Dec3")
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnSGDClassifierMulti-Dec3")
 
 if __name__ == "__main__":
     # TestGLMClassifierConverter().test_model_linear_svc_multi_class()

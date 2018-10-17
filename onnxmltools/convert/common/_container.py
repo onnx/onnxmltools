@@ -199,7 +199,10 @@ class ModelComponentContainer(ModelContainer):
             if v is None:
                 raise ValueError('Failed to create ONNX node. Undefined attribute pair (%s, %s) found' % (k, v))
 
-        node = helper.make_node(op_type, inputs, outputs, **attrs)
+        try:
+            node = helper.make_node(op_type, inputs, outputs, **attrs)
+        except ValueError as e:
+            raise ValueError("Unable to create operator '{0}'".format(op_type)) from e
         node.domain = op_domain
 
         self.node_domain_version_pair_sets.add((op_domain, op_version))

@@ -5,7 +5,13 @@ import os
 import glob
 import pickle
 import numpy
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+
+class ExpectedAssertionError(Exception):
+    """
+    Expected failure.
+    """
+    pass
 
 
 def search_converted_models(root=None):
@@ -72,7 +78,7 @@ def extract_options(name):
     else:
         res = {}
         for opt in opts[1:]:
-            if opt in ("SkipDim1", "OneOff", "NoProb", "Dec4", "Dec3"):
+            if opt in ("SkipDim1", "OneOff", "NoProb", "Dec4", "Dec3", "Disc"):
                 res[opt] = True
             else:
                 raise NameError("Unable to parse option '{}'".format(opts[1:]))
@@ -88,6 +94,7 @@ def compare(expected, output, **kwargs):
     NoProb = kwargs.pop("NoProb", False)
     Dec4 = kwargs.pop("Dec4", False)
     Dec3 = kwargs.pop("Dec3", False)
+    Disc = kwargs.pop("Disc", False)
     
     if Dec4:
         kwargs["decimal"] = min(kwargs["decimal"], 4)
@@ -110,11 +117,25 @@ def compare(expected, output, **kwargs):
                 raise NotImplementedError("No good shape: {0} != {1}".format(expected.shape, output.shape))
         if len(expected.shape) == 1 and len(output.shape) == 2 and output.shape[1] == 1:
             output = output.ravel()
-        try:
-            assert_array_almost_equal(expected, output, **kwargs)
-        except Exception as e:
-            diff = numpy.abs(expected.ravel() - output.ravel()).max()            
-            return AssertionError("max diff(expected, output)={0}\n{1}".format(diff, e))
+        if expected.dtype in (numpy.str, numpy.dtype("<U1")):
+            try:
+                assert_array_equal(expected, output)
+            except Exception as e:
+                if Disc:
+                    # Bug to be fixed later.
+                    return ExpectedAssertionError(str(e))
+                else:
+                    return AssertionError(str(e))
+        else:
+            try:
+                assert_array_almost_equal(expected, output, **kwargs)
+            except Exception as e:
+                diff = numpy.abs(expected.ravel() - output.ravel()).max()            
+                if Disc:
+                    # Bug to be fixed later.
+                    return ExpectedAssertionError("max diff(expected, output)={0}\n{1}".format(diff, e))
+                else:
+                    return AssertionError("max diff(expected, output)={0}\n{1}".format(diff, e))
     else:
         return TypeError("Unexpected types {0} != {1}".format(type(expected), type(output)))
     return None

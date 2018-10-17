@@ -131,6 +131,7 @@ def convert_lightgbm(scope, operator, container):
     else:
         n_classes = 1  # Regressor has only one output variable
         attrs['post_transform'] = 'NONE'
+        attrs['n_targets'] = n_classes
 
     # Use the same algorithm to parse the tree
     for i, tree in enumerate(gbm_text['tree_info']):

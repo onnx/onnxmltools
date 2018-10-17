@@ -148,7 +148,7 @@ def convert_sklearn_decision_tree_regressor(scope, operator, container):
 
     attrs = _get_default_tree_regressor_attribute_pairs()
     attrs['name'] = scope.get_unique_operator_name(op_type)
-    attrs['n_targets'] = op.n_outputs_
+    attrs['n_targets'] = int(op.n_outputs_)
     _add_tree_to_attribute_pairs(attrs, False, op.tree_, 0, 1., 0, False)
 
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
@@ -196,7 +196,7 @@ def convert_sklearn_random_forest_regressor_converter(scope, operator, container
     op_type = 'TreeEnsembleRegressor'
     attrs = _get_default_tree_regressor_attribute_pairs()
     attrs['name'] = scope.get_unique_operator_name(op_type)
-    attrs['n_targets'] = op.n_outputs_
+    attrs['n_targets'] = int(op.n_outputs_)
 
     # random forest calculate the final score by averaging over all trees' outcomes, so all trees' weights are identical.
     tree_weight = 1. / op.n_estimators
@@ -221,7 +221,7 @@ def convert_sklearn_gradient_boosting_classifier(scope, operator, container):
     else:
         transform = 'SOFTMAX'
         base_values = op.init_.priors
-    attrs['base_values'] = base_values
+    attrs['base_values'] = [float(v) for v in base_values]
     attrs['post_transform'] = transform
 
     classes = op.classes_
@@ -262,7 +262,7 @@ def convert_sklearn_gradient_boosting_regressor(scope, operator, container):
     attrs = _get_default_tree_regressor_attribute_pairs()
     attrs['name'] = scope.get_unique_operator_name(op_type)
     attrs['n_targets'] = 1
-    attrs['base_values'] = [op.init_.mean]
+    attrs['base_values'] = [float(op.init_.mean)]
 
     tree_weight = op.learning_rate
     for i in range(op.n_estimators):

@@ -23,7 +23,7 @@ class TestSklearnNormalizerConverter(unittest.TestCase):
         self.assertTrue(model_onnx is not None)
         self.assertTrue(len(model_onnx.graph.node) == 1)
         dump_data_and_model(numpy.array([[1, 1]], dtype=numpy.float32),
-                            model, model_onnx, basename="NormalizerL2-SkipDim1")
+                            model, model_onnx, basename="SklearnNormalizerL2-SkipDim1")
 
 
 
