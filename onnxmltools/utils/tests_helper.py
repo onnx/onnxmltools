@@ -13,7 +13,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
     """
     Saves data with pickle, saves the model with pickle and onnx,
     runs and saves the predictions for the given model.
-    This function is used to test a backend for onnx.
+    This function is used to test a backend (runtime) for onnx.
     
     :param data: any kind of data
     :param model: any model
@@ -21,7 +21,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
         only if the model accepts one float vector
     :param basemodel: three files are writen ``<basename>.data.pkl``,
         ``<basename>.model.pkl``, ``<basename>.model.onnx``
-    :param  folder: files are written in this folder,
+    :param folder: files are written in this folder,
         it is created if it does not exist
     :return: the four created files
     """
