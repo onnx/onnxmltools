@@ -11,19 +11,40 @@ from ..convert.common.data_types import FloatTensorType
 
 def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"):
     """
-    Saves data with pickle, saves the model with pickle and onnx,
+    Saves data with pickle, saves the model with pickle and *onnx*,
     runs and saves the predictions for the given model.
-    This function is used to test a backend (runtime) for onnx.
-    
+    This function is used to test a backend (runtime) for *onnx*.
+
     :param data: any kind of data
     :param model: any model
-    :param onnx: onnx model or None to use *onnxmltools* to convert it
+    :param onnx: *onnx* model or *None* to use *onnxmltools* to convert it
         only if the model accepts one float vector
     :param basemodel: three files are writen ``<basename>.data.pkl``,
         ``<basename>.model.pkl``, ``<basename>.model.onnx``
     :param folder: files are written in this folder,
         it is created if it does not exist
     :return: the four created files
+
+    Some convention for the name,
+    *Bin* for a binary classifier, *Mcl* for a multiclass
+    classifier, *Reg* for a regressor, *MRg* for a multi-regressor.
+    The name can contain some flags. Expected outputs refer to the
+    outputs computed with the original library, computed outputs
+    refer to the outputs computed with a ONNX runtime.
+    
+    * ``-Dec3``: compares expected and computed outputs up to 3 decimals (5 by default)
+    * ``-Dec4``: compares expected and computed outputs up to 4 decimals (5 by default)    
+    * ``-Disc``: the runtime fails due to discrepencies
+    * ``-Mism``: the runtime fails due to a dimension mismatch between expected
+    * ``-NoProb``: The original models computed probabilites for two classes *size=(N, 2)*
+      but the runtime produces a vector of size *N*, the test will compare the second column
+      to the column
+    * ``-OneOff``: the ONNX runtime cannot computed the prediction for several inputs,
+      it must be called for each of them
+      and computed output.
+    * ``-SkipDim1``: before comparing expected and computed output,
+      arrays with a shape like *(2, 1, 2)* becomes *(2, 2)*
+    
     """
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -76,8 +97,8 @@ def convert_model(model, name, input_types):
     """
     Runs the appropriate conversion method.
     
-    :param model: model, scikit-learn, keras, or coremltools object
-    :return: onnx model
+    :param model: model, *scikit-learn*, *keras*, or *coremltools* object
+    :return: *onnx* model
     """
     from sklearn.base import BaseEstimator
     if isinstance(model, BaseEstimator):

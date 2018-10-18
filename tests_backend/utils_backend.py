@@ -78,7 +78,7 @@ def extract_options(name):
     else:
         res = {}
         for opt in opts[1:]:
-            if opt in ("SkipDim1", "OneOff", "NoProb", "Dec4", "Dec3", "Disc"):
+            if opt in ("SkipDim1", "OneOff", "NoProb", "Dec4", "Dec3", "Disc", "Mism"):
                 res[opt] = True
             else:
                 raise NameError("Unable to parse option '{}'".format(opts[1:]))
@@ -95,6 +95,7 @@ def compare(expected, output, **kwargs):
     Dec4 = kwargs.pop("Dec4", False)
     Dec3 = kwargs.pop("Dec3", False)
     Disc = kwargs.pop("Disc", False)
+    Mism = kwargs.pop("Mism", False)
     
     if Dec4:
         kwargs["decimal"] = min(kwargs["decimal"], 4)
@@ -113,7 +114,9 @@ def compare(expected, output, **kwargs):
                 output = output[:, 1]
             elif len(output.shape) == 1 and len(expected.shape) == 1:
                 pass
-            else:
+            elif len(expected.shape) == 1 and len(output.shape) == 2 and expected.shape[0] == output.shape[0] and output.shape[1] == 1:
+                output = output[:, 0]
+            elif expected.shape != output.shape:
                 raise NotImplementedError("No good shape: {0} != {1}".format(expected.shape, output.shape))
         if len(expected.shape) == 1 and len(output.shape) == 2 and output.shape[1] == 1:
             output = output.ravel()
@@ -130,7 +133,14 @@ def compare(expected, output, **kwargs):
             try:
                 assert_array_almost_equal(expected, output, **kwargs)
             except Exception as e:
-                diff = numpy.abs(expected.ravel() - output.ravel()).max()            
+                expected_ = expected.ravel()
+                output_ = output.ravel()
+                if len(expected_) == len(output_):
+                    diff = numpy.abs(expected_ - output_).max()
+                elif Mism:
+                    return ExpectedAssertionError("dimension mismatch={0}, {1}\n{2}".format(expected.shape, output.shape, e))
+                else:
+                    return AssertionError("dimension mismatch={0}, {1}\n{2}".format(expected.shape, output.shape, e))
                 if Disc:
                     # Bug to be fixed later.
                     return ExpectedAssertionError("max diff(expected, output)={0}\n{1}".format(diff, e))
