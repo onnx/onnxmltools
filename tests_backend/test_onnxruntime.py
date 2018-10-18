@@ -159,6 +159,11 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                 output = sess.run(None, inputs)
             except ExpectedAssertionError as expe:
                 raise expe
+            except RuntimeError as e:
+                if "-Fail" in onnx:
+                    raise ExpectedAssertionError("onnxruntime cannot compute the prediction for '{0}'".format(onnx)) from e
+                else:
+                    raise OnnxRuntimeAssertionError("onnxruntime cannot compute the prediction for '{0}'".format(onnx)) from e
             except Exception as e:
                 raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
         
@@ -168,12 +173,6 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         except ExpectedAssertionError as expe:
             raise expe
         except Exception as e:
-            print("----------")
-            print(inputs)
-            print("*")
-            print(load["expected"])
-            print("*")
-            print(output)
             raise OnnxRuntimeAssertionError("Model '{0}' has discrepencies.\n{1}: {2}".format(onnx, type(e), e)) from e
         
     def _compare_expected(self, expected, output, sess, onnx, decimal=5, **kwargs):
