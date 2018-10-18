@@ -33,6 +33,13 @@ class TestSklearnTreeEnsembleModels(unittest.TestCase):
         model_onnx = convert_sklearn(model, 'tree-based binary classifier', [('input', Int64TensorType([1, 2]))])
         self.assertTrue(model_onnx is not None)
 
+    def _test_multiclass_classification_core(self, model):
+        X = [[0, 1], [1, 1], [1, 2], [2, 0], [3, 4], [2, 1]]
+        y = ['A', 'B', 'C', 'A', 'B', 'C']
+        model.fit(X, y)
+        model_onnx = convert_sklearn(model, 'tree-based multiclass classifier', [('input', Int64TensorType([1, 2]))])
+        self.assertTrue(model_onnx is not None)
+
     def _test_multiple_output_core(self, model):
         X = [[0, 1], [1, 1], [2, 0]]
         y = [[100, 50], [100, 49], [100, 99]]
@@ -96,6 +103,10 @@ class TestSklearnTreeEnsembleModels(unittest.TestCase):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1)
         self._test_binary_classification_core(model)
         self._test_single_output_core(model)
+
+    def test_lightgbm_multiclass_classifier(self):
+        model = LGBMClassifier(n_estimators=3, min_child_samples=1, objective='ova', num_class=3)
+        self._test_multiclass_classification_core(model)
 
     def test_lightgbm__regressor(self):
         model = LGBMRegressor(n_estimators=3, min_child_samples=1)
