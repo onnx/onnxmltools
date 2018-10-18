@@ -9,9 +9,9 @@ import numpy
 import pandas
 from onnxmltools.convert.common.data_types import FloatTensorType
 try:
-    from .utils_backend import compare, search_converted_models, load_data_and_model, extract_options, ExpectedAssertionError
+    from .utils_backend import compare, search_converted_models, load_data_and_model, extract_options, ExpectedAssertionError, OnnxRuntimeAssertionError
 except ImportError: 
-    from utils_backend import compare, search_converted_models, load_data_and_model, extract_options, ExpectedAssertionError
+    from utils_backend import compare, search_converted_models, load_data_and_model, extract_options, ExpectedAssertionError, OnnxRuntimeAssertionError
 import onnxruntime
 
 
@@ -25,7 +25,7 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         status = []
         for test in alltests:
             if not isinstance(test, dict):
-                raise TypeError("Unexpected type '{0}'".format(type(test)))
+                raise OnnxRuntimeAssertionError("Unexpected type '{0}'".format(type(test)))
             name = os.path.split(test["onnx"])[-1].split('.')[0]
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", ImportWarning)
@@ -91,7 +91,10 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         except ExpectedAssertionError as expe:
             raise expe
         except Exception as e:
-            raise Exception("Unable to load onnx '{0}'".format(onnx)) from e
+            if "-CannotLoad" in onnx:
+                raise ExpectedAssertionError("Unable to load onnx '{0}' due to\n{1}".format(onnx, e)) from e
+            else:
+                raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'".format(onnx)) from e
         
         input = load["data"]
         if isinstance(input, dict):
@@ -103,9 +106,9 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
             elif len(inp) == 1:
                 inputs = {inp[0].name: input}
             else:
-                raise ValueError("Wrong number of inputs {0} != {1}, onnx='{2}'".format(len(inp), len(input), onnx))
+                raise OnnxRuntimeAssertionError("Wrong number of inputs {0} != {1}, onnx='{2}'".format(len(inp), len(input), onnx))
         else:
-            raise TypeError("Dict or list is expected, not {0}".format(type(input)))
+            raise OnnxRuntimeAssertionError("Dict or list is expected, not {0}".format(type(input)))
             
         for k in inputs:
             if isinstance(inputs[k], list):
@@ -123,7 +126,7 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                 except ExpectedAssertionError as expe:
                     raise expe
                 except Exception as e:
-                    raise Exception("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
+                    raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
                 res.append(one)
             output = self._post_process_output(res)
         else:
@@ -132,35 +135,35 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
             except ExpectedAssertionError as expe:
                 raise expe
             except Exception as e:
-                raise Exception("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
+                raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
         
         try:
             self._compare_expected(load["expected"], output, sess, onnx, decimal=decimal, **options)
         except ExpectedAssertionError as expe:
             raise expe
         except Exception as e:
-            raise AssertionError("Model '{0}' has discrepencies.\n{1}: {2}".format(onnx, type(e), e))
+            raise OnnxRuntimeAssertionError("Model '{0}' has discrepencies.\n{1}: {2}".format(onnx, type(e), e)) from e
         
     def _compare_expected(self, expected, output, sess, onnx, decimal=5, **kwargs):
         tested = 0
         if isinstance(expected, list):
             if isinstance(output, list):
                 if len(expected) != len(output):
-                    raise ValueError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
+                    raise OnnxRuntimeAssertionError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
                 for exp, out in zip(expected, output):
                     self._compare_expected(exp, out, sess, onnx, decimal=5, **kwargs)
                     tested += 1
             else:
-                raise TypeError("Type mismatch for '{0}', output type is {1}".format(onnx, type(output)))
+                raise OnnxRuntimeAssertionError("Type mismatch for '{0}', output type is {1}".format(onnx, type(output)))
         elif isinstance(expected, dict):
             if not isinstance(output, dict):
-                raise TypeError("Type mismatch for '{0}'".format(onnx))                
+                raise OnnxRuntimeAssertionError("Type mismatch for '{0}'".format(onnx))                
             for k, v in output.items():
                 if k not in expected:
                     continue
                 msg = compare(expected[k], v, decimal=decimal, **kwargs)
                 if msg:
-                    raise ValueError("Unexpected output '{0}' in model '{1}'\n{2}".format(k, onnx, msg))
+                    raise OnnxRuntimeAssertionError("Unexpected output '{0}' in model '{1}'\n{2}".format(k, onnx, msg)) from msg
                 tested += 1
         elif isinstance(expected, numpy.ndarray):
             if isinstance(output, list):
@@ -173,15 +176,15 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                     ex = str(output)
                     if len(ex) > 70:
                         ex = ex[:70] + "..."
-                    raise ValueError("More than one output when 1 is expected for onnx '{0}'\n{1}".format(onnx, ex))
+                    raise OnnxRuntimeAssertionError("More than one output when 1 is expected for onnx '{0}'\n{1}".format(onnx, ex))
                 output = output.pop()
             if not isinstance(output, numpy.ndarray):
-                raise TypeError("output must be an array for onnx '{0}' not {1}".format(onnx, type(output)))
+                raise OnnxRuntimeAssertionError("output must be an array for onnx '{0}' not {1}".format(onnx, type(output)))
             msg = compare(expected, output, decimal=decimal, **kwargs)
             if isinstance(msg, ExpectedAssertionError):
                 raise msg
             if msg:
-                raise ValueError("Unexpected output in model '{0}'\n{1}".format(onnx, msg))
+                raise OnnxRuntimeAssertionError("Unexpected output in model '{0}'\n{1}".format(onnx, msg)) from msg
             tested += 1
         else:
             from scipy.sparse.csr import csr_matrix
@@ -190,12 +193,12 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                 one_array = numpy.array(output)
                 msg = compare(expected.todense(), one_array, decimal=decimal, **kwargs)
                 if msg:
-                    raise ValueError("Unexpected output in model '{0}'\n{1}".format(onnx, msg))
+                    raise OnnxRuntimeAssertionError("Unexpected output in model '{0}'\n{1}".format(onnx, msg)) from msg
                 tested += 1
             else:
-                raise TypeError("Unexpected type for expected output ({1}) and onnx '{0}'".format(onnx, type(expected)))
+                raise OnnxRuntimeAssertionError("Unexpected type for expected output ({1}) and onnx '{0}'".format(onnx, type(expected)))
         if tested ==0:
-            raise RuntimeError("No test for onnx '{0}'".format(onnx))
+            raise OnnxRuntimeAssertionError("No test for onnx '{0}'".format(onnx))
 
 
 if __name__ == "__main__":

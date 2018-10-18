@@ -9,7 +9,8 @@ import os
 from ..convert.common.data_types import FloatTensorType
 
 
-def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"):
+def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests",
+                        inputs=None):
     """
     Saves data with pickle, saves the model with pickle and *onnx*,
     runs and saves the predictions for the given model.
@@ -23,6 +24,8 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
         ``<basename>.model.pkl``, ``<basename>.model.onnx``
     :param folder: files are written in this folder,
         it is created if it does not exist
+    :param inputs: standard type or specific one if specified, only used is
+        parameter *onnx* is None
     :return: the four created files
 
     Some convention for the name,
@@ -32,6 +35,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
     outputs computed with the original library, computed outputs
     refer to the outputs computed with a ONNX runtime.
     
+    * ``-CannotLoad``: the model can be converted but the runtime cannot load it
     * ``-Dec3``: compares expected and computed outputs up to 3 decimals (5 by default)
     * ``-Dec4``: compares expected and computed outputs up to 4 decimals (5 by default)    
     * ``-Disc``: the runtime fails due to discrepencies
@@ -81,9 +85,10 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
         pickle.dump(model, f)
         
     if onnx is None:
+        if inputs is None:
+            inputs = [('input', FloatTensorType(list(array.shape)))]
         array = numpy.array(data)
-        onnx = convert_model(model, basename, 
-                             [('input', FloatTensorType(list(array.shape)))])
+        onnx = convert_model(model, basename, inputs)
     
     dest = os.path.join(folder, basename + ".model.onnx")
     names.append(dest)
