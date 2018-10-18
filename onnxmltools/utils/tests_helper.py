@@ -85,9 +85,9 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
         pickle.dump(model, f)
         
     if onnx is None:
+        array = numpy.array(data)
         if inputs is None:
             inputs = [('input', FloatTensorType(list(array.shape)))]
-        array = numpy.array(data)
         onnx = convert_model(model, basename, inputs)
     
     dest = os.path.join(folder, basename + ".model.onnx")

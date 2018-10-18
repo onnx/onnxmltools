@@ -81,7 +81,16 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                     return res
         else:
             return res
-    
+
+    def _create_column(self, values, dtype):
+        "Creates a column from values with dtype"
+        if str(dtype) == "tensor(int64)":
+            return numpy.array(values, dtype=numpy.int64)
+        elif str(dtype) == "tensor(float)":
+            return numpy.array(values, dtype=numpy.float32)
+        else:
+            raise OnnxRuntimeAssertionError("Unable to create one column from dtype '{0}'".format(dtype))
+
     def _compare_model(self, test, decimal=5, verbose=False):
         load = load_data_and_model(test)
         onnx = test['onnx']
@@ -105,8 +114,24 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                 inputs = {i.name: v for i, v in zip(inp, input)}
             elif len(inp) == 1:
                 inputs = {inp[0].name: input}
+            elif isinstance(input, numpy.ndarray):
+                shape = sum(i.shape[1] for i in inp)
+                if shape == input.shape[1]:
+                    inputs = {n.name: input[:, i] for i, n in enumerate(inp)}
+                else:
+                    raise OnnxRuntimeAssertionError("Wrong number of inputs onnx {0} != original shape {1}, onnx='{2}'".format(len(inp), input.shape, onnx))
+            elif isinstance(input, list):
+                try:
+                    array_input = numpy.array(input)
+                except Exception as e:
+                    raise OnnxRuntimeAssertionError("Wrong number of inputs onnx {0} != original {1}, onnx='{2}'".format(len(inp), len(input), onnx))
+                shape = sum(i.shape[1] for i in inp)
+                if shape == array_input.shape[1]:
+                    inputs = {n.name: self._create_column([row[i] for row in input], n.type) for i, n in enumerate(inp)}
+                else:
+                    raise OnnxRuntimeAssertionError("Wrong number of inputs onnx {0} != original shape {1}, onnx='{2}'*".format(len(inp), array_input.shape, onnx))
             else:
-                raise OnnxRuntimeAssertionError("Wrong number of inputs {0} != {1}, onnx='{2}'".format(len(inp), len(input), onnx))
+                raise OnnxRuntimeAssertionError("Wrong number of inputs onnx {0} != original {1}, onnx='{2}'".format(len(inp), len(input), onnx))
         else:
             raise OnnxRuntimeAssertionError("Dict or list is expected, not {0}".format(type(input)))
             
@@ -137,11 +162,18 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
             except Exception as e:
                 raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
         
+        output0 = output.copy()
         try:
             self._compare_expected(load["expected"], output, sess, onnx, decimal=decimal, **options)
         except ExpectedAssertionError as expe:
             raise expe
         except Exception as e:
+            print("----------")
+            print(inputs)
+            print("*")
+            print(load["expected"])
+            print("*")
+            print(output)
             raise OnnxRuntimeAssertionError("Model '{0}' has discrepencies.\n{1}: {2}".format(onnx, type(e), e)) from e
         
     def _compare_expected(self, expected, output, sess, onnx, decimal=5, **kwargs):
@@ -177,7 +209,7 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                     if len(ex) > 70:
                         ex = ex[:70] + "..."
                     raise OnnxRuntimeAssertionError("More than one output when 1 is expected for onnx '{0}'\n{1}".format(onnx, ex))
-                output = output.pop()
+                output = output[-1]
             if not isinstance(output, numpy.ndarray):
                 raise OnnxRuntimeAssertionError("output must be an array for onnx '{0}' not {1}".format(onnx, type(output)))
             msg = compare(expected, output, decimal=decimal, **kwargs)
