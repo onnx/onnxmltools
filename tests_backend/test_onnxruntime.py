@@ -91,8 +91,32 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         else:
             raise OnnxRuntimeAssertionError("Unable to create one column from dtype '{0}'".format(dtype))
 
+    def _keras_context(self):
+        import keras.layers
+        from keras import backend as K
+        
+        class ScaledTanh(keras.layers.Layer):
+            def __init__(self, alpha=1.0, beta=1.0, **kwargs):
+                super(ScaledTanh, self).__init__(**kwargs)
+                self.alpha = alpha
+                self.beta = beta
+            def build(self, input_shape):
+                super(ScaledTanh, self).build(input_shape)
+            def call(self, x):
+                return self.alpha * K.tanh(self.beta * x)
+            def compute_output_shape(self, input_shape):
+                return input_shape
+
+        return dict(ScaledTanh=ScaledTanh)
+
     def _compare_model(self, test, decimal=5, verbose=False):
-        load = load_data_and_model(test)
+        try:
+            load = load_data_and_model(test)
+        except ValueError as e:
+            if "ScaledTanh" in str(e):
+                load = load_data_and_model(test, **self._keras_context())
+            else:
+                raise e
         onnx = test['onnx']
         options = extract_options(onnx)
         try:

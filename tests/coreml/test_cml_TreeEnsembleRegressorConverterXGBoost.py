@@ -28,8 +28,10 @@ class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
         model_coreml = convert_xgb_to_coreml(model)
         model_onnx = convert_cml(model_coreml)
         assert model_onnx is not None
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx,
-                                     basename="CmlXGBoostRegressor-OneOff-Reshape-Disc")
+        if sys.version_info[0] >= 3:
+            # python 2.7 returns TypeError: can't pickle instancemethod objects
+            dump_data_and_model(X.astype(numpy.float32), model, model_onnx,
+                                        basename="CmlXGBoostRegressor-OneOff-Reshape-Disc")
 
 
 if __name__ == "__main__":

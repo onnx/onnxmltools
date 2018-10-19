@@ -81,10 +81,15 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
     with open(dest, "wb") as f:
         pickle.dump(data, f)
     
-    dest = os.path.join(folder, basename + ".model.pkl")
-    names.append(dest)
-    with open(dest, "wb") as f:
-        pickle.dump(model, f)
+    if hasattr(model, 'save'):
+        dest = os.path.join(folder, basename + ".model.keras")
+        names.append(dest)
+        model.save(dest)
+    else:
+        dest = os.path.join(folder, basename + ".model.pkl")
+        names.append(dest)
+        with open(dest, "wb") as f:
+            pickle.dump(model, f)
         
     if onnx is None:
         array = numpy.array(data)

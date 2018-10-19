@@ -34,3 +34,4 @@ temp_*.onnx
 tests/sklearn/tests/*
 tests_backend/*.onnx
 tests/coreml/tests/*
+tests/end2end/tests/*

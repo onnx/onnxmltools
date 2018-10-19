@@ -39,20 +39,25 @@ def search_converted_models(root=None):
         onnx = found
         basename = onnx[:-len(".model.onnx")]
         data = basename + ".data.pkl"
-        model = basename + ".model.pkl"
         expected = basename + ".expected.pkl"
-        res = dict(onnx=onnx, data=data, model=model, expected=expected)
+        res = dict(onnx=onnx, data=data, expected=expected)
         ok = True
         for k, v in res.items():
             if not os.path.exists(v):
                 ok = False
         if ok:
-            keep.append((basename, res))
+            models = [basename + ".model.pkl", basename + ".model.keras"]
+            for model in models:
+                if os.path.exists(model):
+                    res['model'] = model
+                    break
+            if 'model' in res:
+                keep.append((basename, res))
     keep.sort()
     return [_[1] for _ in keep]
     
 
-def load_data_and_model(items_as_dict):
+def load_data_and_model(items_as_dict, **context):
     """
     Loads every file in a dictionary with extension pkl
     for pickle.
@@ -62,6 +67,9 @@ def load_data_and_model(items_as_dict):
         if os.path.splitext(v)[-1] == ".pkl":
             with open(v, "rb") as f:
                 res[k] = pickle.load(f)
+        elif os.path.splitext(v)[-1] == ".keras":
+            import keras.models
+            res[k] = keras.models.load_model(v, custom_objects=context)
         else:
             res[k] = v
     return res
