@@ -2,6 +2,7 @@
 Tests CoreML TreeEnsembleRegressor converter.
 """
 import os
+import sys
 import unittest
 import numpy
 import pandas
