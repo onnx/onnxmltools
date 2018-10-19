@@ -50,7 +50,7 @@ class TestSklearnImputerConverter(unittest.TestCase):
         self.assertEqual(len(outputs), 1)
         self.assertEqual(outputs[0].type.tensor_type.shape.dim[-1].dim_value, 2)
         dump_data_and_model(np.array(data, dtype=np.float32),
-                            model, model_onnx, basename="ImputerMeanFloat32")
+                            model, model_onnx, basename="SklearnImputerMeanFloat32")
 
 
 if __name__ == "__main__":

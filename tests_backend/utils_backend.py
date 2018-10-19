@@ -74,10 +74,13 @@ def extract_options(name):
     options *SkipDim1* is enabled. 
     ``(1, 2)`` and ``(2,)`` are considered equal.
     Available options:
-    
+
     * `'SkipDim1'`: reshape arrays by skipping 1-dimension: ``(1, 2)`` --> ``(2,)``
     * `'OneOff'`: inputs comes in a list for the predictions are computed with a call for each of them,
         not with one call
+    * ...
+
+    See function *dump_data_and_model* to get the full list.
     """
     opts = name.replace("\\", "/").split("/")[-1].split('.')[0].split('-')
     if len(opts) == 1:
@@ -86,7 +89,7 @@ def extract_options(name):
         res = {}
         for opt in opts[1:]:
             if opt in ("SkipDim1", "OneOff", "NoProb", "Dec4", "Dec3",
-                       "Disc", "Mism", "CannotLoad", "Fail"):
+                       "Disc", "Mism", "CannotLoad", "Fail", 'Out0', 'Reshape'):
                 res[opt] = True
             else:
                 raise NameError("Unable to parse option '{}'".format(opts[1:]))

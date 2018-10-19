@@ -63,5 +63,4 @@ class TestGLMRegressorConverter(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # TestGLMClassifierConverter().test_model_linear_svc_multi_class()
     unittest.main()

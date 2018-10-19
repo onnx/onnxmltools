@@ -115,7 +115,7 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
             elif len(inp) == 1:
                 inputs = {inp[0].name: input}
             elif isinstance(input, numpy.ndarray):
-                shape = sum(i.shape[1] for i in inp)
+                shape = sum(i.shape[1] if len(i.shape) == 2 else i.shape[0] for i in inp)
                 if shape == input.shape[1]:
                     inputs = {n.name: input[:, i] for i, n in enumerate(inp)}
                 else:
@@ -141,19 +141,31 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         
         OneOff = options.pop('OneOff', False)
         if OneOff:
-            if len(inputs) != 1:
-                raise NotImplementedError("OneOff option is not available for more than one input")            
-            name, values = list(inputs.items())[0]
-            res = []
-            for input in values:
-                try:
-                    one = sess.run(None, {name: input})
-                except ExpectedAssertionError as expe:
-                    raise expe
-                except Exception as e:
-                    raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
-                res.append(one)
-            output = self._post_process_output(res)
+            if len(inputs) == 1:
+                name, values = list(inputs.items())[0]
+                res = []
+                for input in values:
+                    try:
+                        one = sess.run(None, {name: input})
+                    except ExpectedAssertionError as expe:
+                        raise expe
+                    except Exception as e:
+                        raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
+                    res.append(one)
+                output = self._post_process_output(res)
+            else:
+                t = list(inputs.items())[0]
+                res = []
+                for i in range(0, len(t[1])):
+                    iii = {k: numpy.array([v[i]], dtype=numpy.float32) for k, v in inputs.items()}
+                    try:
+                        one = sess.run(None, iii)
+                    except ExpectedAssertionError as expe:
+                        raise expe
+                    except Exception as e:
+                        raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
+                    res.append(one)
+                output = self._post_process_output(res)                
         else:
             try:
                 output = sess.run(None, inputs)
@@ -168,6 +180,7 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                 raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e)) from e
         
         output0 = output.copy()
+
         try:
             self._compare_expected(load["expected"], output, sess, onnx, decimal=decimal, **options)
         except ExpectedAssertionError as expe:
@@ -179,6 +192,15 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
         tested = 0
         if isinstance(expected, list):
             if isinstance(output, list):
+                if 'Out0' in kwargs:
+                    expected = expected[:1]
+                    output = output[:1]
+                    del kwargs['Out0']
+                if 'Reshape' in kwargs:
+                    del kwargs['Reshape']
+                    output = numpy.hstack(output).ravel()
+                    output = output.reshape((len(expected),
+                                             len(output.ravel()) // len(expected)))
                 if len(expected) != len(output):
                     raise OnnxRuntimeAssertionError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
                 for exp, out in zip(expected, output):

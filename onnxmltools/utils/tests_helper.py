@@ -46,6 +46,8 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
     * ``-OneOff``: the ONNX runtime cannot computed the prediction for several inputs,
       it must be called for each of them
       and computed output.
+    * ``-Out0``: only compares the first output on both sides
+    * ``-Reshape``: merges all outputs into one single vector and resizes it before comparing
     * ``-SkipDim1``: before comparing expected and computed output,
       arrays with a shape like *(2, 1, 2)* becomes *(2, 2)*
     
