@@ -26,7 +26,7 @@ with (open(os.path.join(this, 'onnxmltools/__init__.py'), "r")) as f:
     if len(line) > 0:
         version_str = line[0].split('=')[1].strip('" ')
 
-README = os.path.join(os.getcwd(), "README.rst")
+README = os.path.join(os.getcwd(), "README.md")
 with open(README) as f:
     long_description = f.read()
 
@@ -35,6 +35,7 @@ setup(
     version=version_str,
     description="Converts Machine Learning models to ONNX",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     license='MIT License',
     author='Microsoft Corporation',
     author_email='onnx@microsoft.com',
