@@ -42,7 +42,7 @@ class MainTestBackendWithOnnxRuntime(unittest.TestCase):
             if exc is None:
                 tests_ok[name] = msg, None
             else:
-                test_failed[name] = msg, e
+                test_failed[name] = msg, exc
         tests_missed = []
         for test in cls.alltests:
             name = os.path.split(test["onnx"])[-1].split('.')[0]
