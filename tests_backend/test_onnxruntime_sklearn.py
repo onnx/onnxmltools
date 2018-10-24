@@ -2,6 +2,8 @@
 Tests onnx conversion with onnxruntime.
 """
 import unittest
+from onnxruntime import __version__ as rt_version
+from onnxmltools.convert.common.utils import compare_strict_version
 try:
     from .main_test_onnxruntime import MainTestBackendWithOnnxRuntime
 except ImportError: 
@@ -27,6 +29,7 @@ class TestBackendWithOnnxRuntime_Sklearn(MainTestBackendWithOnnxRuntime):
     def test_SklearnBinGradientBoostingClassifier(self): self._main_test_onnxruntime(self._testMethodName)
     @unittest.skip("prediction mismatch")
     def test_SklearnBinLGBMClassifier(self): self._main_test_onnxruntime(self._testMethodName)
+    @unittest.skipIf(compare_strict_version(rt_version, "0.1.3") <= 0, reason="fixed in newer versions")
     def test_SklearnBinMultinomialNB_OneOff(self): self._main_test_onnxruntime(self._testMethodName)
     @unittest.skip("cannot compute predictions")
     def test_SklearnBinNuSVCPF(self): self._main_test_onnxruntime(self._testMethodName)
@@ -50,11 +53,13 @@ class TestBackendWithOnnxRuntime_Sklearn(MainTestBackendWithOnnxRuntime):
     def test_SklearnMRgExtraTreesRegressor(self): self._main_test_onnxruntime(self._testMethodName)
     def test_SklearnMRgRandomForestRegressor(self): self._main_test_onnxruntime(self._testMethodName)
     def test_SklearnMaxAbsScaler(self): self._main_test_onnxruntime(self._testMethodName)
+    @unittest.skipIf(compare_strict_version(rt_version, "0.1.3") <= 0, reason="fixed in newer versions")
     def test_SklearnMclBernoulliNB_OneOff(self): self._main_test_onnxruntime(self._testMethodName)
     def test_SklearnMclDecisionTreeClassifier(self): self._main_test_onnxruntime(self._testMethodName)
     def test_SklearnMclExtraTreesClassifier(self): self._main_test_onnxruntime(self._testMethodName)
     @unittest.skip("prediction mismatch")
     def test_SklearnMclLGBMClassifier(self): self._main_test_onnxruntime(self._testMethodName)
+    @unittest.skipIf(compare_strict_version(rt_version, "0.1.3") <= 0, reason="fixed in newer versions")
     def test_SklearnMclMultinomialNB_OneOff(self): self._main_test_onnxruntime(self._testMethodName)
     @unittest.skip("prediction mismatch")
     def test_SklearnMclNuSVCPF(self): self._main_test_onnxruntime(self._testMethodName)
