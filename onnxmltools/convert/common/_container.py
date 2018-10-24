@@ -112,8 +112,9 @@ class ModelComponentContainer(ModelContainer):
     encapsulated in a ONNX ModelProto.
     '''
 
-    def __init__(self, targeted_onnx):
+    def __init__(self, target_opset, targeted_onnx):
         '''
+        :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
         :param targeted_onnx: A string, for example, '1.1.2' and '1.2'.
         '''
         # Inputs of ONNX graph. They are ValueInfoProto in ONNX.
@@ -128,6 +129,7 @@ class ModelComponentContainer(ModelContainer):
         self.nodes = []
         # ONNX operators' domain-version pair set. They will be added into opset_import field in the final ONNX model.
         self.node_domain_version_pair_sets = set()
+        self.target_opset = target_opset
         # The targeted ONNX version. All produced operators should be supported by the targeted ONNX version.
         self.targeted_onnx_version = targeted_onnx
 
