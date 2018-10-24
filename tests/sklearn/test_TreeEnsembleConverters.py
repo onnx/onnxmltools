@@ -109,12 +109,12 @@ class TestSklearnTreeEnsembleModels(unittest.TestCase):
 
     def test_lightgbm_classifier(self):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1)
-        self._test_binary_classification_core(model, opts="-Disc")
-        self._test_multiple_classification_core(model, opts="-Disc")
+        self._test_binary_classification_core(model)
+        self._test_multiple_classification_core(model)
 
     def test_lightgbm_regressor(self):
         model = LGBMRegressor(n_estimators=3, min_child_samples=1)
-        self._test_single_regression_core(model, opts="-Disc")
+        self._test_single_regression_core(model)
 
 
 if __name__ == "__main__":

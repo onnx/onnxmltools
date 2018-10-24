@@ -71,7 +71,7 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinSVCLinearPF-Fail")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinSVCLinearPF")
 
     def test_convert_svmc_linear_multi(self):
         model, X = self._fit_multi_classification(SVC(kernel='linear', probability=False))
@@ -88,7 +88,7 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnMclSVCLinearPF-Disc")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnMclSVCLinearPF")
 
     def test_convert_svmr_linear_binary(self):
         model, X = self._fit_binary_classification(SVR(kernel='linear'))
@@ -118,7 +118,7 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPF-Fail")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPF")
 
     def test_convert_nusvmc_multi(self):
         model, X = self._fit_multi_classification(NuSVC(probability=False))
@@ -134,7 +134,7 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnMclNuSVCPF-Disc")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnMclNuSVCPF")
 
     def test_convert_nusvmr_binary(self):
         model, X = self._fit_binary_classification(NuSVR())

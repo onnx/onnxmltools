@@ -28,25 +28,25 @@ class TestNaiveBayesConverter(unittest.TestCase):
         model, X = self._fit_model_binary_classification(MultinomialNB())
         model_onnx = convert_sklearn(model, 'multinomial naive bayes', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinMultinomialNB-OneOff-Mism")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinMultinomialNB-OneOff")
 
     def test_model_bernoulli_nb_binary_classification(self):
         model, X = self._fit_model_binary_classification(BernoulliNB())
         model_onnx = convert_sklearn(model, 'bernoulli naive bayes', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X[:5], model, model_onnx, basename="SklearnBinBernoulliNB-OneOff-Mism-Disc")
+        dump_data_and_model(X[:5], model, model_onnx, basename="SklearnBinBernoulliNB-OneOff")
 
     def test_model_multinomial_nb_multiclass(self):
         model, X = self._fit_model_multiclass_classification(MultinomialNB())
         model_onnx = convert_sklearn(model, 'multinomial naive bayes', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X, model, model_onnx, basename="SklearnMclMultinomialNB-OneOff-Mism")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnMclMultinomialNB-OneOff")
 
     def test_model_bernoulli_nb_multiclass(self):
         model, X = self._fit_model_multiclass_classification(BernoulliNB())
         model_onnx = convert_sklearn(model, 'bernoulli naive bayes', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X, model, model_onnx, basename="SklearnMclBernoulliNB-OneOff-Mism")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnMclBernoulliNB-OneOff")
 
 
 if __name__ == "__main__":

@@ -38,8 +38,6 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
     * ``-CannotLoad``: the model can be converted but the runtime cannot load it
     * ``-Dec3``: compares expected and computed outputs up to 3 decimals (5 by default)
     * ``-Dec4``: compares expected and computed outputs up to 4 decimals (5 by default)    
-    * ``-Disc``: the runtime fails due to discrepencies
-    * ``-Mism``: the runtime fails due to a dimension mismatch between expected
     * ``-NoProb``: The original models computed probabilites for two classes *size=(N, 2)*
       but the runtime produces a vector of size *N*, the test will compare the second column
       to the column

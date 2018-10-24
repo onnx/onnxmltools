@@ -15,26 +15,71 @@ except ImportError:
 import onnxruntime
 
 
-class TestBackendWithOnnxRuntime(unittest.TestCase):
-
-    def test_onnxruntime(self):
-        "Main test"
+class MainTestBackendWithOnnxRuntime(unittest.TestCase):
+    
+    @staticmethod
+    def _setUpClass(cls):
+        prefix = getattr(cls, 'prefix', None)
         alltests = search_converted_models()
-        assert len(alltests) >= 1
-        failures = []
-        status = []
+        keeptests = []
         for test in alltests:
             if not isinstance(test, dict):
                 raise OnnxRuntimeAssertionError("Unexpected type '{0}'".format(type(test)))
+            if prefix is not None:                
+                name = os.path.split(test["onnx"])[-1].split('.')[0]
+                if name.startswith(prefix):
+                   keeptests.append(test) 
+        cls.alltests = keeptests
+        cls.status = []
+        
+    @staticmethod
+    def _tearDownClass(cls):
+        if len(cls.status) == 0:
+            raise AssertionError("No test run.")
+        tests_failed = {}
+        tests_ok = {}        
+        for name, msg, exc in cls.status:
+            if exc is None:
+                tests_ok[name] = msg, None
+            else:
+                test_failed[name] = msg, e
+        tests_missed = []
+        for test in cls.alltests:
             name = os.path.split(test["onnx"])[-1].split('.')[0]
+            if name not in tests_failed and name not in tests_ok:
+                tests_missed.append(name)
+            
+        prefix = getattr(cls, 'prefix', None)
+        message = ["Runtime Status\n[onnxruntime-{3}] Skipped: {0}, Passed: {1}, Failed: {2}".format(
+                    len(tests_missed), len(tests_ok), len(tests_failed), prefix)]
+        for _, v in sorted(tests_failed.items()):
+            message.append(v[0])
+        for n in sorted(tests_missed):
+            message.append("RT-MISS {0}".format(n))
+        # Can be seen with option --capture=no.
+        print("\n".join(message))
+
+    def _main_test_onnxruntime(self, subset, **kwargs):
+        "Main test"
+        if isinstance(subset, str):
+            subset = {subset}
+        subset = set((n[5:] if n.startswith("test_") else n).replace("_", "-") for n in subset)
+        failures = []
+        status = []
+        for test in self.alltests:
+            name = os.path.split(test["onnx"])[-1].split('.')[0]
+            if name not in subset:
+                continue
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", ImportWarning)
                 warnings.simplefilter("ignore", DeprecationWarning)
                 warnings.simplefilter("ignore", PendingDeprecationWarning)                
                 try:
                     self._compare_model(test)
-                    msg = "RT-OK   {}".format(name)
+                    msg = "RT-OK   {}".format((name, None))
+                    exc = None
                 except Exception as e:
+                    exc = e
                     if "DictVectorizer" in name:
                         msg = "RT-WARN {} - No suitable kernel definition found for op DictVectorizer (node DictVectorizer) - {}"
                         msg = msg.format(name, str(e).replace("\n", " ").replace("\r", ""))
@@ -43,11 +88,12 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
                     else:
                         msg = "RT-FAIL {} - {}".format(name, str(e).replace("\n", " ").replace("\r", ""))
                         failures.append((name, e))
-            status.append(msg)
-        # To let the status be displayed by pytest.
-        warnings.warn("\n" + "\n".join(status) + "\n")
+            status.append((name, msg, exc))
         if len(failures) > 0:
             raise failures[0][1]
+        if len(status) == 0:
+            raise AssertionError("No test was run for subset: {0}".format(subset))
+        self.status.extend(status)
             
     def _post_process_output(self, res):
         if isinstance(res, list):
@@ -275,8 +321,8 @@ class TestBackendWithOnnxRuntime(unittest.TestCase):
             else:
                 raise OnnxRuntimeAssertionError("Unexpected type for expected output ({1}) and onnx '{0}'".format(onnx, type(expected)))
         if tested ==0:
-            raise OnnxRuntimeAssertionError("No test for onnx '{0}'".format(onnx))
-
+            raise OnnxRuntimeAssertionError("No test for onnx '{0}'".format(onnx))        
+        
 
 if __name__ == "__main__":
     unittest.main()

@@ -43,7 +43,7 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
         self.validate_zipmap(svm_onnx)
-        dump_data_and_model(X.astype(numpy.float32), svm, svm_onnx, basename="CmlBinLinearSVC-NoProb-Disc")
+        dump_data_and_model(X.astype(numpy.float32), svm, svm_onnx, basename="CmlBinLinearSVC-NoProb")
 
 
 if __name__ == "__main__":

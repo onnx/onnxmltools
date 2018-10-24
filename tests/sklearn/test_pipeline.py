@@ -34,7 +34,7 @@ class TestSklearnPipeline(unittest.TestCase):
                                       ('input2', FloatTensorType([1, 1]))])
         self.assertTrue(len(model_onnx.graph.node[-1].output) == 1)
         self.assertTrue(model_onnx is not None)
-        dump_data_and_model(data, model, model_onnx, basename="SklearnPipelineScaler11-Mism")
+        dump_data_and_model(data, model, model_onnx, basename="SklearnPipelineScaler11")
 
     def test_combine_inputs_floats_ints(self):
         from sklearn.preprocessing import StandardScaler
@@ -50,7 +50,7 @@ class TestSklearnPipeline(unittest.TestCase):
                                       ('input2', FloatTensorType([1, 1]))])
         self.assertTrue(len(model_onnx.graph.node[-1].output) == 1)
         self.assertTrue(model_onnx is not None)
-        dump_data_and_model(data, model, model_onnx, basename="SklearnPipelineScalerMixed-Mism")
+        dump_data_and_model(data, model, model_onnx, basename="SklearnPipelineScalerMixed")
 
 
 if __name__ == "__main__":

@@ -58,7 +58,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         nodes = svm_onnx.graph.node
         self.assertEqual(len(nodes), 1)
         self._check_model_outputs(svm_onnx, ['classLabel'])
-        dump_data_and_model(X, svm, svm_onnx, basename="CmlBinSVC-Disc-Out0")
+        dump_data_and_model(X, svm, svm_onnx, basename="CmlBinSVC-Out0")
 
     def test_support_vector_classifier_binary_with_prob(self):
         svm, X = self._fit_binary_classification(SVC(probability=True, gamma=0.5))
