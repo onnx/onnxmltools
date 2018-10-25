@@ -30,6 +30,7 @@ def custom_activation(scope, operator, container):
     container.add_node('ScaledTanh', operator.input_full_names, operator.output_full_names,
                        op_version=1, alpha=operator.original_operator.alpha, beta=operator.original_operator.beta)
 
+
 class TestKerasConverter(unittest.TestCase):
     def test_custom_op(self):
         N, C, H, W = 2, 3, 5, 5
