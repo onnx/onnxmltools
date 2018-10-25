@@ -10,7 +10,7 @@ import numpy as np
 from collections import Counter
 from lightgbm import LGBMClassifier, LGBMRegressor
 from ...common._registration import register_converter
-from .TreeEnsemble import _get_default_tree_classifier_attribute_pairs
+from ...sklearn.operator_converters.TreeEnsemble import _get_default_tree_classifier_attribute_pairs
 
 
 def _translate_split_criterion(criterion):
@@ -120,7 +120,7 @@ def convert_lightgbm(scope, operator, container):
 
     attrs = _get_default_tree_classifier_attribute_pairs()
     attrs['name'] = operator.full_name
-
+    
     # Create different attributes for classifier and regressor, respectively
     if isinstance(gbm_model, LGBMClassifier):
         n_classes = gbm_text['num_class']
@@ -137,7 +137,7 @@ def convert_lightgbm(scope, operator, container):
     for i, tree in enumerate(gbm_text['tree_info']):
         tree_id = i
         class_id = tree_id % n_classes
-        learning_rate = tree['shrinkage']
+        learning_rate = 1. # tree['shrinkage'] --> LightGbm provides figures with it already.
         _parse_tree_structure(tree_id, class_id, learning_rate, tree['tree_structure'], attrs)
 
     # Sort nodes_* attributes. For one tree, its node indexes should appear in an ascent order in nodes_nodeids. Nodes

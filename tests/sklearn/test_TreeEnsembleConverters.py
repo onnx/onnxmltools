@@ -6,7 +6,6 @@
 
 import unittest
 import numpy
-from lightgbm import LGBMClassifier, LGBMRegressor
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import GradientBoostingClassifier
@@ -105,15 +104,6 @@ class TestSklearnTreeEnsembleModels(unittest.TestCase):
 
     def test_gradient_boosting_regressor(self):
         model = GradientBoostingRegressor(n_estimators=3)
-        self._test_single_regression_core(model)
-
-    def test_lightgbm_classifier(self):
-        model = LGBMClassifier(n_estimators=3, min_child_samples=1)
-        self._test_binary_classification_core(model)
-        self._test_multiple_classification_core(model)
-
-    def test_lightgbm_regressor(self):
-        model = LGBMRegressor(n_estimators=3, min_child_samples=1)
         self._test_single_regression_core(model)
 
 

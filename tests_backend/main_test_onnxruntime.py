@@ -59,7 +59,7 @@ class MainTestBackendWithOnnxRuntime(unittest.TestCase):
         # Can be seen with option --capture=no.
         print("\n".join(message))
 
-    def _main_test_onnxruntime(self, subset, **kwargs):
+    def _main_test_onnxruntime(self, subset, show_onnx=False, **kwargs):
         "Main test"
         if isinstance(subset, str):
             subset = {subset}
@@ -73,7 +73,7 @@ class MainTestBackendWithOnnxRuntime(unittest.TestCase):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", ImportWarning)
                 warnings.simplefilter("ignore", DeprecationWarning)
-                warnings.simplefilter("ignore", PendingDeprecationWarning)                
+                warnings.simplefilter("ignore", PendingDeprecationWarning)
                 try:
                     self._compare_model(test)
                     msg = "RT-OK   {}".format((name, None))
@@ -88,6 +88,10 @@ class MainTestBackendWithOnnxRuntime(unittest.TestCase):
                     else:
                         msg = "RT-FAIL {} - {}".format(name, str(e).replace("\n", " ").replace("\r", ""))
                         failures.append((name, e))
+                    if show_onnx:
+                        import onnx
+                        mdl = onnx.load(test["onnx"])
+                        print(mdl)
             status.append((name, msg, exc))
         if len(failures) > 0:
             raise failures[0][1]

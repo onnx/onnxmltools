@@ -57,15 +57,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import MaxAbsScaler
 
-from lightgbm import LGBMClassifier, LGBMRegressor
-
 # In most cases, scikit-learn operator produces only one output. However, each classifier has basically two outputs;
 # one is the predicted label and the other one is the probabilities of all possible labels. Here is a list of supported
 # scikit-learn classifiers. In the parsing stage, we produce two outputs for objects included in the following list and
 # one output for everything not in the list.
 sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, NuSVC,
                            GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier,
-                           ExtraTreesClassifier, LGBMClassifier, BernoulliNB, MultinomialNB]
+                           ExtraTreesClassifier, BernoulliNB, MultinomialNB]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
@@ -101,8 +99,6 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              MultinomialNB: 'SklearnMultinomialNB',
                              BernoulliNB: 'SklearnBernoulliNB',
                              Binarizer: 'SklearnBinarizer',
-                             LGBMClassifier: 'LgbmClassifier',
-                             LGBMRegressor: 'LgbmRegressor',
                              PCA: 'SklearnPCA',
                              TruncatedSVD: 'SklearnTruncatedSVD',
                              MinMaxScaler: 'SklearnMinMaxScaler',

@@ -53,10 +53,10 @@ class CoremlModelContainer(RawModelContainer):
         return [str(var.name) for var in self.raw_model.description.output]
 
 
-class SklearnModelContainer(RawModelContainer):
+class CommonSklearnModelContainer(RawModelContainer):
 
     def __init__(self, sklearn_model):
-        super(SklearnModelContainer, self).__init__(sklearn_model)
+        super(CommonSklearnModelContainer, self).__init__(sklearn_model)
         # Scikit-learn models have no input and output specified, so we create them and store them in this container.
         self._inputs = []
         self._outputs = []
@@ -78,6 +78,14 @@ class SklearnModelContainer(RawModelContainer):
         # The order of adding variables matters. The final model's output names are sequentially added as this list
         if variable not in self._outputs:
             self._outputs.append(variable)
+
+
+class SklearnModelContainer(CommonSklearnModelContainer):
+    pass
+
+
+class LightGbmModelContainer(CommonSklearnModelContainer):
+    pass
 
 
 class KerasModelContainer(RawModelContainer):
