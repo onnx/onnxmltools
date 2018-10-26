@@ -9,7 +9,7 @@ import os
 from ..convert.common.data_types import FloatTensorType
 
 
-def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests",
+def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                         inputs=None):
     """
     Saves data with pickle, saves the model with pickle and *onnx*,
@@ -23,7 +23,9 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
     :param basemodel: three files are writen ``<basename>.data.pkl``,
         ``<basename>.model.pkl``, ``<basename>.model.onnx``
     :param folder: files are written in this folder,
-        it is created if it does not exist
+        it is created if it does not exist, if *folder* is None,
+        it looks first in environment variable ``ONNXTESTDUMP``,
+        otherwise, it is placed into ``'tests'``.
     :param inputs: standard type or specific one if specified, only used is
         parameter *onnx* is None
     :return: the four created files
@@ -50,6 +52,8 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder="tests"
       arrays with a shape like *(2, 1, 2)* becomes *(2, 2)*
     
     """
+    if folder is None:
+        folder = os.environ.get('ONNXTESTDUMP', 'tests')
     if not os.path.exists(folder):
         os.makedirs(folder)
     
@@ -130,7 +134,7 @@ def convert_model(model, name, input_types):
     return model, prefix
     
     
-def dump_one_class_classification(model, suffix="", folder="tests"):
+def dump_one_class_classification(model, suffix="", folder=None):
     """
     Trains and dumps a model for a One Class outlier problem.
     The function trains a model and calls
@@ -153,7 +157,7 @@ def dump_one_class_classification(model, suffix="", folder="tests"):
                                basename=prefix + "One" + model.__class__.__name__ + suffix)
 
 
-def dump_binary_classification(model, suffix="", folder="tests"):
+def dump_binary_classification(model, suffix="", folder=None):
     """
     Trains and dumps a model for a binary classification problem.
     
@@ -173,7 +177,7 @@ def dump_binary_classification(model, suffix="", folder="tests"):
     dump_data_and_model(X, model, model_onnx, folder=folder,
                         basename=prefix + "Bin" + model.__class__.__name__ + suffix)
 
-def dump_multiple_classification(model, suffix="", folder="tests"):
+def dump_multiple_classification(model, suffix="", folder=None):
     """
     Trains and dumps a model for a binary classification problem.
     
@@ -194,7 +198,7 @@ def dump_multiple_classification(model, suffix="", folder="tests"):
                         basename=prefix + "Mcl" + model.__class__.__name__ + suffix)
 
 
-def dump_multiple_regression(model, suffix="", folder="tests"):
+def dump_multiple_regression(model, suffix="", folder=None):
     """
     Trains and dumps a model for a multi regression problem.
     
@@ -215,7 +219,7 @@ def dump_multiple_regression(model, suffix="", folder="tests"):
                         basename=prefix + "MRg" + model.__class__.__name__ + suffix)
 
 
-def dump_single_regression(model, suffix="", folder="tests"):
+def dump_single_regression(model, suffix="", folder=None):
     """
     Trains and dumps a model for a regression problem.
     

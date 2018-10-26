@@ -36,3 +36,5 @@ tests_backend/*.onnx
 tests/coreml/tests/*
 tests/end2end/tests/*
 tests/lightgbm/tests/*
+tests/TESTDUMP/*
+tests/build/*
