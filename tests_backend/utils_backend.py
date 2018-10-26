@@ -66,7 +66,14 @@ def load_data_and_model(items_as_dict, **context):
     for k, v in items_as_dict.items():
         if os.path.splitext(v)[-1] == ".pkl":
             with open(v, "rb") as f:
-                res[k] = pickle.load(f)
+                try:
+                    bin = pickle.load(f)
+                except ImportError as e:
+                    if '.model.' in v:
+                        continue
+                    else:
+                        raise ImportError("Unable to load '{0}' due to {1}".format(v, e))
+                res[k] = bin
         elif os.path.splitext(v)[-1] == ".keras":
             import keras.models
             res[k] = keras.models.load_model(v, custom_objects=context)

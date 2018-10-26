@@ -6,12 +6,11 @@ import os
 import unittest
 import warnings
 import numpy
-import pandas
-from onnxmltools.convert.common.data_types import FloatTensorType
 try:
     from .utils_backend import compare, search_converted_models, load_data_and_model, extract_options, ExpectedAssertionError, OnnxRuntimeAssertionError
 except ImportError: 
     from utils_backend import compare, search_converted_models, load_data_and_model, extract_options, ExpectedAssertionError, OnnxRuntimeAssertionError
+
 import onnxruntime
 
 
@@ -108,6 +107,7 @@ class MainTestBackendWithOnnxRuntime(unittest.TestCase):
             elif isinstance(res[0], numpy.ndarray):
                 return numpy.array(res)
             elif isinstance(res[0], dict):
+                import pandas
                 return pandas.DataFrame(res).values
             else:
                 ls = [len(r) for r in res]
@@ -295,6 +295,7 @@ class MainTestBackendWithOnnxRuntime(unittest.TestCase):
         elif isinstance(expected, numpy.ndarray):
             if isinstance(output, list):
                 if expected.shape[0] == len(output) and isinstance(output[0], dict):
+                    import pandas
                     output = pandas.DataFrame(output)
                     output = output[list(sorted(output.columns))]
                     output = output.values

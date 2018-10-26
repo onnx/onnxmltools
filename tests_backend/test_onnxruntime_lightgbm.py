@@ -2,8 +2,6 @@
 Tests onnx conversion with onnxruntime.
 """
 import unittest
-from onnxruntime import __version__ as rt_version
-from onnxmltools.convert.common.utils import compare_strict_version
 try:
     from .main_test_onnxruntime import MainTestBackendWithOnnxRuntime
 except ImportError: 

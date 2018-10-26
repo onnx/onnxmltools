@@ -2,12 +2,17 @@
 Tests onnx conversion with onnxruntime.
 """
 import unittest
-from onnxruntime import __version__ as rt_version
-from onnxmltools.convert.common.utils import compare_strict_version
 try:
     from .main_test_onnxruntime import MainTestBackendWithOnnxRuntime
 except ImportError: 
     from main_test_onnxruntime import MainTestBackendWithOnnxRuntime
+
+try:
+    from onnxruntime import __version__ as rt_version
+    from onnxmltools.convert.common.utils import compare_strict_version
+except ImportError:
+    rt_version = None
+    compare_strict_version = lambda a,b: 1
 
 
 class TestBackendWithOnnxRuntime_Sklearn(MainTestBackendWithOnnxRuntime):
@@ -98,6 +103,7 @@ class TestBackendWithOnnxRuntime_Sklearn(MainTestBackendWithOnnxRuntime):
     def test_SklearnSGDRegressor_Dec4(self): self._main_test_onnxruntime(self._testMethodName)
     def test_SklearnStandardScalerFloat32(self): self._main_test_onnxruntime(self._testMethodName)
     def test_SklearnStandardScalerInt64(self): self._main_test_onnxruntime(self._testMethodName)
+    def test_SklearnTruncatedSVD(self): self._main_test_onnxruntime(self._testMethodName)
 
 
 if __name__ == "__main__":
