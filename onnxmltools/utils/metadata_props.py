@@ -1,7 +1,7 @@
 import warnings
 from ..convert.common.case_insensitive_dict import CaseInsensitiveDict
+from ..convert.common.utils import compare_strict_version
 from ..proto import onnx, onnx_proto
-from distutils.version import StrictVersion
 
 
 KNOWN_METADATA_PROPS = CaseInsensitiveDict({
@@ -37,7 +37,7 @@ def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version_
     :param metadata_props: A dictionary of metadata properties, with property names and values (example: `{ 'model_author': 'Alice', 'model_license': 'MIT' }`)
     :param targeted_onnx: Target ONNX version
     '''
-    if StrictVersion(targeted_onnx) < StrictVersion('1.2.1'):
+    if compare_strict_version(targeted_onnx, '1.2.1') < 0:
         warnings.warn('Metadata properties are not supported in targeted ONNX-%s' % targeted_onnx)
         return
     _validate_metadata(metadata_props)
@@ -68,7 +68,7 @@ def set_denotation(onnx_model, input_name, denotation, dimension_denotation=None
     (example: `['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE']`)
     :param targeted_onnx: Target ONNX version
     '''
-    if StrictVersion(targeted_onnx) < StrictVersion('1.2.1'):
+    if compare_strict_version(targeted_onnx, '1.2.1') < 0:
         warnings.warn('Denotation is not supported in targeted ONNX-%s' % targeted_onnx)
         return
     for graph_input in onnx_model.graph.input:

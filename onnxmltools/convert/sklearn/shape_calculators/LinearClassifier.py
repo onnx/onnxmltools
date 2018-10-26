@@ -8,10 +8,9 @@ import lightgbm
 import numpy as np
 import numbers
 import six
-from distutils.version import StrictVersion
 from ...common._registration import register_shape_calculator
 from ...common.data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType, SequenceType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types, compare_strict_version
 
 
 def calculate_sklearn_linear_classifier_output_shapes(operator):
@@ -39,7 +38,7 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
         operator.outputs[0].type = StringTensorType(shape=[N])
         if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
             # For multi-class classifier, we produce a map for encoding the probabilities of all classes
-            if operator.targeted_onnx_version < StrictVersion('1.2'):
+            if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
                 operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]))
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
@@ -50,7 +49,7 @@ def calculate_sklearn_linear_classifier_output_shapes(operator):
         operator.outputs[0].type = Int64TensorType(shape=[N])
         if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
             # For multi-class classifier, we produce a map for encoding the probabilities of all classes
-            if operator.targeted_onnx_version < StrictVersion('1.2'):
+            if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
                 operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)

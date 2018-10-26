@@ -58,7 +58,16 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     if op.padding == 'valid':
         attrs['auto_pad'] = 'VALID'
     elif op.padding == 'same':
-        attrs['auto_pad'] = 'SAME_LOWER'
+        if is_transpose:  # bypass onnx engine issue on convtranpose support.
+            attrs['auto_pad'] = 'NOTSET'
+            shape = [-1 if i is None else i for i in op.output_shape]
+            if channels_first:
+                attrs['output_shape'] = shape
+            else:
+                attrs['output_shape'] = shape[0:1] + shape[-1:] + shape[1:-1]
+
+        else:
+            attrs['auto_pad'] = 'SAME_LOWER'
     else:
         raise RuntimeError("Unsupported padding type '{}'".format(op.padding))
 

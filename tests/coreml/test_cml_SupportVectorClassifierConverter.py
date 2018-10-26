@@ -47,7 +47,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self.assertTrue('classProbability' in node.output)
 
     def test_support_vector_classifier_binary_no_prob(self):
-        svm = self._fit_binary_classification(SVC())
+        svm = self._fit_binary_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
@@ -57,7 +57,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self._check_model_outputs(svm_onnx, ['classLabel'])
 
     def test_support_vector_classifier_binary_with_prob(self):
-        svm = self._fit_binary_classification(SVC(probability=True))
+        svm = self._fit_binary_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
@@ -65,7 +65,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self._check_model_outputs(svm_onnx, ['classLabel', 'classProbability'])
 
     def test_support_vector_classifier_multiclass_no_prob(self):
-        svm = self._fit_multi_classification(SVC())
+        svm = self._fit_multi_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
@@ -74,10 +74,9 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self._check_model_outputs(svm_onnx, ['classLabel'])
 
     def test_support_vector_classifier_multiclass_with_prob(self):
-        svm = self._fit_multi_classification(SVC(probability=True))
+        svm = self._fit_multi_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
         self.validate_zipmap(svm_onnx)
         self._check_model_outputs(svm_onnx, ['classLabel', 'classProbability'])
-

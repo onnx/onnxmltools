@@ -5,11 +5,11 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
-from distutils.version import StrictVersion
 from keras.layers import SimpleRNN
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_reshape, apply_transpose
 from ...common._registration import register_converter
+from ...common.utils import compare_strict_version
 from .common import extract_recurrent_activation
 
 
@@ -64,7 +64,7 @@ def convert_keras_simple_rnn(scope, operator, container):
     attrs['hidden_size'] = hidden_size
 
     # Set up version-dependent attributes
-    if operator.targeted_onnx_version < StrictVersion('1.2'):
+    if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
         attrs['output_sequence'] = 1 if output_seq else 0
         op_version = 1
     else:
