@@ -7,6 +7,7 @@
 Helpers to help testing deep learning converted models.
 """
 import numpy as np
+from .main import save_model
 
 
 def find_keras_backend():
@@ -68,7 +69,7 @@ def _evaluate_cntk(onnx_model, inputs):
         adjusted_inputs[onnx_name] = [np.ascontiguousarray(np.squeeze(_, axis=0)) for _ in np.split(x, x.shape[0])]
 
     temporary_onnx_model_file_name = 'temp_' + onnx_model.graph.name + '.onnx'
-    onnxmltools.utils.save_model(onnx_model, temporary_onnx_model_file_name)
+    save_model(onnx_model, temporary_onnx_model_file_name)
     cntk_model = cntk.Function.load(temporary_onnx_model_file_name, format=cntk.ModelFormat.ONNX)
 
     return cntk_model.eval(adjusted_inputs)

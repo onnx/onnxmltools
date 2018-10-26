@@ -20,7 +20,7 @@ from keras.initializers import RandomUniform
 
 def skip_relu6():        
     import keras as _keras
-    if False and _keras.__version__ >= StrictVersion('2.2.0'):
+    if _keras.__version__ >= StrictVersion('2.2.0') and _keras.__version__ < StrictVersion('2.2.4'):
         try:
             from keras_applications.mobilenet import relu6
             return False
@@ -38,7 +38,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         # Verify Keras-to-CoreML-to-ONNX path
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
-        except AttributeError as e:
+        except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'".format(e))
             return
         onnx_model = onnxmltools.convert_coreml(coreml_model)
@@ -93,7 +93,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         # Verify Keras-to-CoreML-to-ONNX path
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
-        except AttributeError as e:
+        except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'.".format(e))
             return
         onnx_model_p1 = onnxmltools.convert_coreml(coreml_model)
@@ -126,7 +126,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
-        except AttributeError as e:
+        except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'.".format(e))
             return
         onnx_model = onnxmltools.convert_coreml(coreml_model)
@@ -380,7 +380,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
-        except AttributeError as e:
+        except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'".format(e))
             return
         
