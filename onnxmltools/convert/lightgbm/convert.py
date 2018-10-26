@@ -11,10 +11,10 @@ from ._parse import parse_lightgbm
 
 # Invoke the registration of all our converters and shape calculators
 # from . import shape_calculators
-from . import operator_converters
+from . import operator_converters, shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='',
+def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
             targeted_onnx=onnx.__version__, custom_conversion_functions=None,
             custom_shape_calculators=None):
     '''
@@ -29,6 +29,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
     :param initial_types: a python list. Each element is a tuple of a variable name and a type defined in data_types.py
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
+    :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
@@ -42,5 +43,5 @@ def convert(model, name=None, initial_types=None, doc_string='',
         name = str(uuid4().hex)
     topology = parse_lightgbm(model, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
-    onnx_model = convert_topology(topology, name, doc_string, targeted_onnx)
+    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
     return onnx_model

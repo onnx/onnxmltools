@@ -10,7 +10,7 @@ import numpy as np
 from collections import Counter
 from lightgbm import LGBMClassifier, LGBMRegressor
 from ...common._registration import register_converter
-from ...sklearn.operator_converters.TreeEnsemble import _get_default_tree_classifier_attribute_pairs
+from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
 
 
 def _translate_split_criterion(criterion):
@@ -118,7 +118,7 @@ def convert_lightgbm(scope, operator, container):
         raise ValueError('Only support LightGBM classifier with boosting_type=gbdt')
     gbm_text = gbm_model.booster_.dump_model()
 
-    attrs = _get_default_tree_classifier_attribute_pairs()
+    attrs = get_default_tree_classifier_attribute_pairs()
     attrs['name'] = operator.full_name
     
     # Create different attributes for classifier and regressor, respectively
