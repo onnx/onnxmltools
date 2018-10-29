@@ -79,7 +79,7 @@ def search_converted_models(root=None):
     if not os.path.exists(root):
         raise FileNotFoundError("Unable to find '{0}'.".format(root))
     
-    founds = glob.iglob(f"{root}/**/*.model.onnx", recursive=True)
+    founds = glob.iglob("{0}/**/*.model.onnx".format(root), recursive=True)
     keep = []
     for found in founds:
         onnx = found
