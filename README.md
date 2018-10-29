@@ -98,25 +98,12 @@ to automatically check every converter with
 ## Test all existing converters
 
 This process requires to clone the *onnxmltools* repository.
-
-*Step 1: run converters*
-
 The following command runs all unit tests and generates
 dumps of models, inputs, expected outputs and converted models
 in folder ``TESTDUMP``.
 
 ```
 python tests/main.py DUMP
-```
-
-*Step 2: compare expected output with the runtime*
-
-The following commands retrieves all dumped files,
-computed the output with *onnxruntime* and compare
-them to the expected output.
-
-```
-python tests_backend/main.py DUMP
 ```
 
 It requires *onnxruntime*, *numpy* for most of the models,

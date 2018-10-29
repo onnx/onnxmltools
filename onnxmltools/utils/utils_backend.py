@@ -2,10 +2,12 @@
 Helpers to test runtimes.
 """
 import os
+import sys
 import glob
 import pickle
 import numpy
 from numpy.testing import assert_array_almost_equal, assert_array_equal
+
 
 class ExpectedAssertionError(Exception):
     """
@@ -19,6 +21,37 @@ class OnnxRuntimeAssertionError(AssertionError):
     Expected failure.
     """
     pass
+
+
+def compare_backend(backend, test, decimal=5, options=None, verbose=False, context=None):
+    """
+    The function compares the expected output (computed with
+    the model before being converted to ONNX) and the ONNX output
+    produced with module *onnxruntime*.
+    
+    :param backend: backend to use to run the comparison,
+        only *onnxruntime* is currently supported
+    :param test: dictionary with the following keys:
+        - *onnx*: onnx model (filename or object)
+        - *expected*: expected output (filename pkl or object)
+        - *data*: input data (filename pkl or object)
+    :param decimal: precision of the comparison
+    :param options: comparison options
+    :param context: specifies custom operators
+    :param verbose: in case of error, the function may print
+        more information on the standard output
+    
+    The function does not return anything but raises an error
+    if the comparison failed.
+    """
+    if backend == "onnxruntime":
+        if sys.version_info[0] == 2:
+            # onnxruntime is not available on Python 2.
+            return            
+        from .utils_backend_onnxruntime import compare_runtime
+        compare_runtime(test, decimal, options, verbose)
+    else:
+        raise ValueError("Does not support backend '{0}'.".format(backend))
 
 
 def search_converted_models(root=None):
@@ -59,24 +92,29 @@ def search_converted_models(root=None):
 
 def load_data_and_model(items_as_dict, **context):
     """
-    Loads every file in a dictionary with extension pkl
-    for pickle.
+    Loads every file in a dictionary {key: filename}.
+    The extension is either *pkl* and *onnx* and determines
+    how it it loaded. If the value is not a string,
+    the function assumes it was already loaded.
     """
     res = {}
     for k, v in items_as_dict.items():
-        if os.path.splitext(v)[-1] == ".pkl":
-            with open(v, "rb") as f:
-                try:
-                    bin = pickle.load(f)
-                except ImportError as e:
-                    if '.model.' in v:
-                        continue
-                    else:
-                        raise ImportError("Unable to load '{0}' due to {1}".format(v, e))
-                res[k] = bin
-        elif os.path.splitext(v)[-1] == ".keras":
-            import keras.models
-            res[k] = keras.models.load_model(v, custom_objects=context)
+        if isinstance(v, str):
+            if os.path.splitext(v)[-1] == ".pkl":
+                with open(v, "rb") as f:
+                    try:
+                        bin = pickle.load(f)
+                    except ImportError as e:
+                        if '.model.' in v:
+                            continue
+                        else:
+                            raise ImportError("Unable to load '{0}' due to {1}".format(v, e))
+                    res[k] = bin
+            elif os.path.splitext(v)[-1] == ".keras":
+                import keras.models
+                res[k] = keras.models.load_model(v, custom_objects=context)
+            else:
+                res[k] = v
         else:
             res[k] = v
     return res
@@ -110,7 +148,7 @@ def extract_options(name):
         return res
 
 
-def compare(expected, output, **kwargs):
+def compare_outputs(expected, output, **kwargs):
     """
     Compares expected values and output.
     Returns None if no error, an exception message otherwise.
@@ -121,7 +159,7 @@ def compare(expected, output, **kwargs):
     Dec3 = kwargs.pop("Dec3", False)
     Disc = kwargs.pop("Disc", False)
     Mism = kwargs.pop("Mism", False)
-    
+
     if Dec4:
         kwargs["decimal"] = min(kwargs["decimal"], 4)
     if Dec3:

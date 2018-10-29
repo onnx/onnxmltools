@@ -69,16 +69,27 @@ def run_tests(library=None, folder=None):
             index = sys.path.index(fold)
             del sys.path[index]
     
-    with warnings.catch_warnings():
-        warnings.filterwarnings(category=DeprecationWarning, action="ignore")
-        warnings.filterwarnings(category=FutureWarning, action="ignore")
-        runner = unittest.TextTestRunner()
-        for ts in suites:
-            for k in ts:
-                for t in k:
-                    print(t.__class__.__name__)
-                    break
-            runner.run(ts)
+    if False:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(category=DeprecationWarning, action="ignore")
+            warnings.filterwarnings(category=FutureWarning, action="ignore")
+            runner = unittest.TextTestRunner()
+            for ts in suites:
+                for k in ts:
+                    for t in k:
+                        print(t.__class__.__name__)
+                        break
+                runner.run(ts)
+    
+    from onnxmltools.utils.tests_helper import make_report_backend
+    report = make_report_backend(folder)
+    
+    from pandas import DataFrame, set_option
+    set_option("display.max_columns", None)
+    set_option("display.max_rows", None)
+    
+    df = DataFrame(report).sort_values(["_model"])
+    print(df)
                     
     
 if __name__ == "__main__":
