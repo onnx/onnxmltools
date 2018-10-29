@@ -5,6 +5,7 @@ import os
 import sys
 import glob
 import pickle
+from distutils.version import StrictVersion
 import numpy
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
@@ -21,6 +22,18 @@ class OnnxRuntimeAssertionError(AssertionError):
     Expected failure.
     """
     pass
+    
+
+def evaluate_condition(backend, condition):
+    """
+    Evaluates a condition such as
+    ``StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')``
+    """
+    if backend == "onnxruntime":
+        import onnxruntime
+        return eval(condition)
+    else:
+        raise NotImplementedError("Not implemented for backend '{0}'".format(backend))
 
 
 def compare_backend(backend, test, decimal=5, options=None, verbose=False, context=None):
