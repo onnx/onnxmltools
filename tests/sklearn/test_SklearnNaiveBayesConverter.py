@@ -36,7 +36,7 @@ class TestNaiveBayesConverter(unittest.TestCase):
         model_onnx = convert_sklearn(model, 'bernoulli naive bayes', [('input', FloatTensorType([1, 4]))])
         self.assertIsNotNone(model_onnx)
         dump_data_and_model(X[:5], model, model_onnx, basename="SklearnBinBernoulliNB-OneOff",
-                            allow_failure=True)
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.4')")
 
     def test_model_multinomial_nb_multiclass(self):
         model, X = self._fit_model_multiclass_classification(MultinomialNB())

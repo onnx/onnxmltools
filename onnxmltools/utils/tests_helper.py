@@ -140,7 +140,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                 try:
                     output = compare_backend(b, runtime_test, options=extract_options(basename), context=context)
                 except AssertionError as e:
-                    if isinstance(allow_failure, bool) and allow_failure:
+                    if isinstance(allow, bool) and allow:
                         warnings.warn("Issue with '{0}' due to {1}".format(basename, e))
                         continue
                     else:
