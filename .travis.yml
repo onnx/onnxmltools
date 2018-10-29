@@ -1,7 +1,7 @@
 dist: xenial
 language: python
 env:
-  - ONNX_VERSION="" ONNX_ML=1
+  - ONNX_ML=1
 
 addons:
   apt:
@@ -22,7 +22,11 @@ install:
     else
       curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o $HOME/miniconda.sh;
     fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then export ONNX_VERSION="==1.1.2" fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+      export ONNX_VERSION="==1.1.2";
+    else
+      export ONNX_VERSION="";
+    fi
   - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
