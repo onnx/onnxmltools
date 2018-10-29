@@ -69,17 +69,16 @@ def run_tests(library=None, folder=None):
             index = sys.path.index(fold)
             del sys.path[index]
     
-    if False:
-        with warnings.catch_warnings():
-            warnings.filterwarnings(category=DeprecationWarning, action="ignore")
-            warnings.filterwarnings(category=FutureWarning, action="ignore")
-            runner = unittest.TextTestRunner()
-            for ts in suites:
-                for k in ts:
-                    for t in k:
-                        print(t.__class__.__name__)
-                        break
-                runner.run(ts)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(category=DeprecationWarning, action="ignore")
+        warnings.filterwarnings(category=FutureWarning, action="ignore")
+        runner = unittest.TextTestRunner()
+        for ts in suites:
+            for k in ts:
+                for t in k:
+                    print(t.__class__.__name__)
+                    break
+            runner.run(ts)
     
     from onnxmltools.utils.tests_helper import make_report_backend
     report = make_report_backend(folder)

@@ -129,7 +129,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
             backend = [backend]
         for b in backend:
             if isinstance(allow_failure, str):
-                allow = evaluate_condition(allow_failure)
+                allow = evaluate_condition(b, allow_failure)
             else:
                 allow = allow_failure
             if allow_failure is None:
