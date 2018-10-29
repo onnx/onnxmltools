@@ -37,7 +37,9 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     :param context: used if the model contains a custom operator such
         as a custom Keras function...
     :param allow_failure: None to raise an exception if comparison fails
-        for the backends
+        for the backends, otherwise a string which is then evaluated to check
+        whether or not the test can fail, example:
+        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: the created files
 
     Some convention for the name,
@@ -181,7 +183,7 @@ def convert_model(model, name, input_types):
     return model, prefix
     
     
-def dump_one_class_classification(model, suffix="", folder=None):
+def dump_one_class_classification(model, suffix="", folder=None, allow_failure=None):
     """
     Trains and dumps a model for a One Class outlier problem.
     The function trains a model and calls
@@ -190,6 +192,10 @@ def dump_one_class_classification(model, suffix="", folder=None):
     :param model: any model following *scikit-learn* API
     :param suffix: added to filenames
     :param folder: where to save the file
+    :param allow_failure: None to raise an exception if comparison fails
+        for the backends, otherwise a string which is then evaluated to check
+        whether or not the test can fail, example:
+        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
     
     Every created filename will follow the pattern:
@@ -200,17 +206,21 @@ def dump_one_class_classification(model, suffix="", folder=None):
     y = [1, 1, 1]
     model.fit(X, y)
     model_onnx, prefix = convert_model(model, 'one_class', [('input', FloatTensorType([1, 2]))])
-    return dump_data_and_model(X, model, model_onnx, folder=folder,
+    return dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
                                basename=prefix + "One" + model.__class__.__name__ + suffix)
 
 
-def dump_binary_classification(model, suffix="", folder=None):
+def dump_binary_classification(model, suffix="", folder=None, allow_failure=None):
     """
     Trains and dumps a model for a binary classification problem.
     
     :param model: any model following *scikit-learn* API
     :param suffix: added to filenames
     :param folder: where to save the file
+    :param allow_failure: None to raise an exception if comparison fails
+        for the backends, otherwise a string which is then evaluated to check
+        whether or not the test can fail, example:
+        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
     
     Every created filename will follow the pattern:
@@ -221,16 +231,20 @@ def dump_binary_classification(model, suffix="", folder=None):
     y = ['A', 'B', 'A']
     model.fit(X, y)
     model_onnx, prefix = convert_model(model, 'tree-based binary classifier', [('input', FloatTensorType([1, 2]))])
-    dump_data_and_model(X, model, model_onnx, folder=folder,
+    dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
                         basename=prefix + "Bin" + model.__class__.__name__ + suffix)
 
-def dump_multiple_classification(model, suffix="", folder=None):
+def dump_multiple_classification(model, suffix="", folder=None, allow_failure=None):
     """
     Trains and dumps a model for a binary classification problem.
     
     :param model: any model following *scikit-learn* API
     :param suffix: added to filenames
     :param folder: where to save the file
+    :param allow_failure: None to raise an exception if comparison fails
+        for the backends, otherwise a string which is then evaluated to check
+        whether or not the test can fail, example:
+        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
     
     Every created filename will follow the pattern:
@@ -241,17 +255,21 @@ def dump_multiple_classification(model, suffix="", folder=None):
     y = [0, 1, 2, 1, 1, 2]
     model.fit(X, y)
     model_onnx, prefix = convert_model(model, 'tree-based multi-output regressor', [('input', FloatTensorType([1, 2]))])
-    dump_data_and_model(X, model, model_onnx, folder=folder,
+    dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
                         basename=prefix + "Mcl" + model.__class__.__name__ + suffix)
 
 
-def dump_multiple_regression(model, suffix="", folder=None):
+def dump_multiple_regression(model, suffix="", folder=None, allow_failure=None):
     """
     Trains and dumps a model for a multi regression problem.
     
     :param model: any model following *scikit-learn* API
     :param suffix: added to filenames
     :param folder: where to save the file
+    :param allow_failure: None to raise an exception if comparison fails
+        for the backends, otherwise a string which is then evaluated to check
+        whether or not the test can fail, example:
+        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
     
     Every created filename will follow the pattern:
@@ -262,11 +280,11 @@ def dump_multiple_regression(model, suffix="", folder=None):
     y = numpy.array([[100, 50], [100, 49], [100, 99]], dtype=numpy.float32)
     model.fit(X, y)
     model_onnx, prefix = convert_model(model, 'tree-based multi-output regressor', [('input', FloatTensorType([1, 2]))])
-    dump_data_and_model(X, model, model_onnx, folder=folder,
+    dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
                         basename=prefix + "MRg" + model.__class__.__name__ + suffix)
 
 
-def dump_single_regression(model, suffix="", folder=None):
+def dump_single_regression(model, suffix="", folder=None, allow_failure=None):
     """
     Trains and dumps a model for a regression problem.
     
@@ -274,6 +292,10 @@ def dump_single_regression(model, suffix="", folder=None):
     :param prefix: library name
     :param suffix: added to filenames
     :param folder: where to save the file
+    :param allow_failure: None to raise an exception if comparison fails
+        for the backends, otherwise a string which is then evaluated to check
+        whether or not the test can fail, example:
+        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
     
     Every created filename will follow the pattern:
@@ -284,7 +306,7 @@ def dump_single_regression(model, suffix="", folder=None):
     y = numpy.array([100, -10, 50], dtype=numpy.float32)
     model.fit(X, y)
     model_onnx, prefix = convert_model(model, 'tree-based regressor', [('input', FloatTensorType([1, 2]))])
-    dump_data_and_model(X, model, model_onnx, folder=folder,
+    dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
                         basename=prefix + "Reg" + model.__class__.__name__ + suffix)
 
 

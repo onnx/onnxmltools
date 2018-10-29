@@ -18,7 +18,7 @@ class TestSklearnDictVectorizerConverter(unittest.TestCase):
                                      [('input', DictionaryType(StringTensorType([1]), FloatTensorType([1])))])
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(data, model, model_onnx, basename="SklearnDictVectorizer-OneOff-SkipDim1",
-                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3') or StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
 
 
 if __name__ == "__main__":

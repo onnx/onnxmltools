@@ -17,7 +17,8 @@ class TestCoreMLDictVectorizerConverter(unittest.TestCase):
         model_coreml = coremltools.converters.sklearn.convert(model)
         model_onnx = convert(model_coreml.get_spec())
         self.assertTrue(model_onnx is not None)
-        dump_data_and_model(data, model, model_onnx, basename="CmlDictVectorizer-OneOff-SkipDim1")
+        dump_data_and_model(data, model, model_onnx, basename="CmlDictVectorizer-OneOff-SkipDim1",
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
 
 
 if __name__ == "__main__":

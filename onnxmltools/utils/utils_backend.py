@@ -31,6 +31,7 @@ def evaluate_condition(backend, condition):
     """
     if backend == "onnxruntime":
         import onnxruntime
+        import onnx
         return eval(condition)
     else:
         raise NotImplementedError("Not implemented for backend '{0}'".format(backend))
@@ -76,7 +77,7 @@ def compare_backend(backend, test, decimal=5, options=None, verbose=False, conte
             # onnxruntime is not available on Python 2.
             return            
         from .utils_backend_onnxruntime import compare_runtime
-        compare_runtime(test, decimal, options, verbose)
+        return compare_runtime(test, decimal, options, verbose)
     else:
         raise ValueError("Does not support backend '{0}'.".format(backend))
 

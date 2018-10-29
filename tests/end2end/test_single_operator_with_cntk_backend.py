@@ -308,7 +308,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         self._test_one_to_one_operator_core_channels_last(model, x)
 
     @unittest.skipIf(skip_relu6(), "relu6 is not available")
-    @unittest.skipIf(StrictVersion(onnx.__version__) >= StrictVersion('1.2'),
+    @unittest.skipIf(StrictVersion(onnx.__version__) >= StrictVersion('1.3'),
         "The latest CNTK release does not support the new ONNX Reshape")
     def test_flatten(self):
         N, C, H, W, D = 2, 3, 1, 2, 2

@@ -34,7 +34,8 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         lr_onnx = convert(lr_coreml.get_spec())
         self.assertTrue(lr_onnx is not None)
         self.validate_zipmap(lr_onnx)
-        dump_data_and_model(X.astype(numpy.float32), lr, lr_onnx, basename="CmlbinLogitisticRegression")
+        dump_data_and_model(X.astype(numpy.float32), lr, lr_onnx, basename="CmlbinLogitisticRegression",
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
 
         # Ensure there is a probability output
         svm = LinearSVC()

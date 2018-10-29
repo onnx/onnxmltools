@@ -88,7 +88,13 @@ def run_tests(library=None, folder=None):
     set_option("display.max_rows", None)
     
     df = DataFrame(report).sort_values(["_model"])
+    
+    import onnx
+    import onnxruntime
     print(df)
+    df["onnx-version"] = onnx.__version__
+    df["onnxruntime-version"] = onnxruntime.__version__
+    df.to_excel(os.path.join(folder, "report_backend.xlsx"))
                     
     
 if __name__ == "__main__":
