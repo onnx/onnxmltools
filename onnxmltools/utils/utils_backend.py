@@ -36,6 +36,20 @@ def evaluate_condition(backend, condition):
         raise NotImplementedError("Not implemented for backend '{0}'".format(backend))
 
 
+def is_backend_enabled(backend):
+    """
+    Tells if a backend is enabled.
+    """
+    if backend == "onnxruntime":
+        try:
+            import onnxruntime
+            return True
+        except ImportError:
+            return False
+    else:
+        raise NotImplementedError("Not implemented for backend '{0}'".format(backend))
+
+
 def compare_backend(backend, test, decimal=5, options=None, verbose=False, context=None):
     """
     The function compares the expected output (computed with

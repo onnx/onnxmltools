@@ -8,7 +8,7 @@ import pickle
 import os
 import warnings
 from ..convert.common.data_types import FloatTensorType
-from .utils_backend import compare_backend, extract_options, evaluate_condition
+from .utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
 
 
 def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
@@ -128,6 +128,8 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         if not isinstance(backend, list):
             backend = [backend]
         for b in backend:
+            if not is_backend_enabled(b):
+                continue
             if isinstance(allow_failure, str):
                 allow = evaluate_condition(b, allow_failure)
             else:
@@ -143,10 +145,11 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                         continue
                     else:
                         raise e
-            dest = os.path.join(folder, basename + ".backend.{0}.pkl".format(b))
-            names.append(dest)
-            with open(dest, "wb") as f:
-                pickle.dump(model, f)
+            if output is not None:
+                dest = os.path.join(folder, basename + ".backend.{0}.pkl".format(b))
+                names.append(dest)
+                with open(dest, "wb") as f:
+                    pickle.dump(output, f)
         
     return names
 
