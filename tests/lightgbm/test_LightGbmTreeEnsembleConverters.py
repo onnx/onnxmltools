@@ -18,7 +18,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     def test_lightgbm_classifier(self):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1)
-        dump_binary_classification(model)
+        dump_binary_classification(model, allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
         dump_multiple_classification(model, allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
 
     def test_lightgbm_regressor(self):

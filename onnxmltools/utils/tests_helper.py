@@ -136,7 +136,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                 allow = evaluate_condition(b, allow_failure)
             else:
                 allow = allow_failure
-            if allow_failure is None:
+            if allow is None:
                 output = compare_backend(b, runtime_test, options=extract_options(basename), context=context)
             else:
                 try:
