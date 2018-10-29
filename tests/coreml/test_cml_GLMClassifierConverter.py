@@ -24,7 +24,8 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         y = iris.target
         y[y == 2] = 1
 
-        lr = LogisticRegression()
+        # scikit-learn has changed the default value for multi_class.
+        lr = LogisticRegression(multi_class='ovr')
         lr.fit(X, y)
         lr_coreml = coremltools.converters.sklearn.convert(lr)
         lr_onnx = convert(lr_coreml.get_spec())
@@ -38,3 +39,7 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
         self.validate_zipmap(svm_onnx)
+
+
+if __name__ == "__main__":
+    unittest.main()

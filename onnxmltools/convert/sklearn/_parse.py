@@ -117,8 +117,7 @@ def _get_sklearn_operator_name(model_type):
     :return: A string which stands for the type of the input model in our conversion framework
     '''
     if model_type not in sklearn_operator_name_map:
-        print(sklearn_operator_name_map)
-        raise ValueError('No proper operator name found for %s' % model_type)
+        raise ValueError("No proper operator name found for '%s'" % model_type)
     return sklearn_operator_name_map[model_type]
 
 
@@ -131,7 +130,6 @@ def _parse_sklearn_simple_model(scope, model, inputs):
     :param inputs: A list of variables
     :return: A list of output variables which will be passed to next stage
     '''
-    print('simple model: %s ' % type(model))
     this_operator = scope.declare_local_operator(_get_sklearn_operator_name(type(model)), model)
     this_operator.inputs = inputs
 
@@ -160,7 +158,6 @@ def _parse_sklearn_pipeline(scope, model, inputs):
     :param inputs: A list of Variable objects
     :return: A list of output variables produced by the input pipeline
     '''
-    print('pipeline: %s ' % type(model))
     for step in model.steps:
         inputs = _parse_sklearn(scope, step[1], inputs)
     return inputs
@@ -181,14 +178,19 @@ def _parse_sklearn(scope, model, inputs):
         return _parse_sklearn_simple_model(scope, model, inputs)
 
 
-def parse_sklearn(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+def parse_sklearn(model, initial_types=None, target_opset=None,
+                  targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     # Put scikit-learn object into an abstract container so that our framework can work seamlessly on models created
     # with different machine learning tools.
     raw_model_container = SklearnModelContainer(model)
 
     # Declare a computational graph. It will become a representation of the input scikit-learn model after parsing.
-    topology = Topology(raw_model_container, initial_types=initial_types, targeted_onnx=targeted_onnx,
-        custom_conversion_functions = custom_conversion_functions, custom_shape_calculators = custom_shape_calculators)
+    topology = Topology(raw_model_container,
+                        initial_types=initial_types,
+                        target_opset=target_opset,
+                        targeted_onnx=targeted_onnx,
+                        custom_conversion_functions=custom_conversion_functions,
+                        custom_shape_calculators=custom_shape_calculators)
 
     # Declare an object to provide variables' and operators' naming mechanism. In contrast to CoreML, one global scope
     # is enough for parsing scikit-learn models.

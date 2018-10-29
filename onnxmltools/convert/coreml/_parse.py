@@ -4,11 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
 import warnings
 from ...proto import onnx
 from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
+from ..common.utils import compare_strict_version
 from ..common.data_types import *
 
 
@@ -86,12 +86,12 @@ def _parse_coreml_feature(feature_info, targeted_onnx_version, batch_size=1):
     elif type_name == 'dictionaryType':
         key_type = raw_type.dictionaryType.WhichOneof('KeyType')
         if key_type == 'int64KeyType':
-            if targeted_onnx_version < StrictVersion('1.2'):
+            if compare_strict_version(targeted_onnx_version, '1.2') < 0:
                 return DictionaryType(Int64TensorType([1]), FloatTensorType([1]), doc_string=doc_string)
             else:
                 return DictionaryType(Int64TensorType([]), FloatTensorType([]), doc_string=doc_string)
         elif key_type == 'stringKeyType':
-            if targeted_onnx_version < StrictVersion('1.2'):
+            if compare_strict_version(targeted_onnx_version, '1.2') < 0:
                 return DictionaryType(StringTensorType([1]), FloatTensorType([1]), doc_string=doc_string)
             else:
                 return DictionaryType(StringTensorType([]), FloatTensorType([]), doc_string=doc_string)
@@ -429,12 +429,13 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         operator.outputs.append(parent_variable)
 
 
-def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+def parse_coreml(model, initial_types=None, target_opset=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model
     :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
     name and a type defined in data_types.py.
+    :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
     :param targeted_onnx: a version string such as `1.1.2` or `1.2.1` for specifying the ONNX version used to produce
     the output model.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
@@ -456,8 +457,12 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, cust
     # Topology is shared by both of CoreML and scikit-learn conversion frameworks, so we have a wrapper class,
     # CoremlModelContainer, to make sure our topology-related functions can seamlessly handle both of CoreML and
     # scikit-learn.
-    topology = Topology(CoremlModelContainer(model), default_batch_size, initial_types, reserved_variable_names,
-                        targeted_onnx=targeted_onnx, custom_conversion_functions=custom_conversion_functions,
+    topology = Topology(CoremlModelContainer(model),
+                        default_batch_size,
+                        initial_types,
+                        reserved_variable_names,
+                        target_opset=target_opset, targeted_onnx=targeted_onnx,
+                        custom_conversion_functions=custom_conversion_functions,
                         custom_shape_calculators=custom_shape_calculators)
     scope = topology.declare_scope('__root__')
 

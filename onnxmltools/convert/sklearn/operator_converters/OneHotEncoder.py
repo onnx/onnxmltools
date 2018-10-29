@@ -13,7 +13,7 @@ from ...common._registration import register_converter
 def convert_sklearn_one_hot_encoder(scope, operator, container):
     op = operator.raw_operator
     C = operator.inputs[0].type.shape[1]
-    if op.categorical_features == 'all':
+    if op.categorical_features in (None, 'all'):
         categorical_feature_indices = [i for i in range(C)]
     elif isinstance(op.categorical_features, collections.Iterable):
         if all(isinstance(i, bool) for i in op.categorical_features):

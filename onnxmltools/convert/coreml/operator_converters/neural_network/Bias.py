@@ -4,10 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 from ....common._apply_operation import apply_add
+from ....common.utils import compare_strict_version
 from .Scale import deduce_broadcast_axis_and_shape
 
 

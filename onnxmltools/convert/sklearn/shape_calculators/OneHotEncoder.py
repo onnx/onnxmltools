@@ -35,7 +35,8 @@ def calculate_sklearn_one_hot_encoder_output_shapes(operator):
     op = operator.raw_operator
 
     # Figure out which coordinates are categorical features we're going to encode
-    if op.categorical_features == 'all':
+    # None is allowed since 0.20 and categorical_features will be removed in 0.22.
+    if op.categorical_features in (None, 'all'):
         # In this case, all features need to be encoded
         C = operator.inputs[0].type.shape[1]
         categorical_feature_indices = [i for i in range(C)]
