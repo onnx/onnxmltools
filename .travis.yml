@@ -24,10 +24,10 @@ install:
     fi
   - export ONNX_VERSION="";
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
-      export ONNX_VERSION="==1.2.3";
+      export ONNX_VERSION="==1.1.2";
     fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-      export ONNX_VERSION="==1.3.0";
+      export ONNX_VERSION="==1.2.3";
     fi
   - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
