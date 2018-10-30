@@ -3,10 +3,13 @@ Tests CoreML GLMClassifier converter.
 """
 import coremltools
 import unittest
+import numpy
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from onnxmltools.convert.coreml.convert import convert
+from onnxmltools.utils import dump_data_and_model
+
 
 class TestCoreMLGLMClassifierConverter(unittest.TestCase):
 
@@ -31,6 +34,8 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         lr_onnx = convert(lr_coreml.get_spec())
         self.assertTrue(lr_onnx is not None)
         self.validate_zipmap(lr_onnx)
+        dump_data_and_model(X.astype(numpy.float32), lr, lr_onnx, basename="CmlbinLogitisticRegression",
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
 
         # Ensure there is a probability output
         svm = LinearSVC()
@@ -39,6 +44,8 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
         self.validate_zipmap(svm_onnx)
+        dump_data_and_model(X.astype(numpy.float32), svm, svm_onnx, basename="CmlBinLinearSVC-NoProb",
+                            allow_failure=True)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import sys
 
 import onnxmltools
+from onnxmltools.utils import dump_data_and_model
 import numpy as np
 import unittest
 import keras
@@ -49,3 +50,9 @@ class TestKerasConverter(unittest.TestCase):
         converted_model = onnxmltools.convert_keras(model, custom_conversion_functions={ScaledTanh: custom_activation})
         self.assertIsNotNone(converted_model)
         # to check the model, you can print(str(converted_model))
+        dump_data_and_model(x.astype(np.float32), model, converted_model, basename="KerasCustomOp-Out0",
+                            context=dict(ScaledTanh=ScaledTanh))
+
+
+if __name__ == "__main__":
+    unittest.main()
