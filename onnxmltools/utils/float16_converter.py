@@ -50,15 +50,11 @@ def convert_tensor_float_to_float16(tensor):
         # convert raw_data (bytes type)
         if tensor.raw_data:
             # convert n.raw_data to float
-            float32_list = []
-            for i in range(len(tensor.raw_data) // 4):
-                float32_list += unpack('f', tensor.raw_data[i * 4:(i + 1) * 4])
+            float32_list = np.fromstring(tensor.raw_data, dtype='float32')
             # convert float to float16
-            int_list = _npfloat16_to_int(np.float16(float32_list))
+            float16_list = np.float16(float32_list)
             # convert float16 to bytes and write back to raw_data
-            tensor.raw_data = b''
-            for num in int_list:
-                tensor.raw_data += num.to_bytes(2, byteorder='little', signed=False)
+            tensor.raw_data = float16_list.tostring()
     return tensor
 
 
