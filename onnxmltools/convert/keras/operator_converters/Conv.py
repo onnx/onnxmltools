@@ -3,8 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
-from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose
+import numpy
+from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, DepthwiseConv2D
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_identity, apply_transpose
 from ...common._registration import register_converter
@@ -36,8 +36,21 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     input_channels, output_channels = weight_params.shape[-2:]
     kernel_size = weight_params.shape[:-2]
     assert (kernel_size == op.kernel_size)
-    weight_params = weight_params.transpose(weight_perm_axes)
-
+        
+    if isinstance(op, DepthwiseConv2D):
+        # see https://github.com/onnx/onnx-tensorflow/pull/266/files
+        dm = op.depth_multiplier
+        output_channels *= dm
+        group = input_channels
+        shape = weight_params.shape
+        # weight_params = weight_params.transpose(weight_perm_axes)
+        new_shape = shape[:2] + (1, shape[2] * shape[3])
+        weight_params = numpy.reshape(weight_params, new_shape)
+        weight_params = weight_params.transpose(weight_perm_axes)
+    else:
+        weight_params = weight_params.transpose(weight_perm_axes)
+        group = 1
+        
     weight_tensor_name = scope.get_unique_variable_name('W')
     container.add_initializer(weight_tensor_name, onnx_proto.TensorProto.FLOAT,
                               weight_params.shape, weight_params.flatten())
@@ -53,7 +66,7 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     attrs['strides'] = list(op.strides)
     attrs['kernel_shape'] = op.kernel_size
     # Fix this...
-    attrs['group'] = 1
+    attrs['group'] = group
 
     if op.padding == 'valid':
         attrs['auto_pad'] = 'VALID'
@@ -107,6 +120,11 @@ def convert_keras_conv2d(scope, operator, container):
     convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm, output_perm, weight_perm)
 
 
+def convert_keras_depthwise_conv_2d(scope, operator, container):
+    is_transpose, n_dims, input_perm, output_perm, weight_perm = get_converter_config(2, False)
+    convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm, output_perm, weight_perm)
+
+
 def convert_keras_conv3d(scope, operator, container):
     is_transpose, n_dims, input_perm, output_perm, weight_perm = get_converter_config(3, False)
     convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm, output_perm, weight_perm)
@@ -127,3 +145,4 @@ register_converter(Conv2D, convert_keras_conv2d)
 register_converter(Conv3D, convert_keras_conv3d)
 register_converter(Conv2DTranspose, convert_keras_conv_transpose_2d)
 register_converter(Conv3DTranspose, convert_keras_conv_transpose_3d)
+register_converter(DepthwiseConv2D, convert_keras_depthwise_conv_2d)

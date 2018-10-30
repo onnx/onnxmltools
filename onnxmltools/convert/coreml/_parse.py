@@ -429,12 +429,13 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
         operator.outputs.append(parent_variable)
 
 
-def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+def parse_coreml(model, initial_types=None, target_opset=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     This is the root function of the whole parsing procedure.
     :param model: CoreML model
     :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
     name and a type defined in data_types.py.
+    :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
     :param targeted_onnx: a version string such as `1.1.2` or `1.2.1` for specifying the ONNX version used to produce
     the output model.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
@@ -456,8 +457,12 @@ def parse_coreml(model, initial_types=None, targeted_onnx=onnx.__version__, cust
     # Topology is shared by both of CoreML and scikit-learn conversion frameworks, so we have a wrapper class,
     # CoremlModelContainer, to make sure our topology-related functions can seamlessly handle both of CoreML and
     # scikit-learn.
-    topology = Topology(CoremlModelContainer(model), default_batch_size, initial_types, reserved_variable_names,
-                        targeted_onnx=targeted_onnx, custom_conversion_functions=custom_conversion_functions,
+    topology = Topology(CoremlModelContainer(model),
+                        default_batch_size,
+                        initial_types,
+                        reserved_variable_names,
+                        target_opset=target_opset, targeted_onnx=targeted_onnx,
+                        custom_conversion_functions=custom_conversion_functions,
                         custom_shape_calculators=custom_shape_calculators)
     scope = topology.declare_scope('__root__')
 

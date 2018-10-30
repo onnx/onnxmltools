@@ -8,6 +8,7 @@ import re
 import warnings
 from ...proto import onnx
 from ...proto import helper
+from ...proto import get_opset_number_from_onnx
 from ...utils.metadata_props import add_metadata_props
 from .data_types import *
 from ._container import ModelComponentContainer
@@ -15,6 +16,7 @@ from . import _registration
 from . import utils
 from .utils import compare_strict_version
 from .interface import OperatorBase
+
 
 class Variable:
 
@@ -234,7 +236,7 @@ class Scope:
 class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
-                 reserved_variable_names=None, reserved_operator_names=None, targeted_onnx=None,
+                 reserved_variable_names=None, reserved_operator_names=None, target_opset=None, targeted_onnx=None,
                  custom_conversion_functions=None, custom_shape_calculators=None, metadata_props=None):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
@@ -256,10 +258,7 @@ class Topology:
         self.initial_types = initial_types if initial_types else list()
         self.metadata_props = metadata_props if metadata_props else dict()
         self.default_batch_size = default_batch_size
-        if targeted_onnx is None: 
-            self.targeted_onnx_version = None 
-        else: 
-            self.targeted_onnx_version = targeted_onnx
+        self.targeted_onnx_version = targeted_onnx
         self.custom_conversion_functions = custom_conversion_functions if custom_conversion_functions else {}
         self.custom_shape_calculators = custom_shape_calculators if custom_shape_calculators else {}
 
@@ -626,25 +625,32 @@ class Topology:
         self._check_structure()
 
 
-def convert_topology(topology, model_name, doc_string, targeted_onnx):
+def convert_topology(topology, model_name, doc_string, target_opset, targeted_onnx):
     '''
     This function is used to convert our Topology object defined in _parser.py into a ONNX model (type: ModelProto).
     :param topology: The Topology object we are going to convert
     :param model_name: GraphProto's name. Let "model" denote the returned model. The string "model_name" would be
     assigned to "model.graph.name."
     :param doc_string: A string attached to the produced model
-    :param targeted_onnx: A string, which specifies the targeted ONNX version of the produced model. Possible values
+    :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
+    :param targeted_onnx[deprecated]: A string, which specifies the targeted ONNX version of the produced model. Possible values
     include '1.1.2', '1.2', and so on.
     :return: a ONNX ModelProto
     '''
     if targeted_onnx is not None and compare_strict_version(targeted_onnx, onnx.__version__) != 0:
-        raise RuntimeError(
+        warnings.warn(
+            'targeted_onnx is deprecated, in future, specify target_opset for the target model.\n' +
             'ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
                 onnx.__version__, targeted_onnx))
 
+    if target_opset is None:
+        target_opset = get_opset_number_from_onnx()
+    elif target_opset > get_opset_number_from_onnx():
+        raise RuntimeError("target_opset %d is higher than the number of the installed onnx package.")
+
     topology._initialize_graph_status_for_traversing()
 
-    container = ModelComponentContainer(targeted_onnx)
+    container = ModelComponentContainer(target_opset, targeted_onnx)
 
     # Put roots and leaves as ONNX's model into buffers. They will be added into ModelComponentContainer later.
     tensor_inputs = {}

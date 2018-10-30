@@ -18,7 +18,7 @@ from .operator_converters import neural_network as nn_converters
 from .shape_calculators import neural_network as nn_shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='',
+def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
             targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
@@ -29,6 +29,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
     name and a type defined in data_types.py.
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
+    :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
@@ -50,7 +51,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
         name = str(uuid4().hex)
 
     # Parse CoreML model as our internal data structure (i.e., Topology)
-    topology = parse_coreml(spec, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_coreml(spec, initial_types, target_opset, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
 
     # Parse CoreML description, author, and license. Those information will be attached to the final ONNX model.
     metadata = spec.description.metadata
@@ -70,7 +71,7 @@ def convert(model, name=None, initial_types=None, doc_string='',
             metadata_props.append(entry)
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
-    onnx_model = convert_topology(topology, name, doc_string, targeted_onnx)
+    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
 
     # Edit ONNX model's attributes related to CoreML's meta information
     if len(metadata_props) > 0:
