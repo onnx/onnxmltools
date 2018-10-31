@@ -123,34 +123,42 @@ def convert_sklearn_naive_bayes(scope, operator, container):
 
     class_type = onnx_proto.TensorProto.STRING
     zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-    if np.issubdtype(nb.classes_.dtype, float):
+    if np.issubdtype(nb.classes_.dtype, np.floating):
         class_type = onnx_proto.TensorProto.INT32
         classes = np.array(list(map(lambda x: int(x), classes)))
         zipmap_attrs['classlabels_int64s'] = classes 
-    elif np.issubdtype(nb.classes_.dtype, int):
+    elif np.issubdtype(nb.classes_.dtype, np.signedinteger):
         class_type = onnx_proto.TensorProto.INT32
         zipmap_attrs['classlabels_int64s'] = classes
     else:
         zipmap_attrs['classlabels_strings'] = classes
         classes = np.array([s.encode('utf-8') for s in classes])
 
-    container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
-                              class_log_prior.shape, class_log_prior.flatten())
     container.add_initializer(feature_log_prob_name, onnx_proto.TensorProto.FLOAT,
                               feature_log_prob.shape, feature_log_prob.flatten())
     container.add_initializer(classes_name, class_type, classes.shape, classes)
 
     if operator.type == 'SklearnMultinomialNB':
+        container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
+                                  class_log_prior.shape, class_log_prior.flatten())
         matmul_result_name = scope.get_unique_variable_name('matmul_result')
 
         container.add_node('MatMul', [operator.inputs[0].full_name, feature_log_prob_name],
                            matmul_result_name, name=scope.get_unique_operator_name('MatMul'))
         # Cast is required here as Sum op doesn't work with Float64
-        container.add_node('Cast', matmul_result_name, 
-                            cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
-        container.add_node('Sum', [cast_result_name, class_log_prior_name],
+        container.add_node('Cast', matmul_result_name, cast_result_name,
+                           to=onnx_proto.TensorProto.FLOAT, op_version=7)
+                           
+        shape_result_name = scope.get_unique_variable_name('shape_result')
+        container.add_node('Shape', class_log_prior_name, shape_result_name)
+        reshape_result_name = scope.get_unique_variable_name('reshape_result')
+        container.add_node('Reshape', [cast_result_name, shape_result_name], reshape_result_name)
+        
+        container.add_node('Sum', [reshape_result_name, class_log_prior_name],
                            sum_result_name, name=scope.get_unique_operator_name('Sum'))
     else:
+        container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
+                                  class_log_prior.shape, class_log_prior.flatten())
         constant_name = scope.get_unique_variable_name('constant')
         exp_result_name = scope.get_unique_variable_name('exp_result')
         sub_result_name = scope.get_unique_variable_name('sub_result')
@@ -182,7 +190,8 @@ def convert_sklearn_naive_bayes(scope, operator, container):
 
     # Following four statements are for predicting probabilities
     container.add_node('ReduceLogSumExp', sum_result_name,
-                       reduce_log_sum_exp_result_name, name=scope.get_unique_operator_name('ReduceLogSumExp'), axes=[1], keepdims=0)
+                       reduce_log_sum_exp_result_name, name=scope.get_unique_operator_name('ReduceLogSumExp'),
+                       axes=[1], keepdims=0)
     apply_sub(scope, [sum_result_name, reduce_log_sum_exp_result_name], log_prob_name, container, broadcast=1)
     apply_exp(scope, log_prob_name, prob_tensor_name, container)
     container.add_node('ZipMap', prob_tensor_name, operator.outputs[1].full_name,

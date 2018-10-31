@@ -57,15 +57,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import MaxAbsScaler
 
-from lightgbm import LGBMClassifier, LGBMRegressor
-
 # In most cases, scikit-learn operator produces only one output. However, each classifier has basically two outputs;
 # one is the predicted label and the other one is the probabilities of all possible labels. Here is a list of supported
 # scikit-learn classifiers. In the parsing stage, we produce two outputs for objects included in the following list and
 # one output for everything not in the list.
 sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, NuSVC,
                            GradientBoostingClassifier, RandomForestClassifier, DecisionTreeClassifier,
-                           ExtraTreesClassifier, LGBMClassifier, BernoulliNB, MultinomialNB]
+                           ExtraTreesClassifier, BernoulliNB, MultinomialNB]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
@@ -101,8 +99,6 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              MultinomialNB: 'SklearnMultinomialNB',
                              BernoulliNB: 'SklearnBernoulliNB',
                              Binarizer: 'SklearnBinarizer',
-                             LGBMClassifier: 'LgbmClassifier',
-                             LGBMRegressor: 'LgbmRegressor',
                              PCA: 'SklearnPCA',
                              TruncatedSVD: 'SklearnTruncatedSVD',
                              MinMaxScaler: 'SklearnMinMaxScaler',
@@ -178,14 +174,19 @@ def _parse_sklearn(scope, model, inputs):
         return _parse_sklearn_simple_model(scope, model, inputs)
 
 
-def parse_sklearn(model, initial_types=None, targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+def parse_sklearn(model, initial_types=None, target_opset=None,
+                  targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     # Put scikit-learn object into an abstract container so that our framework can work seamlessly on models created
     # with different machine learning tools.
     raw_model_container = SklearnModelContainer(model)
 
     # Declare a computational graph. It will become a representation of the input scikit-learn model after parsing.
-    topology = Topology(raw_model_container, initial_types=initial_types, targeted_onnx=targeted_onnx,
-        custom_conversion_functions = custom_conversion_functions, custom_shape_calculators = custom_shape_calculators)
+    topology = Topology(raw_model_container,
+                        initial_types=initial_types,
+                        target_opset=target_opset,
+                        targeted_onnx=targeted_onnx,
+                        custom_conversion_functions=custom_conversion_functions,
+                        custom_shape_calculators=custom_shape_calculators)
 
     # Declare an object to provide variables' and operators' naming mechanism. In contrast to CoreML, one global scope
     # is enough for parsing scikit-learn models.

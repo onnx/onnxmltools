@@ -5,5 +5,6 @@
 # --------------------------------------------------------------------------
 
 from .main import convert_coreml
-from .main import convert_sklearn
 from .main import convert_keras
+from .main import convert_lightgbm
+from .main import convert_sklearn

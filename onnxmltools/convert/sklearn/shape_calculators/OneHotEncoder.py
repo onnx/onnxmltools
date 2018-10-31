@@ -34,47 +34,25 @@ def calculate_sklearn_one_hot_encoder_output_shapes(operator):
     '''
     op = operator.raw_operator
 
-    # Figure out which coordinates are categorical features we're going to encode
-    # None is allowed since 0.20 and categorical_features will be removed in 0.22.
-    if op.categorical_features in (None, 'all'):
-        # In this case, all features need to be encoded
-        C = operator.inputs[0].type.shape[1]
-        categorical_feature_indices = [i for i in range(C)]
-    elif isinstance(op.categorical_features, collections.Iterable):
-        # In this case, there are two formats to specify which features are encoded.
-        if all(isinstance(i, (bool, np.bool_)) for i in op.categorical_features):
-            # op.categorical_features is a binary vector. Its ith element is 0/1 if the ith coordinate is not encoded/
-            # encoded.
-            categorical_feature_indices = [i for i, active in enumerate(op.categorical_features) if active]
-        else:
-            # op.categorical_features is a vector containing all categorical features' indexes.
-            categorical_feature_indices = [int(i) for i in op.categorical_features]
-    else:
-        raise ValueError('Unknown operation mode')
+    categorical_feature_indices = [i for i, mat in enumerate(op.categories_) if mat is not None and len(mat) > 0]
 
     # Calculate the number of allowed categorical values in each original categorical coordinate.
     # encoded_slot_sizes[i] is the number of output coordinates associated with the ith categorical feature.
     encoded_slot_sizes = []
-    if op.n_values == 'auto':
-        # Use active feature to determine output length
-        for i in range(len(op.feature_indices_) - 1):
-            categorical_size = 0
-            index_head = op.feature_indices_[i]
-            index_tail = op.feature_indices_[i + 1]  # feature indexed by index_tail is not included in this category
-            for j in op.active_features_:
-                if index_head <= j and j < index_tail:
-                    categorical_size += 1
-            encoded_slot_sizes.append(categorical_size)
-    elif isinstance(op.n_values, numbers.Integral):
-        # Each categorical feature will be mapped to a fixed length one-hot sub-vector
-        for i in range(len(op.feature_indices_) - 1):
-            encoded_slot_sizes.append(op.n_values)
-    else:
-        # Each categorical feature has its own sub-vector length
-        encoded_slot_sizes = [i for i in op.n_values]
+
+    # Use active feature to determine output length
+    index_head = 0
+    for i in range(len(op.categories_)):
+        if op.categories_[i] is None or len(op.categories_[i]) == 0:
+            continue
+        categorical_size = op.categories_[i].shape[0]
+        # feature indexed by index_tail is not included in this category
+        index_tail = index_head + categorical_size
+        encoded_slot_sizes.append(categorical_size)
 
     N = operator.inputs[0].type.shape[0]
-    # Calculate the output feature length by replacing the count of categorical features with their encoded widths
+    # Calculate the output feature length by replacing the count of categorical
+    # features with their encoded widths
     if operator.inputs[0].type.shape[1] != 'None':
         C = operator.inputs[0].type.shape[1] - len(categorical_feature_indices) + sum(encoded_slot_sizes)
     else:
