@@ -136,11 +136,11 @@ def convert_sklearn_naive_bayes(scope, operator, container):
         zipmap_attrs['classlabels_strings'] = classes
         classes = np.array([s.encode('utf-8') for s in classes])
 
-    container.add_initializer(feature_log_prob_name, onnx_proto.TensorProto.FLOAT,
-                              feature_log_prob.shape, feature_log_prob.flatten())
     container.add_initializer(classes_name, class_type, classes.shape, classes)
 
     if operator.type == 'SklearnMultinomialNB':
+        container.add_initializer(feature_log_prob_name, onnx_proto.TensorProto.FLOAT,
+                                  feature_log_prob.shape, feature_log_prob.flatten())
         container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
                                   class_log_prior.shape, class_log_prior.flatten())
         matmul_result_name = scope.get_unique_variable_name('matmul_result')
@@ -159,8 +159,6 @@ def convert_sklearn_naive_bayes(scope, operator, container):
         container.add_node('Sum', [reshape_result_name, class_log_prior_name],
                            sum_result_name, name=scope.get_unique_operator_name('Sum'))
     else:
-        container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
-                                  class_log_prior.shape, class_log_prior.flatten())
         inp_neg_prob_prod_name = scope.get_unique_variable_name('inp_neg_prob_prod')
                 
         # https://github.com/scikit-learn/scikit-learn/blob/bac89c2/sklearn/naive_bayes.py#L948
