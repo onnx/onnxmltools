@@ -137,6 +137,7 @@ class ModelComponentContainer(ModelContainer):
         self.nodes = []
         # ONNX operators' domain-version pair set. They will be added into opset_import field in the final ONNX model.
         self.node_domain_version_pair_sets = set()
+        # The targeted ONNX operator set (referred to as opset) that matches the ONNX version.
         self.target_opset = target_opset
         # The targeted ONNX version. All produced operators should be supported by the targeted ONNX version.
         self.targeted_onnx_version = targeted_onnx

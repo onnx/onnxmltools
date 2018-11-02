@@ -22,7 +22,7 @@ def _apply_unary_operation(scope, op_type, input_name, output_name, container, o
     name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
     attrs['name'] = name
-    if compare_strict_version(container.targeted_onnx_version, '1.0') <0:
+    if container.target_opset < 6:
         attrs['consumed_inputs'] = [0]
         op_version = 1
     else:
@@ -36,20 +36,20 @@ def _apply_basic_numerical_operation(scope, op_type, input_names, output_name, c
     name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
     attrs = {}
-    if compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
-        # Before ONNX-1.2, broadcasting behavior is Caffe2-like.
+    if container.target_opset < 7:
+        # Before ONNX-1.2 (opset 7), broadcasting behavior is Caffe2-like.
         if axis is not None:
             attrs['axis'] = axis
         if broadcast is not None:
             attrs['broadcast'] = broadcast
 
-        if compare_strict_version(container.targeted_onnx_version, '1.0') < 0:
+        if container.target_opset < 6:
             attrs['consumed_inputs'] = [0, 0]
             op_version = 1
         else:
             op_version = 6
     else:
-        # Since ONNX-1.2, broadcasting behavior is Numpy-like, so we don't need to specify any attributes
+        # Since ONNX-1.2 (opset 7), broadcasting behavior is Numpy-like, so we don't need to specify any attributes
         op_version = 7
 
     container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
@@ -59,7 +59,7 @@ def _apply_pointwise_operation(scope, op_type, input_names, output_name, contain
     name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
     attrs = {}
-    if compare_strict_version(container.targeted_onnx_version, '1.0') < 0:
+    if container.target_opset < 6:
         attrs['consumed_inputs'] = [0] * len(input_names)
         op_version = 1
     else:
@@ -83,7 +83,7 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
 
     attrs = {'name': name, 'epsilon': epsilon, 'momentum': momentum, 'spatial': spatial}
 
-    if compare_strict_version(container.targeted_onnx_version, '1.0') < 0:
+    if container.target_opset < 6:
         attrs['consumed_inputs'] = [0] * len(input_names)
         if len(input_names) > 3:
             attrs['consumed_inputs'][3] = 1
@@ -91,7 +91,7 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
             attrs['consumed_inputs'][4] = 2
         attrs['is_test'] = is_test
         op_version = 1
-    elif compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
+    elif container.target_opset < 7:
         attrs['is_test'] = is_test
         op_version = 6
     else:
@@ -112,7 +112,7 @@ def apply_cast(scope, input_name, output_name, container, operator_name=None, to
     if to not in allowed_type_name_and_type_enum_pairs:
         raise ValueError('Attribute to must be one of %s' % allowed_type_name_and_type_enum_pairs.keys())
 
-    if compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
+    if container.target_opset < 7:
         # Convert enum to string, for example, TensorProto.INT64 to 'INT64'
         attrs['to'] = allowed_type_name_and_type_enum_pairs[to]
         op_version = 1
@@ -136,7 +136,7 @@ def apply_exp(scope, input_name, output_name, container, operator_name=None):
 def apply_concat(scope, input_names, output_name, container, operator_name=None, axis=0):
     name = _create_name_or_use_existing_one(scope, 'Concat', operator_name)
 
-    if compare_strict_version(container.targeted_onnx_version, '1.0') <= 0:
+    if container.target_opset < 4:
         op_version = 1
     else:
         op_version = 4
@@ -153,7 +153,7 @@ def apply_clip(scope, input_name, output_name, container, operator_name=None, ma
     if min is not None:
         attrs['min'] = float(min)
 
-    if compare_strict_version(container.targeted_onnx_version, '1.0') < 0:
+    if container.target_opset < 6:
         attrs['consumed_inputs'] = [0]
         op_version = 1
     else:
@@ -167,7 +167,7 @@ def apply_instance_norm(scope, input_names, output_name, container, operator_nam
 
     attrs = {'name': name, 'epsilon': epsilon}
 
-    if compare_strict_version(container.targeted_onnx_version, '1.0') <= 0:
+    if container.target_opset < 2:
         attrs['consumed_inputs'] = [0] * len(input_names)
         op_version = 1
     else:
@@ -205,7 +205,7 @@ def apply_pad(scope, input_name, output_name, container, operator_name=None, mod
         attrs['mode'] = mode
     if value is not None:
         attrs['value'] = value
-    if compare_strict_version(container.targeted_onnx_version, '1.0') <= 0:
+    if container.target_opset < 2:
         attrs['paddings'] = pads
         op_version = 1
     else:
@@ -225,7 +225,7 @@ def apply_reshape(scope, input_name, output_name, container, operator_name=None,
 
     name = _create_name_or_use_existing_one(scope, 'Reshape', operator_name)
 
-    if compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
+    if container.target_opset < 7:
         container.add_node('Reshape', input_name, output_name, op_version=1, name=name, shape=desired_shape,
                            consumed_inputs=[0])
     else:
@@ -245,7 +245,7 @@ def apply_pow(scope, input_names, output_name, container, operator_name=None, ax
     name = _create_name_or_use_existing_one(scope, 'Pow', operator_name)
 
     attrs = {'name': name}
-    if compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
+    if container.target_opset < 7:
         # Before ONNX-1.2, broadcasting behavior is Caffe2-like.
         if axis is not None:
             attrs['axis'] = axis
@@ -265,7 +265,7 @@ def apply_sub(scope, input_names, output_name, container, operator_name=None, ax
 
 def apply_split(scope, input_name, output_names, container, operator_name=None, split=None, axis=0):
     name = _create_name_or_use_existing_one(scope, 'Split', operator_name)
-    if compare_strict_version(container.targeted_onnx_version, '1.0') <= 0:
+    if container.target_opset <= 1:
         op_version = 1
     else:
         op_version = 2
@@ -286,7 +286,7 @@ def apply_tile(scope, input_name, output_name, container, operator_name=None, re
         container.add_node('Identity', input_name, output_name, name=name)
         return
 
-    if compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
+    if container.target_opset < 7:
         intermediate_input_name = input_name
         intermediate_output_name = None
 
@@ -337,7 +337,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
     name = _create_name_or_use_existing_one(scope, 'Upsample', operator_name)
 
     attrs = {'name': name}
-    if compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
+    if container.target_opset < 7:
         if len(scales) != 4:
             raise ValueError('Need to specify a 4-element list the the scales of N-, C-, H-, and W-axes')
         attrs['height_scale'] = float(scales[2])
@@ -364,14 +364,14 @@ def apply_prelu(scope, input_name, output_name, container, operator_name=None, s
     name = _create_name_or_use_existing_one(scope, 'PRelu', operator_name)
     slope_tensor_name = scope.get_unique_variable_name('slope')
     s_shape = slope.shape
-    if compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
+    if container.target_opset < 7:
         s_shape = [len(slope.flatten())]
     container.add_initializer(slope_tensor_name, onnx_proto.TensorProto.FLOAT, s_shape, slope.flatten())
 
-    if compare_strict_version(container.targeted_onnx_version, '1.0') <= 0:
+    if container.target_opset < 6:
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=1, name=name,
                            consumed_inputs=[0, 0])
-    elif compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
+    elif container.target_opset < 7:
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=6, name=name)
     else:
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=7, name=name)
