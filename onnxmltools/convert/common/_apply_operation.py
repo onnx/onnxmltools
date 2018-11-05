@@ -37,7 +37,7 @@ def _apply_basic_numerical_operation(scope, op_type, input_names, output_name, c
 
     attrs = {}
     if container.target_opset < 7:
-        # Before ONNX-1.2 (opset 8), broadcasting behavior is Caffe2-like.
+        # Before ONNX-1.2 (opset 7), broadcasting behavior is Caffe2-like.
         if axis is not None:
             attrs['axis'] = axis
         if broadcast is not None:
@@ -49,7 +49,7 @@ def _apply_basic_numerical_operation(scope, op_type, input_names, output_name, c
         else:
             op_version = 6
     else:
-        # Since ONNX-1.2 (opset 8), broadcasting behavior is Numpy-like, so we don't need to specify any attributes
+        # Since ONNX-1.2 (opset 7), broadcasting behavior is Numpy-like, so we don't need to specify any attributes
         op_version = 7
 
     container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
