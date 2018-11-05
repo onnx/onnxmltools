@@ -6,6 +6,7 @@
 
 import numbers
 import collections
+import numpy
 from ....proto import onnx_proto
 from ...common._registration import register_converter
 
@@ -13,37 +14,21 @@ from ...common._registration import register_converter
 def convert_sklearn_one_hot_encoder(scope, operator, container):
     op = operator.raw_operator
     C = operator.inputs[0].type.shape[1]
-    if op.categorical_features in (None, 'all'):
-        categorical_feature_indices = [i for i in range(C)]
-    elif isinstance(op.categorical_features, collections.Iterable):
-        if all(isinstance(i, bool) for i in op.categorical_features):
-            categorical_feature_indices = [i for i, active in enumerate(op.categorical_features) if active]
-        else:
-            categorical_feature_indices = [int(i) for i in op.categorical_features]
-    else:
-        raise ValueError('Unknown operation mode')
+    categorical_feature_indices = [i for i, mat in enumerate(op.categories_) if mat is not None and len(mat) > 0]
 
     # encoded_slot_sizes[i] is the number of output coordinates associated with the ith categorical feature
     categorical_values_per_feature = []
-    if op.n_values == 'auto':
-        # Use active feature to determine output length
-        for i in range(len(op.feature_indices_) - 1):
-            allowed_values = []
-            index_head = op.feature_indices_[i]
-            index_tail = op.feature_indices_[i + 1]  # the feature indexed by index_tail is not included in this category
-            for j in op.active_features_:
-                if index_head <= j and j < index_tail:
-                    allowed_values.append(j - index_head)
-            categorical_values_per_feature.append(allowed_values)
-    elif isinstance(op.n_values, numbers.Integral):
-        # Each categorical feature will be mapped to a fixed length one-hot sub-vector
-        for i in range(len(op.feature_indices_) - 1):
-            index_head = op.feature_indices_[i]
-            categorical_values_per_feature.append(list(i - index_head for i in range(op.n_values)))
-    else:
-        # Each categorical feature has its own sub-vector length
-        for max_index in op.n_values:
-            categorical_values_per_feature.append(list(i for i in range(max_index)))
+    
+    categorical_values_per_feature = []
+    for cat in op.categories_:
+        if cat is None and len(cat) == 0:
+            continue
+        if cat.dtype in (numpy.float32, numpy.float64, numpy.int32, numpy.int64):
+            categorical_values_per_feature.append(list(cat.astype(numpy.int64)))
+        elif cat.dtype in (numpy.str, numpy.unicode, numpy.object):
+            categorical_values_per_feature.append([str(_) for _ in cat])
+        else:
+            raise TypeError("Categories must be int or strings not {0}.".format(cat.dtype))
 
     # Variable names produced by one-hot encoders. Each of them is the encoding result of a categorical feature.
     final_variable_names = []

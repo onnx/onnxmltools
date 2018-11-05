@@ -4,7 +4,5 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .main import convert_coreml
-from .main import convert_keras
-from .main import convert_lightgbm
-from .main import convert_sklearn
+# To register converter for scikit-learn operators, import associated modules here.
+from . import LightGbm

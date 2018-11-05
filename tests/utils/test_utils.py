@@ -9,6 +9,7 @@ import unittest
 
 from onnxmltools.utils import load_model, save_model, save_text
 from onnxmltools.utils import set_denotation, set_model_version, set_model_domain, set_model_doc_string
+from onnxmltools.utils.utils_backend import evaluate_condition, is_backend_enabled
 
 
 class TestUtils(unittest.TestCase):
@@ -81,3 +82,13 @@ class TestUtils(unittest.TestCase):
         set_denotation(onnx_model, "1", "IMAGE", dimension_denotation=["DATA_FEATURE"])
         self.assertEqual(onnx_model.graph.input[0].type.denotation, "IMAGE")
         self.assertEqual(onnx_model.graph.input[0].type.tensor_type.shape.dim[0].denotation, "DATA_FEATURE")
+
+    def test_evaluate_condition(self):
+        if not is_backend_enabled("onnxruntime"):
+            return
+        value = [evaluate_condition("onnxruntime", "StrictVersion(onnxruntime.__version__) <= StrictVersion('0.%d.3')" % i) for i in range(0, 5)]
+        self.assertNotEqual(min(value), max(value))
+        
+
+if __name__ == "__main__":
+    unittest.main()

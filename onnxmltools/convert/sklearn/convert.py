@@ -52,11 +52,8 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
       26. ensemble.RandomForestRegressor
       27. ensemble.ExtraTreesClassifier
       28. ensemble.ExtraTreesRegressor
-    * LightGBM Python module
-      29. LGBMClassifiers (http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMClassifier)
-      30. LGBMRegressor (http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMRegressor)
     * pipeline
-      31. pipeline.Pipeline
+      29. pipeline.Pipeline
 
     For pipeline conversion, user needs to make sure each component is one of our supported items (1)-(24).
 
