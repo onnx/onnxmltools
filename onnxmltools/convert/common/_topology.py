@@ -15,6 +15,7 @@ from ._container import ModelComponentContainer
 from . import _registration
 from . import utils
 from .utils import compare_strict_version
+from .optimizer import optimize_onnx
 from .interface import OperatorBase
 
 
@@ -724,8 +725,11 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
         value_info = helper.make_tensor_value_info(tensor.name, tensor.data_type, tensor.dims)
         extra_inputs.append(value_info)
 
+    # enable the onnx optimizations
+    nodes = optimize_onnx(container.nodes)
+
     # Create a graph from its main components
-    graph = helper.make_graph(container.nodes, model_name, container.inputs + extra_inputs,
+    graph = helper.make_graph(nodes, model_name, container.inputs + extra_inputs,
                               container.outputs, container.initializers)
 
     # Add extra information related to the graph
