@@ -38,3 +38,4 @@ tests/coreml/tests/*
 tests/end2end/tests/*
 tests/lightgbm/tests/*
 tests/build/*
+tests/tests/
