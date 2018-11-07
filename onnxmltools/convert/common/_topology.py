@@ -10,11 +10,12 @@ from ...proto import onnx
 from ...proto import helper
 from ...proto import get_opset_number_from_onnx
 from ...utils.metadata_props import add_metadata_props
-from .data_types import *
-from ._container import ModelComponentContainer
 from . import _registration
 from . import utils
+from .data_types import *
+from ._container import ModelComponentContainer
 from .utils import compare_strict_version
+from .optimizer import optimize_onnx
 from .interface import OperatorBase
 
 
@@ -625,7 +626,7 @@ class Topology:
         self._check_structure()
 
 
-def convert_topology(topology, model_name, doc_string, target_opset, targeted_onnx):
+def convert_topology(topology, model_name, doc_string, target_opset, targeted_onnx, channel_first_inputs=None):
     '''
     This function is used to convert our Topology object defined in _parser.py into a ONNX model (type: ModelProto).
     :param topology: The Topology object we are going to convert
@@ -672,13 +673,22 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
 
     # Add roots the graph according to their order in the original model
     invalid_name = []
+    nhwc_inputs = []
+    if channel_first_inputs is None:
+        channel_first_inputs = []
     for name in topology.raw_model.input_names:
         # Check input naming convention
         input_name = name.replace('_', '').replace(":", "").replace("/", "")
         if input_name and (input_name[0].isdigit() or (not input_name.isalnum())):
             invalid_name.append(name)
         if name in tensor_inputs:
-            container.add_input(tensor_inputs[name])
+            onnx_input = tensor_inputs[name]  # type: Variable
+            if name in channel_first_inputs:
+                nhwc_inputs.append(onnx_input.full_name)
+                s = onnx_input.type.shape
+                onnx_input.type.shape = [s[0], s[3], s[1], s[2]]
+            container.add_input(onnx_input)
+
     if invalid_name:
         warnings.warn('Some input names are not compliant with ONNX naming convention: %s' % invalid_name)
     for name in topology.raw_model.input_names:
@@ -724,8 +734,11 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
         value_info = helper.make_tensor_value_info(tensor.name, tensor.data_type, tensor.dims)
         extra_inputs.append(value_info)
 
+    # enable the ONNX optimizations
+    nodes = optimize_onnx(container.nodes, nhwc_inputs)
+
     # Create a graph from its main components
-    graph = helper.make_graph(container.nodes, model_name, container.inputs + extra_inputs,
+    graph = helper.make_graph(nodes, model_name, container.inputs + extra_inputs,
                               container.outputs, container.initializers)
 
     # Add extra information related to the graph

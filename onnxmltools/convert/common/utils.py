@@ -77,6 +77,17 @@ def libsvm_installed():
         return False
 
 
+def lightgbm_installed():
+    """
+    Checks that *lightgbm* is available.
+    """
+    try:
+        import lightgbm
+        return True
+    except ImportError:
+        return False
+
+
 def xgboost_installed():
     """
     Checks that *xgboost* is available.
