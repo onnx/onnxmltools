@@ -3,9 +3,12 @@ Tests CoreML SupportVectorClassifier converter.
 """
 import coremltools
 import unittest
+import numpy
 from sklearn.datasets import load_iris
 from sklearn.svm import SVC
 from onnxmltools.convert.coreml.convert import convert
+from onnxmltools.utils import dump_data_and_model
+
 
 class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
 
@@ -17,7 +20,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         y[y == 2] = 1
 
         model.fit(X, y)
-        return model
+        return model, X[47:55].astype(numpy.float32)
 
     def _fit_multi_classification(self, model):
         iris = load_iris()
@@ -25,7 +28,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         X = iris.data[:, :3]
         y = iris.target
         model.fit(X, y)
-        return model
+        return model, X[47:55].astype(numpy.float32)
 
     def _check_model_outputs(self, model, output_names):
         outputs = model.graph.output
@@ -47,7 +50,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self.assertTrue('classProbability' in node.output)
 
     def test_support_vector_classifier_binary_no_prob(self):
-        svm = self._fit_binary_classification(SVC(gamma=0.5))
+        svm, X = self._fit_binary_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
@@ -55,9 +58,11 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         nodes = svm_onnx.graph.node
         self.assertEqual(len(nodes), 1)
         self._check_model_outputs(svm_onnx, ['classLabel'])
+        dump_data_and_model(X, svm, svm_onnx, basename="CmlBinSVC-Out0",
+                            allow_failure=True)
 
     def test_support_vector_classifier_binary_with_prob(self):
-        svm = self._fit_binary_classification(SVC(probability=True, gamma=0.5))
+        svm, X = self._fit_binary_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
@@ -65,7 +70,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self._check_model_outputs(svm_onnx, ['classLabel', 'classProbability'])
 
     def test_support_vector_classifier_multiclass_no_prob(self):
-        svm = self._fit_multi_classification(SVC(gamma=0.5))
+        svm, X = self._fit_multi_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
@@ -74,9 +79,13 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self._check_model_outputs(svm_onnx, ['classLabel'])
 
     def test_support_vector_classifier_multiclass_with_prob(self):
-        svm = self._fit_multi_classification(SVC(probability=True, gamma=0.5))
+        svm, X = self._fit_multi_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec())
         self.assertTrue(svm_onnx is not None)
         self.validate_zipmap(svm_onnx)
         self._check_model_outputs(svm_onnx, ['classLabel', 'classProbability'])
+
+
+if __name__ == "__main__":
+    unittest.main()

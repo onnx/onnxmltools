@@ -2,11 +2,14 @@
 Tests CoreML TreeEnsembleRegressor converter.
 """
 import os
+import sys
 import unittest
+import numpy
 import pandas
 from coremltools.converters.xgboost import convert as convert_xgb_to_coreml
 from onnxmltools.convert.coreml import convert as convert_cml
 from xgboost import XGBRegressor
+from onnxmltools.utils import dump_data_and_model
 
 
 class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
@@ -26,3 +29,12 @@ class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
         model_coreml = convert_xgb_to_coreml(model)
         model_onnx = convert_cml(model_coreml)
         assert model_onnx is not None
+        if sys.version_info[0] >= 3:
+            # python 2.7 returns TypeError: can't pickle instancemethod objects
+            dump_data_and_model(X.astype(numpy.float32), model, model_onnx,
+                                         basename="CmlXGBoostRegressor-OneOff-Reshape",
+                                         allow_failure=True)
+
+
+if __name__ == "__main__":
+    unittest.main()

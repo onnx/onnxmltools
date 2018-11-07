@@ -1,8 +1,7 @@
-dist: trusty
+dist: xenial
 language: python
 env:
-  - ONNX_VERSION="==1.1.2" ONNX_ML=1
-  - ONNX_VERSION="" ONNX_ML=1
+  - ONNX_ML=1
 
 addons:
   apt:
@@ -15,44 +14,39 @@ python:
     - "2.7"
     - "3.5"
     - "3.6"
+    - "3.7"
 
 install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      curl -L https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
-      PYTHON_VER="2.7";
+      curl -L https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -o $HOME/miniconda.sh;
     else
-      curl -L https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -o $HOME/miniconda.sh;
-      PYTHON_VER="3.6m";
+      curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o $HOME/miniconda.sh;
+    fi
+  - export ONNX_VERSION="";
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
+      export ONNX_VERSION="==1.1.2";
+    fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+      export ONNX_VERSION="==1.2.3";
     fi
   - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - export LD_LIBRARY_PATH="$HOME/miniconda/lib:$LD_LIBRARY_PATH"
   - export LIBRARY_PATH="$HOME/miniconda/lib:$LIBRARY_PATH"
   - export CPATH="$HOME/miniconda/include:$CPATH"
-  - export CPATH="$HOME/miniconda/include/python$PYTHON_VER:$CPATH"
-  - ls $HOME/miniconda/include/python$PYTHON_VER
-  - wget https://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.2.tar.gz
-  - tar zxf openmpi-1.10.2.tar.gz
-  - echo "Configuring and building OpenMPI"
-  - cd openmpi-1.10.2
-  - mkdir build
-  - ./configure --prefix="$PWD/build" &> openmpi.configure
-  - make -j4 &> openmpi.make
-  - sudo make install &> openmpi.install
-  - export PATH="$PATH:$PWD/build/bin"
-  - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH$PWD/build/lib"
-  - cd ..
-  - printenv
   - conda config --set always_yes yes --set changeps1 no
   - conda install -c conda-forge protobuf
   - conda install -c conda-forge numpy
   - conda install -c conda-forge cmake
   - conda install -c conda-forge openmpi
+  - conda install -c conda-forge tensorflow
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
-  - cd $TRAVIS_BUILD_DIR && pip install cntk==2.5.1
+  - cd $TRAVIS_BUILD_DIR && pip install cntk
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
+  - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
+      pip install onnxruntime;
+    fi
 
 script:
-    - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
-
+  - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
