@@ -54,7 +54,7 @@ class TestKerasConverter(unittest.TestCase):
 
         self.assertIsNotNone(converted_model)
         # to check the model, you can print(str(converted_model))
-        dump_data_and_model(x.astype(np.float32), model, converted_model, basename="Keras_custom_op-Out0",
+        dump_data_and_model(x.astype(np.float32), model, converted_model, basename="KerasCustomOp-Out0",
                             context=dict(ScaledTanh=ScaledTanh))
 
     def test_channel_last(self):

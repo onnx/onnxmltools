@@ -31,7 +31,8 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     and a type defined in data_types.py.
     :param doc_string: A string attached onto the produced ONNX model
     :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
-    :param channel_first_inputs, enforce the input format of the converted model is channel_first, i.e. NCHW
+    :param : specifies names of 4-D inputs which are forced to be in channel-first format
+     (i.e., NCHW) in the converted model. It's a list of string; for example, ['input1', 'input2'].
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function

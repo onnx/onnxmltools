@@ -76,16 +76,24 @@ class LinkedNode(object):
             self.output[key] = name
 
     def generate(self):
-        if not self.input and not self.output and not self.attributes:
+        updated = False
+        if self.attributes:
+            updated = True
+        elif len([k for k, v in six.iteritems(self.input) if k != v]) > 0:
+            updated = True
+        elif len([k for k, v in six.iteritems(self.output) if k != v]) > 0:
+            updated = True
+        if not updated:
             return self.origin
         else:
-            onode = helper.make_node(
-                self.origin.op_type,
-                [self.input.get(i_, i_) for i_ in self.origin.input],
-                [self.output.get(o_, o_) for o_ in self.origin.output],
-                self.origin.name,
-                self.origin.doc_string,
-            )
+            onode = onnx_proto.NodeProto()
+            onode.name = self.origin.name
+            onode.op_type = self.origin.op_type
+            onode.input.extend([self.input.get(i_, i_) for i_ in self.origin.input])
+            onode.output.extend([self.output.get(o_, o_) for o_ in self.origin.output])
+            onode.doc_string = self.origin.doc_string
+            onode.domain = self.origin.domain
+            onode.attribute.extend(attr for attr in self.origin.attribute)
 
             onode.attribute.extend(
                 helper.make_attribute(attr.name, self.attributes[attr.name])
