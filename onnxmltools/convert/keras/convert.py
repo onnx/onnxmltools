@@ -16,8 +16,8 @@ from . import operator_converters
 from . import shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
-            targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+def convert(model, name=None, initial_types=None, doc_string='', target_opset=None, targeted_onnx=onnx.__version__,
+                channel_first_inputs=None,custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     Convert Keras-Tensorflow Model and Sequence objects into Topology. Note that default batch size is 1 here instead of
     `None` used in CoreML conversion framework. To overwrite this behavior, we can specify initial_types. Assume that a
@@ -31,6 +31,8 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     and a type defined in data_types.py.
     :param doc_string: A string attached onto the produced ONNX model
     :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
+    :param : specifies names of 4-D inputs which are forced to be in channel-first format
+     (i.e., NCHW) in the converted model. It's a list of string; for example, ['input1', 'input2'].
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
@@ -38,12 +40,14 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     :return: An ONNX model (type: ModelProto) which is equivalent to the input Keras model
     '''
 
-    topology = parse_keras(model, initial_types, target_opset, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_keras(model, initial_types,
+                           target_opset, targeted_onnx,
+                           custom_conversion_functions, custom_shape_calculators)
 
     topology.compile()
 
     if name is None:
         name = str(uuid4().hex)
 
-    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
+    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx, channel_first_inputs)
     return onnx_model

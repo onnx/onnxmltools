@@ -1,5 +1,8 @@
-import sys
-
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
 import onnxmltools
 from onnxmltools.utils import dump_data_and_model
 import numpy as np
@@ -19,8 +22,8 @@ class ScaledTanh(keras.layers.Layer):
     def build(self, input_shape):
         super(ScaledTanh, self).build(input_shape)
 
-    def call(self, x):
-        return self.alpha * K.tanh(self.beta * x)
+    def call(self, inputs, **kwargs):
+        return self.alpha * K.tanh(self.beta * inputs)
 
     def compute_output_shape(self, input_shape):
         return input_shape
@@ -44,14 +47,40 @@ class TestKerasConverter(unittest.TestCase):
         model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format='channels_last'))
 
         model.compile(optimizer='sgd', loss='mse')
+        converted_model = onnxmltools.convert_keras(model, custom_conversion_functions={ScaledTanh: custom_activation})
+
         actual = model.predict(x)
         self.assertIsNotNone(actual)
 
-        converted_model = onnxmltools.convert_keras(model, custom_conversion_functions={ScaledTanh: custom_activation})
         self.assertIsNotNone(converted_model)
         # to check the model, you can print(str(converted_model))
         dump_data_and_model(x.astype(np.float32), model, converted_model, basename="KerasCustomOp-Out0",
                             context=dict(ScaledTanh=ScaledTanh))
+
+    def test_channel_last(self):
+        N, C, H, W = 2, 3, 5, 5
+        x = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
+
+        model = keras.Sequential()
+        model.add(Conv2D(2, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
+                         data_format='channels_last'))  # , activation='softmax')
+        model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format='channels_last'))
+
+        model.compile(optimizer='sgd', loss='mse')
+        converted_model = onnxmltools.convert_keras(model, channel_first_inputs=[model.inputs[0].name])
+
+        expected = model.predict(x)
+        self.assertIsNotNone(expected)
+        self.assertIsNotNone(converted_model)
+
+        try:
+            import onnxruntime
+            sess = onnxruntime.InferenceSession(converted_model.SerializeToString())
+            actual = sess.run([], {sess.get_inputs()[0].name:
+                                         np.transpose(x.astype(np.float32), [0, 3, 1, 2])})
+            self.assertTrue(np.allclose(expected, actual))
+        except ImportError:
+            pass
 
 
 if __name__ == "__main__":
