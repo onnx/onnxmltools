@@ -3,10 +3,12 @@ Tests utilities.
 """
 from distutils.version import StrictVersion
 import filecmp
-from onnxmltools.proto import onnx
 import os
 import unittest
+import numpy as np
 
+from onnxmltools.proto import onnx, onnx_proto, helper
+from onnxmltools.convert.common.optimizer import optimize_onnx
 from onnxmltools.utils import load_model, save_model, save_text
 from onnxmltools.utils import set_denotation, set_model_version, set_model_domain, set_model_doc_string
 from onnxmltools.utils.utils_backend import evaluate_condition, is_backend_enabled
@@ -88,7 +90,36 @@ class TestUtils(unittest.TestCase):
             return
         value = [evaluate_condition("onnxruntime", "StrictVersion(onnxruntime.__version__) <= StrictVersion('0.%d.3')" % i) for i in range(0, 5)]
         self.assertNotEqual(min(value), max(value))
-        
+
+    def test_optimizer(self):
+        val = np.asarray([[[[1.0, 2.0, 3.0], [1.1, 2.1, 3.1]]]], np.float32)
+
+        nodes = []
+        nodes[0:] =\
+            [helper.make_node('Constant', [], ['const1'], value=helper.make_tensor(
+            name='const0',
+            data_type=onnx_proto.TensorProto.FLOAT,
+            dims=val.shape,
+            vals=val.flatten().astype(float)))]
+        nodes[1:] = [helper.make_node('Identity', ['const1'], ['identity1'])]
+        nodes[2:] = [helper.make_node('Identity', ['identity1'], ['identity2'])]
+        nodes[3:] = [helper.make_node('Max', ['input1', 'identity2'], ['max0'])]
+        nodes[4:] = [helper.make_node('Transpose', ['max0'], ['tranpose0'], perm=[0, 2, 3, 1])]
+        nodes[5:] = [helper.make_node('Transpose', ['tranpose0'], ['tranpose1'], perm=(0, 3, 1, 2))]
+
+        input0 = helper.make_tensor_value_info('input1', onnx_proto.TensorProto.FLOAT, [1, 1, 2, 3])
+        output0 = helper.make_tensor_value_info('tranpose1', onnx_proto.TensorProto.FLOAT, [1, 1, 2, 3])
+
+        graph = helper.make_graph(nodes, 'test0', [input0], [output0])
+        model = helper.make_model(graph)
+        self.assertIsNotNone(model)
+
+        new_nodes = optimize_onnx(nodes)
+        self.assertEqual(len(new_nodes), 2)
+        graph = helper.make_graph(new_nodes, 'test0', [input0], [output0])
+        model = helper.make_model(graph)
+        self.assertIsNotNone(model)
+
 
 if __name__ == "__main__":
     unittest.main()
