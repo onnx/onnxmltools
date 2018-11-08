@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ....proto import onnx_proto
-from ...common._apply_operation import apply_add, apply_exp, apply_reshape, apply_sub
+from ...common._apply_operation import apply_add, apply_cast, apply_exp, apply_reshape, apply_sub
 from ...common._registration import register_converter
 import numpy as np
 
@@ -137,58 +137,51 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     container.add_initializer(feature_log_prob_name, onnx_proto.TensorProto.FLOAT,
                               feature_log_prob.shape, feature_log_prob.flatten())
     container.add_initializer(classes_name, class_type, classes.shape, classes)
+    container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
+                              class_log_prior.shape, class_log_prior.flatten())
 
     if operator.type == 'SklearnMultinomialNB':
-        container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
-                                  class_log_prior.shape, class_log_prior.flatten())
         matmul_result_name = scope.get_unique_variable_name('matmul_result')
+        shape_result_name = scope.get_unique_variable_name('shape_result')
+        reshape_result_name = scope.get_unique_variable_name('reshape_result')
 
         container.add_node('MatMul', [operator.inputs[0].full_name, feature_log_prob_name],
                            matmul_result_name, name=scope.get_unique_operator_name('MatMul'))
         # Cast is required here as Sum op doesn't work with Float64
-        container.add_node('Cast', matmul_result_name, cast_result_name,
-                           to=onnx_proto.TensorProto.FLOAT, op_version=7)
-                           
-        shape_result_name = scope.get_unique_variable_name('shape_result')
+        apply_cast(scope, matmul_result_name, cast_result_name, container,
+                   to=onnx_proto.TensorProto.FLOAT)
         container.add_node('Shape', class_log_prior_name, shape_result_name)
-        reshape_result_name = scope.get_unique_variable_name('reshape_result')
         container.add_node('Reshape', [cast_result_name, shape_result_name], reshape_result_name)
-        
         container.add_node('Sum', [reshape_result_name, class_log_prior_name],
                            sum_result_name, name=scope.get_unique_operator_name('Sum'))
     else:
-        container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
-                                  class_log_prior.shape, class_log_prior.flatten())
         constant_name = scope.get_unique_variable_name('constant')
         exp_result_name = scope.get_unique_variable_name('exp_result')
         sub_result_name = scope.get_unique_variable_name('sub_result')
         neg_prob_name = scope.get_unique_variable_name('neg_prob')
         sum_neg_prob_name = scope.get_unique_variable_name('sum_neg_prob')
-        inp_neg_prob_prod_name = scope.get_unique_variable_name('inp_neg_prob_prod')
         difference_matrix_name = scope.get_unique_variable_name('difference_matrix')
+        dot_prod_name = scope.get_unique_variable_name('dot_prod')
+        partial_sum_result_name = scope.get_unique_variable_name('partial_sum_result')
 
         container.add_initializer(constant_name, onnx_proto.TensorProto.FLOAT,
                                   [], [1.0])
-
         input_name = operator.inputs[0].full_name
 
         if nb.binarize is not None:
             threshold_name = scope.get_unique_variable_name('threshold')
             condition_name = scope.get_unique_variable_name('condition')
             cast_values_name = scope.get_unique_variable_name('cast_values')
-            cast_input_name = scope.get_unique_variable_name('cast_input')
             zero_tensor_name = scope.get_unique_variable_name('zero_tensor')
             binarised_input_name = scope.get_unique_variable_name('binarised_input')
 
             container.add_initializer(threshold_name, onnx_proto.TensorProto.FLOAT,
                                       [1], [nb.binarize])
         
-            container.add_node('Cast', operator.inputs[0].full_name,
-                                cast_input_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
-            container.add_node('Greater', [cast_input_name, threshold_name],
-                              condition_name, name=scope.get_unique_operator_name('Greater'), op_version=7)
-            container.add_node('Cast', condition_name, 
-                                cast_values_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
+            container.add_node('Greater', [operator.inputs[0].full_name, threshold_name],
+                              condition_name, name=scope.get_unique_operator_name('Greater'), op_version=9)
+            apply_cast(scope, condition_name, cast_values_name, container,
+                       to=onnx_proto.TensorProto.FLOAT)
             container.add_node('ConstantLike', operator.inputs[0].full_name, zero_tensor_name,
                                name=scope.get_unique_operator_name('ConstantLike'),
                                dtype=onnx_proto.TensorProto.FLOAT, op_version=9)
@@ -201,23 +194,27 @@ def convert_sklearn_naive_bayes(scope, operator, container):
                            neg_prob_name, name=scope.get_unique_operator_name('Log'))
         container.add_node('ReduceSum', neg_prob_name,
                            sum_neg_prob_name, name=scope.get_unique_operator_name('ReduceSum'), axes=[0])
-        container.add_node('MatMul', [input_name, neg_prob_name],
-                           inp_neg_prob_prod_name, name=scope.get_unique_operator_name('MatMul'))
-        # Cast is required here as Sub op doesn't work with Float64
-        container.add_node('Cast', inp_neg_prob_prod_name, 
-                            cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
-        apply_sub(scope, [sum_neg_prob_name, cast_result_name], difference_matrix_name, container, broadcast=1)
-        container.add_node('Sum', [difference_matrix_name, class_log_prior_name],
+        apply_sub(scope, [feature_log_prob_name, neg_prob_name], difference_matrix_name, container)
+        container.add_node('MatMul', [input_name, difference_matrix_name],
+                           dot_prod_name, name=scope.get_unique_operator_name('MatMul'))
+        container.add_node('Sum', [sum_neg_prob_name, dot_prod_name],
+                           partial_sum_result_name, name=scope.get_unique_operator_name('Sum'))
+        container.add_node('Sum', [partial_sum_result_name, class_log_prior_name],
                            sum_result_name, name=scope.get_unique_operator_name('Sum'))
 
     container.add_node('ArgMax', sum_result_name,
                        argmax_output_name, name=scope.get_unique_operator_name('ArgMax'), axis=1)
 
     # Following four statements are for predicting probabilities
+    log_prob_shape = [-1, 1]
+
+    reshaped_log_prob_name = scope.get_unique_variable_name('reshaped_log_prob')
+
     container.add_node('ReduceLogSumExp', sum_result_name,
                        reduce_log_sum_exp_result_name, name=scope.get_unique_operator_name('ReduceLogSumExp'),
                        axes=[1], keepdims=0)
-    apply_sub(scope, [sum_result_name, reduce_log_sum_exp_result_name], log_prob_name, container, broadcast=1)
+    apply_reshape(scope, reduce_log_sum_exp_result_name, reshaped_log_prob_name, container, desired_shape=log_prob_shape)
+    apply_sub(scope, [sum_result_name, reshaped_log_prob_name], log_prob_name, container, broadcast=1)
     apply_exp(scope, log_prob_name, prob_tensor_name, container)
     container.add_node('ZipMap', prob_tensor_name, operator.outputs[1].full_name,
                            op_domain='ai.onnx.ml', **zipmap_attrs)
