@@ -78,7 +78,7 @@ class TestKerasConverter(unittest.TestCase):
             sess = onnxruntime.InferenceSession(converted_model.SerializeToString())
             actual = sess.run([], {sess.get_inputs()[0].name:
                                          np.transpose(x.astype(np.float32), [0, 3, 1, 2])})
-            self.assertTrue(np.allclose(expected, actual))
+            self.assertTrue(np.allclose(expected, actual, rtol=1.e-3))
         except ImportError:
             pass
 
