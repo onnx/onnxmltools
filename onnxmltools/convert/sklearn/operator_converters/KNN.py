@@ -32,6 +32,7 @@ def convert_sklearn_knn(scope, operator, container):
     # C: Number of classes
     # input: test set input
     # output: test set output 
+    # output_prob: test set class probabilities 
     #
     # Graph:
     #
@@ -58,45 +59,56 @@ def convert_sklearn_knn(scope, operator, container):
     #               V
     #   ARRAYFEATUREEXTRACTOR <- training_labels[M]
     #           |
-    #           V              (KNN Regressor)
-    #          topk_labels[K] ------------------> REDUCEMEAN --> output[1] 
-    #                    | 
-    #                   /|\
-    #                  / | \(KNN Classifier)
-    #                 /  |  \
-    #                /   |   \
-    #               /    |    \__
-    #               |    |       |
-    #               V    V       V
-    # label0 -> EQUAL  EQUAL ... EQUAL <- label(C-1)
-    #            |       |          |
-    #            V       V          V
-    # output_label_0[C] ...       output_label_(C-1)[C]
-    #            |       |          |
-    #            V       V          V
-    #          CAST    CAST    ... CAST 
-    #            |       |          |
-    #            V       V          V
-    # output_cast_label_0[C] ...  output_cast_label_(C-1)[C]
-    #            |       |          |
-    #            V       V          V
-    #      REDUCESUM  REDUCESUM ... REDUCESUM
-    #            |       |          |
-    #            V       V          V
-    # output_label_reduced_0[1] ... output_label_reduced_(C-1)[1]
-    #           \        |           /
-    #            \____   |      ____/ 
-    #                 \  |  ___/ 
-    #                  \ | / 
-    #                   \|/
-    #                    V
-    #                 CONCAT --> concat_labels[C]
-    #                               |
-    #                               V
-    #                           ARGMAX --> predicted_label[1] 
-    #                                       |
-    #                                       V
-    #            output[1] <--- ARRAYFEATUREEXTRACTOR <- classes[C]
+    #           V                        (KNN Regressor)
+    #          topk_labels[K] ----------------------------> REDUCEMEAN --> output[1] 
+    #                    |        |___________________________________________ 
+    #                   /|\                    (probability calculation)     | 
+    #                  / | \(KNN Classifier)                                 |
+    #                 /  |  \                                                V 
+    #                /   |   \                  pred_label_shape[2] ----> RESHAPE
+    #               /    |    \__                                            |
+    #               |    |       |                                           V
+    #               V    V       V                                   reshaped_pred_label[K, 1]
+    # label0 -> EQUAL  EQUAL ... EQUAL <- label(C-1)                         |
+    #            |       |          |                                        |
+    #            V       V          V                                        |
+    # output_label_0[C] ...       output_label_(C-1)[C]                      |
+    #            |       |          |                                        V
+    #            V       V          V                                       CAST
+    #          CAST    CAST    ... CAST                                      |
+    #            |       |          |                                        V
+    #            V       V          V                                   cast_pred_labels[K, 1]
+    # output_cast_label_0[C] ...  output_cast_label_(C-1)[C]                    |
+    #            |       |          |                                           |
+    #            V       V          V                                           |
+    #      REDUCESUM  REDUCESUM ... REDUCESUM                                   |
+    #            |       |          |                                           |
+    #            V       V          V                                           |
+    # output_label_reduced_0[1] ... output_label_reduced_(C-1)[1]               |
+    #           \        |           /                                          |
+    #            \____   |      ____/                                           |
+    #                 \  |  ___/                                                |
+    #                  \ | /                                                    |
+    #                   \|/                                                     |
+    #                    V                                                      |
+    #                 CONCAT --> concat_labels[C]                               |
+    #                               |                                           |
+    #                               V                                           |
+    #                           ARGMAX --> predicted_label[1]                   |
+    #                                       |                                   |
+    #                                       V                                   |
+    #            output[1] <--- ARRAYFEATUREEXTRACTOR <- classes[C]             |
+    #                                                                           |
+    #                                                                           |
+    #                                                                           |
+    #   ohe_model --> ONEHOTENCODER <-------------------------------------------|
+    #                   |
+    #                   V
+    #  ohe_result[n_neighbors, C] -> REDUCEMEAN -> reduced_prob[1, C]
+    #                                                |
+    #                                                V
+    #               output_probability[1, C]  <-  ZipMap 
+    #                   
 
     knn = operator.raw_operator
     training_examples = knn._fit_X
@@ -183,7 +195,7 @@ def convert_sklearn_knn(scope, operator, container):
                            name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
         for i in range(len(classes)):
             container.add_node('Equal', [labels_name[i], topk_labels_name],
-                                output_label_name[i])#, op_version=7)
+                                output_label_name[i])
             # Casting to Int32 instead of Int64 as ReduceSum doesn't seem to support Int64 
             apply_cast(scope, output_label_name[i], output_cast_label_name[i], container,
                        to=onnx_proto.TensorProto.INT32)
@@ -208,7 +220,6 @@ def convert_sklearn_knn(scope, operator, container):
         # Calculation of class probability
         pred_label_shape = [-1, 1]
 
-        pred_label_name = scope.get_unique_variable_name('pred_label')
         pred_label_shape_name = scope.get_unique_variable_name('pred_label_shape')
         cast_pred_label_name = scope.get_unique_variable_name('cast_pred_label')
         reshaped_pred_label_name = scope.get_unique_variable_name('reshaped_pred_label')
@@ -218,10 +229,7 @@ def convert_sklearn_knn(scope, operator, container):
                                   [len(pred_label_shape)], pred_label_shape)
         ohe_model = OneHotEncoder(categorical_features='all').fit(training_labels.reshape((-1, 1)))
 
-        container.add_node('ArrayFeatureExtractor', [training_labels_name, topk_indices_name],
-                           pred_label_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'),
-                           op_domain='ai.onnx.ml')
-        container.add_node('Reshape', [pred_label_name, pred_label_shape_name], 
+        container.add_node('Reshape', [topk_labels_name, pred_label_shape_name], 
                            reshaped_pred_label_name, name=scope.get_unique_operator_name('Reshape'))
         apply_cast(scope, reshaped_pred_label_name, cast_pred_label_name, container, to=onnx_proto.TensorProto.INT64)
 

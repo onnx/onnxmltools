@@ -65,13 +65,15 @@ class TestGLMClassifierConverter(unittest.TestCase):
 
     def test_model_knn_classifier_binary_class(self):
         model, X = self._fit_model_binary_classification(KNeighborsClassifier())
-        model_onnx = convert_sklearn(model, 'KNN classifier', [('input', FloatTensorType([1, 3]))])
+        model_onnx = convert_sklearn(model, 'KNN classifier binary', [('input', FloatTensorType([1, 3]))])
         self.assertIsNotNone(model_onnx)
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnKNeighborsClassifierBinary")
 
     def test_model_knn_classifier_multi_class(self):
         model, X = self._fit_model_multiclass_classification(KNeighborsClassifier())
-        model_onnx = convert_sklearn(model, 'KNN classifier', [('input', FloatTensorType([1, 3]))])
+        model_onnx = convert_sklearn(model, 'KNN classifier multi-class', [('input', FloatTensorType([1, 3]))])
         self.assertIsNotNone(model_onnx)
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnKNeighborsClassifierMulti")
 
 if __name__ == "__main__":
     # TestGLMClassifierConverter().test_model_linear_svc_multi_class()
