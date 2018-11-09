@@ -8,8 +8,6 @@
 # `container` argument. Notice that those function behaviors are defined in a way very similar to ONNX-1.2.
 
 from ...proto import onnx_proto
-from .utils import compare_strict_version
-
 
 def _create_name_or_use_existing_one(scope, op_type, name):
     if name is None:
@@ -55,15 +53,24 @@ def _apply_basic_numerical_operation(scope, op_type, input_names, output_name, c
     container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
 
 
-def _apply_pointwise_operation(scope, op_type, input_names, output_name, container, operator_name):
+def _apply_pointwise_operation(scope, op_type, input_names, output_name, container, operator_name, broadcast):
     name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
     attrs = {}
-    if container.target_opset < 6:
-        attrs['consumed_inputs'] = [0] * len(input_names)
-        op_version = 1
+
+    # Before ONNX-1.3 (opset 8), broadcasting behavior is Caffe2-like.
+    if container.target_opset < 8:
+        if container.target_opset < 6:
+            attrs['consumed_inputs'] = [0] * len(input_names)
+            op_version = 1
+        else:
+            op_version = 6
+
+        if broadcast is not None:
+            attrs['broadcast'] = broadcast
     else:
-        op_version = 6
+        # Since ONNX-1.3 (opset 8), broadcasting behavior is Numpy-like, so we don't need to specify any attributes
+        op_version = 8
 
     container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
 
@@ -180,16 +187,16 @@ def apply_log(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Log', input_name, output_name, container, operator_name=operator_name)
 
 
-def apply_max(scope, input_names, output_name, container, operator_name=None):
-    _apply_pointwise_operation(scope, 'Max', input_names, output_name, container, operator_name)
+def apply_max(scope, input_names, output_name, container, operator_name=None, broadcast=None):
+    _apply_pointwise_operation(scope, 'Max', input_names, output_name, container, operator_name, broadcast)
 
 
-def apply_mean(scope, input_names, output_name, container, operator_name=None):
-    _apply_pointwise_operation(scope, 'Mean', input_names, output_name, container, operator_name)
+def apply_mean(scope, input_names, output_name, container, operator_name=None, broadcast=None):
+    _apply_pointwise_operation(scope, 'Mean', input_names, output_name, container, operator_name, broadcast)
 
 
-def apply_min(scope, input_names, output_name, container, operator_name=None):
-    _apply_pointwise_operation(scope, 'Min', input_names, output_name, container, operator_name)
+def apply_min(scope, input_names, output_name, container, operator_name=None, broadcast=None):
+    _apply_pointwise_operation(scope, 'Min', input_names, output_name, container, operator_name, broadcast)
 
 
 def apply_mul(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
