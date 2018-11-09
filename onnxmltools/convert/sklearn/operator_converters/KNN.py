@@ -108,7 +108,6 @@ def convert_sklearn_knn(scope, operator, container):
     #                                                |
     #                                                V
     #               output_probability[1, C]  <-  ZipMap 
-    #                   
 
     knn = operator.raw_operator
     training_examples = knn._fit_X
