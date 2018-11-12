@@ -4,7 +4,14 @@
 # license information.
 # --------------------------------------------------------------------------
 import numpy
-from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, DepthwiseConv2D
+from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose
+
+try:
+    from keras.layers import DepthwiseConv2D
+except ImportError:
+    # keras <= 2.1.2
+    from keras.applications.mobilenet import DepthwiseConv2D
+
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_identity, apply_transpose
 from ...common._registration import register_converter

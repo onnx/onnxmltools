@@ -81,6 +81,11 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         elif hasattr(model, "decision_function"):
             # Classifier without probabilities
             prediction = [model.predict(data), model.decision_function(data)]
+        elif hasattr(model, "layers"):
+            # Keras
+            if len(model.input_names) != 1:
+                raise NotImplemented("Only neural network with one input are supported")
+            prediction = [model.predict(data)]
         else:
             # Regressor
             prediction = [model.predict(data)]

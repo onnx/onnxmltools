@@ -5,7 +5,14 @@
 # --------------------------------------------------------------------------
 
 import numbers
-from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, DepthwiseConv2D, RepeatVector
+from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, RepeatVector
+
+try:
+    from keras.layers import DepthwiseConv2D
+except ImportError:
+    # Keras <= 2.1.2
+    from keras.applications.mobilenet import DepthwiseConv2D
+    
 from ...common._registration import register_shape_calculator
 
 

@@ -12,7 +12,7 @@ from ...common._apply_operation import apply_elu, apply_hard_sigmoid, apply_relu
 from ...common._registration import register_converter
 
 try:
-    from keras_applications.mobilenet import relu6
+    from keras.applications.mobilenet import relu6
 except ImportError:
     relu6 = None
 

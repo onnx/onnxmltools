@@ -23,11 +23,13 @@ install:
       curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o $HOME/miniconda.sh;
     fi
   - export ONNX_VERSION="";
+  - export KERAS_VERSION="";
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
       export ONNX_VERSION="==1.1.2";
     fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
       export ONNX_VERSION="==1.2.3";
+      export KERAS_VERSION="==2.1.2";
     fi
   - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -44,6 +46,7 @@ install:
   - cd $TRAVIS_BUILD_DIR && pip install cntk
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
+  - pip install keras$KERAS_VERSION
   - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
       pip install onnxruntime;
     fi
