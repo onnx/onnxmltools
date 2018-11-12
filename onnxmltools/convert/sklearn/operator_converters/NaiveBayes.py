@@ -7,8 +7,6 @@
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_add, apply_exp, apply_reshape, apply_sub
 from ...common._registration import register_converter
-from ...common._container import ModelComponentContainer
-import onnx
 import numpy as np
 
 
@@ -136,11 +134,11 @@ def convert_sklearn_naive_bayes(scope, operator, container):
         zipmap_attrs['classlabels_strings'] = classes
         classes = np.array([s.encode('utf-8') for s in classes])
 
+    container.add_initializer(feature_log_prob_name, onnx_proto.TensorProto.FLOAT,
+                              feature_log_prob.shape, feature_log_prob.flatten())
     container.add_initializer(classes_name, class_type, classes.shape, classes)
 
     if operator.type == 'SklearnMultinomialNB':
-        container.add_initializer(feature_log_prob_name, onnx_proto.TensorProto.FLOAT,
-                                  feature_log_prob.shape, feature_log_prob.flatten())
         container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
                                   class_log_prior.shape, class_log_prior.flatten())
         matmul_result_name = scope.get_unique_variable_name('matmul_result')
@@ -159,6 +157,13 @@ def convert_sklearn_naive_bayes(scope, operator, container):
         container.add_node('Sum', [reshape_result_name, class_log_prior_name],
                            sum_result_name, name=scope.get_unique_operator_name('Sum'))
     else:
+        container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
+                                  class_log_prior.shape, class_log_prior.flatten())
+        constant_name = scope.get_unique_variable_name('constant')
+        exp_result_name = scope.get_unique_variable_name('exp_result')
+        sub_result_name = scope.get_unique_variable_name('sub_result')
+        neg_prob_name = scope.get_unique_variable_name('neg_prob')
+        sum_neg_prob_name = scope.get_unique_variable_name('sum_neg_prob')
         inp_neg_prob_prod_name = scope.get_unique_variable_name('inp_neg_prob_prod')
         difference_matrix_name = scope.get_unique_variable_name('difference_matrix')
 
@@ -198,27 +203,24 @@ def convert_sklearn_naive_bayes(scope, operator, container):
                            sum_neg_prob_name, name=scope.get_unique_operator_name('ReduceSum'), axes=[0])
         container.add_node('MatMul', [input_name, neg_prob_name],
                            inp_neg_prob_prod_name, name=scope.get_unique_operator_name('MatMul'))
+        # Cast is required here as Sub op doesn't work with Float64
+        container.add_node('Cast', inp_neg_prob_prod_name, 
+                            cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
+        apply_sub(scope, [sum_neg_prob_name, cast_result_name], difference_matrix_name, container, broadcast=1)
+        container.add_node('Sum', [difference_matrix_name, class_log_prior_name],
+                           sum_result_name, name=scope.get_unique_operator_name('Sum'))
 
-        # safe_sparse_dot(X, (self.feature_log_prob_ - neg_prob).T) + nb_log_prior --> sum_result_name
-        x_reshaped = scope.get_unique_variable_name('x_reshaped')
-        nb_log_prior_reshaped = scope.get_unique_variable_name('nb_log_prior_reshaped')
-        opname = scope.get_unique_operator_name('Sum')
-        apply_reshape(scope, inp_neg_prob_prod_name, x_reshaped, container, desired_shape=class_log_prior.shape)
-        apply_reshape(scope, nb_log_prior_name, nb_log_prior_reshaped, container, desired_shape=class_log_prior.shape)
-        container.add_node('Sum', [x_reshaped, nb_log_prior_reshaped], sum_result_name, name=opname)        
-        
     container.add_node('ArgMax', sum_result_name,
                        argmax_output_name, name=scope.get_unique_operator_name('ArgMax'), axis=1)
 
     # Following four statements are for predicting probabilities
-    container.add_node('ReduceLogSumExp', sum_result_name, reduce_log_sum_exp_result_name,
-                       name=scope.get_unique_operator_name('ReduceLogSumExp'), axes=[1], keepdims=0)
+    container.add_node('ReduceLogSumExp', sum_result_name,
+                       reduce_log_sum_exp_result_name, name=scope.get_unique_operator_name('ReduceLogSumExp'),
+                       axes=[1], keepdims=0)
     apply_sub(scope, [sum_result_name, reduce_log_sum_exp_result_name], log_prob_name, container, broadcast=1)
     apply_exp(scope, log_prob_name, prob_tensor_name, container)
-    
-    # prob_tensor_name = binarized
     container.add_node('ZipMap', prob_tensor_name, operator.outputs[1].full_name,
-                       op_domain='ai.onnx.ml', **zipmap_attrs)
+                           op_domain='ai.onnx.ml', **zipmap_attrs)
 
     container.add_node('ArrayFeatureExtractor', [classes_name, argmax_output_name],
                        array_feature_extractor_result_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
@@ -233,7 +235,6 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     else: # string labels
         apply_reshape(scope, array_feature_extractor_result_name, operator.outputs[0].full_name, container,
                       desired_shape=output_shape)
-
 
 register_converter('SklearnMultinomialNB', convert_sklearn_naive_bayes)
 register_converter('SklearnBernoulliNB', convert_sklearn_naive_bayes)
