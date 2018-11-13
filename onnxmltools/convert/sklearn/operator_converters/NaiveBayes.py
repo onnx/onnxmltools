@@ -19,13 +19,13 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     # All variables are followed by their shape in [].
     #
     # Symbols:
-    # M: Number of test set instances
+    # M: Number of instances
     # N: Number of features
     # C: Number of classes
-    # input(or x): test set input
-    # output(or y): test set output (There are two paths for producing output, one for
+    # input(or x): input
+    # output(or y): output (There are two paths for producing output, one for
     #               string labels and the other one for int labels) 
-    # output_probability: test set class probabilties 
+    # output_probability: class probabilties 
     # feature_log_prob: Empirical log probability of features given a class, P(x_i|y)
     # class_log_prior: Smoothed empirical log probability for each class
     #
@@ -35,31 +35,31 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     #
     # Graph:
     #
-    #   input[M, N] -> MATMUL <- feature_log_prob.T[N, C]
+    #   input [M, N] -> MATMUL <- feature_log_prob.T [N, C]
     #                    |
     #                    V
-    #        matmul_result[M, C] -> CAST <- onnx_proto.TensorProto.FLOAT
+    #        matmul_result [M, C] -> CAST <- onnx_proto.TensorProto.FLOAT
     #                                |
     #                                V
-    #                    cast_result[M, C] -> SUM <- class_log_prior[1, C]
+    #                    cast_result [M, C] -> SUM <- class_log_prior [1, C]
     #                                          |
     #                                          V                                   
-    #                            sum_result[M, C]* -> ARGMAX -> argmax_output[M, 1] 
+    #                            sum_result [M, C] -> ARGMAX -> argmax_output [M, 1] 
     #                                                            |                
     #                                                            V               
-    #                              classes[C] -------> ARRAYFEATUREEXTRACTOR
+    #                              classes [C] -------> ARRAYFEATUREEXTRACTOR
     #                                                            |
     #                                                            V          (string labels)
-    #                                  array_feature_extractor_result[M, 1] ----------------------------
-    #                                               (int labels) |                                      | 
-    #                                                            V                                      |
-    #      output_shape[1] -> RESHAPE <- cast2_result[M, 1] <- CAST(to=onnx_proto.TensorProto.FLOAT)    |
-    #                          |                                                                        |
-    #                          V                                                                        V
-    #                       reshaped_result[M,]             |------------------------------------- RESHAPE
+    #                                  array_feature_extractor_result [M, 1] -----------------------------.
+    #                                               (int labels) |                                        | 
+    #                                                            V                                        |
+    #      output_shape [1] -> RESHAPE <- cast2_result [M, 1] <- CAST(to=onnx_proto.TensorProto.FLOAT)    |
+    #                            |                                                                        |
+    #                            V                                                                        V
+    #                       reshaped_result [M,]            .--------------------------------------- RESHAPE
     #                                   |                   |
     #                                   V                   V
-    #  (to=onnx_proto.TensorProto.INT64)CAST --------> output[M,]
+    #  (to=onnx_proto.TensorProto.INT64)CAST --------> output [M,]
     #
     # Bernoulli NB
     # Equation:
@@ -68,71 +68,72 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     #
     #   Graph:
     #
-    #           _______________________________________________________________________________
+    #           .------------------------------------------------------------------------------. 
     #           |                                                                              |
-    #  feature_log_prob.T[N, C] -> EXP -> exp_result[N, C]                                     |
+    #  feature_log_prob.T [N, C] -> EXP -> exp_result [N, C]                                   |
     #                                      |                                                   |
     #                                      V                                                   V
-    #                         constant -> SUB -> sub_result[N, C] -> LOG -> neg_prob[N, C] -> SUB
+    #                         constant -> SUB -> sub_result [N, C] -> LOG -> neg_prob [N, C] -> SUB
     #                                                                        |                 |
     #                                                                        V                 V 
-    #  ----------------- sum_neg_prob[1, C] <------------------------ REDUCE_SUM        difference_matrix[N, C]
-    #  |                     __________________________________________________________________| 
+    #  .---------------- sum_neg_prob [1, C] <------------------------ REDUCE_SUM        difference_matrix [N, C]
+    #  |                                                                                       |
+    #  |                     .-----------------------------------------------------------------' 
     #  |                     |
     #  |                     V
-    #  |    input[M, N] -> MATMUL -> dot_product[M, C]
+    #  |    input [M, N] -> MATMUL -> dot_product [M, C]
     #  |                                       |
     #  |                                       V
-    #  -------------------------------------> SUM
+    #  '------------------------------------> SUM
     #                                          |
     #                                          V
-    #  class_log_prior[1, C] -> SUM <- partial_sum_result[M, C]
+    #  class_log_prior [1, C] -> SUM <- partial_sum_result [M, C]
     #                            |
     #                            V
-    #                   sum_result[M, C]* -> ARGMAX -> argmax_output[M, 1] 
+    #                   sum_result [M, C] -> ARGMAX -> argmax_output [M, 1] 
     #                                                            |
     #                                                            V
-    #                              classes[C] -------> ARRAYFEATUREEXTRACTOR
+    #                              classes [C] -------> ARRAYFEATUREEXTRACTOR
     #                                                            |
     #                                                            V          (string labels)
-    #                                  array_feature_extractor_result[M, 1] ----------------------------
+    #                                  array_feature_extractor_result [M, 1] --------------------------.
     #                                               (int labels) |                                     | 
     #                                                            V                                     |
-    #      output_shape[1] -> RESHAPE <- cast2_result[M, 1] <- CAST(to=onnx_proto.TensorProto.FLOAT)   | 
+    #      output_shape [1] -> RESHAPE <- cast2_result [M, 1] <- CAST(to=onnx_proto.TensorProto.FLOAT) | 
     #                          |                                                                       |
-    #                          V                                                                       |
-    #                       reshaped_result[M,]             --------------------------------------RESHAPE
-    #                                   |                   |
-    #                                   V                   |
-    # (to=onnx_proto.TensorProto.INT64)CAST -> output[M,] <-|
+    #                          V                                                                       V
+    #                       reshaped_result [M,]             .-------------------------------------RESHAPE
+    #                                   |                    |
+    #                                   V                    |
+    # (to=onnx_proto.TensorProto.INT64)CAST -> output [M,] <-'
     #
     #
-    # If model's binarize attribute is not null, then input is updated based on the following graph:
+    # If model's binarize attribute is not null, then input of Bernoulli NB is produced by the following graph:
     #
-    #    input[M, N] -> GREATER <- threshold[1]
+    #    input [M, N] -> GREATER <- threshold [1]
     #       |              |
     #       |              V
-    #       |       condition[M, N] -> CAST(to=onnx_proto.TensorProto.FLOAT) -> cast_values[M, N]
+    #       |       condition [M, N] -> CAST(to=onnx_proto.TensorProto.FLOAT) -> cast_values [M, N]
     #       |                                                                       |
     #       V                                                                       V
-    #   CONSTANT_LIKE ---------------------------> zero_tensor[M, N] ------------> ADD
+    #   CONSTANT_LIKE ---------------------------> zero_tensor [M, N] ------------> ADD
     #                                                                               |
     #                                                                               V
-    #                                                   input[M, N] <- binarised_input[M, N]
+    #                                                   input [M, N] <- binarised_input [M, N]
     #
     # Sub-graph for probability calculation common to both Multinomial and Bernoulli Naive Bayes
     #
-    #  sum_result[M, C]* -> REDUCELOGSUMEXP -> reduce_log_sum_exp_resulti[M,] -|
-    #         |                                                                |
-    #         |                                                                V
-    #         |                                       log_prob_shape[2] -> RESHAPE
-    #         |                                                                |
-    #         |--------------> SUB <---- reshaped_log_prob[M, 1] <-------------|
+    #  sum_result [M, C] -> REDUCELOGSUMEXP -> reduce_log_sum_exp_resulti [M,] -.
+    #         |                                                                  |
+    #         |                                                                  V
+    #         |                                         log_prob_shape [2] -> RESHAPE
+    #         |                                                                  |
+    #         '--------------> SUB <---- reshaped_log_prob [M, 1] <--------------'
     #                           |
     #                           V
-    #                       log_prob[M, C] -> EXP -> prob_tensor[M, C] -|
+    #                     log_prob [M, C] -> EXP -> prob_tensor [M, C] -.
     #                                                                   |
-    #         output_probability[M, C] <- ZIPMAP <----------------------|
+    #         output_probability [M, C] <- ZIPMAP <---------------------'
 
     nb = operator.raw_operator
     class_log_prior = nb.class_log_prior_.astype('float32').reshape((1, -1))
@@ -237,7 +238,7 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     container.add_node('ArgMax', sum_result_name,
                        argmax_output_name, name=scope.get_unique_operator_name('ArgMax'), axis=1)
 
-    # Following four statements are for predicting probabilities
+    # Calculation of class probability
     log_prob_shape = [-1, 1]
 
     reshaped_log_prob_name = scope.get_unique_variable_name('reshaped_log_prob')

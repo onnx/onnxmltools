@@ -11,14 +11,9 @@ from ....proto import onnx_proto
 from ...common._registration import register_converter
 
 
-def convert_sklearn_one_hot_encoder(scope, operator, container, flag=False):
+def convert_sklearn_one_hot_encoder(scope, operator, container):
     op = operator.raw_operator
-    if flag:
-        C = 1
-        input_name = operator.inputs
-    else:
-        C = operator.inputs[0].type.shape[1]
-        input_name = operator.inputs[0].full_name
+    C = operator.inputs[0].type.shape[1]
     categorical_feature_indices = [i for i, mat in enumerate(op.categories_) if mat is not None and len(mat) > 0]
 
     # encoded_slot_sizes[i] is the number of output coordinates associated with the ith categorical feature
@@ -47,7 +42,7 @@ def convert_sklearn_one_hot_encoder(scope, operator, container, flag=False):
         extracted_feature_name = scope.get_unique_variable_name('extracted_feature_at_' + str(i))
         extractor_type = 'ArrayFeatureExtractor'
         extractor_attrs = {'name': scope.get_unique_operator_name(extractor_type)}
-        container.add_node(extractor_type, [input_name, index_variable_name],
+        container.add_node(extractor_type, [operator.inputs[0].full_name, index_variable_name],
                            extracted_feature_name, op_domain='ai.onnx.ml', **extractor_attrs)
 
         # Encode the extracted categorical feature as a one-hot vector
@@ -71,7 +66,7 @@ def convert_sklearn_one_hot_encoder(scope, operator, container, flag=False):
         extractor_attrs = {'name': scope.get_unique_operator_name(extractor_type)}
         passed_indices_name = scope.get_unique_variable_name('passed_feature_indices')
         container.add_initializer(passed_indices_name, onnx_proto.TensorProto.INT64, [1], [len(passed_indices)])
-        container.add_node(extractor_type, [input_name, passed_indices_name],
+        container.add_node(extractor_type, [operator.inputs[0].full_name, passed_indices_name],
                            passed_feature_name, op_domain='ai.onnx.ml', **extractor_attrs)
         final_variable_names.append(passed_feature_name)
         final_variable_lengths.append(1)
@@ -80,11 +75,6 @@ def convert_sklearn_one_hot_encoder(scope, operator, container, flag=False):
     collector_type = 'FeatureVectorizer'
     collector_attrs = {'name': scope.get_unique_operator_name(collector_type)}
     collector_attrs['inputdimensions'] = final_variable_lengths
-    if flag:
-        output_variable_name = scope.get_unique_variable_name('output_variable')
-        container.add_node(collector_type, final_variable_names, output_variable_name,
-                           op_domain='ai.onnx.ml', **collector_attrs)
-        return output_variable_name
     container.add_node(collector_type, final_variable_names, operator.outputs[0].full_name,
                        op_domain='ai.onnx.ml', **collector_attrs)
 
