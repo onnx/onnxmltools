@@ -164,8 +164,8 @@ def convert_sklearn_naive_bayes(scope, operator, container):
         class_type = onnx_proto.TensorProto.INT32
         zipmap_attrs['classlabels_int64s'] = classes
     else:
-        zipmap_attrs['classlabels_strings'] = classes
         classes = np.array([s.encode('utf-8') for s in classes])
+        zipmap_attrs['classlabels_strings'] = classes
 
     container.add_initializer(feature_log_prob_name, onnx_proto.TensorProto.FLOAT,
                               feature_log_prob.shape, feature_log_prob.flatten())

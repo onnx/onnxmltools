@@ -17,14 +17,16 @@ def convert_sklearn_knn(scope, operator, container):
     # and operator names are in upper case characters. We borrow operator names 
     # from the official ONNX spec: https://github.com/onnx/onnx/blob/master/docs/Operators.md
     # All variables are followed by their shape in [].
+    # Note that KNN regressor and classifier share the same computation graphs until the top-k
+    # nearest examples' labels (aka `topk_labels` in the graph below) are found.
     #
     # Symbols:
     # M: Number of training set instances
     # N: Number of features
     # C: Number of classes
-    # input: test set input
-    # output: test set output 
-    # output_prob(for KNN Classifier): test set class probabilities 
+    # input: input
+    # output: output
+    # output_prob (for KNN Classifier): class probabilities
     #
     # Graph:
     #
@@ -170,13 +172,12 @@ def convert_sklearn_knn(scope, operator, container):
             class_type = onnx_proto.TensorProto.INT32
             zipmap_attrs['classlabels_int64s'] = classes
         else:
-            zipmap_attrs['classlabels_strings'] = classes
             classes = np.array([s.encode('utf-8') for s in classes])    
+            zipmap_attrs['classlabels_strings'] = classes
 
         for i in range(len(classes)):
             labels_name[i] = scope.get_unique_variable_name('class_labels_{}'.format(i))
-            container.add_initializer(labels_name[i], onnx_proto.TensorProto.INT32,
-                                  [], [i])
+            container.add_initializer(labels_name[i], onnx_proto.TensorProto.INT32, [], [i])
             output_label_name[i] = scope.get_unique_variable_name('output_label_{}'.format(i))
             output_cast_label_name[i] = scope.get_unique_variable_name('output_cast_label_{}'.format(i))
             output_label_reduced_name[i] = scope.get_unique_variable_name('output_label_reduced_{}'.format(i))
