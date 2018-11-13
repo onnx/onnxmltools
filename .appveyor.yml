@@ -6,7 +6,6 @@ environment:
 
   # To build onnx-ml.proto, set ONNX_ML to true.
   ONNX_ML: 1
-  # Package coremltools doesn't have pipy for Windows, so we install it from its repo.
 
   matrix:
     - CONDA_PREFIX: "C:\\Miniconda36-x64"
