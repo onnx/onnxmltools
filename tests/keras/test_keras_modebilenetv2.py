@@ -1,5 +1,5 @@
 import sys
-
+from distutils.version import StrictVersion
 import onnxmltools
 from onnxmltools.utils import dump_data_and_model
 import numpy as np
@@ -15,6 +15,9 @@ from keras.layers import *
 
 
 class TestKerasConverterMobileNetv2(unittest.TestCase):
+    
+    @unittest.skipIf(StrictVersion(keras.__version__) >= StrictVersion('2.2'),
+                     reason="Unsupported shape calculation for operator <class 'keras.layers.advanced_activations.ReLU'>")
     def test_mobilenetv2(self):
         x = np.random.rand(1, 224, 224, 3).astype(np.float32, copy=False)
         model = MobileNet(input_shape=None, alpha=1.0,
