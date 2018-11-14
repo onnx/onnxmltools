@@ -3,14 +3,16 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+import six
 import unittest
 import warnings
 import onnxmltools
 import coremltools
 import numpy as np
+from distutils.version import StrictVersion
+from onnxmltools.proto import onnx
 from onnxmltools.utils.tests_dl_helper import evaluate_deep_model, create_tensor,\
     find_inference_engine, rt_onnxruntime, rt_caffe2, rt_cntk
-
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
@@ -23,6 +25,10 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
     def setUp(self):
         np.random.seed(0)
 
+    @staticmethod
+    def _no_available_inference_engine():
+        return six.PY2 or StrictVersion(onnx.__version__) < StrictVersion('1.2')
+
     def _test_one_to_one_operator_keras(self, keras_model, x):
         y_reference = keras_model.predict(x)
 
@@ -32,6 +38,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             self.assertTrue(np.allclose(y_reference, y_produced))
         else:
             warnings.warn("None of onnx inference engine is available.")
+            if self._no_available_inference_engine():
+                return
 
     def _test_one_to_one_operator_coreml(self, keras_model, x):
         # Verify Keras-to-CoreML-to-ONNX path
@@ -39,8 +47,11 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             coreml_model = coremltools.converters.keras.convert(keras_model)
         except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'".format(e))
+            if self._no_available_inference_engine():
+                return
 
         onnx_model = onnxmltools.convert_coreml(coreml_model)
+        self.assertIsNotNone(onnx_model)
 
         y_reference = keras_model.predict(x)
         y_produced = evaluate_deep_model(onnx_model, x)
@@ -84,6 +95,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             coreml_model = coremltools.converters.keras.convert(keras_model)
         except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'.".format(e))
+            if self._no_available_inference_engine():
+                return
 
         onnx_model_p1 = onnxmltools.convert_coreml(coreml_model)
         onnx_model_p2 = onnxmltools.convert_keras(keras_model)
@@ -119,10 +132,11 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             return
         onnx_model = onnxmltools.convert_coreml(coreml_model)
 
-        y_reference = keras_model.predict(x)
-        y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
+        if not self._no_available_inference_engine():
+            y_reference = keras_model.predict(x)
+            y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
 
-        self.assertTrue(np.allclose(y_reference, y_produced))
+            self.assertTrue(np.allclose(y_reference, y_produced))
 
     def test_dense_with_dropout(self):
         N, C, D = 2, 3, 2
@@ -301,12 +315,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             warnings.warn("Issue in coremltools.")
             return
         onnx_model = onnxmltools.convert_coreml(coreml_model)
+        self.assertIsNotNone(onnx_model)
 
-        y_reference = keras_model.predict(np.transpose(x, [0, 2, 3, 1]))
-
-        y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
-
-        self.assertTrue(np.allclose(y_reference, y_produced))
+        if not self._no_available_inference_engine():
+            y_reference = keras_model.predict(np.transpose(x, [0, 2, 3, 1]))
+            y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
+            self.assertTrue(np.allclose(y_reference, y_produced))
 
     @unittest.skipIf(find_inference_engine() == rt_cntk, "does not work for CNTK")
     def test_reshape(self):
@@ -363,11 +377,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             return
         
         onnx_model = onnxmltools.convert_coreml(coreml_model)
-        
-        x = [x, 2*x]
-        y_reference = keras_model.predict(x)
-        y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
-        self.assertTrue(np.allclose(y_reference, y_produced))
+        self.assertIsNotNone(onnx_model)
+        if not self._no_available_inference_engine():
+            x = [x, 2*x]
+            y_reference = keras_model.predict(x)
+            y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
+            self.assertTrue(np.allclose(y_reference, y_produced))
 
     def test_recursive_and_shared_model(self):
         N, C, D = 2, 3, 3
@@ -392,7 +407,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         mapped2_2 = sub_model2(mapped2_1)
         sub_sum = Add()([mapped1_3, mapped2_2])
         model = Model(inputs=[input1, input2], outputs=sub_sum)
-        # coreml can't convert this kind of model.
+        # coremltools can't convert this kind of model.
         self._test_one_to_one_operator_keras(model, [x, 2 * x])
 
 
