@@ -51,7 +51,6 @@ install:
     fi
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
-  - cd $TRAVIS_BUILD_DIR && pip install -I keras==2.1.6
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
   - if [[ "$TRAVIS_PYTHON_VERSION" != "3.7" ]]; then
       # keras does exist on Python 3.7 but no backend
