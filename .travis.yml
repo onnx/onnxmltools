@@ -42,13 +42,22 @@ install:
   - conda install -c conda-forge numpy
   - conda install -c conda-forge cmake
   - conda install -c conda-forge openmpi
-  - conda install -c conda-forge tensorflow
+  - if [[ "$TRAVIS_PYTHON_VERSION" != "3.7" ]]; then
+      # tensorflow does not exist on python 3.6 so conda
+      # automatically installs python 3.6
+      conda install -c conda-forge tensorflow
+      # CNTK not available on python 3.7
+      cd $TRAVIS_BUILD_DIR && pip install cntk
+    fi
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
-  - cd $TRAVIS_BUILD_DIR && pip install cntk
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
   - cd $TRAVIS_BUILD_DIR && pip install -I keras==2.1.6
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
-  - pip install keras$KERAS_VERSION
+  - if [[ "$TRAVIS_PYTHON_VERSION" != "3.7" ]]; then
+      # keras does exist on Python 3.7 but no backend
+      # is yet available.
+      pip install keras$KERAS_VERSION
+    fi
   - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
       pip install onnxruntime;
     fi
