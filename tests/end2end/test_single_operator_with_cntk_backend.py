@@ -43,15 +43,17 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
     def _test_one_to_one_operator_coreml(self, keras_model, x):
         # Verify Keras-to-CoreML-to-ONNX path
+        coreml_model = None
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
         except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'".format(e))
-            if self._no_available_inference_engine():
-                return
 
-        onnx_model = onnxmltools.convert_coreml(coreml_model)
-        self.assertIsNotNone(onnx_model)
+        onnx_model = None if coreml_model is None else onnxmltools.convert_coreml(coreml_model)
+        self.assertTrue(onnx_model or coreml_model is None)
+
+        if self._no_available_inference_engine():
+            return
 
         y_reference = keras_model.predict(x)
         y_produced = evaluate_deep_model(onnx_model, x)
@@ -91,15 +93,20 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         '''
         # Verify Keras-to-CoreML-to-ONNX path
+        coreml_model = None
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
         except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'.".format(e))
-            if self._no_available_inference_engine():
-                return
 
-        onnx_model_p1 = onnxmltools.convert_coreml(coreml_model)
+        onnx_model_p1 = None if coreml_model is None else onnxmltools.convert_coreml(coreml_model)
         onnx_model_p2 = onnxmltools.convert_keras(keras_model)
+
+        self.assertTrue(onnx_model_p1 or coreml_model is None)
+        self.assertTrue(onnx_model_p2)
+
+        if self._no_available_inference_engine():
+            return
 
         if isinstance(x, list):
             x_t = [np.transpose(_, [0, 2, 3, 1]) for _ in x]
