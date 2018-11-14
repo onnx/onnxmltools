@@ -6,40 +6,67 @@
 """
 Helpers to help testing deep learning converted models.
 """
+import six
 import numpy as np
 from .main import save_model
 
+rt_onnxruntime, rt_caffe2, rt_cntk = range(3)
+_rt_installed = None
 
-def find_keras_backend():
+
+def find_inference_engine():
     """
     Finds an available backend to evaluate deep learning models.
     Returns its name as a string.
     """
+    global _rt_installed
+    if _rt_installed is not None:
+        return _rt_installed
+
     try:
-        import cntk
-        return 'cntk'
-    except:
-        pass
-    try:
-        import caffe2
-        return 'caffe2'
-    except:
-        pass
-    return None
+        import onnxruntime
+        _rt_installed = rt_onnxruntime
+    except ImportError:
+        try:
+            import cntk
+            _rt_installed = rt_cntk
+        except ImportError:
+            try:
+                import caffe2
+                _rt_installed = rt_caffe2
+            except ImportError:
+                pass
+
+    return _rt_installed
 
 
-def evaluate_deep_model(onnx_model, inputs):
+def evaluate_deep_model(onnx_model, inputs, rt_type=None):
     """
     Evaluates a deep learning model with
-    *CNTK* or *caffe2*.
+    onnxruntime, *CNTK* or *caffe2*
     """
-    runtime_name = find_keras_backend()
-    if runtime_name == 'cntk':
+    if rt_type is None:
+        rt_type = find_inference_engine()
+    if rt_type == rt_onnxruntime:
+        return _evaluate_onnxruntime(onnx_model, inputs)
+    if rt_type == rt_cntk:
         return _evaluate_cntk(onnx_model, inputs)
-    elif runtime_name == 'caffe2':
+    elif rt_type == rt_caffe2:
         return _evaluate_caffe2(onnx_model, inputs)
     else:
         raise ImportError('No runtime found. Need either CNTK or Caffe2')
+
+
+def _evaluate_onnxruntime(onnx_model, inputs):
+    import onnxruntime
+    runtime = onnxruntime.InferenceSession(onnx_model.SerializeToString())
+    result = None
+    inputs = inputs if isinstance(inputs, list) else [inputs]
+    for i_ in six.moves.range(inputs[0].shape[0]):  # TODO: onnxruntime can't support batch_size > 1
+        out = runtime.run([], {x.name: inputs[n_][i_:i_ + 1] for n_, x in enumerate(runtime.get_inputs())})[0]
+        result = out if result is None else np.concatenate((result, out))
+
+    return result[0] if isinstance(result, list) else result
 
 
 def _evaluate_caffe2(onnx_model, inputs):

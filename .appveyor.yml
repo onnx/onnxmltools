@@ -6,25 +6,25 @@ environment:
 
   # To build onnx-ml.proto, set ONNX_ML to true.
   ONNX_ML: 1
-  # Package coremltools doesn't have pipy for Python 3, so we install it from its repo.
-  COREML_PATH: git+https://github.com/apple/coremltools
-  # XGBoost wheel is not officially supported, so we use ours.
-  XGB_PATH: https://github.com/xadupre/xgboost/releases/download/0.7/xgboost-0.7-cp36-cp36m-win_amd64.whl
- 
-  matrix:
 
+  matrix:
     - CONDA_PREFIX: "C:\\Miniconda36-x64"
-      ONNX_PATH: onnx==1.1.2
+      ONNX_PATH: onnx==1.2.3
+      KERAS: keras==2.1.6
+      COREML_PATH: https://github.com/apple/coremltools/archive/v2.0.zip
 
     - CONDA_PREFIX: "C:\\Miniconda36-x64"
       ONNX_PATH: onnx
+      KERAS: keras
+      COREML_PATH: git+https://github.com/apple/coremltools
 
 install:
     - cmd: SET PATH=%CONDA_PREFIX%;%CONDA_PREFIX%\Scripts;%PATH%
     - cmd: conda install -y -c conda-forge protobuf numpy
     - cmd: python -m pip install --upgrade pip
-    - cmd: pip install %XGB_PATH% %COREML_PATH% %ONNX_PATH% cntk==2.5.1
+    - cmd: pip install %COREML_PATH% %ONNX_PATH% cntk==2.5.1
     - cmd: pip install -r requirements-dev.txt"
+    - cmd: pip install %KERAS%
 
 build: off
 
