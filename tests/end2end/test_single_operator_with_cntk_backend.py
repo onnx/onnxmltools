@@ -3,14 +3,16 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+import six
 import unittest
 import warnings
-from distutils.version import StrictVersion
-import onnx
 import onnxmltools
 import coremltools
 import numpy as np
-from onnxmltools.utils.tests_dl_helper import evaluate_deep_model, create_tensor, find_keras_backend
+from distutils.version import StrictVersion
+from onnxmltools.proto import onnx
+from onnxmltools.utils.tests_dl_helper import evaluate_deep_model, create_tensor,\
+    find_inference_engine, rt_onnxruntime, rt_caffe2, rt_cntk
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
@@ -18,30 +20,41 @@ from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, C
 from keras.initializers import RandomUniform
 
 
-def skip_relu6():        
-    import keras as _keras
-    if _keras.__version__ >= StrictVersion('2.2.0') and _keras.__version__ < StrictVersion('2.2.4'):
-        try:
-            from keras_applications.mobilenet import relu6
-            return False
-        except ImportError as e:
-            return True
-    return False
-
-
 class TestKeras2CoreML2ONNX(unittest.TestCase):
     
     def setUp(self):
         np.random.seed(0)
 
-    def _test_one_to_one_operator_core(self, keras_model, x):
+    @staticmethod
+    def _no_available_inference_engine():
+        return six.PY2 or StrictVersion(onnx.__version__) < StrictVersion('1.2')
+
+    def _test_one_to_one_operator_keras(self, keras_model, x):
+        y_reference = keras_model.predict(x)
+
+        onnx_model = onnxmltools.convert_keras(keras_model)
+        if not self._no_available_inference_engine():
+            y_produced = evaluate_deep_model(onnx_model, x)
+            self.assertTrue(np.allclose(y_reference, y_produced))
+        else:
+            self.assertIsNotNone(onnx_model)
+            warnings.warn("None of onnx inference engine is available.")
+            if self._no_available_inference_engine():
+                return
+
+    def _test_one_to_one_operator_coreml(self, keras_model, x):
         # Verify Keras-to-CoreML-to-ONNX path
+        coreml_model = None
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
         except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'".format(e))
+
+        onnx_model = None if coreml_model is None else onnxmltools.convert_coreml(coreml_model)
+        self.assertTrue(onnx_model or coreml_model is None)
+
+        if self._no_available_inference_engine():
             return
-        onnx_model = onnxmltools.convert_coreml(coreml_model)
 
         y_reference = keras_model.predict(x)
         y_produced = evaluate_deep_model(onnx_model, x)
@@ -54,17 +67,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced))
 
-    def _test_one_to_one_operator_core_keras(self, keras_model, x):
-        y_reference = keras_model.predict(x)
-
-        onnx_model = onnxmltools.convert_keras(keras_model)
-        if find_keras_backend():
-            y_produced = evaluate_deep_model(onnx_model, x)
-            self.assertTrue(np.allclose(y_reference, y_produced))
-        else:
-            warnings.warn("cntk or caffe2 are not available")
-
-    def _test_one_to_one_operator_core_channels_last(self, keras_model, x):
+    def _test_one_to_one_operator_coreml_channels_last(self, keras_model, x):
         '''
         There are two test paths. One is Keras-->CoreML-->ONNX and the other one is Keras-->ONNX.
 
@@ -91,13 +94,20 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         '''
         # Verify Keras-to-CoreML-to-ONNX path
+        coreml_model = None
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
         except (AttributeError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'.".format(e))
-            return
-        onnx_model_p1 = onnxmltools.convert_coreml(coreml_model)
+
+        onnx_model_p1 = None if coreml_model is None else onnxmltools.convert_coreml(coreml_model)
         onnx_model_p2 = onnxmltools.convert_keras(keras_model)
+
+        self.assertTrue(onnx_model_p1 or coreml_model is None)
+        self.assertTrue(onnx_model_p2)
+
+        if self._no_available_inference_engine():
+            return
 
         if isinstance(x, list):
             x_t = [np.transpose(_, [0, 2, 3, 1]) for _ in x]
@@ -114,7 +124,6 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced, atol=1e-6))
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_dense(self):
         N, C, D = 2, 3, 2
         x = create_tensor(N, C)
@@ -131,12 +140,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             return
         onnx_model = onnxmltools.convert_coreml(coreml_model)
 
-        y_reference = keras_model.predict(x)
-        y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
+        if not self._no_available_inference_engine():
+            y_reference = keras_model.predict(x)
+            y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
 
-        self.assertTrue(np.allclose(y_reference, y_produced))
+            self.assertTrue(np.allclose(y_reference, y_produced))
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_dense_with_dropout(self):
         N, C, D = 2, 3, 2
         x = create_tensor(N, C)
@@ -148,9 +157,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         keras_model = Model(inputs=input, outputs=result)
         keras_model.compile(optimizer='sgd', loss='mse')
 
-        self._test_one_to_one_operator_core_keras(keras_model, x)
+        self._test_one_to_one_operator_keras(keras_model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_conv_4d(self):
         N, C, H, W = 1, 2, 4, 3
         x = create_tensor(N, C, H, W)
@@ -161,9 +169,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         model = Model(inputs=input, outputs=result)
         model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_one_to_one_operator_core_channels_last(model, x)
+        self._test_one_to_one_operator_coreml_channels_last(model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_pooling_4d(self):
         layers_to_be_tested = [MaxPooling2D, AveragePooling2D]
         N, C, H, W = 1, 2, 4, 3
@@ -174,9 +181,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             model = Model(inputs=input, outputs=result)
             model.compile(optimizer='adagrad', loss='mse')
 
-            self._test_one_to_one_operator_core_channels_last(model, x)
+            self._test_one_to_one_operator_coreml_channels_last(model, x)
 
-    @unittest.skip('Skip because CNTK is not able to evaluate this model')
+    @unittest.skipIf(find_inference_engine() == rt_cntk, 'Skip because CNTK is not able to evaluate this model')
     def test_convolution_transpose_2d(self):
         N, C, H, W = 2, 2, 1, 1
         x = create_tensor(N, C, H, W)
@@ -185,9 +192,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         model = Model(inputs=input, outputs=result)
         model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_one_to_one_operator_core_channels_last(model, x)
+        self._test_one_to_one_operator_coreml_channels_last(model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_merge_2d(self):
         # Skip Concatenate for now because  CoreML Concatenate needs 4-D input
         layers_to_be_tested = [Add, Maximum, Multiply, Average, Dot]
@@ -203,9 +209,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
                 result = layer()([input1, input2])
             model = Model(inputs=[input1, input2], outputs=result)
             model.compile(optimizer='adagrad', loss='mse')
-            self._test_one_to_one_operator_core(model, [x1, x2])
+            self._test_one_to_one_operator_coreml(model, [x1, x2])
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_merge_4d(self):
         layers_to_be_tested = [Add, Maximum, Multiply, Average, Concatenate]
         N, C, H, W = 2, 2, 1, 3
@@ -217,9 +222,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             output = layer()([input1, input2])
             model = Model(inputs=[input1, input2], outputs=output)
             model.compile(optimizer='adagrad', loss='mse')
-            self._test_one_to_one_operator_core_channels_last(model, [x1, x2])
+            self._test_one_to_one_operator_coreml_channels_last(model, [x1, x2])
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_activation_2d(self):
         activation_to_be_tested = ['tanh', 'relu', 'sigmoid', 'softsign', 'elu', 'softplus', LeakyReLU]
         N, C = 2, 3
@@ -234,9 +238,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             model = Model(inputs=input, outputs=result)
             model.compile(optimizer='adagrad', loss='mse')
 
-            self._test_one_to_one_operator_core(model, x)
+            self._test_one_to_one_operator_coreml(model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_activation_4d(self):
         activation_to_be_tested = ['tanh', 'relu', 'sigmoid', 'softsign', 'elu', 'softplus', LeakyReLU]
 
@@ -252,10 +255,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             model = Model(inputs=input, outputs=result)
             model.compile(optimizer='adagrad', loss='mse')
 
-            self._test_one_to_one_operator_core_channels_last(model, x)
+            self._test_one_to_one_operator_coreml_channels_last(model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
-    @unittest.skipIf(find_keras_backend() != 'caffe2', "only for caffe2")
+    @unittest.skipIf(find_inference_engine() != rt_caffe2, "only for caffe2")
     def test_embedding(self):
         # This test is active only for Caffe2
         low, high = 0, 3
@@ -264,10 +266,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         model.add(Embedding(high - low + 1, 2, input_length=1))
         model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_one_to_one_operator_core(model, x)
+        self._test_one_to_one_operator_coreml(model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
-    @unittest.skipIf(find_keras_backend() != 'cntk', "caffe does not work")
+    @unittest.skipIf(find_inference_engine() == rt_caffe2, "caffe2 does not work")
     def test_batch_normalization(self):
         N, C, H, W = 2, 2, 3, 4
         x = create_tensor(N, C, H, W)
@@ -280,9 +281,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         model = Model(inputs=input, outputs=result)
         model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_one_to_one_operator_core_channels_last(model, x)
+        self._test_one_to_one_operator_coreml_channels_last(model, x)
 
-    @unittest.skip('This is not supported by either CNTK nor Caffe2')
+    @unittest.skip(find_inference_engine() != rt_onnxruntime)
     def test_gru(self):
         N, T, C, D = 1, 2, 3, 2
         input = Input(shape=(T, C))
@@ -292,10 +293,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         model.compile(optimizer='adagrad', loss='mse')
 
         x = np.random.rand(N, T, C)
-        self._test_one_to_one_operator_core(model, x)
+        self._test_one_to_one_operator_coreml(model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
-    @unittest.skipIf(find_keras_backend() != 'caffe2', "only for caffe2")
+    @unittest.skipIf(find_inference_engine() != rt_caffe2, "only for caffe2")
     def test_upsample(self):
         N, C, H, W = 2, 3, 1, 2
         x = create_tensor(N, C, H, W)
@@ -305,11 +305,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         model = Model(inputs=input, outputs=result)
         model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_one_to_one_operator_core_channels_last(model, x)
+        self._test_one_to_one_operator_coreml_channels_last(model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
-    @unittest.skipIf(StrictVersion(onnx.__version__) >= StrictVersion('1.3'),
-        "The latest CNTK release does not support the new ONNX Reshape")
+    @unittest.skipIf(find_inference_engine() == rt_cntk, "does not work for CNTK")
     def test_flatten(self):
         N, C, H, W, D = 2, 3, 1, 2, 2
         x = create_tensor(N, C, H, W)
@@ -325,15 +323,14 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             warnings.warn("Issue in coremltools.")
             return
         onnx_model = onnxmltools.convert_coreml(coreml_model)
+        self.assertIsNotNone(onnx_model)
 
-        y_reference = keras_model.predict(np.transpose(x, [0, 2, 3, 1]))
+        if not self._no_available_inference_engine():
+            y_reference = keras_model.predict(np.transpose(x, [0, 2, 3, 1]))
+            y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
+            self.assertTrue(np.allclose(y_reference, y_produced))
 
-        y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
-
-        self.assertTrue(np.allclose(y_reference, y_produced))
-
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
-    @unittest.skipIf(find_keras_backend() == 'cntk', "does not work for CNTK")
+    @unittest.skipIf(find_inference_engine() == rt_cntk, "does not work for CNTK")
     def test_reshape(self):
         N, C, H, W = 2, 3, 1, 2
         x = create_tensor(N, C, H, W)
@@ -342,9 +339,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         keras_model.add(Reshape((1, C * H * W, 1), input_shape=(H, W, C)))
         keras_model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_one_to_one_operator_core_channels_last(keras_model, x)
+        self._test_one_to_one_operator_coreml_channels_last(keras_model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_sequential_model_with_multiple_operators(self):
         N, C, H, W = 2, 3, 5, 5
         x = create_tensor(N, C, H, W)
@@ -360,9 +356,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         model.compile(optimizer='adagrad', loss='mse')
 
-        self._test_one_to_one_operator_core_channels_last(model, x)
+        self._test_one_to_one_operator_coreml_channels_last(model, x)
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
+    @unittest.skipIf(find_inference_engine() == rt_cntk, "does not work for CNTK")
     def test_recursive_model(self):
         N, C, D = 2, 3, 3
         x = create_tensor(N, C)
@@ -389,12 +385,13 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             return
         
         onnx_model = onnxmltools.convert_coreml(coreml_model)
-        
-        x = [x, 2*x]
-        y_reference = keras_model.predict(x)
-        y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
+        self.assertIsNotNone(onnx_model)
+        if not self._no_available_inference_engine():
+            x = [x, 2*x]
+            y_reference = keras_model.predict(x)
+            y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
+            self.assertTrue(np.allclose(y_reference, y_produced))
 
-    @unittest.skipIf(skip_relu6(), "relu6 is not available")
     def test_recursive_and_shared_model(self):
         N, C, D = 2, 3, 3
         x = create_tensor(N, C)
@@ -418,7 +415,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         mapped2_2 = sub_model2(mapped2_1)
         sub_sum = Add()([mapped1_3, mapped2_2])
         model = Model(inputs=[input1, input2], outputs=sub_sum)
-        self._test_one_to_one_operator_core_keras(model, [x, 2 * x])
+        # coremltools can't convert this kind of model.
+        self._test_one_to_one_operator_keras(model, [x, 2 * x])
 
 
 if __name__ == "__main__":
