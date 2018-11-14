@@ -4,19 +4,25 @@ import onnxmltools
 from onnxmltools.utils import dump_data_and_model
 import numpy as np
 import unittest
-import keras
 try:
-    from keras.applications.mobilenetv2 import MobileNetV2 as MobileNet
-except ModuleNotFoundError:
-    from keras.applications.mobilenet import MobileNet
+    import keras
+    has_keras = True
+except ImportError:
+    has_keras = False
+    
+if has_keras:
+    try:
+        from keras.applications.mobilenetv2 import MobileNetV2 as MobileNet
+    except ModuleNotFoundError:
+        from keras.applications.mobilenet import MobileNet
 
-from keras import backend as K
-from keras.layers import *
+    from keras import backend as K
+    from keras.layers import *
 
 
 class TestKerasConverterMobileNetv2(unittest.TestCase):
     
-    @unittest.skipIf(StrictVersion(keras.__version__) >= StrictVersion('2.2'),
+    @unittest.skipIf(not has_keras or StrictVersion(keras.__version__) >= StrictVersion('2.2'),
                      reason="Unsupported shape calculation for operator <class 'keras.layers.advanced_activations.ReLU'>")
     def test_mobilenetv2(self):
         x = np.random.rand(1, 224, 224, 3).astype(np.float32, copy=False)
