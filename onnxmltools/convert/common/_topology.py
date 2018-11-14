@@ -683,7 +683,8 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
             invalid_name.append(name)
         if name in tensor_inputs:
             onnx_input = tensor_inputs[name]  # type: Variable
-            if name in channel_first_inputs:
+            if name in channel_first_inputs or \
+                    (name.endswith(':0') and name[:-2] in channel_first_inputs):
                 nhwc_inputs.append(onnx_input.full_name)
                 s = onnx_input.type.shape
                 onnx_input.type.shape = [s[0], s[3], s[1], s[2]]
