@@ -33,10 +33,11 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         y_reference = keras_model.predict(x)
 
         onnx_model = onnxmltools.convert_keras(keras_model)
-        if find_inference_engine() is not None:
+        if not self._no_available_inference_engine():
             y_produced = evaluate_deep_model(onnx_model, x)
             self.assertTrue(np.allclose(y_reference, y_produced))
         else:
+            self.assertIsNotNone(onnx_model)
             warnings.warn("None of onnx inference engine is available.")
             if self._no_available_inference_engine():
                 return
