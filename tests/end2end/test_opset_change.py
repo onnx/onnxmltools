@@ -37,10 +37,7 @@ class TestKerasConverter(unittest.TestCase):
 
         opset_comparison = converted_model_8.opset_import[0].version > converted_model_4.opset_import[0].version
 
-        if opset_comparison != True:
-            opset_comparison = None
-
-        self.assertIsNotNone(opset_comparison)
+        self.assertTrue(opset_comparison)
 
 if __name__ == "__main__":
     unittest.main()
