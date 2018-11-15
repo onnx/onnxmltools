@@ -14,9 +14,9 @@ from keras.layers import *
 class TestKerasConverter(unittest.TestCase):
     def test_model_creation(self):
         N, C, H, W = 2, 3, 5, 5
-        input1 = keras.layers.Input(input_shape=(H, W, C))
+        input1 = keras.layers.Input(shape=(H, W, C))
         x1 = keras.layers.Dense(8, activation='relu')(input1)
-        input2 = keras.layers.Input(input_shape=(H, W, C))
+        input2 = keras.layers.Input(shape=(H, W, C))
         x2 = keras.layers.Dense(8, activation='relu')(input2)
         maximum_layer = keras.layers.Maximum()([x1, x2])
 
@@ -26,7 +26,7 @@ class TestKerasConverter(unittest.TestCase):
         trial1 = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
         trial2 = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
 
-        predicted = model.predict([trial1, x])
+        predicted = model.predict([trial1, trial2])
         self.assertIsNotNone(predicted)
 
         converted_model_8 = onnxmltools.convert_keras(model, target_opset=8)
@@ -37,7 +37,10 @@ class TestKerasConverter(unittest.TestCase):
 
         opset_comparison = converted_model_8.opset_import[0].version > converted_model_4.opset_import[0].version
 
-        self.assertIsNotNone(opset_comparison != False)
+        if opset_comparison != True:
+            opset_comparison = None
+
+        self.assertIsNotNone(opset_comparison)
 
 if __name__ == "__main__":
     unittest.main()
