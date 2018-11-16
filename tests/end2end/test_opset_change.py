@@ -29,13 +29,13 @@ class TestKerasConverter(unittest.TestCase):
         predicted = model.predict([trial1, trial2])
         self.assertIsNotNone(predicted)
 
-        converted_model_8 = onnxmltools.convert_keras(model, target_opset=8)
-        converted_model_4 = onnxmltools.convert_keras(model, target_opset=4)
+        converted_model_7 = onnxmltools.convert_keras(model, target_opset=7)
+        converted_model_5 = onnxmltools.convert_keras(model, target_opset=5)
 
-        self.assertIsNotNone(converted_model_8)
-        self.assertIsNotNone(converted_model_4)
+        self.assertIsNotNone(converted_model_7)
+        self.assertIsNotNone(converted_model_5)
 
-        opset_comparison = converted_model_8.opset_import[0].version > converted_model_4.opset_import[0].version
+        opset_comparison = converted_model_7.opset_import[0].version > converted_model_5.opset_import[0].version
 
         self.assertTrue(opset_comparison)
 
