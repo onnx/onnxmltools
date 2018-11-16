@@ -181,10 +181,13 @@ def convert_pooling(scope, operator, container):
     # From here to the end of this function, we will handle local pooling mode
     if params.type == Params.MAX:
         op_type = 'MaxPool'
-        op_version = 1
+        if container.target_opset < 8:
+            op_version = 1
+        else:
+            op_version = 8
     elif params.type == Params.AVERAGE:
         op_type = 'AveragePool'
-        if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
+        if container.target_opset < 8:
             op_version = 1
         else:
             op_version = 7

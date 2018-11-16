@@ -138,6 +138,13 @@ def convert_sklearn_naive_bayes(scope, operator, container):
                               feature_log_prob.shape, feature_log_prob.flatten())
     container.add_initializer(classes_name, class_type, classes.shape, classes)
 
+    if container.target_opset < 6:
+        sum_op_version = 1
+    elif container.target_opset < 8:
+        sum_op_version = 6
+    else:
+        sum_op_version = 8
+        
     if operator.type == 'SklearnMultinomialNB':
         container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
                                   class_log_prior.shape, class_log_prior.flatten())
@@ -155,7 +162,7 @@ def convert_sklearn_naive_bayes(scope, operator, container):
         container.add_node('Reshape', [cast_result_name, shape_result_name], reshape_result_name)
         
         container.add_node('Sum', [reshape_result_name, class_log_prior_name],
-                           sum_result_name, name=scope.get_unique_operator_name('Sum'))
+                           sum_result_name, name=scope.get_unique_operator_name('Sum'), op_version=sum_op_version)
     else:
         container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
                                   class_log_prior.shape, class_log_prior.flatten())
@@ -208,7 +215,7 @@ def convert_sklearn_naive_bayes(scope, operator, container):
                             cast_result_name, to=onnx_proto.TensorProto.FLOAT, op_version=7)
         apply_sub(scope, [sum_neg_prob_name, cast_result_name], difference_matrix_name, container, broadcast=1)
         container.add_node('Sum', [difference_matrix_name, class_log_prior_name],
-                           sum_result_name, name=scope.get_unique_operator_name('Sum'))
+                           sum_result_name, name=scope.get_unique_operator_name('Sum'), op_version=sum_op_version)
 
     container.add_node('ArgMax', sum_result_name,
                        argmax_output_name, name=scope.get_unique_operator_name('ArgMax'), axis=1)

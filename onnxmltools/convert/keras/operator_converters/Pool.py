@@ -29,13 +29,16 @@ def convert_keras_pooling_core(scope, operator, container, is_global, n_dims,
     op_type_prefix = 'Global' if is_global else ''
     if op_type == 'Avg':
         onnx_op_type = 'AveragePool'
-        if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
+        if container.target_opset < 7:
             op_version = 1
         else:
             op_version = 7
     elif op_type == 'Max':
         onnx_op_type = 'MaxPool'
-        op_version = 1
+        if container.target_opset < 8:
+            op_version = 1
+        else:
+            op_version = 8
     else:
         raise RuntimeError('Unsupported Keras pooling type: %s' % op_type)
 
