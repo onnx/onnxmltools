@@ -93,7 +93,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         # Verify Keras-to-CoreML-to-ONNX path
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
-        except (AttributeError, ImportError) as e:
+        except (AttributeError, ValueError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'.".format(e))
             return
         onnx_model_p1 = onnxmltools.convert_coreml(coreml_model)
