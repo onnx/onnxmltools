@@ -7,11 +7,15 @@ import onnxmltools
 import numpy as np
 import unittest
 import keras
+import onnx
+from distutils.version import StrictVersion
 
 from keras import backend as K
 from keras.layers import *
 
-class TestKerasConverter(unittest.TestCase):
+class TestOpsetComparison(unittest.TestCase):
+    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion("1.2"),
+                     "Not supported in ONNX version less than 1.2, since this test requires opset 7.")
     def test_model_creation(self):
         N, C, H, W = 2, 3, 5, 5
         input1 = keras.layers.Input(shape=(H, W, C))
