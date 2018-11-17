@@ -43,6 +43,7 @@ install:
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
   - cd $TRAVIS_BUILD_DIR && pip install cntk
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
+  - cd $TRAVIS_BUILD_DIR && pip install -I keras==2.1.6
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
   - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
       pip install onnxruntime;

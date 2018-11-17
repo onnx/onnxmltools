@@ -4,7 +4,11 @@
 # license information.
 # --------------------------------------------------------------------------
 import numpy
-from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, DepthwiseConv2D
+import keras
+from distutils.version import StrictVersion
+from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
+    from keras.layers import DepthwiseConv2D
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_identity, apply_transpose
 from ...common._registration import register_converter
@@ -37,7 +41,7 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     kernel_size = weight_params.shape[:-2]
     assert (kernel_size == op.kernel_size)
         
-    if isinstance(op, DepthwiseConv2D):
+    if StrictVersion(keras.__version__) >= StrictVersion('2.1.5') and isinstance(op, DepthwiseConv2D):
         # see https://github.com/onnx/onnx-tensorflow/pull/266/files
         dm = op.depth_multiplier
         output_channels *= dm
@@ -145,4 +149,5 @@ register_converter(Conv2D, convert_keras_conv2d)
 register_converter(Conv3D, convert_keras_conv3d)
 register_converter(Conv2DTranspose, convert_keras_conv_transpose_2d)
 register_converter(Conv3DTranspose, convert_keras_conv_transpose_3d)
-register_converter(DepthwiseConv2D, convert_keras_depthwise_conv_2d)
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
+    register_converter(DepthwiseConv2D, convert_keras_depthwise_conv_2d)
