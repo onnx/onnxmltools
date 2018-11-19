@@ -4,13 +4,15 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import keras
+from distutils.version import StrictVersion
 import numbers
 from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, RepeatVector
 
 try:
     from keras.layers import DepthwiseConv2D
 except ImportError:
-    # Keras <= 2.1.2
+    # Keras < 2.1.5
     from keras.applications.mobilenet import DepthwiseConv2D
     
 from ...common._registration import register_shape_calculator
@@ -39,4 +41,5 @@ register_shape_calculator(Conv2D, calculate_keras_conv_output_shapes)
 register_shape_calculator(Conv3D, calculate_keras_conv_output_shapes)
 register_shape_calculator(Conv2DTranspose, calculate_keras_conv_output_shapes)
 register_shape_calculator(Conv3DTranspose, calculate_keras_conv_output_shapes)
-register_shape_calculator(DepthwiseConv2D, calculate_keras_depthwise_conv_output_shapes)
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
+    register_shape_calculator(DepthwiseConv2D, calculate_keras_depthwise_conv_output_shapes)
