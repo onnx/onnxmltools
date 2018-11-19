@@ -280,6 +280,10 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         # This test is active only for Caffe2
         low, high = 0, 3
         x = np.random.randint(low=low, high=high, size=2, dtype='int64')
+        try:
+            from keras.models import Sequential
+        except ImportError:
+            return
         model = Sequential()
         model.add(Embedding(high - low + 1, 2, input_length=1))
         model.compile(optimizer='adagrad', loss='mse')
@@ -290,6 +294,10 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
     def test_batch_normalization(self):
         N, C, H, W = 2, 2, 3, 4
         x = create_tensor(N, C, H, W)
+        try:
+            from keras.models import Sequential
+        except ImportError:
+            return
         model = Sequential()
         input = Input(shape=(H, W, C))
         result = BatchNormalization(beta_initializer='random_uniform', gamma_initializer='random_uniform',
@@ -330,6 +338,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         N, C, H, W, D = 2, 3, 1, 2, 2
         x = create_tensor(N, C, H, W)
 
+        try:
+            from keras.models import Sequential
+            from keras.layers import Flatten, Dense
+        except ImportError:
+            return
+
         keras_model = Sequential()
         keras_model.add(Flatten(input_shape=(H, W, C)))
         keras_model.add(Dense(D))
@@ -352,6 +366,12 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
     def test_reshape(self):
         N, C, H, W = 2, 3, 1, 2
         x = create_tensor(N, C, H, W)
+
+        try:
+            from keras.models import Sequential
+            from keras.layers import Reshape
+        except ImportError:
+            return
 
         keras_model = Sequential()
         keras_model.add(Reshape((1, C * H * W, 1), input_shape=(H, W, C)))
