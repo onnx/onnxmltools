@@ -13,11 +13,20 @@ from distutils.version import StrictVersion
 from onnxmltools.proto import onnx
 from onnxmltools.utils.tests_dl_helper import evaluate_deep_model, create_tensor,\
     find_inference_engine, rt_onnxruntime, rt_caffe2, rt_cntk
-from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
-    Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
-    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout
-from keras.initializers import RandomUniform
+    
+def has_tensorflow():
+    try:
+        import tensorflow
+        return tensorflow is not None
+    except ImportError:
+        return False
+
+if has_tensorflow():
+    from keras.models import Sequential, Model
+    from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
+        Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
+        Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout
+    from keras.initializers import RandomUniform
 
 
 class TestKeras2CoreML2ONNX(unittest.TestCase):
@@ -57,9 +66,9 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             return
 
         y_reference = keras_model.predict(x)
-        y_produced = evaluate_deep_model(onnx_model, x)
-
-        self.assertTrue(np.allclose(y_reference, y_produced))
+        if onnx_model is not None:
+            y_produced = evaluate_deep_model(onnx_model, x)
+            self.assertTrue(np.allclose(y_reference, y_produced))
 
         # Verify Keras-to-ONNX path
         onnx_model = onnxmltools.convert_keras(keras_model)
@@ -114,9 +123,11 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         else:
             x_t = np.transpose(x, [0, 2, 3, 1])
         y_reference = np.transpose(keras_model.predict(x_t), [0, 3, 1, 2])
-        y_produced = evaluate_deep_model(onnx_model_p1, x)
-
-        self.assertTrue(np.allclose(y_reference, y_produced))
+        if onnx_model_p1 is not None:
+            y_produced = evaluate_deep_model(onnx_model_p1, x)
+            self.assertTrue(np.allclose(y_reference, y_produced))
+        else:
+            y_produced = None
 
         # Verify Keras-to-ONNX path
         y_reference = np.transpose(y_reference, [0, 2, 3, 1])
@@ -124,6 +135,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self.assertTrue(np.allclose(y_reference, y_produced, atol=1e-6))
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_dense(self):
         N, C, D = 2, 3, 2
         x = create_tensor(N, C)
@@ -146,6 +158,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
             self.assertTrue(np.allclose(y_reference, y_produced))
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_dense_with_dropout(self):
         N, C, D = 2, 3, 2
         x = create_tensor(N, C)
@@ -171,6 +184,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_coreml_channels_last(model, x)
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_pooling_4d(self):
         layers_to_be_tested = [MaxPooling2D, AveragePooling2D]
         N, C, H, W = 1, 2, 4, 3
@@ -194,6 +208,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_coreml_channels_last(model, x)
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_merge_2d(self):
         # Skip Concatenate for now because  CoreML Concatenate needs 4-D input
         layers_to_be_tested = [Add, Maximum, Multiply, Average, Dot]
@@ -211,6 +226,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             model.compile(optimizer='adagrad', loss='mse')
             self._test_one_to_one_operator_coreml(model, [x1, x2])
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_merge_4d(self):
         layers_to_be_tested = [Add, Maximum, Multiply, Average, Concatenate]
         N, C, H, W = 2, 2, 1, 3
@@ -224,6 +240,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             model.compile(optimizer='adagrad', loss='mse')
             self._test_one_to_one_operator_coreml_channels_last(model, [x1, x2])
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_activation_2d(self):
         activation_to_be_tested = ['tanh', 'relu', 'sigmoid', 'softsign', 'elu', 'softplus', LeakyReLU]
         N, C = 2, 3
@@ -240,6 +257,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
             self._test_one_to_one_operator_coreml(model, x)
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_activation_4d(self):
         activation_to_be_tested = ['tanh', 'relu', 'sigmoid', 'softsign', 'elu', 'softplus', LeakyReLU]
 
@@ -319,7 +337,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)        
-        except ImportError:
+        except (ImportError, AttributeError):
             warnings.warn("Issue in coremltools.")
             return
         onnx_model = onnxmltools.convert_coreml(coreml_model)
@@ -341,6 +359,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_coreml_channels_last(keras_model, x)
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_sequential_model_with_multiple_operators(self):
         N, C, H, W = 2, 3, 5, 5
         x = create_tensor(N, C, H, W)
@@ -392,6 +411,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             y_produced = evaluate_deep_model(onnx_model, x).reshape(N, D)
             self.assertTrue(np.allclose(y_reference, y_produced))
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_recursive_and_shared_model(self):
         N, C, D = 2, 3, 3
         x = create_tensor(N, C)

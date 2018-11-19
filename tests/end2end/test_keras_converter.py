@@ -7,10 +7,18 @@ import onnxmltools
 from onnxmltools.utils import dump_data_and_model
 import numpy as np
 import unittest
-import keras
 
-from keras import backend as K
-from keras.layers import *
+def has_tensorflow():
+    try:
+        import tensorflow
+        return tensorflow is not None
+    except ImportError:
+        return False
+
+if has_tensorflow():
+    import keras
+    from keras import backend as K
+    from keras.layers import *
 
 
 class ScaledTanh(keras.layers.Layer):
@@ -36,6 +44,7 @@ def custom_activation(scope, operator, container):
 
 
 class TestKerasConverter(unittest.TestCase):
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_custom_op(self):
         N, C, H, W = 2, 3, 5, 5
         x = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
@@ -57,6 +66,7 @@ class TestKerasConverter(unittest.TestCase):
         dump_data_and_model(x.astype(np.float32), model, converted_model, basename="KerasCustomOp-Out0",
                             context=dict(ScaledTanh=ScaledTanh))
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_channel_last(self):
         N, C, H, W = 2, 3, 5, 5
         x = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
