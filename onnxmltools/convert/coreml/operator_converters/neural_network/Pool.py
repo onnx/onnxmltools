@@ -187,7 +187,7 @@ def convert_pooling(scope, operator, container):
             op_version = 8
     elif params.type == Params.AVERAGE:
         op_type = 'AveragePool'
-        if container.target_opset < 8:
+        if container.target_opset < 7:
             op_version = 1
         else:
             op_version = 7
