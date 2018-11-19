@@ -21,20 +21,20 @@ if has_tensorflow():
     from keras.layers import *
 
 
-class ScaledTanh(keras.layers.Layer):
-    def __init__(self, alpha=1.0, beta=1.0, **kwargs):
-        super(ScaledTanh, self).__init__(**kwargs)
-        self.alpha = alpha
-        self.beta = beta
+    class ScaledTanh(keras.layers.Layer):
+        def __init__(self, alpha=1.0, beta=1.0, **kwargs):
+            super(ScaledTanh, self).__init__(**kwargs)
+            self.alpha = alpha
+            self.beta = beta
 
-    def build(self, input_shape):
-        super(ScaledTanh, self).build(input_shape)
+        def build(self, input_shape):
+            super(ScaledTanh, self).build(input_shape)
 
-    def call(self, inputs, **kwargs):
-        return self.alpha * K.tanh(self.beta * inputs)
+        def call(self, inputs, **kwargs):
+            return self.alpha * K.tanh(self.beta * inputs)
 
-    def compute_output_shape(self, input_shape):
-        return input_shape
+        def compute_output_shape(self, input_shape):
+            return input_shape
 
 
 def custom_activation(scope, operator, container):
