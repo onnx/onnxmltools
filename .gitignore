@@ -11,6 +11,7 @@
 .eggs
 *.egg-info/
 dist
+build
 
 # PyCharm files
 .idea
