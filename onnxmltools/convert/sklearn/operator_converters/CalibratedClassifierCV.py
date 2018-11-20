@@ -9,6 +9,8 @@ from ...common._apply_operation import apply_add, apply_cast, apply_div, apply_e
 from ...common._registration import get_converter, register_converter
 from .._parse import sklearn_operator_name_map, _get_sklearn_operator_name 
 import numpy as np
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import MultinomialNB
 
 class Oper:
     def __init__(self, model, inputs, op_type):
@@ -19,7 +21,10 @@ class Oper:
 def convert_sklearn_calibrated_classifier_cv(scope, operator, container, flag=False, model=None):
     
     if flag:
+        supported_classifier_list = [BernoulliNB, MultinomialNB]
         base_model = model.base_estimator
+        if type(base_model) not in supported_classifier_list:
+            raise NotImplementedError
         op_type = sklearn_operator_name_map[type(base_model)] 
         this_operator = Oper(base_model, operator.inputs, op_type)
         df_name = get_converter(op_type)(scope, this_operator, container, flag=True)
