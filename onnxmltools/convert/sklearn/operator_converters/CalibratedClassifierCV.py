@@ -91,7 +91,8 @@ def convert_sklearn_calibrated_classifier_cv(scope, operator, container, flag=Fa
             container.add_initializer(unit_float_tensor_name, onnx_proto.TensorProto.FLOAT, [], [1.0])
 
             container.add_node('ArrayFeatureExtractor', [concatenated_prob_name, col_index_name],
-                               first_col_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
+                               first_col_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'),
+                               op_domain='ai.onnx.ml')
             
             apply_sub(scope, [unit_float_tensor_name, first_col_name], zeroth_col_name, container, broadcast=1)
             container.add_node('Concat', [zeroth_col_name, first_col_name],
@@ -151,10 +152,12 @@ def convert_sklearn_calibrated_classifier_cv(scope, operator, container, flag=Fa
         container.add_node('ArgMax', class_prob_name,
                            argmax_output_name, name=scope.get_unique_operator_name('ArgMax'), axis=1)
         container.add_node('ArrayFeatureExtractor', [classes_name, argmax_output_name],
-                           array_feature_extractor_result_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
+                           array_feature_extractor_result_name,
+                           name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
 
         if class_type == onnx_proto.TensorProto.INT32: # int labels
-            apply_reshape(scope, array_feature_extractor_result_name, reshaped_result_name, container, desired_shape=output_shape)
+            apply_reshape(scope, array_feature_extractor_result_name, reshaped_result_name, container,
+                          desired_shape=output_shape)
             apply_cast(scope, reshaped_result_name, operator.outputs[0].full_name, container,
                        to=onnx_proto.TensorProto.INT64)
         else: # string labels
