@@ -16,6 +16,7 @@ python:
     - "3.6"
     - "3.7"
 
+# the bug in coremltools 2.0 package makes it not work with keras > 2.1.6
 install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       curl -L https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -o $HOME/miniconda.sh;
@@ -45,9 +46,9 @@ install:
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
   - cd $TRAVIS_BUILD_DIR && pip install cntk
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
+
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
       export KERAS_VERSION=;
-      # the bug in coremltools 2.0 package makes it not work with keras > 2.1.6
       pip install -I git+https://github.com/apple/coremltools;
     fi
   - cd $TRAVIS_BUILD_DIR && pip install -I "keras$KERAS_VERSION"
