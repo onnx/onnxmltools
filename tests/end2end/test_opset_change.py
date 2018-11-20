@@ -6,14 +6,26 @@
 import onnxmltools
 import numpy as np
 import unittest
-import keras
 import onnx
 from distutils.version import StrictVersion
 
-from keras import backend as K
-from keras.layers import *
+
+def has_tensorflow():
+    try:
+        import tensorflow
+        return tensorflow is not None
+    except ImportError:
+        return False
+
+
+if has_tensorflow():
+    import keras
+    from keras import backend as K
+    from keras.layers import *
+
 
 class TestOpsetComparison(unittest.TestCase):
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow not released yet on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion("1.2"),
                      "Not supported in ONNX version less than 1.2, since this test requires opset 7.")
     def test_model_creation(self):
@@ -42,6 +54,7 @@ class TestOpsetComparison(unittest.TestCase):
         opset_comparison = converted_model_7.opset_import[0].version > converted_model_5.opset_import[0].version
 
         self.assertTrue(opset_comparison)
+
 
 if __name__ == "__main__":
     unittest.main()
