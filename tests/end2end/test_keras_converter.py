@@ -10,6 +10,7 @@ import unittest
 import keras
 
 from keras import backend as K
+from keras.models import Sequential
 from keras.layers import *
 
 
@@ -40,7 +41,7 @@ class TestKerasConverter(unittest.TestCase):
         N, C, H, W = 2, 3, 5, 5
         x = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
 
-        model = keras.Sequential()
+        model = Sequential()
         model.add(Conv2D(2, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
                          data_format='channels_last'))
         model.add(ScaledTanh(0.9, 2.0))
@@ -61,7 +62,7 @@ class TestKerasConverter(unittest.TestCase):
         N, C, H, W = 2, 3, 5, 5
         x = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
 
-        model = keras.Sequential()
+        model = Sequential()
         model.add(Conv2D(2, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
                          data_format='channels_last'))  # , activation='softmax')
         model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format='channels_last'))
@@ -85,3 +86,4 @@ class TestKerasConverter(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

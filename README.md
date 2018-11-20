@@ -10,7 +10,7 @@
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
 * Apple Core ML
 * scikit-learn (subset of models convertible to ONNX)
-* Keras (version 2.0.0 or higher)
+* Keras (version 2.0.8 or higher)
 * LightGBM (through its scikit-learn interface)
 
 (To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx))
