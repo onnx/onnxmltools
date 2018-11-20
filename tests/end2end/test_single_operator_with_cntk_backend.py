@@ -172,6 +172,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
 
         self._test_one_to_one_operator_keras(keras_model, x)
 
+    @unittest.skipIf(not has_tensorflow(), reason="tensorflow is not installed")
     def test_conv_4d(self):
         N, C, H, W = 1, 2, 4, 3
         x = create_tensor(N, C, H, W)
@@ -282,6 +283,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         x = np.random.randint(low=low, high=high, size=2, dtype='int64')
         try:
             from keras.models import Sequential
+            from keras.layers import Embedding
         except ImportError:
             return
         model = Sequential()
@@ -295,7 +297,8 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         N, C, H, W = 2, 2, 3, 4
         x = create_tensor(N, C, H, W)
         try:
-            from keras.models import Sequential
+            from keras.models import Sequential, Model
+            from keras.layers import Input, BatchNormalization
         except ImportError:
             return
         model = Sequential()
