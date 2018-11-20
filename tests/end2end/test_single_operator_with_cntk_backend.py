@@ -106,7 +106,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         coreml_model = None
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
-        except (AttributeError, ImportError) as e:
+        except (AttributeError, ValueError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'.".format(e))
 
         onnx_model_p1 = None if coreml_model is None else onnxmltools.convert_coreml(coreml_model)
