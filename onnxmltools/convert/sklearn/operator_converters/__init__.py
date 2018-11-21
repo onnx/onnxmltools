@@ -8,6 +8,7 @@
 from . import Binarizer
 from . import DictVectorizer
 from . import DecisionTree
+from . import FeatureUnion 
 from . import GradientBoosting
 from . import Imputer
 from . import KNN

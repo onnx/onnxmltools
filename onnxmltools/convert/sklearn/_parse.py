@@ -9,6 +9,7 @@ from ..common._topology import *
 
 # Pipeline
 from sklearn import pipeline
+from sklearn.pipeline import FeatureUnion
 
 # Linear classifiers
 from sklearn.linear_model import LogisticRegression
@@ -103,6 +104,7 @@ sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
                              Binarizer: 'SklearnBinarizer',
                              PCA: 'SklearnPCA',
                              TruncatedSVD: 'SklearnTruncatedSVD',
+                             FeatureUnion: 'SklearnFeatureUnion',
                              MinMaxScaler: 'SklearnMinMaxScaler',
                              MaxAbsScaler: 'SklearnMaxAbsScaler'}
 
