@@ -22,7 +22,7 @@ install:
     else
       curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o $HOME/miniconda.sh;
     fi
-  - export ONNX_VERSION="1.2.3"
+  - export ONNX_VERSION="==1.2.3"
   - export KERAS_VERSION="==2.0.8"
   - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
