@@ -173,6 +173,13 @@ def convert_sklearn_naive_bayes(scope, operator, container):
     container.add_initializer(class_log_prior_name, onnx_proto.TensorProto.FLOAT,
                               class_log_prior.shape, class_log_prior.flatten())
 
+    if container.target_opset < 6:
+        sum_op_version = 1
+    elif container.target_opset < 8:
+        sum_op_version = 6
+    else:
+        sum_op_version = 8
+        
     if operator.type == 'SklearnMultinomialNB':
         matmul_result_name = scope.get_unique_variable_name('matmul_result')
         shape_result_name = scope.get_unique_variable_name('shape_result')
@@ -186,7 +193,7 @@ def convert_sklearn_naive_bayes(scope, operator, container):
         container.add_node('Shape', class_log_prior_name, shape_result_name)
         container.add_node('Reshape', [cast_result_name, shape_result_name], reshape_result_name)
         container.add_node('Sum', [reshape_result_name, class_log_prior_name],
-                           sum_result_name, name=scope.get_unique_operator_name('Sum'))
+                           sum_result_name, name=scope.get_unique_operator_name('Sum'), op_version=sum_op_version)
     else:
         constant_name = scope.get_unique_variable_name('constant')
         exp_result_name = scope.get_unique_variable_name('exp_result')
@@ -231,9 +238,9 @@ def convert_sklearn_naive_bayes(scope, operator, container):
         container.add_node('MatMul', [input_name, difference_matrix_name],
                            dot_prod_name, name=scope.get_unique_operator_name('MatMul'))
         container.add_node('Sum', [sum_neg_prob_name, dot_prod_name],
-                           partial_sum_result_name, name=scope.get_unique_operator_name('Sum'))
+                           partial_sum_result_name, name=scope.get_unique_operator_name('Sum'), op_version=sum_op_version)
         container.add_node('Sum', [partial_sum_result_name, class_log_prior_name],
-                           sum_result_name, name=scope.get_unique_operator_name('Sum'))
+                           sum_result_name, name=scope.get_unique_operator_name('Sum'), op_version=sum_op_version)
 
     container.add_node('ArgMax', sum_result_name,
                        argmax_output_name, name=scope.get_unique_operator_name('ArgMax'), axis=1)

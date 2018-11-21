@@ -8,8 +8,6 @@
 # `container` argument. Notice that those function behaviors are defined in a way very similar to ONNX-1.2.
 
 from ...proto import onnx_proto
-from .utils import compare_strict_version
-
 
 def _create_name_or_use_existing_one(scope, op_type, name):
     if name is None:
@@ -59,11 +57,14 @@ def _apply_pointwise_operation(scope, op_type, input_names, output_name, contain
     name = _create_name_or_use_existing_one(scope, op_type, operator_name)
 
     attrs = {}
+
     if container.target_opset < 6:
         attrs['consumed_inputs'] = [0] * len(input_names)
         op_version = 1
-    else:
+    elif container.target_opset < 8:
         op_version = 6
+    else:
+        op_version = 8
 
     container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
 
