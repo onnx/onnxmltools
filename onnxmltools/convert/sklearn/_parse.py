@@ -83,6 +83,7 @@ def build_sklearn_operator_name_map():
                     CountVectorizer, TfidfVectorizer]}
     res.update({
         ElasticNet: 'SklearnElasticNetRegressor',
+        LinearRegression: 'SklearnLinearRegressor',
         LogisticRegression: 'SklearnLinearClassifier',
         NuSVC: 'SklearnSVC',
         NuSVR: 'SklearnSVR',
