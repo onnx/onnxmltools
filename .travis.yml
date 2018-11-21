@@ -16,6 +16,7 @@ python:
     - "3.6"
     - "3.7"
 
+# the bug in coremltools 2.0 package makes it not work with keras > 2.1.6
 install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       curl -L https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -o $HOME/miniconda.sh;
@@ -30,7 +31,7 @@ install:
     fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
       export ONNX_VERSION="==1.2.3";
-      export KERAS_VERSION="==2.1.6";
+      export KERAS_VERSION="==2.0.8";
     fi
   - cd $HOME && bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -51,6 +52,11 @@ install:
     fi
   - cd $TRAVIS_BUILD_DIR && pip install -r requirements-dev.txt
   - cd $TRAVIS_BUILD_DIR && pip install -I "onnx$ONNX_VERSION"
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
+      export KERAS_VERSION=;
+      pip install -I git+https://github.com/apple/coremltools;
+    fi
+  - cd $TRAVIS_BUILD_DIR && pip install -I "keras$KERAS_VERSION"
   - cd $TRAVIS_BUILD_DIR && export PYTHONPATH=pwd
   - if [[ "$TRAVIS_PYTHON_VERSION" != "3.7" ]]; then
       # keras does exist on Python 3.7 but no backend
