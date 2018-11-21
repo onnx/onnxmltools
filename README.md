@@ -10,14 +10,14 @@
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
 * Apple Core ML
 * scikit-learn (subset of models convertible to ONNX)
-* Keras (version 2.0.8 or higher)
+* Keras
 * LightGBM (through its scikit-learn interface)
 
 (To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx))
-(To convert ONNX model to Core ML, see [onnx-coreml](https://github.com/onnx/onnx-coreml))
-
-# Getting Started
-Clone this repository on your local machine.
+(To convert ONNX model to Core ML, see [onnx-coreml](https://github.com/onnx/onnx-coreml))\
+If you want the converted model is compatible with certain ONNX version,
+please specify the target_opset parameter on invoking convert function,
+and the following Keras converter example code shows how it works.
 
 ## Install
 You can install latest release of ONNXMLTools from pypi:
@@ -34,7 +34,7 @@ If you choose to install `onnxmltools` from its source code, you must set an env
 This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Apple Core ML, Keras, or LightGBM, you need the following packages installed respectively:
 1. scikit-learn
 2. CoreMLTools
-3. Keras
+3. Keras (version 2.0.8 or higher) with corresponding Tensorflow version
 4. LightGBM (scikit-learn interface)
 
 ## Examples
@@ -83,7 +83,8 @@ sub_sum = Add()([mapped1_2, mapped2_2])
 keras_model = Model(inputs=[input1, input2], output=sub_sum)
 
 # Convert it!
-onnx_model = onnxmltools.convert_keras(keras_model)
+onnx_model = onnxmltools.convert_keras(keras_model, target_opset=8) # target_opset is optional
+
 ```
 
 # Tests converted models
