@@ -52,12 +52,13 @@ class TestNaiveBayesConverter(unittest.TestCase):
         self.assertIsNotNone(model_onnx)
         dump_data_and_model(X[:5], model, model_onnx, basename="SklearnBinBernoulliNB-OneOff")
 
+    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_model_bernoulli_nb_binary_classifications_simple(self):
         model, X = self._fit_model_binary_classification_simple(BernoulliNB())
         model_onnx = convert_sklearn(model, 'bernoulli naive bayes', [('input', FloatTensorType([1, X.shape[1]]))])
         self.assertIsNotNone(model_onnx)
         dump_data_and_model(X[:5], model, model_onnx, basename="SklearnBinBernoulliNB3-OneOff",
-                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.4')")
+                            allow_failure="StrictVersion(onnxruntime.__version__) < StrictVersion('0.1.4')")
 
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_model_multinomial_nb_multiclass(self):

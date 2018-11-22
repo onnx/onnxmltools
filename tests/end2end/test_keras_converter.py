@@ -19,6 +19,7 @@ if has_tensorflow():
     import keras
     from keras import backend as K
     from keras.layers import *
+    from keras.models import Sequential
 
 
     class ScaledTanh(keras.layers.Layer):
