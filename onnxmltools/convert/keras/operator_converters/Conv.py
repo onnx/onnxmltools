@@ -81,7 +81,7 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
         attrs['auto_pad'] = 'VALID'
     elif op.padding == 'same':
         if is_transpose:  # bypass onnx engine issue on convtranpose support.
-            attrs['auto_pad'] = 'NOTSET'
+            attrs['auto_pad'] = 'SAME_LOWER'
             shape = [-1 if i is None else i for i in op.output_shape]
             if channels_first:
                 attrs['output_shape'] = shape

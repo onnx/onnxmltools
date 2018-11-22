@@ -14,7 +14,6 @@ python:
     - "2.7"
     - "3.5"
     - "3.6"
-    - "3.7"
 
 # the bug in coremltools 2.0 package makes it not work with keras > 2.1.6
 install:

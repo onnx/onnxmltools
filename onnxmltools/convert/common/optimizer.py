@@ -35,7 +35,7 @@ class LinkedNode(object):
 
     @property
     def in_single_path(self):
-        return False if self.origin is None else len(self.origin.output) == 1
+        return len(self.successor) <= 1
 
     @property
     def in_or_out(self):
@@ -93,13 +93,10 @@ class LinkedNode(object):
             onode.output.extend([self.output.get(o_, o_) for o_ in self.origin.output])
             onode.doc_string = self.origin.doc_string
             onode.domain = self.origin.domain
-            onode.attribute.extend(attr for attr in self.origin.attribute)
-
             onode.attribute.extend(
-                helper.make_attribute(attr.name, self.attributes[attr.name])
-                if attr.name in self.attributes else
-                attr for attr in self.origin.attribute
-            )
+                attr for attr in self.origin.attribute if not attr.name in self.attributes)
+            onode.attribute.extend(
+                helper.make_attribute(attr.name, self.attributes[attr.name]) for attr in self.attributes)
 
             return onode
 

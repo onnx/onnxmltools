@@ -418,7 +418,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         mapped1_2 = sub_model1(input1)
         mapped2_2 = sub_model2(input2)
         sub_sum = Add()([mapped1_2, mapped2_2])
-        keras_model = Model(inputs=[input1, input2], output=sub_sum)
+        keras_model = Model(inputs=[input1, input2], outputs=[sub_sum])
 
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)

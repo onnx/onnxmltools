@@ -6,6 +6,7 @@
 
 import re
 import warnings
+from logging import getLogger
 from ...proto import onnx
 from ...proto import helper
 from ...proto import get_opset_number_from_onnx
@@ -640,8 +641,8 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
     '''
     if targeted_onnx is not None and compare_strict_version(targeted_onnx, onnx.__version__) != 0:
         warnings.warn(
-            'targeted_onnx is deprecated, in future, specify target_opset for the target model.\n' +
-            'ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
+            'targeted_onnx is deprecated, please specify target_opset for the target model.\n' +
+            '*** ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
                 onnx.__version__, targeted_onnx))
 
     if target_opset is None:
@@ -768,6 +769,11 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
         op_set.domain = op_domain
         op_set.version = op_version
         i += 1
+        if container.target_opset < op_version:
+            raise RuntimeError(('The specified opset %d is too low to convert this model, ' +
+                               'which requires at least opset %d.') % (container.target_opset, op_version))
+        elif container.target_opset > op_version:
+            getLogger('onnxmltools').warning('The maximum opset needed by this model is only %d.' % op_version)
 
     # Add extra information
     add_metadata_props(onnx_model, topology.metadata_props)
