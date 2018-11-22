@@ -7,7 +7,7 @@ coremltools
 pandas
 pytest
 pytest-cov
-scikit-learn==0.19.2
+scikit-learn
 scipy
 wheel
 xgboost

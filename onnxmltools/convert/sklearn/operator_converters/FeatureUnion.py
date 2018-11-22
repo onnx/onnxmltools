@@ -32,7 +32,7 @@ def convert_sklearn_feature_union(scope, operator, container):
         transform_result_name.append(get_converter(op_type)(scope, this_operator, container, flag=True))
 
     container.add_node('Concat', [s for s in transform_result_name],
-                           operator.outputs[0].full_name, name=scope.get_unique_operator_name('Concat'), axis=1)
+                       operator.outputs[0].full_name, name=scope.get_unique_operator_name('Concat'), axis=1)
 
 
 register_converter('SklearnFeatureUnion', convert_sklearn_feature_union)
