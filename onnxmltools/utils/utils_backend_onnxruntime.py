@@ -32,10 +32,10 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         context = {}
     load = load_data_and_model(test, **context)
 
-    onnx = test['onnx']
+    onx = test['onnx']
     if options is None:
-        if isinstance(onnx, str):
-            options = extract_options(onnx)
+        if isinstance(onx, str):
+            options = extract_options(onx)
         else:
             options = {}
     elif options is None:
@@ -50,14 +50,14 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         return
 
     try:
-        sess = onnxruntime.InferenceSession(onnx)
+        sess = onnxruntime.InferenceSession(onx)
     except ExpectedAssertionError as expe:
         raise expe
     except Exception as e:
         if "CannotLoad" in options:
-            raise ExpectedAssertionError("Unable to load onnx '{0}' due to\n{1}".format(onnx, e))
+            raise ExpectedAssertionError("Unable to load onnx '{0}' due to\n{1}".format(onx, e))
         else:
-            raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'".format(onnx))
+            raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'".format(onx))
     
     input = load["data"]
     if isinstance(input, dict):
@@ -136,11 +136,17 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
     output0 = output.copy()
 
     try:
-        _compare_expected(load["expected"], output, sess, onnx, decimal=decimal, **options)
+        _compare_expected(load["expected"], output, sess, onx, decimal=decimal, **options)
     except ExpectedAssertionError as expe:
         raise expe
     except Exception as e:
-        raise OnnxRuntimeAssertionError("Model '{0}' has discrepencies.\n{1}: {2}".format(onnx, type(e), e))
+        if verbose:
+            import onnx
+            model = onnx.load(onx)
+            smodel = "\nJSON ONNX\n" + str(model)
+        else:
+            smodel = ""
+        raise OnnxRuntimeAssertionError("Model '{0}' has discrepencies.\n{1}: {2}{3}".format(onx, type(e), e, smodel))
         
     return output0
     
