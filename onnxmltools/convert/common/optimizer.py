@@ -163,7 +163,7 @@ class Solution(object):
             return next(
                 helper.get_attribute_value(attr) for attr in onode.attribute if attr.name == 'perm')
         except StopIteration:
-            return [None] # This function should return a list as is_useless_transpose() would fail with None
+            return [] # This function should return a list as is_useless_transpose() would fail with None
 
     @staticmethod
     def is_useless_transpose(perm):

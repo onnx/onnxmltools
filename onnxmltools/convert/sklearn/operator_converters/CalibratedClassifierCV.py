@@ -7,10 +7,11 @@
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_add, apply_cast, apply_div, apply_exp, apply_mul, apply_reshape
 from ...common._registration import get_converter, register_converter
-from .._parse import sklearn_operator_name_map, _get_sklearn_operator_name 
+from .._parse import sklearn_operator_name_map
 import numpy as np
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.naive_bayes import MultinomialNB
+
 
 class Oper:
     def __init__(self, model, inputs, op_type):
