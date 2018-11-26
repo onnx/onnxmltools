@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from svm import svm_model
 from ..common._container import LibSvmModelContainer
 from ..common._topology import *
 
