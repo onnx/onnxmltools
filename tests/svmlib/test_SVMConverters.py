@@ -4,7 +4,6 @@ Tests scikit-linear converter.
 import tempfile
 import numpy
 import svm
-from svm import PRINT_STRING_FUN, print_null
 import numpy as np
 import unittest
 from sklearn.datasets import load_iris
@@ -14,7 +13,12 @@ import svmutil
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
-noprint = PRINT_STRING_FUN(print_null)
+try:
+    from svm import PRINT_STRING_FUN, print_null
+    noprint = PRINT_STRING_FUN(print_null)
+except ImportError:
+    # This was recently added.
+    noprint = None
 
 
 class SkAPI:
@@ -92,7 +96,8 @@ class TestSvmLibSVM(unittest.TestCase):
         param.kernel_type = svmutil.LINEAR
         param.eps = 1
         param.probability = 1
-        param.print_func = noprint
+        if noprint:
+            param.print_func = noprint
         
         libsvm_model = svmutil.svm_train(prob, param)
 
@@ -115,7 +120,8 @@ class TestSvmLibSVM(unittest.TestCase):
         param.kernel_type = svmutil.RBF
         param.eps = 1
         param.probability = 1
-        param.print_func = noprint
+        if noprint:
+            param.print_func = noprint
         
         libsvm_model = svmutil.svm_train(prob, param)
 
@@ -135,7 +141,8 @@ class TestSvmLibSVM(unittest.TestCase):
         param.svm_type = SVR
         param.kernel_type = svmutil.LINEAR
         param.eps = 1
-        param.print_func = noprint
+        if noprint:
+            param.print_func = noprint
 
         libsvm_model = svmutil.svm_train(prob, param)
 
@@ -156,7 +163,8 @@ class TestSvmLibSVM(unittest.TestCase):
         param.kernel_type = svmutil.RBF
         param.probability = 1
         param.eps = 1
-        param.print_func = noprint
+        if noprint:
+            param.print_func = noprint
 
         libsvm_model = svmutil.svm_train(prob, param)
 
@@ -177,7 +185,8 @@ class TestSvmLibSVM(unittest.TestCase):
         param.svm_type = NuSVR
         param.kernel_type = svmutil.RBF
         param.eps = 1
-        param.print_func = noprint
+        if noprint:
+            param.print_func = noprint
 
         libsvm_model = svmutil.svm_train(prob, param)
 
@@ -200,8 +209,8 @@ class TestSvmLibSVM(unittest.TestCase):
         param.kernel_type = svmutil.RBF
         param.eps = 1
         param.probability = 1
-        param.print_func = noprint
-        param.print_func = noprint
+        if noprint:
+            param.print_func = noprint
         
         libsvm_model = svmutil.svm_train(prob, param)
 
@@ -225,7 +234,8 @@ class TestSvmLibSVM(unittest.TestCase):
         param.kernel_type = svmutil.LINEAR
         param.eps = 1
         param.probability = 0
-        param.print_func = noprint
+        if noprint:
+            param.print_func = noprint
         
         libsvm_model = svmutil.svm_train(prob, param)
 
@@ -249,7 +259,8 @@ class TestSvmLibSVM(unittest.TestCase):
         param.kernel_type = svmutil.RBF
         param.eps = 1
         param.probability = 0
-        param.print_func = noprint
+        if noprint:
+            param.print_func = noprint
         
         libsvm_model = svmutil.svm_train(prob, param)
 
@@ -273,7 +284,8 @@ class TestSvmLibSVM(unittest.TestCase):
         param.kernel_type = svmutil.LINEAR
         param.eps = 1
         param.probability = 0
-        param.print_func = noprint
+        if noprint:
+            param.print_func = noprint
         
         libsvm_model = svmutil.svm_train(prob, param)
 
