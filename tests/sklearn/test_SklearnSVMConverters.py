@@ -61,7 +61,6 @@ class TestSklearnSVM(unittest.TestCase):
         model_onnx = convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
         nodes = model_onnx.graph.node
         self.assertIsNotNone(nodes)
-        self.assertEqual(len(nodes), 2)
 
         svc_node = nodes[0]
         self._check_attributes(svc_node, {'coefficients': None,
@@ -71,15 +70,13 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinSVCLinearPF",
-                           allow_failure=True)
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinSVCLinearPF-NoProb-Opp")
 
     def test_convert_svmc_linear_multi(self):
         model, X = self._fit_multi_classification(SVC(kernel='linear', probability=False))
         model_onnx = convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
         nodes = model_onnx.graph.node
         self.assertIsNotNone(nodes)
-        self.assertEqual(len(nodes), 2)
 
         svc_node = nodes[0]
         self._check_attributes(svc_node, {'coefficients': None,
@@ -110,7 +107,6 @@ class TestSklearnSVM(unittest.TestCase):
         model_onnx = convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
         nodes = model_onnx.graph.node
         self.assertIsNotNone(nodes)
-        self.assertEqual(len(nodes), 2)
 
         svc_node = nodes[0]
         self._check_attributes(svc_node, {'coefficients': None,
@@ -120,15 +116,13 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPF",
-                            allow_failure=True)
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPF-NoProb-Opp")
 
     def test_convert_nusvmc_multi(self):
         model, X = self._fit_multi_classification(NuSVC(probability=False))
         model_onnx = convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
         nodes = model_onnx.graph.node
         self.assertIsNotNone(nodes)
-        self.assertEqual(len(nodes), 2)
         svc_node = nodes[0]
         self._check_attributes(svc_node, {'coefficients': None,
                                           'kernel_params': None,
@@ -137,7 +131,7 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnMclNuSVCPF",
+        dump_data_and_model(X, model, model_onnx, basename="SklearnMclNuSVCPF-NoProb-Opp",
                             allow_failure=True)
 
     def test_convert_nusvmr_binary(self):

@@ -117,7 +117,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
                 except ExpectedAssertionError as expe:
                     raise expe
                 except Exception as e:
-                    raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e))
+                    raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onx, e))
                 res.append(one)
             output = _post_process_output(res)                
     else:
@@ -126,10 +126,10 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         except ExpectedAssertionError as expe:
             raise expe
         except RuntimeError as e:
-            if "-Fail" in onnx:
-                raise ExpectedAssertionError("onnxruntime cannot compute the prediction for '{0}'".format(onnx))
+            if "-Fail" in onx:
+                raise ExpectedAssertionError("onnxruntime cannot compute the prediction for '{0}'".format(onx))
             else:
-                raise OnnxRuntimeAssertionError("onnxruntime cannot compute the prediction for '{0}'".format(onnx))
+                raise OnnxRuntimeAssertionError("onnxruntime cannot compute the prediction for '{0}' due to {1}".format(onx, e))
         except Exception as e:
             raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e))
     

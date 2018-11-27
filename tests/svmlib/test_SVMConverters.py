@@ -77,8 +77,6 @@ class SkAPICl(SkAPI):
         res = SkAPI.predict(self, X)
         pro = numpy.array(res[-1]).ravel()
         pro = pro.reshape(X.shape[0], len(pro) // X.shape[0]).astype(numpy.float32)
-        if pro.shape[1] == 1:
-            pro = numpy.hstack([-pro, pro])
         return pro
 
 
@@ -299,5 +297,4 @@ class TestSvmLibSVM(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    #TestSvmLibSVM().test_convert_nusvmc_linear_raw()
     unittest.main()

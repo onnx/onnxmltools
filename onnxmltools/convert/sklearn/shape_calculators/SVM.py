@@ -35,7 +35,7 @@ def calculate_sklearn_svm_output_shapes(operator):
 
         if all(isinstance(i, (six.string_types, six.text_type)) for i in op.classes_):
             operator.outputs[0].type = StringTensorType([N])
-            if len(operator.outputs) == 2:
+            if len(operator.outputs) == 2 and len(op.probA_) > 0:
                 if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
                     # Old ONNX ZipMap produces Map type
                     operator.outputs[1].type = \
@@ -46,7 +46,7 @@ def calculate_sklearn_svm_output_shapes(operator):
                         SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
         elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in op.classes_):
             operator.outputs[0].type = Int64TensorType([N])
-            if len(operator.outputs) == 2:
+            if len(operator.outputs) == 2 and len(op.probA_) > 0:
                 if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
                     # Old ONNX ZipMap produces Map type
                     operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
