@@ -77,6 +77,7 @@ class SkAPICl(SkAPI):
         res = SkAPI.predict(self, X)
         pro = numpy.array(res[-1]).ravel()
         pro = pro.reshape(X.shape[0], len(pro) // X.shape[0]).astype(numpy.float32)
+        print('pro=', pro)
         return pro
 
 
@@ -219,7 +220,7 @@ class TestSvmLibSVM(unittest.TestCase):
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
                             basename="LibSvmNuSvmc-Dec2")
 
-    @unittest.skip(reason='Still fails')
+    #@unittest.skip(reason='Still fails')
     def test_convert_svmc_linear_raw(self):
         iris = load_iris()
 
@@ -297,4 +298,5 @@ class TestSvmLibSVM(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    TestSvmLibSVM().test_convert_svmc_linear_raw()
+    #unittest.main()

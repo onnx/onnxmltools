@@ -54,7 +54,8 @@ install:
   - cd libsvm
   - make
   - cd ..
-  - export PYTHONPATH="$PYTHONPATH:libsvm\python"
+  - export PYTHONPATH=$PYTHONPATH:libsvm/python
+  - python -c "import svmutil"
 
 script:
   - python -m pytest --cov=onnxmltools --cov-report=term --cov-report=html --cov-report=xml tests
