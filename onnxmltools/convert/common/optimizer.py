@@ -279,8 +279,8 @@ def optimize_onnx(onnx_nodes, nchw_inputs=None, inputs=None, outputs=None):
     """
     node_list = LinkedNode.build_from_onnx(onnx_nodes,
                                            nchw_inputs if nchw_inputs else [],
-                                           [i_.name for i_ in inputs],
-                                           [o_.name for o_ in outputs])
+                                           [] if inputs is None else [i_.name for i_ in inputs],
+                                           [] if outputs is None else [o_.name for o_ in outputs])
     solution = _find_an_optimization(node_list)
     while solution:
         node_list = _apply_optimization(solution, node_list)
