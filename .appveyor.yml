@@ -26,7 +26,7 @@ install:
     - cmd: pip install -r requirements-dev.txt"
     - cmd: pip install %KERAS%
     # install libsvm
-    - git clone --recursive https://github.com/cjlin1/%libname% libsvm
+    - git clone --recursive https://github.com/cjlin1/libsvm libsvm
     - cd libsvm
     - nmake -f Makefile.win lib
     - copy windows\*.dll python    
