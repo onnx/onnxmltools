@@ -105,18 +105,20 @@ class Operator(OperatorBase):
 
 class Scope:
 
-    def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None):
+    def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None, target_opset=None):
         '''
         :param name:  A string, the unique ID of this scope in a Topology object
         :param parent_scopes: A list of Scope objects. The last element should be the direct parent scope (i.e., where
         this scope is declared).
         :param variable_name_set: A set of strings serving as the name pool of variables
         :param operator_name_set: A set of strings serving as the name pool of operators
+        :param target_opset: The target opset number for the converted model.
         '''
         self.name = name
         self.parent_scopes = parent_scopes if parent_scopes else list()
         self.onnx_variable_names = variable_name_set if variable_name_set is not None else set()
         self.onnx_operator_names = operator_name_set if operator_name_set is not None else set()
+        self.target_opset = target_opset
 
         # An one-to-many map from raw variable name to ONNX variable names. It looks like
         #   (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ..., onnx_nameN])
@@ -207,7 +209,7 @@ class Scope:
         This function is used to declare new local operator.
         '''
         onnx_name = self.get_unique_operator_name(str(type))
-        operator = Operator(onnx_name, self.name, type, raw_model, self.targeted_onnx_version)
+        operator = Operator(onnx_name, self.name, type, raw_model, self.target_opset)
         self.operators[onnx_name] = operator
         return operator
 
@@ -300,9 +302,8 @@ class Topology:
     def get_unique_scope_name(self, seed):
         return Topology._generate_unique_name(seed, self.scope_names)
 
-    def declare_scope(self, seed, parent_scopes=list()):
-        scope = Scope(self.get_unique_scope_name(seed), parent_scopes, self.variable_name_set,
-                      self.operator_name_set, self.targeted_onnx_version)
+    def declare_scope(self, seed, parent_scopes=None):
+        scope = Scope(self.get_unique_scope_name(seed), parent_scopes, self.variable_name_set, self.operator_name_set)
         self.scopes.append(scope)
         return scope
 

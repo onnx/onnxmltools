@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
-from ...proto import onnx
+from ...proto import onnx, get_opset_number_from_onnx
 from ..common._topology import convert_topology
 from ._parse import parse_lightgbm
 
@@ -41,6 +41,8 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
                            onnxmltools.convert.lightgbm.convert for details')
     if name is None:
         name = str(uuid4().hex)
+
+    target_opset = target_opset if target_opset else get_opset_number_from_onnx()
     topology = parse_lightgbm(model, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
     onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
