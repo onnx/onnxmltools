@@ -26,7 +26,7 @@ install:
     - cmd: pip install -r requirements-dev.txt"
     - cmd: pip install %KERAS%
     # install libsvm
-    - '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64'
+    - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
     - git clone --recursive https://github.com/cjlin1/libsvm libsvm
     - cd libsvm
     - nmake -f Makefile.win lib

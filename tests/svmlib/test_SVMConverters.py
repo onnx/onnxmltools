@@ -77,7 +77,8 @@ class SkAPICl(SkAPI):
         res = SkAPI.predict(self, X)
         pro = numpy.array(res[-1]).ravel()
         pro = pro.reshape(X.shape[0], len(pro) // X.shape[0]).astype(numpy.float32)
-        print('pro=', pro)
+        if pro.shape[1] == 1:
+            pro = numpy.hstack([-pro, pro])
         return pro
 
 
@@ -220,7 +221,6 @@ class TestSvmLibSVM(unittest.TestCase):
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
                             basename="LibSvmNuSvmc-Dec2")
 
-    #@unittest.skip(reason='Still fails')
     def test_convert_svmc_linear_raw(self):
         iris = load_iris()
 
@@ -243,9 +243,9 @@ class TestSvmLibSVM(unittest.TestCase):
         node = convert(libsvm_model, "LibSvmSvmcLinearRaw", [('input', FloatTensorType(shape=[1, 'None']))])
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcLinearRaw", verbose=False)
+                            basename="LibSvmSvmcLinearRaw-Dec3", verbose=False,
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
 
-    @unittest.skip(reason='Still fails')
     def test_convert_svmc_raw(self):
         iris = load_iris()
 
@@ -268,9 +268,9 @@ class TestSvmLibSVM(unittest.TestCase):
         node = convert(libsvm_model, "LibSvmSvmcRaw", [('input', FloatTensorType(shape=[1, 'None']))])
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcRaw")
+                            basename="LibSvmSvmcRaw",
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
 
-    @unittest.skip(reason='Still fails')
     def test_convert_nusvmc_linear_raw(self):
         iris = load_iris()
 
@@ -294,9 +294,10 @@ class TestSvmLibSVM(unittest.TestCase):
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:5], X[60:65]])  # 5x0, 5x1
         dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmNuSvmcRaw", verbose=False)
+                            basename="LibSvmNuSvmcRaw", verbose=False,
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
 
 
 if __name__ == "__main__":
-    TestSvmLibSVM().test_convert_svmc_linear_raw()
-    #unittest.main()
+    #TestSvmLibSVM().test_convert_nusvmc_linear_raw()
+    unittest.main()

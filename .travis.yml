@@ -52,7 +52,7 @@ install:
   # install libsvm
   - git clone --recursive https://github.com/cjlin1/libsvm libsvm
   - cd libsvm
-  - make
+  - make lib
   - cd ..
   - export PYTHONPATH=$PYTHONPATH:libsvm/python
   - python -c "import svmutil"
