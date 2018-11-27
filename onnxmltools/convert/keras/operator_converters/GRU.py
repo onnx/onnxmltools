@@ -9,7 +9,6 @@ from keras.layers import GRU
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_reshape, apply_transpose
 from ...common._registration import register_converter
-from ...common.utils import compare_strict_version
 from .common import extract_recurrent_activation
 
 
@@ -79,10 +78,10 @@ def convert_keras_gru(scope, operator, container):
     attrs['hidden_size'] = hidden_size
 
     # Set up version-dependent attributes
-    if compare_strict_version(operator.targeted_onnx_version, '1.0') < 0:
+    if container.target_opset < 5:
         op_version = 1
         attrs['output_sequence'] = 1 if output_seq else 0
-    elif compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
+    elif container.target_opset < 7:
         attrs['linear_before_reset'] = 0
         attrs['output_sequence'] = 1 if output_seq else 0
         op_version = 3

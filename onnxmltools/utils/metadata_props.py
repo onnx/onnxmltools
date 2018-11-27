@@ -1,6 +1,5 @@
 import warnings
 from ..convert.common.case_insensitive_dict import CaseInsensitiveDict
-from ..convert.common.utils import compare_strict_version
 from ..proto import onnx, onnx_proto
 
 
@@ -26,7 +25,7 @@ def _validate_metadata(metadata_props):
             warnings.warn('Key {} has invalid value {}. Valid values are {}'.format(key, value, valid_values))
 
 
-def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version__):
+def add_metadata_props(onnx_model, metadata_props, target_opset):
     '''
     Add metadata properties to the model. See recommended key names at:
     `Extensibility - Metadata <https://github.com/onnx/onnx/blob/296953db87b79c0137c5d9c1a8f26dfaa2495afc/docs/IR.md#metadata>`_ and
@@ -35,10 +34,10 @@ def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version_
 
     :param onnx_model: ONNX model object
     :param metadata_props: A dictionary of metadata properties, with property names and values (example: `{ 'model_author': 'Alice', 'model_license': 'MIT' }`)
-    :param targeted_onnx: Target ONNX version
+    :param target_opset: Target ONNX opset
     '''
-    if compare_strict_version(targeted_onnx, '1.2.1') < 0:
-        warnings.warn('Metadata properties are not supported in targeted ONNX-%s' % targeted_onnx)
+    if target_opset < 7:
+        warnings.warn('Metadata properties are not supported in targeted opset - %d' % target_opset)
         return
     _validate_metadata(metadata_props)
     new_metadata = CaseInsensitiveDict({x.key: x.value for x in onnx_model.metadata_props})
@@ -50,7 +49,7 @@ def add_metadata_props(onnx_model, metadata_props, targeted_onnx=onnx.__version_
     )
 
 
-def set_denotation(onnx_model, input_name, denotation, dimension_denotation=None, targeted_onnx=onnx.__version__):
+def set_denotation(onnx_model, input_name, denotation, target_opset, dimension_denotation=None):
     '''
     Set input type denotation and dimension denotation.
 
@@ -63,13 +62,13 @@ def set_denotation(onnx_model, input_name, denotation, dimension_denotation=None
     :param input_name: Name of input tensor to edit (example: `'data0'`)
     :param denotation: Input type denotation (`documentation <https://github.com/onnx/onnx/blob/master/docs/TypeDenotation.md#type-denotation-definition>`_)
     (example: `'IMAGE'`)
+    :param target_opset: Target ONNX opset
     :param dimension_denotation: List of dimension type denotations. The length of the list must be the same of the number of dimensions in the tensor
     (`documentation https://github.com/onnx/onnx/blob/master/docs/DimensionDenotation.md#denotation-definition>`_)
     (example: `['DATA_BATCH', 'DATA_CHANNEL', 'DATA_FEATURE', 'DATA_FEATURE']`)
-    :param targeted_onnx: Target ONNX version
     '''
-    if compare_strict_version(targeted_onnx, '1.2.1') < 0:
-        warnings.warn('Denotation is not supported in targeted ONNX-%s' % targeted_onnx)
+    if target_opset < 7:
+        warnings.warn('Denotation is not supported in targeted opset - %d' % target_opset)
         return
     for graph_input in onnx_model.graph.input:
         if graph_input.name == input_name:
