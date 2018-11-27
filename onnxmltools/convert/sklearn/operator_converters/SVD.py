@@ -9,7 +9,7 @@ from ...common._apply_operation import apply_div, apply_sub, apply_sqrt
 from ...common._registration import register_converter
 
 
-def convert_truncated_svd(scope, operator, container, flag=False):
+def convert_truncated_svd(scope, operator, container):
     # Create alias for the scikit-learn truncated SVD model we are going to convert
     svd = operator.raw_operator
     # Transpose [K, C] matrix to [C, K], where C/K is the input/transformed feature dimension
@@ -21,14 +21,8 @@ def convert_truncated_svd(scope, operator, container, flag=False):
 
     if operator.type == 'SklearnTruncatedSVD': # TruncatedSVD 
         # Create the major operator, a matrix multiplication.
-        if flag:
-            svd_result_name = scope.get_unique_variable_name('svd_result')
-
-            container.add_node('MatMul', [operator.inputs[0].full_name, transform_matrix_name],
-                               svd_result_name, name=scope.get_unique_variable_name('MatMul1'))
-            return svd_result_name
         container.add_node('MatMul', [operator.inputs[0].full_name, transform_matrix_name],
-                           operator.outputs[0].full_name, name=operator.full_name)
+                           operator.outputs[0].full_name, name=scope.get_unique_variable_name('MatMul1'))
     else: # PCA
         if svd.mean_ is not None:
             mean_name = scope.get_unique_variable_name('mean')
@@ -54,21 +48,9 @@ def convert_truncated_svd(scope, operator, container, flag=False):
                                matmul_result_name, name=scope.get_unique_operator_name('MatMul'))
             apply_sqrt(scope, explained_variance_name,
                       explained_variance_root_name, container)
-            if flag:
-                pca_result_name = scope.get_unique_variable_name('pca_result')
-
-                apply_div(scope, [matmul_result_name, explained_variance_root_name],
-                          pca_result_name, container, broadcast=1)
-                return pca_result_name
             apply_div(scope, [matmul_result_name, explained_variance_root_name],
                       operator.outputs[0].full_name, container, broadcast=1)
         else:
-            if flag:
-                svd_result_name = scope.get_unique_variable_name('svd_result')
-
-                container.add_node('MatMul', [sub_result_name, transform_matrix_name],
-                                   svd_result_name, name=scope.get_unique_operator_name('MatMul'))
-                return svd_result_name
             container.add_node('MatMul', [sub_result_name, transform_matrix_name],
                                operator.outputs[0].full_name, name=scope.get_unique_operator_name('MatMul'))
 

@@ -12,13 +12,17 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.decomposition import TruncatedSVD
 
+class Output:
+    def __init__(self, full_name):
+        self.full_name = full_name
 
 class Oper:
-    def __init__(self, model, inputs, op_type, input_full_names):
+    def __init__(self, model, inputs, op_type, input_full_names, output_full_name):
         self.raw_operator = model
         self.inputs = inputs
         self.input_full_names = input_full_names
         self.type = op_type
+        self.outputs = [Output(output_full_name)]
 
 def convert_sklearn_feature_union(scope, operator, container):
     op = operator.raw_operator
@@ -28,8 +32,10 @@ def convert_sklearn_feature_union(scope, operator, container):
         if type(transform) not in supported_transformer_list:
             raise NotImplementedError
         op_type = sklearn_operator_name_map[type(transform)]
-        this_operator = Oper(transform, operator.inputs, op_type, operator.input_full_names)
-        transform_result_name.append(get_converter(op_type)(scope, this_operator, container, flag=True))
+        result_name = scope.get_unique_variable_name('result')
+        this_operator = Oper(transform, operator.inputs, op_type, operator.input_full_names, result_name)
+        get_converter(op_type)(scope, this_operator, container)
+        transform_result_name.append(result_name)
 
     container.add_node('Concat', [s for s in transform_result_name],
                        operator.outputs[0].full_name, name=scope.get_unique_operator_name('Concat'), axis=1)
