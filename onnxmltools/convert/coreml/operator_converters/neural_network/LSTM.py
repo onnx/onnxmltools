@@ -7,7 +7,6 @@
 import numpy as np
 from .....proto import onnx_proto
 from ....common._registration import register_converter
-from ....common.utils import compare_strict_version
 from .Reshape import apply_reshape
 from .SimpleRNN import extract_rnn_activation_info
 
@@ -254,7 +253,7 @@ def convert_unidirectional_lstm(scope, operator, container):
     lstm_attrs['input_forget'] = lstm_params.coupledInputAndForgetGate
 
     # Set up version-dependent attributes
-    if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
+    if container.target_opset < 7:
         lstm_attrs['output_sequence'] = lstm_params.sequenceOutput
         op_version = 1
     else:

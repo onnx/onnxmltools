@@ -38,7 +38,7 @@ def convert_embedding(scope, operator, container):
 
         # Load the bias vector into an initializer
         bias_name = scope.get_unique_variable_name(gather_op_name + '_bias')
-        bias_axis, bias_shape = deduce_broadcast_axis_and_shape(operator.targeted_onnx_version, [params.outputChannels])
+        bias_axis, bias_shape = deduce_broadcast_axis_and_shape(container.target_opset, [params.outputChannels])
         container.add_initializer(bias_name, onnx_proto.TensorProto.FLOAT,
                                   bias_shape, params.bias.floatValue)
         # Create an addition operator to add bias (shape: [C]) into Gather's tensor (shape: [N, C])
