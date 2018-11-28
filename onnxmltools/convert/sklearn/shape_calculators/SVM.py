@@ -57,7 +57,7 @@ def calculate_sklearn_svm_output_shapes(operator):
         else:
             raise RuntimeError('Class labels should be either all strings or all integers')
 
-    if operator.type in ['SklearnSVR']:
+    elif operator.type in ['SklearnSVR']:
         check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=1)
 
         operator.outputs[0].type = FloatTensorType([N, 1])

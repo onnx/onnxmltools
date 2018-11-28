@@ -26,7 +26,17 @@ class TestSklearnSVM(unittest.TestCase):
         X = iris.data[:, :3]
         y = iris.target
         model.fit(X, y)
-        return model, X[:5].astype(numpy.float32)
+        tx = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]]).astype(numpy.float32)
+        return model, tx
+
+    def _fit_multi_classification2(self, model):
+        iris = load_iris()
+        X = iris.data[:, :3]
+        y = iris.target
+        y[-5:] = 3
+        model.fit(X, y)
+        tx = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]]).astype(numpy.float32)
+        return model, tx
 
     def _fit_multi_regression(self, model):
         iris = load_iris()
@@ -70,24 +80,7 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinSVCLinearPF-NoProb-Opp")
-
-    def test_convert_svmc_linear_multi(self):
-        model, X = self._fit_multi_classification(SVC(kernel='linear', probability=False))
-        model_onnx = convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
-        nodes = model_onnx.graph.node
-        self.assertIsNotNone(nodes)
-
-        svc_node = nodes[0]
-        self._check_attributes(svc_node, {'coefficients': None,
-                                          'kernel_params': None,
-                                          'kernel_type': 'LINEAR',
-                                          'post_transform': None,
-                                          'rho': None,
-                                          'support_vectors': None,
-                                          'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnMclSVCLinearPF",
-                            allow_failure=True)
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinSVCLinearPF-NoProb")
 
     def test_convert_svmr_linear_binary(self):
         model, X = self._fit_binary_classification(SVR(kernel='linear'))
@@ -116,23 +109,7 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPF-NoProb-Opp")
-
-    def test_convert_nusvmc_multi(self):
-        model, X = self._fit_multi_classification(NuSVC(probability=False))
-        model_onnx = convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
-        nodes = model_onnx.graph.node
-        self.assertIsNotNone(nodes)
-        svc_node = nodes[0]
-        self._check_attributes(svc_node, {'coefficients': None,
-                                          'kernel_params': None,
-                                          'kernel_type': 'RBF',
-                                          'post_transform': None,
-                                          'rho': None,
-                                          'support_vectors': None,
-                                          'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnMclNuSVCPF-NoProb-Opp",
-                            allow_failure=True)
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPF-NoProb")
 
     def test_convert_nusvmr_binary(self):
         model, X = self._fit_binary_classification(NuSVR())
@@ -153,7 +130,7 @@ class TestSklearnSVM(unittest.TestCase):
         self.assertIsNotNone(model_onnx)
         dump_data_and_model(X, model, model_onnx, basename="SklearnRegNuSVR2")
 
-    def test_registration_convert_nusvc_model(self):
+    def test_registration_convert_nusvc_model_multi(self):
         model, X = self._fit_multi_classification(NuSVC(probability=True))
         model_onnx = onnxmltools.convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
         self.assertIsNotNone(model_onnx)
@@ -165,6 +142,47 @@ class TestSklearnSVM(unittest.TestCase):
         self.assertIsNotNone(model_onnx)
         dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPT")
 
+    @unittest.skip(reason="scikit-learn applies _ovr_decision_function. It does not follow ONNX spec.")
+    def test_convert_svmc_multi(self):
+        model, X = self._fit_multi_classification2(SVC(probability=False))
+        model_onnx = convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
+        nodes = model_onnx.graph.node
+        self.assertIsNotNone(nodes)
+        svc_node = nodes[0]
+        self._check_attributes(svc_node, {'coefficients': None,
+                                          'kernel_params': None,
+                                          'kernel_type': 'RBF',
+                                          'post_transform': None,
+                                          'rho': None,
+                                          'support_vectors': None,
+                                          'vectors_per_class': None})
+        dump_data_and_model(X, model, model_onnx, basename="SklearnMclNuSVCPF")
+
+    @unittest.skip(reason="scikit-learn applies _ovr_decision_function. It does not follow ONNX spec.")
+    def test_convert_svmc_linear_multi(self):
+        model, X = self._fit_multi_classification2(SVC(kernel='linear', probability=False))
+        model_onnx = convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
+        nodes = model_onnx.graph.node
+        self.assertIsNotNone(nodes)
+
+        svc_node = nodes[0]
+        self._check_attributes(svc_node, {'coefficients': None,
+                                          'kernel_params': None,
+                                          'kernel_type': 'LINEAR',
+                                          'post_transform': None,
+                                          'rho': None,
+                                          'support_vectors': None,
+                                          'vectors_per_class': None})
+        dump_data_and_model(X, model, model_onnx, basename="SklearnMclSVCLinearPF")
+
+    @unittest.skip(reason="scikit-learn applies _ovr_decision_function. It does not follow ONNX spec.")
+    def test_registration_convert_svc_model_multi(self):
+        model, X = self._fit_multi_classification2(SVC(probability=False))
+        model_onnx = onnxmltools.convert_sklearn(model, 'SVC', [('input', FloatTensorType([1, X.shape[1]]))])
+        self.assertIsNotNone(model_onnx)
+        dump_data_and_model(X, model, model_onnx, basename="SklearnMclSVCPFMulti")
+
 
 if __name__ == "__main__":
+    TestSklearnSVM().test_convert_svmc_linear_binary()
     unittest.main()

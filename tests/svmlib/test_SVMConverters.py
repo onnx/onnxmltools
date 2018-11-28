@@ -28,7 +28,8 @@ class SkAPI:
     def predict(self, X, options=""):
         if hasattr(X, 'shape'):
             X = X.tolist()
-        return svmutil.svm_predict([0 for i in X], list(X), self.model, options=options)
+        res = svmutil.svm_predict([0 for i in X], list(X), self.model, options=options)
+        return res
         
     def __getstate__(self):
         f = tempfile.NamedTemporaryFile(delete=False)
@@ -75,8 +76,22 @@ class SkAPICl(SkAPI):
 
     def decision_function(self, X):
         res = SkAPI.predict(self, X)
-        pro = numpy.array(res[-1]).ravel()
+        pro = numpy.array(res[-1]).ravel()        
         pro = pro.reshape(X.shape[0], len(pro) // X.shape[0]).astype(numpy.float32)
+        if pro.shape[1] == 1:
+            pro = numpy.hstack([pro, -pro])
+        elif pro.shape[1] > 2:
+            
+            # see from sklearn.utils.multiclass import _ovr_decision_function
+            conf = pro.copy()
+            nc = self.model.get_nr_class()
+            pro = numpy.zeros((conf.shape[0], nc))
+            k = 0
+            for i in range(nc):
+                for j in range(i + 1, nc):
+                    pro[:, i] += conf[:, k]
+                    pro[:, j] -= conf[:, k]
+                    k += 1
         return pro
 
 
@@ -269,6 +284,7 @@ class TestSvmLibSVM(unittest.TestCase):
                             basename="LibSvmSvmcRaw",
                             allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
 
+    @unittest.skip(reason="libsvm crashes.")
     def test_convert_nusvmc_linear_raw(self):
         iris = load_iris()
 
@@ -295,6 +311,59 @@ class TestSvmLibSVM(unittest.TestCase):
                             basename="LibSvmNuSvmcRaw", verbose=False,
                             allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
 
+    def test_convert_svmc_rbf_raw_multi(self):
+        iris = load_iris()
+
+        X = iris.data[:, :2]
+        y = iris.target
+        y[-5:] = 3
+        
+        prob = svmutil.svm_problem(y, X.tolist())        
+
+        param = svmutil.svm_parameter()
+        param.svm_type = SVC
+        param.kernel_type = svmutil.RBF
+        param.eps = 1
+        param.probability = 0
+        if noprint:
+            param.print_func = noprint
+        
+        libsvm_model = svmutil.svm_train(prob, param)
+
+        node = convert(libsvm_model, "LibSvmNuSvmcMultiRbfRaw", [('input', FloatTensorType(shape=[1, 'None']))])
+        self.assertTrue(node is not None)
+        X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
+        dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
+                            basename="LibSvmNuSvmcRaw", verbose=False,
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
+
+    def test_convert_svmc_linear_raw_multi(self):
+        iris = load_iris()
+
+        X = iris.data[:, :2]
+        y = iris.target
+        y[-5:] = 3
+        
+        prob = svmutil.svm_problem(y, X.tolist())        
+
+        param = svmutil.svm_parameter()
+        param.svm_type = SVC
+        param.kernel_type = svmutil.LINEAR
+        param.eps = 1
+        param.probability = 0
+        if noprint:
+            param.print_func = noprint
+        
+        libsvm_model = svmutil.svm_train(prob, param)
+
+        node = convert(libsvm_model, "LibSvmNuSvmcMultiRaw", [('input', FloatTensorType(shape=[1, 2]))])
+        self.assertTrue(node is not None)
+        X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
+        dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
+                            basename="LibSvmSvmcRaw-Dec3", verbose=False,
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
+
 
 if __name__ == "__main__":
+    # TestSvmLibSVM().test_convert_svmc_raw()
     unittest.main()

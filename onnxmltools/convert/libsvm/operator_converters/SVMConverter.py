@@ -117,10 +117,9 @@ class SVCConverter(SVMConverter):
         # See converter for sklearn.
         nb = SVMConverter.convert(operator, scope, container, svm_node, inputs, "SVMClassifier", nbclass)
         sign_rho = -1.
-        sign_coef = 1.
+        st = svm_node.param.svm_type
         
         if svm_node.is_probability_model():
-            st = svm_node.param.svm_type
             if st == svm.C_SVC or st == svm.NU_SVC:
                 n_class = len(svm_node.get_labels())
                 n = int(n_class*(n_class-1)/2)
@@ -131,6 +130,10 @@ class SVCConverter(SVMConverter):
                 nb["attrs"]['rho'] = [svm_node.rho[i] * sign_rho for i in range(n)]
             else:
                 nb["attrs"]['rho'] = [svm_node.rho[0] * sign_rho]
+        elif st == svm.C_SVC or st == svm.NU_SVC:
+            n_class = len(svm_node.get_labels())
+            n = int(n_class*(n_class-1)/2)
+            nb["attrs"]['rho'] = [svm_node.rho[i] * sign_rho for i in range(n)]
         else:
             nb["attrs"]['rho'] = [svm_node.rho[0] * sign_rho]
             

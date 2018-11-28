@@ -10,6 +10,14 @@ from ...common._registration import register_converter
 
 
 def convert_sklearn_svm(scope, operator, container):
+    """
+    There is a major difference between the converted model and
+    the original model from *scikit-learn*. This is due to a function
+    *scikit-learn* applies to normalize the output, see parameter 
+    `decision_function_shape <https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html>`_.
+    The function rescales scores based on scores obtained for other observations
+    and this does fit ONNX specifications.
+    """
     svm_attrs = {'name': scope.get_unique_operator_name('SVM')}
     op = operator.raw_operator
     if isinstance(op.dual_coef_, np.ndarray):
@@ -25,10 +33,14 @@ def convert_sklearn_svm(scope, operator, container):
     svm_attrs['kernel_type'] = op.kernel.upper()
     svm_attrs['kernel_params'] = [float(_) for _ in [op._gamma, op.coef0, op.degree]]
     svm_attrs['support_vectors'] = support_vectors
-
-    if operator.type in ['SklearnSVC', 'SklearnNuSVC'] and len(op.classes_) == 2:
-        svm_attrs['coefficients'] = [-v for v in coef]
-        svm_attrs['rho'] = [-v for v in intercept]
+    
+    if operator.type in ['SklearnSVC', 'SklearnNuSVC']:
+        if len(op.classes_) == 2:
+            svm_attrs['coefficients'] = [-v for v in coef]
+            svm_attrs['rho'] = [-v for v in intercept]
+        else:
+            svm_attrs['coefficients'] = coef
+            svm_attrs['rho'] = [v for v in intercept]
     else:
         svm_attrs['coefficients'] = coef
         svm_attrs['rho'] = intercept
