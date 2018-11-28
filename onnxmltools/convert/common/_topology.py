@@ -737,7 +737,7 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
         extra_inputs.append(value_info)
 
     # enable the ONNX optimizations
-    nodes = optimize_onnx(container.nodes, nhwc_inputs, container.inputs + extra_inputs, container.outputs)
+    nodes = optimize_onnx(container.nodes, nhwc_inputs)
 
     # Create a graph from its main components
     graph = helper.make_graph(nodes, model_name, container.inputs + extra_inputs,
