@@ -19,7 +19,7 @@ packages = find_packages()
 assert packages
 
 # read version from the package file.
-version_str = '1.0.0.0000'
+version_str = '1.0.0'
 with (open(os.path.join(this, 'onnxmltools/__init__.py'), "r")) as f:
     line = [_ for _ in [_.strip("\r\n ")
                                 for _ in f.readlines()] if _.startswith("__version__")]
@@ -53,6 +53,5 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'License :: OSI Approved :: MIT License'],
 )
