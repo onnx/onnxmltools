@@ -156,7 +156,7 @@ def convert_gru(scope, operator, container):
     gru_attrs['hidden_size'] = hidden_size
 
     # Set up version-dependent attributes
-    if container.target_opset <= 4:
+    if container.target_opset < 5:
         gru_attrs['output_sequence'] = params.sequenceOutput
         op_version = 1
     elif container.target_opset < 7:
