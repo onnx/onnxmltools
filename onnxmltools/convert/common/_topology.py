@@ -237,7 +237,7 @@ class Scope:
 class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
-                 reserved_variable_names=None, reserved_operator_names=None, target_opset=None, targeted_onnx=None,
+                 reserved_variable_names=None, reserved_operator_names=None, target_opset=None,
                  custom_conversion_functions=None, custom_shape_calculators=None, metadata_props=None):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
@@ -260,7 +260,6 @@ class Topology:
         self.metadata_props = metadata_props if metadata_props else dict()
         self.default_batch_size = default_batch_size
         self.target_opset = target_opset
-        self.targeted_onnx_version = targeted_onnx
         self.custom_conversion_functions = custom_conversion_functions if custom_conversion_functions else {}
         self.custom_shape_calculators = custom_shape_calculators if custom_shape_calculators else {}
 
@@ -303,7 +302,8 @@ class Topology:
         return Topology._generate_unique_name(seed, self.scope_names)
 
     def declare_scope(self, seed, parent_scopes=None):
-        scope = Scope(self.get_unique_scope_name(seed), parent_scopes, self.variable_name_set, self.operator_name_set)
+        scope = Scope(self.get_unique_scope_name(seed), parent_scopes,
+                      self.variable_name_set, self.operator_name_set, self.target_opset)
         self.scopes.append(scope)
         return scope
 
@@ -651,7 +651,7 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
 
     topology._initialize_graph_status_for_traversing()
 
-    container = ModelComponentContainer(target_opset, targeted_onnx)
+    container = ModelComponentContainer(target_opset)
 
     # Put roots and leaves as ONNX's model into buffers. They will be added into ModelComponentContainer later.
     tensor_inputs = {}

@@ -37,8 +37,7 @@ def convert(model, name=None, default_batch_size=1, initial_types=None, doc_stri
     '''
 
     target_opset = target_opset if target_opset else get_opset_number_from_onnx()
-    topology = parse_keras(model, default_batch_size, initial_types,
-                           target_opset, targeted_onnx,
+    topology = parse_keras(model, default_batch_size, initial_types, target_opset,
                            custom_conversion_functions, custom_shape_calculators)
 
     topology.compile()

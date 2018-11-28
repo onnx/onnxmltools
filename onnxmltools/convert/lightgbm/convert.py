@@ -43,7 +43,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
         name = str(uuid4().hex)
 
     target_opset = target_opset if target_opset else get_opset_number_from_onnx()
-    topology = parse_lightgbm(model, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_lightgbm(model, initial_types, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
     onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
     return onnx_model

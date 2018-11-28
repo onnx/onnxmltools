@@ -87,7 +87,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
 
     target_opset = target_opset if target_opset else get_opset_number_from_onnx()
     # Parse scikit-learn model as our internal data structure (i.e., Topology)
-    topology = parse_sklearn(model, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_sklearn(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
 
     # Infer variable shapes
     topology.compile()

@@ -52,7 +52,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
 
     target_opset = target_opset if target_opset else get_opset_number_from_onnx()
     # Parse CoreML model as our internal data structure (i.e., Topology)
-    topology = parse_coreml(spec, initial_types, target_opset, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_coreml(spec, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
 
     # Parse CoreML description, author, and license. Those information will be attached to the final ONNX model.
     metadata = spec.description.metadata
