@@ -10,7 +10,6 @@ from keras.layers import GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalA
 from ...common._apply_operation import apply_reshape
 from ...common._apply_operation import apply_transpose
 from ...common._registration import register_converter
-from ...common.utils import compare_strict_version
 from .common import get_permutation_config
 
 

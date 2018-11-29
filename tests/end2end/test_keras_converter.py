@@ -63,7 +63,6 @@ class TestKerasConverter(unittest.TestCase):
         self.assertIsNotNone(actual)
 
         self.assertIsNotNone(converted_model)
-        # to check the model, you can print(str(converted_model))
         dump_data_and_model(x.astype(np.float32), model, converted_model, basename="KerasCustomOp-Out0",
                             context=dict(ScaledTanh=ScaledTanh))
 
@@ -96,4 +95,3 @@ class TestKerasConverter(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

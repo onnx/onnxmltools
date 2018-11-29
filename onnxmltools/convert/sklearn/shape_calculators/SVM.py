@@ -8,7 +8,7 @@ import numpy as np
 import six, numbers
 from ...common._registration import register_shape_calculator
 from ...common.data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType, SequenceType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types, compare_strict_version
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_sklearn_svm_output_shapes(operator):
@@ -36,7 +36,7 @@ def calculate_sklearn_svm_output_shapes(operator):
         if all(isinstance(i, (six.string_types, six.text_type)) for i in op.classes_):
             operator.outputs[0].type = StringTensorType([N])
             if len(operator.outputs) == 2:
-                if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
+                if operator.target_opset < 7:
                     # Old ONNX ZipMap produces Map type
                     operator.outputs[1].type = \
                         DictionaryType(StringTensorType([1]), FloatTensorType([1]))
@@ -47,7 +47,7 @@ def calculate_sklearn_svm_output_shapes(operator):
         elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in op.classes_):
             operator.outputs[0].type = Int64TensorType([N])
             if len(operator.outputs) == 2:
-                if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
+                if operator.target_opset < 7:
                     # Old ONNX ZipMap produces Map type
                     operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
                 else:
