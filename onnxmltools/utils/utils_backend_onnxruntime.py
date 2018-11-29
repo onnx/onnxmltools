@@ -57,7 +57,13 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         if "CannotLoad" in options:
             raise ExpectedAssertionError("Unable to load onnx '{0}' due to\n{1}".format(onx, e))
         else:
-            raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'".format(onx))
+            if verbose:
+                import onnx
+                model = onnx.load(onx)
+                smodel = "\nJSON ONNX\n" + str(model)
+            else:
+                smodel = ""
+            raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'\nONNX\n{1}".format(onx, smodel))
     
     input = load["data"]
     if isinstance(input, dict):
@@ -209,7 +215,7 @@ def _create_column(values, dtype):
         raise OnnxRuntimeAssertionError("Unable to create one column from dtype '{0}'".format(dtype))
 
 
-def _compare_expected(expected, output, sess, onnx, decimal=5, **kwargs):
+def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, **kwargs):
     """
     Compares the expected output against the runtime outputs.
     This is specific to *onnxruntime* due to variable *sess*
@@ -218,6 +224,7 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, **kwargs):
     tested = 0
     if isinstance(expected, list):
         if isinstance(output, list):
+            onnx_shapes = [_.shape for _ in sess.get_outputs()]
             if 'Out0' in kwargs:
                 expected = expected[:1]
                 output = output[:1]
@@ -229,8 +236,8 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, **kwargs):
                                          len(output.ravel()) // len(expected)))
             if len(expected) != len(output):
                 raise OnnxRuntimeAssertionError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
-            for exp, out in zip(expected, output):
-                _compare_expected(exp, out, sess, onnx, decimal=5, **kwargs)
+            for exp, out, osh in zip(expected, output, onnx_shapes):
+                _compare_expected(exp, out, sess, onnx, decimal=5, onnx_shape=osh, **kwargs)
                 tested += 1
         else:
             raise OnnxRuntimeAssertionError("Type mismatch for '{0}', output type is {1}".format(onnx, type(output)))
@@ -260,6 +267,13 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, **kwargs):
             output = output[-1]
         if not isinstance(output, numpy.ndarray):
             raise OnnxRuntimeAssertionError("output must be an array for onnx '{0}' not {1}".format(onnx, type(output)))
+        if onnx_shape is not None:
+            if len(onnx_shape) == 2:
+                cols = onnx_shape[1]
+                ecols = output.shape[1] if len(output.shape) == 2 else 1
+                if cols != ecols:
+                    raise OnnxRuntimeAssertionError("Unexpected onnx shape {0} != {1} for onnx '{2}'".format(
+                                onnx_shape, output.shape, onnx))
         msg = compare_outputs(expected, output, decimal=decimal, **kwargs)
         if isinstance(msg, ExpectedAssertionError):
             raise msg

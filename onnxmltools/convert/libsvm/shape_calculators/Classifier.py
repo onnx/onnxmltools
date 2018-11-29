@@ -16,22 +16,19 @@ def calculate_classifier_output_shapes(operator):
     N = operator.inputs[0].type.shape[0]
     if len(operator.outputs) != 2:
         raise RuntimeError("Expect only two outputs not {0}".format(len(operator.outputs)))
-    svm_node =  operator.raw_operator
+    svm_node =  operator.raw_operator    
     if svm_node.is_probability_model():
-        nc = N
+        nc = svm_node.nr_class
     else:
         # libsvm produces n(n-1) raw scores.
         # onnxruntime aggregates the scores
         # but this behavior could be revisited.
-        # st = svm_node.param.svm_type
-        # if st == C_SVC or st == NU_SVC:
-        #    nc = (N * (N-1)) // 2
-        # else:
-        #    nc = N
-        nc = N
-    svm_node.is_probability_model()
+        nc = svm_node.nr_class        
+        st = svm_node.param.svm_type
+        if (st == C_SVC or st == NU_SVC) and nc > 2:
+            nc = (nc * (nc-1)) // 2
     operator.outputs[0].type = Int64TensorType([N, 1])
-    operator.outputs[1].type = FloatTensorType([nc, 1])
+    operator.outputs[1].type = FloatTensorType([N, nc])
 
 
 register_shape_calculator('LibSvmSVC', calculate_classifier_output_shapes)

@@ -71,7 +71,7 @@ def convert_sklearn_svm(scope, operator, container):
         else:
             raise RuntimeError('Invalid class label type [%s]' % op.classes_)
 
-        if 'prob_a' in svm_attrs or len(op.classes_) == 2:
+        if 'prob_a' in svm_attrs or len(op.classes_) <= 2:
             container.add_node(op_type, operator.inputs[0].full_name, [label_name, probability_tensor_name],
                                op_domain='ai.onnx.ml', **svm_attrs)
             container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
