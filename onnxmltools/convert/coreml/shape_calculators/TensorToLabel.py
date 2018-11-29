@@ -6,7 +6,7 @@
 
 from ...common._registration import register_shape_calculator
 from ...common.data_types import FloatTensorType, Int64TensorType, Int64Type, StringTensorType, StringType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types, compare_strict_version
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculte_tensor_to_label_output_shapes(operator):
@@ -20,7 +20,7 @@ def calculte_tensor_to_label_output_shapes(operator):
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     N = operator.inputs[0].type.shape[0]
-    if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
+    if operator.target_opset < 7:
         output_shape = [1, 1]
     else:
         output_shape = [N, 1]

@@ -108,10 +108,15 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
                 res.append(one)
             output = _post_process_output(res)
         else:
+            def to_array(vv):
+                if isinstance(vv, (numpy.ndarray, numpy.int64, numpy.float32)):
+                    return numpy.array([vv])
+                else:
+                    return numpy.array([vv], dtype=numpy.float32)
             t = list(inputs.items())[0]
             res = []
-            for i in range(0, len(t[1])):
-                iii = {k: numpy.array([v[i]], dtype=numpy.float32) for k, v in inputs.items()}
+            for i in range(0, len(t[1])):                
+                iii = {k: to_array(v[i]) for k, v in inputs.items()}
                 try:
                     one = sess.run(None, iii)
                 except ExpectedAssertionError as expe:
@@ -119,7 +124,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
                 except Exception as e:
                     raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onx, e))
                 res.append(one)
-            output = _post_process_output(res)                
+            output = _post_process_output(res)   
     else:
         try:
             output = sess.run(None, inputs)
@@ -182,8 +187,13 @@ def _post_process_output(res):
                     return numpy.array(res)
                 elif len(res[0]) == 1 and isinstance(res[0][0], dict):
                     return _post_process_output([r[0] for r in res])
-                else:
+                elif len(res) == 1:
                     return res
+                else:
+                    if len(res[0]) != 1:
+                        raise NotImplementedError("Not conversion implemented for {0}".format(res))
+                    st = [r[0] for r in res]
+                    return numpy.vstack(st)
             else:
                 return res
     else:

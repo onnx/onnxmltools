@@ -10,7 +10,6 @@ import keras
 import onnx
 from distutils.version import StrictVersion
 
-from keras import backend as K
 from keras.layers import *
 
 class TestOpsetComparison(unittest.TestCase):
@@ -42,6 +41,7 @@ class TestOpsetComparison(unittest.TestCase):
         opset_comparison = converted_model_7.opset_import[0].version > converted_model_5.opset_import[0].version
 
         self.assertTrue(opset_comparison)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -7,6 +7,7 @@
 import re
 import warnings
 from logging import getLogger
+from distutils.version import StrictVersion
 from ...proto import onnx
 from ...proto import helper
 from ...proto import get_opset_number_from_onnx
@@ -15,7 +16,6 @@ from . import _registration
 from . import utils
 from .data_types import *
 from ._container import ModelComponentContainer
-from .utils import compare_strict_version
 from .optimizer import optimize_onnx
 from .interface import OperatorBase
 
@@ -56,7 +56,7 @@ class Variable:
 
 class Operator(OperatorBase):
 
-    def __init__(self, onnx_name, scope, type, raw_operator, targeted_onnx_version):
+    def __init__(self, onnx_name, scope, type, raw_operator, target_opset):
         '''
         :param onnx_name: A unique ID, which is a string
         :param scope: The name of the scope where this operator is declared. It's a string.
@@ -64,7 +64,7 @@ class Operator(OperatorBase):
         pooling, if this operator is associated with a CoreML pooling layer.
         :param raw_operator: The original operator which defines this operator; for example, a scikit-learn Imputer and
         a CoreML Normalizer.
-        :param targeted_onnx_version: A StrictVersion object indicating the ONNX version used
+        :param target_opset: The target opset number for the converted model.
         '''
         self.onnx_name = onnx_name  # operator name in the converted model
         self.scope = scope
@@ -74,7 +74,7 @@ class Operator(OperatorBase):
         self.outputs = []
         self.is_evaluated = None
         self.is_abandoned = False
-        self.targeted_onnx_version = targeted_onnx_version
+        self.target_opset = target_opset
 
     @property
     def full_name(self):
@@ -111,21 +111,20 @@ class Operator(OperatorBase):
 
 class Scope:
 
-    def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None,
-                 targeted_onnx_version=None):
+    def __init__(self, name, parent_scopes=None, variable_name_set=None, operator_name_set=None, target_opset=None):
         '''
         :param name:  A string, the unique ID of this scope in a Topology object
         :param parent_scopes: A list of Scope objects. The last element should be the direct parent scope (i.e., where
         this scope is declared).
         :param variable_name_set: A set of strings serving as the name pool of variables
         :param operator_name_set: A set of strings serving as the name pool of operators
-        :param targeted_onnx_version: A StrictVersion object indicating the ONNX version used
+        :param target_opset: The target opset number for the converted model.
         '''
         self.name = name
         self.parent_scopes = parent_scopes if parent_scopes else list()
         self.onnx_variable_names = variable_name_set if variable_name_set is not None else set()
         self.onnx_operator_names = operator_name_set if operator_name_set is not None else set()
-        self.targeted_onnx_version = targeted_onnx_version
+        self.target_opset = target_opset
 
         # An one-to-many map from raw variable name to ONNX variable names. It looks like
         #   (key, value) = (raw_name, [onnx_name, onnx_name1, onnx_name2, ..., onnx_nameN])
@@ -216,7 +215,7 @@ class Scope:
         This function is used to declare new local operator.
         '''
         onnx_name = self.get_unique_operator_name(str(type))
-        operator = Operator(onnx_name, self.name, type, raw_model, self.targeted_onnx_version)
+        operator = Operator(onnx_name, self.name, type, raw_model, self.target_opset)
         self.operators[onnx_name] = operator
         return operator
 
@@ -244,7 +243,7 @@ class Scope:
 class Topology:
 
     def __init__(self, model, default_batch_size=1, initial_types=None,
-                 reserved_variable_names=None, reserved_operator_names=None, target_opset=None, targeted_onnx=None,
+                 reserved_variable_names=None, reserved_operator_names=None, target_opset=None,
                  custom_conversion_functions=None, custom_shape_calculators=None, metadata_props=None):
         '''
         Initialize a Topology object, which is an intermediate representation of a computational graph.
@@ -266,7 +265,7 @@ class Topology:
         self.initial_types = initial_types if initial_types else list()
         self.metadata_props = metadata_props if metadata_props else dict()
         self.default_batch_size = default_batch_size
-        self.targeted_onnx_version = targeted_onnx
+        self.target_opset = target_opset
         self.custom_conversion_functions = custom_conversion_functions if custom_conversion_functions else {}
         self.custom_shape_calculators = custom_shape_calculators if custom_shape_calculators else {}
 
@@ -308,9 +307,9 @@ class Topology:
     def get_unique_scope_name(self, seed):
         return Topology._generate_unique_name(seed, self.scope_names)
 
-    def declare_scope(self, seed, parent_scopes=list()):
-        scope = Scope(self.get_unique_scope_name(seed), parent_scopes, self.variable_name_set,
-                      self.operator_name_set, self.targeted_onnx_version)
+    def declare_scope(self, seed, parent_scopes=None):
+        scope = Scope(self.get_unique_scope_name(seed), parent_scopes,
+                      self.variable_name_set, self.operator_name_set, self.target_opset)
         self.scopes.append(scope)
         return scope
 
@@ -645,7 +644,7 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
     include '1.1.2', '1.2', and so on.
     :return: a ONNX ModelProto
     '''
-    if targeted_onnx is not None and compare_strict_version(targeted_onnx, onnx.__version__) != 0:
+    if targeted_onnx is not None and StrictVersion(targeted_onnx) != StrictVersion(onnx.__version__):
         warnings.warn(
             'targeted_onnx is deprecated, please specify target_opset for the target model.\n' +
             '*** ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
@@ -658,7 +657,7 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
 
     topology._initialize_graph_status_for_traversing()
 
-    container = ModelComponentContainer(target_opset, targeted_onnx)
+    container = ModelComponentContainer(target_opset)
 
     # Put roots and leaves as ONNX's model into buffers. They will be added into ModelComponentContainer later.
     tensor_inputs = {}
@@ -743,7 +742,7 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
         extra_inputs.append(value_info)
 
     # enable the ONNX optimizations
-    nodes = optimize_onnx(container.nodes, nhwc_inputs)
+    nodes = optimize_onnx(container.nodes, nhwc_inputs, container.inputs + extra_inputs, container.outputs)
 
     # Create a graph from its main components
     graph = helper.make_graph(nodes, model_name, container.inputs + extra_inputs,
@@ -782,7 +781,7 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
             getLogger('onnxmltools').warning('The maximum opset needed by this model is only %d.' % op_version)
 
     # Add extra information
-    add_metadata_props(onnx_model, topology.metadata_props)
+    add_metadata_props(onnx_model, topology.metadata_props, target_opset)
     onnx_model.ir_version = onnx_proto.IR_VERSION
     onnx_model.producer_name = utils.get_producer()
     onnx_model.producer_version = utils.get_producer_version()

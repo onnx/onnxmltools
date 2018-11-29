@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
-from ...proto import onnx
+from ...proto import onnx, get_opset_number_from_onnx
 from ..common._topology import convert_topology
 from ..common._registration import register_converter
 from ..common._registration import register_shape_calculator
@@ -36,8 +36,8 @@ def convert(model, name=None, default_batch_size=1, initial_types=None, doc_stri
     :return: An ONNX model (type: ModelProto) which is equivalent to the input Keras model
     '''
 
-    topology = parse_keras(model, default_batch_size, initial_types,
-                           target_opset, targeted_onnx,
+    target_opset = target_opset if target_opset else get_opset_number_from_onnx()
+    topology = parse_keras(model, default_batch_size, initial_types, target_opset,
                            custom_conversion_functions, custom_shape_calculators)
 
     topology.compile()
