@@ -79,19 +79,20 @@ class SkAPICl(SkAPI):
         pro = numpy.array(res[-1]).ravel()        
         pro = pro.reshape(X.shape[0], len(pro) // X.shape[0]).astype(numpy.float32)
         if pro.shape[1] == 1:
-            pro = numpy.hstack([pro, -pro])
+            pro = numpy.hstack([-pro, pro])
         elif pro.shape[1] > 2:
             
             # see from sklearn.utils.multiclass import _ovr_decision_function
-            conf = pro.copy()
-            nc = self.model.get_nr_class()
-            pro = numpy.zeros((conf.shape[0], nc))
-            k = 0
-            for i in range(nc):
-                for j in range(i + 1, nc):
-                    pro[:, i] += conf[:, k]
-                    pro[:, j] -= conf[:, k]
-                    k += 1
+            if False:
+                conf = pro.copy()
+                nc = self.model.get_nr_class()
+                pro = numpy.zeros((conf.shape[0], nc))
+                k = 0
+                for i in range(nc):
+                    for j in range(i + 1, nc):
+                        pro[:, i] += conf[:, k]
+                        pro[:, j] -= conf[:, k]
+                        k += 1
         return pro
 
 

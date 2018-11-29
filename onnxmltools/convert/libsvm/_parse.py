@@ -49,8 +49,8 @@ def _parse_libsvm(scope, model, inputs):
 
 
 def parse_libsvm(model, initial_types=None, target_opset=None,
-                  targeted_onnx=onnx.__version__, custom_conversion_functions=None,
-                  custom_shape_calculators=None):
+                 custom_conversion_functions=None,
+                 custom_shape_calculators=None):
     # Put svmlib object into an abstract container so that our framework 
     # can work seamlessly on models created
     # with different machine learning tools.
@@ -61,7 +61,6 @@ def parse_libsvm(model, initial_types=None, target_opset=None,
     topology = Topology(raw_model_container,
                         initial_types=initial_types,
                         target_opset=target_opset,
-                        targeted_onnx=targeted_onnx,
                         custom_conversion_functions=custom_conversion_functions,
                         custom_shape_calculators=custom_shape_calculators)
 

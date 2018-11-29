@@ -80,7 +80,7 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinSVCLinearPF-NoProb")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinSVCLinearPF-NoProb-Opp")
 
     def test_convert_svmr_linear_binary(self):
         model, X = self._fit_binary_classification(SVR(kernel='linear'))
@@ -109,7 +109,7 @@ class TestSklearnSVM(unittest.TestCase):
                                           'rho': None,
                                           'support_vectors': None,
                                           'vectors_per_class': None})
-        dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPF-NoProb")
+        dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPF-NoProb-Opp")
 
     def test_convert_nusvmr_binary(self):
         model, X = self._fit_binary_classification(NuSVR())
@@ -184,5 +184,4 @@ class TestSklearnSVM(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestSklearnSVM().test_convert_svmc_linear_binary()
     unittest.main()

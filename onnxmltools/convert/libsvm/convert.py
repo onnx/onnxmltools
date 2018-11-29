@@ -36,7 +36,8 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
         name = str(uuid4().hex)
 
     # Parse scikit-learn model as our internal data structure (i.e., Topology)
-    topology = parse_libsvm(model, initial_types, targeted_onnx, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_libsvm(model, initial_types, custom_conversion_functions, 
+                            custom_shape_calculators)
 
     # Infer variable shapes
     topology.compile()
