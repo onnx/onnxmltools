@@ -120,7 +120,8 @@ class TestSvmLibSVM(unittest.TestCase):
         node = convert(libsvm_model, "LibSvmSvmcLinear", [('input', FloatTensorType(shape=[1, 'None']))])
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmSvmcLinear-Dec3")
+                            basename="LibSvmSvmcLinear-Dec3",
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.4')")
 
     def test_convert_svmc(self):
         iris = load_iris()
@@ -233,7 +234,8 @@ class TestSvmLibSVM(unittest.TestCase):
         node = convert(libsvm_model, "LibSvmNuSvmc", [('input', FloatTensorType(shape=[1, 'None']))])
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmNuSvmc-Dec2")
+                            basename="LibSvmNuSvmc-Dec2",
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
 
     def test_convert_svmc_linear_raw(self):
         iris = load_iris()
@@ -258,7 +260,7 @@ class TestSvmLibSVM(unittest.TestCase):
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
                             basename="LibSvmSvmcLinearRaw-Dec3", verbose=False,
-                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.4')")
 
     def test_convert_svmc_raw(self):
         iris = load_iris()
@@ -283,7 +285,7 @@ class TestSvmLibSVM(unittest.TestCase):
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
                             basename="LibSvmSvmcRaw",
-                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.3')")
+                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.1.4')")
 
     @unittest.skip(reason="libsvm crashes.")
     def test_convert_nusvmc_linear_raw(self):
