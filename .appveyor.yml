@@ -35,7 +35,7 @@ install:
     - set PYTHONPATH=libsvm\python;%PYTHONPATH%
     - dir libsvm\python
     - python -c "import svmutil"
-    
+
 build: off
 
 test_script:
