@@ -31,8 +31,10 @@ install:
     - cd libsvm
     - nmake -f Makefile.win lib
     - copy windows\*.dll python    
+    - dir
     - cd ..
     - set PYTHONPATH=%~dp0libsvm\python;%PYTHONPATH%
+    - dir
     - dir %~dp0
     - dir %~dp0libsvm
     - dir %~dp0libsvm\windows
