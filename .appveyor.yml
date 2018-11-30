@@ -33,6 +33,9 @@ install:
     - copy windows\*.dll python    
     - cd ..
     - set PYTHONPATH=%~dp0libsvm\python;%PYTHONPATH%
+    - dir %~dp0
+    - dir %~dp0libsvm
+    - dir %~dp0libsvm\windows
     - dir %~dp0libsvm\python
     - python -c "import svmutil"
     
