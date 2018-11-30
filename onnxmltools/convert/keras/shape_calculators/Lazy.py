@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import keras
+from distutils.version import StrictVersion
 from ...common._registration import register_shape_calculator
 
 
@@ -18,8 +19,10 @@ register_shape_calculator(keras.layers.advanced_activations.LeakyReLU, calculate
 register_shape_calculator(keras.layers.advanced_activations.ThresholdedReLU, calculate_lazy_output_shapes)
 register_shape_calculator(keras.layers.advanced_activations.ELU, calculate_lazy_output_shapes)
 register_shape_calculator(keras.layers.advanced_activations.PReLU, calculate_lazy_output_shapes)
-# TODO:Following layer is not supported by the checked-in keras version and requires an upgrade of the checked-in keras
-# register_shape_calculator(keras.layers.advanced_activations.Softmax, calculate_lazy_output_shapes)
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
+    register_shape_calculator(keras.layers.advanced_activations.Softmax, calculate_lazy_output_shapes)
+if StrictVersion(keras.__version__) >= StrictVersion('2.2.0'):
+    register_shape_calculator(keras.layers.advanced_activations.ReLU, calculate_lazy_output_shapes)
 
 # Concate
 register_shape_calculator(keras.layers.Concatenate, calculate_lazy_output_shapes)
