@@ -58,6 +58,7 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import MaxAbsScaler
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 # In most cases, scikit-learn operator produces only one output. However, each classifier has basically two outputs;
 # one is the predicted label and the other one is the probabilities of all possible labels. Here is a list of supported
@@ -69,44 +70,31 @@ sklearn_classifier_list = [LogisticRegression, SGDClassifier, LinearSVC, SVC, Nu
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
-sklearn_operator_name_map = {RobustScaler: 'SklearnRobustScaler',
-                             StandardScaler: 'SklearnScaler',
-                             LogisticRegression: 'SklearnLinearClassifier',
-                             SGDClassifier: 'SklearnLinearClassifier',
-                             LinearSVC: 'SklearnLinearSVC',
-                             OneHotEncoder: 'SklearnOneHotEncoder',
-                             DictVectorizer: 'SklearnDictVectorizer',
-                             Imputer: 'SklearnImputer',
-                             LabelEncoder: 'SklearnLabelEncoder',
-                             SVC: 'SklearnSVC',
-                             NuSVC: 'SklearnSVC',
-                             SVR: 'SklearnSVR',
-                             NuSVR: 'SklearnSVR',
-                             LinearSVR: 'SklearnLinearSVR',
-                             ElasticNet: 'SklearnElasticNetRegressor',
-                             LinearRegression: 'SklearnLinearRegressor',
-                             LassoLars: 'SklearnLassoLars',
-                             Ridge: 'SklearnRidge',
-                             SGDRegressor: 'SklearnLinearRegressor',
-                             Normalizer: 'SklearnNormalizer',
-                             DecisionTreeClassifier: 'SklearnDecisionTreeClassifier',
-                             DecisionTreeRegressor: 'SklearnDecisionTreeRegressor',
-                             RandomForestClassifier: 'SklearnRandomForestClassifier',
-                             RandomForestRegressor: 'SklearnRandomForestRegressor',
-                             ExtraTreesClassifier: 'SklearnExtraTreesClassifier',
-                             ExtraTreesRegressor: 'SklearnExtraTreesRegressor',
-                             GradientBoostingClassifier: 'SklearnGradientBoostingClassifier',
-                             GradientBoostingRegressor: 'SklearnGradientBoostingRegressor',
-                             KNeighborsClassifier: 'SklearnKNeighborsClassifier',
-                             KNeighborsRegressor: 'SklearnKNeighborsRegressor',
-                             MultinomialNB: 'SklearnMultinomialNB',
-                             BernoulliNB: 'SklearnBernoulliNB',
-                             Binarizer: 'SklearnBinarizer',
-                             PCA: 'SklearnPCA',
-                             TruncatedSVD: 'SklearnTruncatedSVD',
-                             #FeatureUnion: 'SklearnFeatureUnion',
-                             MinMaxScaler: 'SklearnMinMaxScaler',
-                             MaxAbsScaler: 'SklearnMaxAbsScaler'}
+
+def build_sklearn_operator_name_map():
+    res = {k: "Sklearn" + k.__name__ for k in [
+                    RobustScaler, LinearSVC, OneHotEncoder, DictVectorizer,
+                    Imputer, LabelEncoder, SVC, SVR, LinearSVR, LinearRegression,
+                    LassoLars, Ridge, Normalizer, DecisionTreeClassifier, DecisionTreeRegressor,
+                    RandomForestClassifier, RandomForestRegressor, ExtraTreesClassifier,
+                    ExtraTreesRegressor, GradientBoostingClassifier, GradientBoostingRegressor,
+                    KNeighborsClassifier, KNeighborsRegressor,
+                    MultinomialNB, BernoulliNB,
+                    Binarizer, PCA, TruncatedSVD, MinMaxScaler, MaxAbsScaler,
+                    CountVectorizer, TfidfVectorizer]}
+    res.update({
+        ElasticNet: 'SklearnElasticNetRegressor',
+        LinearRegression: 'SklearnLinearRegressor',
+        LogisticRegression: 'SklearnLinearClassifier',
+        NuSVC: 'SklearnSVC',
+        NuSVR: 'SklearnSVR',
+        SGDClassifier: 'SklearnLinearClassifier',
+        SGDRegressor: 'SklearnLinearRegressor',
+        StandardScaler: 'SklearnScaler',
+    })
+    return res
+
+sklearn_operator_name_map = build_sklearn_operator_name_map()
 
 
 def _get_sklearn_operator_name(model_type):
@@ -163,21 +151,24 @@ def _parse_sklearn_pipeline(scope, model, inputs):
     return inputs
 
 
-# scope is Scope in our IR
-# model is FeatureUnion
-# inputs is a string list with a single element
 def _parse_sklearn_feature_union(scope, model, inputs):
+    '''
+    :param scope: Scope object
+    :param model: A scikit-learn FeatureUnion object
+    :param inputs: A list of Variable objects
+    :return: A list of output variables produced by feature union
+    '''
     # Output variable name of each transform. It's a list of string.
     transformed_result_names = []
-    # Encode each transform as our IR objects
+    # Encode each transform as our IR object
     for name, transform in model.transformer_list:
-        transformed_result_names.append(_parse_sklearn_simple_model(scope, transform, inputs))
+        transformed_result_names.append(_parse_sklearn_simple_model(scope, transform, inputs)[0])
     # Create a Concat ONNX node
     concat_operator = scope.declare_local_operator('SklearnConcat')
     concat_operator.inputs = transformed_result_names
 
     # Declare output name of scikit-learn FeatureUnion
-    union_name = scope.declare_local_variable('union')
+    union_name = scope.declare_local_variable('union', FloatTensorType())
     concat_operator.outputs.append(union_name)
 
     return concat_operator.outputs 
@@ -201,7 +192,7 @@ def _parse_sklearn(scope, model, inputs):
 
 
 def parse_sklearn(model, initial_types=None, target_opset=None,
-                  targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+                  custom_conversion_functions=None, custom_shape_calculators=None):
     # Put scikit-learn object into an abstract container so that our framework can work seamlessly on models created
     # with different machine learning tools.
     raw_model_container = SklearnModelContainer(model)
@@ -210,7 +201,6 @@ def parse_sklearn(model, initial_types=None, target_opset=None,
     topology = Topology(raw_model_container,
                         initial_types=initial_types,
                         target_opset=target_opset,
-                        targeted_onnx=targeted_onnx,
                         custom_conversion_functions=custom_conversion_functions,
                         custom_shape_calculators=custom_shape_calculators)
 

@@ -11,7 +11,7 @@ import numbers
 import six
 from ._registration import register_shape_calculator
 from .data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType, SequenceType
-from .utils import check_input_and_output_numbers, check_input_and_output_types, compare_strict_version
+from .utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_linear_classifier_output_shapes(operator):
@@ -39,7 +39,7 @@ def calculate_linear_classifier_output_shapes(operator):
         operator.outputs[0].type = StringTensorType(shape=[N])
         if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
             # For multi-class classifier, we produce a map for encoding the probabilities of all classes
-            if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
+            if operator.target_opset < 7:
                 operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]))
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
@@ -50,7 +50,7 @@ def calculate_linear_classifier_output_shapes(operator):
         operator.outputs[0].type = Int64TensorType(shape=[N])
         if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
             # For multi-class classifier, we produce a map for encoding the probabilities of all classes
-            if compare_strict_version(operator.targeted_onnx_version, '1.2') < 0:
+            if operator.target_opset < 7:
                 operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)

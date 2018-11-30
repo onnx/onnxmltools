@@ -8,7 +8,6 @@ import math
 import numpy as np
 from ....common._apply_operation import apply_mul, apply_div, apply_pad
 from ....common._registration import register_converter
-from ....common.utils import compare_strict_version
 
 
 def calculate_legacy_pad_amount(H_in, pad_h, k_h, s_h):
