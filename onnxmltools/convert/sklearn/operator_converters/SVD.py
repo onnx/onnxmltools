@@ -22,7 +22,7 @@ def convert_truncated_svd(scope, operator, container):
     if operator.type == 'SklearnTruncatedSVD': # TruncatedSVD 
         # Create the major operator, a matrix multiplication.
         container.add_node('MatMul', [operator.inputs[0].full_name, transform_matrix_name],
-                           operator.outputs[0].full_name, name=scope.get_unique_variable_name('MatMul1'))
+                           operator.outputs[0].full_name, name=operator.full_name)
     else: # PCA
         if svd.mean_ is not None:
             mean_name = scope.get_unique_variable_name('mean')

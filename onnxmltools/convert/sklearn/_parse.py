@@ -9,7 +9,6 @@ from ..common._topology import *
 
 # Pipeline
 from sklearn import pipeline
-from sklearn.pipeline import FeatureUnion
 
 # Linear classifiers
 from sklearn.linear_model import LogisticRegression

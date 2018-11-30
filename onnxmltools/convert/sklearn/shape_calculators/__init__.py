@@ -7,7 +7,6 @@
 # To register shape calculators for scikit-learn operators, import associated modules here.
 from . import Concat 
 from . import DictVectorizer
-#from . import FeatureUnion 
 from . import Imputer
 from . import LabelEncoder
 from . import LinearClassifier
