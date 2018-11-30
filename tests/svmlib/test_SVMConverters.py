@@ -144,7 +144,7 @@ class TestSvmLibSVM(unittest.TestCase):
         node = convert(libsvm_model, "LibSvmSvmc", [('input', FloatTensorType(shape=[1, 'None']))])
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmSvmc-Dec3")
+                            basename="LibSvmSvmc-Dec2")
 
     def test_convert_svmr_linear(self):
         iris = load_iris()

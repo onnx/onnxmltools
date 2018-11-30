@@ -6,12 +6,21 @@ import numpy
 import onnxmltools
 from sklearn.datasets import load_iris
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
+from sklearn.svm import LinearSVC
 from onnxmltools import convert_sklearn
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
 
 class TestSklearnSVM(unittest.TestCase):
+
+    def _fit_model_binary_classification(self, model):
+        iris = load_iris()
+        X = iris.data[:, :3]
+        y = iris.target
+        y[y == 2] = 1
+        model.fit(X, y)
+        return model, X
 
     def _fit_binary_classification(self, model):
         iris = load_iris()
@@ -20,6 +29,13 @@ class TestSklearnSVM(unittest.TestCase):
         y[y == 2] = 1
         model.fit(X, y)
         return model, X[:5].astype(numpy.float32)
+
+    def _fit_model_multiclass_classification(self, model):
+        iris = load_iris()
+        X = iris.data[:, :3]
+        y = iris.target
+        model.fit(X, y)
+        return model, X
 
     def _fit_multi_classification(self, model):
         iris = load_iris()
@@ -142,6 +158,18 @@ class TestSklearnSVM(unittest.TestCase):
         self.assertIsNotNone(model_onnx)
         dump_data_and_model(X, model, model_onnx, basename="SklearnBinNuSVCPT")
 
+    def test_model_linear_svc_binary_class(self):
+        model, X = self._fit_model_binary_classification(LinearSVC())
+        model_onnx = convert_sklearn(model, 'linear SVC', [('input', FloatTensorType([1, 3]))])
+        self.assertIsNotNone(model_onnx)
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnLinearSVCBinary-NoProb")
+
+    def test_model_linear_svc_multi_class(self):
+        model, X = self._fit_model_multiclass_classification(LinearSVC())
+        model_onnx = convert_sklearn(model, 'multi-class linear SVC', [('input', FloatTensorType([1, 3]))])
+        self.assertIsNotNone(model_onnx)
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnLinearSVCMulti")
+
     @unittest.skip(reason="scikit-learn applies _ovr_decision_function. It does not follow ONNX spec.")
     def test_convert_svmc_multi(self):
         model, X = self._fit_multi_classification2(SVC(probability=False))
@@ -184,5 +212,5 @@ class TestSklearnSVM(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestSklearnSVM().test_registration_convert_nusvc_model_multi()
+    # TestSklearnSVM().test_model_linear_svc_binary_class()
     unittest.main()

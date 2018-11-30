@@ -3,6 +3,13 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 #-------------------------------------------------------------------------
+"""
+You can run this file with to get a report on every tested model conversion.
+
+::
+
+    python -u tests/main.py
+"""
 
 import os
 import sys
@@ -37,6 +44,7 @@ def run_tests(library=None, folder=None):
     
     available = {'Sklearn': ['sklearn'],
                  'LightGbm': ['lightgbm'],
+                 'LibSvm': ['svmlib'],
                  'Cml': ['coreml'],
                  'Keras': ['end2end']}
     

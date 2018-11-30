@@ -9,6 +9,7 @@ import six, numbers
 from ...common._registration import register_shape_calculator
 from ...common.data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType, SequenceType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import calculate_linear_classifier_output_shapes
 
 
 def calculate_sklearn_svm_output_shapes(operator):
@@ -30,7 +31,10 @@ def calculate_sklearn_svm_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
 
-    if operator.type in ['SklearnSVC', 'SklearnNuSVC']:
+    if operator.type in ['SklearnLinearSVC']:
+        calculate_linear_classifier_output_shapes(operator)
+        
+    elif operator.type in ['SklearnSVC', 'SklearnNuSVC']:
         check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=[1, 2])
 
         if (hasattr(op, 'probA_') and len(op.probA_) > 0) or len(op.classes_) <= 2:
@@ -67,12 +71,11 @@ def calculate_sklearn_svm_output_shapes(operator):
             
     elif operator.type in ['SklearnSVR']:
         check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=1)
-
         operator.outputs[0].type = FloatTensorType([N, 1])
-
     else:
         raise ValueError("Unexpected type '{0}'".format(operator.type))
 
 
 register_shape_calculator('SklearnSVC', calculate_sklearn_svm_output_shapes)
 register_shape_calculator('SklearnSVR', calculate_sklearn_svm_output_shapes)
+register_shape_calculator('SklearnLinearSVC', calculate_sklearn_svm_output_shapes)
