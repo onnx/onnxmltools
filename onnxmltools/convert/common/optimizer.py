@@ -35,7 +35,11 @@ class LinkedNode(object):
 
     @property
     def in_single_path(self):
-        return False if self.origin is None else len(self.origin.output) == 1
+        """
+        Test if a node is not linking to any fan in or out node.
+        """
+        return len(self.successor) == 1 and not self.successor[0].in_or_out and \
+               len(self.precedence) == 1 and len(self.precedence[0].successor) <= 1
 
     @property
     def in_or_out(self):
@@ -93,13 +97,10 @@ class LinkedNode(object):
             onode.output.extend([self.output.get(o_, o_) for o_ in self.origin.output])
             onode.doc_string = self.origin.doc_string
             onode.domain = self.origin.domain
-            onode.attribute.extend(attr for attr in self.origin.attribute)
-
             onode.attribute.extend(
-                helper.make_attribute(attr.name, self.attributes[attr.name])
-                if attr.name in self.attributes else
-                attr for attr in self.origin.attribute
-            )
+                attr for attr in self.origin.attribute if not attr.name in self.attributes)
+            onode.attribute.extend(
+                helper.make_attribute(attr.name, self.attributes[attr.name]) for attr in self.attributes)
 
             return onode
 
@@ -109,7 +110,7 @@ class LinkedNode(object):
         assert tname in self.input.values() and tname in pre.output.values()
 
     @staticmethod
-    def build_from_onnx(onnx_nodes, nchw_inputs):
+    def build_from_onnx(onnx_nodes, nchw_inputs, inputs, outputs):
         view = []
         var_map = {}
         for o_ in onnx_nodes:
@@ -124,6 +125,7 @@ class LinkedNode(object):
             for var_ in n_.origin.input:
                 target = var_map.get(var_)
                 if target is None:
+                    assert var_ == '' or var_ in inputs
                     target = LinkedNode(out_n=[var_])  # create an empty node as input
                     new_output = var_ + '_nhwc'
                     if var_ in nchw_inputs:
@@ -143,8 +145,8 @@ class LinkedNode(object):
                 n_.add_precedence(target, var_)
 
         for n_ in view:  # add a dummy output node.
-            if len(n_.successor) < 1:
-                for var_ in n_.origin.output:
+            for var_ in n_.origin.output:
+                if var_ in outputs:
                     LinkedNode(in_n=[var_]).add_precedence(n_, var_)
 
         return view + additional_nodes
@@ -163,7 +165,7 @@ class Solution(object):
             return next(
                 helper.get_attribute_value(attr) for attr in onode.attribute if attr.name == 'perm')
         except StopIteration:
-            return [] # This function should return a list as is_useless_transpose() would fail with None
+            return []
 
     @staticmethod
     def is_useless_transpose(perm):
@@ -269,14 +271,19 @@ def _build_onnx_model(node_list):
     return regenerated
 
 
-def optimize_onnx(onnx_nodes, nchw_inputs=None):
+def optimize_onnx(onnx_nodes, nchw_inputs=None, inputs=None, outputs=None):
     """
     Optimize onnx model by several approaches.
     :param onnx_nodes: the onnx node list in onnx model.
+    :param nchw_inputs: the input name list for NCHW conversion.
+    :param inputs: input name list
+    :param outputs: output name list
     :return:
     """
     node_list = LinkedNode.build_from_onnx(onnx_nodes,
-                                           nchw_inputs if nchw_inputs else [])
+                                           nchw_inputs if nchw_inputs else [],
+                                           [] if inputs is None else [i_.name for i_ in inputs],
+                                           [] if outputs is None else [o_.name for o_ in outputs])
     solution = _find_an_optimization(node_list)
     while solution:
         node_list = _apply_optimization(solution, node_list)

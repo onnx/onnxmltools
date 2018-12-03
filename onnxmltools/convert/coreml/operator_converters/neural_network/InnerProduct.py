@@ -7,7 +7,6 @@
 from .....proto import onnx_proto
 from ....common._apply_operation import apply_reshape
 from ....common._registration import register_converter
-from ....common.utils import compare_strict_version
 
 
 def convert_inner_product(scope, operator, container):
@@ -45,10 +44,10 @@ def convert_inner_product(scope, operator, container):
     attrs['transB'] = 1
 
     # Get the correct version number for Gemm in ONNX
-    if compare_strict_version(container.targeted_onnx_version, '1.0') <= 0:
+    if container.target_opset < 5:
         attrs['broadcast'] = 1
         op_version = 1
-    elif compare_strict_version(container.targeted_onnx_version, '1.2') < 0:
+    elif container.target_opset < 7:
         attrs['broadcast'] = 1
         op_version = 6
     else:

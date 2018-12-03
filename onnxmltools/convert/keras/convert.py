@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
-from ...proto import onnx
+from ...proto import onnx, get_opset_number_from_onnx
 from ..common._topology import convert_topology
 from ..common._registration import register_converter
 from ..common._registration import register_shape_calculator
@@ -16,17 +16,13 @@ from . import operator_converters
 from . import shape_calculators
 
 
-def convert(model, name=None, initial_types=None, doc_string='', target_opset=None, targeted_onnx=onnx.__version__,
+def convert(model, name=None, default_batch_size=1, initial_types=None, doc_string='', target_opset=None, targeted_onnx=onnx.__version__,
                 channel_first_inputs=None,custom_conversion_functions=None, custom_shape_calculators=None):
     '''
-    Convert Keras-Tensorflow Model and Sequence objects into Topology. Note that default batch size is 1 here instead of
-    `None` used in CoreML conversion framework. To overwrite this behavior, we can specify initial_types. Assume that a
-    Keras tensor is named input:0 and its shape is [None, 3]. If the desired batch size is 10, we can specify
-    >>> from onnxmltools.convert.common.data_types import FloatTensorType
-    >>> initial_types=[('input:0', FloatTensorType([10, 3]))]
-
+    Convert Keras-Tensorflow Model and Sequence objects into Topology.
     :param model: A Keras model (Model or Sequence object)
     :param name: Optional graph name of the produced ONNX model
+    :param default_batch_size: default batch size of produced ONNX model. If not set, it will be 1
     :param initial_types: A list providing types for some input variables. Each element is a tuple of a variable name
     and a type defined in data_types.py.
     :param doc_string: A string attached onto the produced ONNX model
@@ -40,8 +36,8 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     :return: An ONNX model (type: ModelProto) which is equivalent to the input Keras model
     '''
 
-    topology = parse_keras(model, initial_types,
-                           target_opset, targeted_onnx,
+    target_opset = target_opset if target_opset else get_opset_number_from_onnx()
+    topology = parse_keras(model, default_batch_size, initial_types, target_opset,
                            custom_conversion_functions, custom_shape_calculators)
 
     topology.compile()
