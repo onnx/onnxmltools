@@ -21,3 +21,4 @@ from . import RandomForest
 from . import Scaler
 from . import SVM
 from . import SVD
+from . import TextVectorizer

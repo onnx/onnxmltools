@@ -97,7 +97,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         coreml_model = None
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)
-        except (AttributeError, ImportError) as e:
+        except (AttributeError, ValueError, ImportError) as e:
             warnings.warn("Unable to test due to an error in coremltools '{0}'.".format(e))
 
         onnx_model_p1 = None if coreml_model is None else onnxmltools.convert_coreml(coreml_model)
@@ -376,7 +376,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         mapped1_2 = sub_model1(input1)
         mapped2_2 = sub_model2(input2)
         sub_sum = Add()([mapped1_2, mapped2_2])
-        keras_model = Model(inputs=[input1, input2], output=sub_sum)
+        keras_model = Model(inputs=[input1, input2], outputs=[sub_sum])
 
         try:
             coreml_model = coremltools.converters.keras.convert(keras_model)

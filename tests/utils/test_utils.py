@@ -7,7 +7,7 @@ import os
 import unittest
 import numpy as np
 
-from onnxmltools.proto import onnx, onnx_proto, helper
+from onnxmltools.proto import onnx, onnx_proto, helper, get_opset_number_from_onnx
 from onnxmltools.convert.common.optimizer import optimize_onnx
 from onnxmltools.utils import load_model, save_model, save_text
 from onnxmltools.utils import set_denotation, set_model_version, set_model_domain, set_model_doc_string
@@ -81,7 +81,7 @@ class TestUtils(unittest.TestCase):
         this = os.path.dirname(__file__)
         onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
         onnx_model = load_model(onnx_file)
-        set_denotation(onnx_model, "1", "IMAGE", dimension_denotation=["DATA_FEATURE"])
+        set_denotation(onnx_model, "1", "IMAGE", get_opset_number_from_onnx(), dimension_denotation=["DATA_FEATURE"])
         self.assertEqual(onnx_model.graph.input[0].type.denotation, "IMAGE")
         self.assertEqual(onnx_model.graph.input[0].type.tensor_type.shape.dim[0].denotation, "DATA_FEATURE")
 
@@ -106,16 +106,17 @@ class TestUtils(unittest.TestCase):
         nodes[3:] = [helper.make_node('Max', ['input1', 'identity2'], ['max0'])]
         nodes[4:] = [helper.make_node('Transpose', ['max0'], ['tranpose0'], perm=[0, 2, 3, 1])]
         nodes[5:] = [helper.make_node('Transpose', ['tranpose0'], ['tranpose1'], perm=(0, 3, 1, 2))]
+        nodes[6:] = [helper.make_node('Relu', ['tranpose1'], ['output0'], perm=(0, 3, 1, 2))]
 
         input0 = helper.make_tensor_value_info('input1', onnx_proto.TensorProto.FLOAT, [1, 1, 2, 3])
-        output0 = helper.make_tensor_value_info('tranpose1', onnx_proto.TensorProto.FLOAT, [1, 1, 2, 3])
+        output0 = helper.make_tensor_value_info('output0', onnx_proto.TensorProto.FLOAT, [1, 1, 2, 3])
 
         graph = helper.make_graph(nodes, 'test0', [input0], [output0])
         model = helper.make_model(graph)
         self.assertIsNotNone(model)
 
-        new_nodes = optimize_onnx(nodes)
-        self.assertEqual(len(new_nodes), 2)
+        new_nodes = optimize_onnx(nodes, inputs=[input0], outputs=[output0])
+        self.assertEqual(len(new_nodes), 3)
         graph = helper.make_graph(new_nodes, 'test0', [input0], [output0])
         model = helper.make_model(graph)
         self.assertIsNotNone(model)
