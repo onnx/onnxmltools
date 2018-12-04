@@ -17,20 +17,21 @@ from . import shape_calculators
 
 
 def convert(model, name=None, default_batch_size=1, initial_types=None, doc_string='', target_opset=None, targeted_onnx=onnx.__version__,
-                channel_first_inputs=None,custom_conversion_functions=None, custom_shape_calculators=None):
+                channel_first_inputs=None, custom_conversion_functions=None, custom_shape_calculators=None):
     '''
     Convert Keras-Tensorflow Model and Sequence objects into Topology.
+    
     :param model: A Keras model (Model or Sequence object)
     :param name: Optional graph name of the produced ONNX model
     :param default_batch_size: default batch size of produced ONNX model. If not set, it will be 1
     :param initial_types: A list providing types for some input variables. Each element is a tuple of a variable name
-    and a type defined in data_types.py.
+        and a type defined in data_types.py.
     :param doc_string: A string attached onto the produced ONNX model
     :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
-    :param : specifies names of 4-D inputs which are forced to be in channel-first format
-     (i.e., NCHW) in the converted model. It's a list of string; for example, ['input1', 'input2'].
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
-    produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
+        produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
+    :param channel_first_inputs: specifies names of 4-D inputs which are forced to be in channel-first format
+        (i.e., NCHW) in the converted model. It's a list of string; for example, ['input1', 'input2'].
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
     :return: An ONNX model (type: ModelProto) which is equivalent to the input Keras model

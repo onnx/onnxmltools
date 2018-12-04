@@ -10,7 +10,8 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * Apple Core ML
 * scikit-learn (subset of models convertible to ONNX)
 * Keras
-* LightGBM (through its scikit-learn interface)
+* LightGBM
+* libsvm
 
 (To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx))
 (To convert ONNX model to Core ML, see [onnx-coreml](https://github.com/onnx/onnx-coreml))\
