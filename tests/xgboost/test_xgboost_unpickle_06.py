@@ -2,14 +2,11 @@
 Tests scikit-linear converter.
 """
 import os
-from xgboost import XGBRegressor, XGBClassifier
 from onnxmltools.convert.xgboost import convert as convert_xgboost
-from sklearn.model_selection import train_test_split
-import pandas
-import numpy
 import unittest
 import pickle
 from onnxmltools.convert.common.data_types import FloatTensorType
+
 
 class TestXGBoostUnpickle06(unittest.TestCase):
     

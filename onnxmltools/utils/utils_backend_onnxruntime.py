@@ -57,6 +57,10 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         if "CannotLoad" in options:
             raise ExpectedAssertionError("Unable to load onnx '{0}' due to\n{1}".format(onnx, e))
         else:
+            if verbose:
+                import onnx as nx
+                m = nx.load(onnx)
+                print(m)
             raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'".format(onnx))
     
     input = load["data"]
