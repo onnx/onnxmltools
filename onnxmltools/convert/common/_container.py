@@ -88,6 +88,10 @@ class LightGbmModelContainer(CommonSklearnModelContainer):
     pass
 
 
+class XGBoostModelContainer(CommonSklearnModelContainer):
+    pass
+
+
 class KerasModelContainer(RawModelContainer):
 
     def __init__(self, keras_model):

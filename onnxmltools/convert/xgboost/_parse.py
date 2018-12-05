@@ -4,44 +4,43 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ..common._container import LightGbmModelContainer
+from ..common._container import XGBoostModelContainer
 from ..common._topology import *
 
-from lightgbm import LGBMClassifier, LGBMRegressor
+from xgboost import XGBRegressor, XGBClassifier
 
-lightgbm_classifier_list = [LGBMClassifier]
+xgboost_classifier_list = [XGBClassifier]
 
-# Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
-# are equivalent in terms of conversion.
-lightgbm_operator_name_map = {LGBMClassifier: 'LgbmClassifier',
-                              LGBMRegressor: 'LgbmRegressor'}
+# Associate types with our operator names.
+xgboost_operator_name_map = {XGBClassifier: 'XGBClassifier',
+                              XGBRegressor: 'XGBRegressor'}
 
 
-def _get_lightgbm_operator_name(model_type):
+def _get_xgboost_operator_name(model_type):
     '''
     Get operator name of the input argument
 
-    :param model_type:  A lightgbm object.
+    :param model_type:  A xgboost object.
     :return: A string which stands for the type of the input model in our conversion framework
     '''
-    if model_type not in lightgbm_operator_name_map:
+    if model_type not in xgboost_operator_name_map:
         raise ValueError("No proper operator name found for '%s'" % model_type)
-    return lightgbm_operator_name_map[model_type]
+    return xgboost_operator_name_map[model_type]
 
 
-def _parse_lightgbm_simple_model(scope, model, inputs):
+def _parse_xgboost_simple_model(scope, model, inputs):
     '''
     This function handles all non-pipeline models.
 
     :param scope: Scope object
-    :param model: A lightgbm object
+    :param model: A xgboost object
     :param inputs: A list of variables
     :return: A list of output variables which will be passed to next stage
     '''
-    this_operator = scope.declare_local_operator(_get_lightgbm_operator_name(type(model)), model)
+    this_operator = scope.declare_local_operator(_get_xgboost_operator_name(type(model)), model)
     this_operator.inputs = inputs
 
-    if type(model) in lightgbm_classifier_list:
+    if type(model) in xgboost_classifier_list:
         # For classifiers, we may have two outputs, one for label and the other one for probabilities of all classes.
         # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
         label_variable = scope.declare_local_variable('label', FloatTensorType())
@@ -55,22 +54,22 @@ def _parse_lightgbm_simple_model(scope, model, inputs):
     return this_operator.outputs
 
 
-def _parse_lightgbm(scope, model, inputs):
+def _parse_xgboost(scope, model, inputs):
     '''
     This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
     model's type.
     :param scope: Scope object
-    :param model: A lightgbm object
+    :param model: A xgboost object
     :param inputs: A list of variables
     :return: The output variables produced by the input model
     '''
-    return _parse_lightgbm_simple_model(scope, model, inputs)
+    return _parse_xgboost_simple_model(scope, model, inputs)
 
 
-def parse_lightgbm(model, initial_types=None, target_opset=None,
+def parse_xgboost(model, initial_types=None, target_opset=None,
                    custom_conversion_functions=None, custom_shape_calculators=None):
 
-    raw_model_container = LightGbmModelContainer(model)
+    raw_model_container = XGBoostModelContainer(model)
     topology = Topology(raw_model_container,
                         initial_types=initial_types, target_opset=target_opset,
                         custom_conversion_functions=custom_conversion_functions,
@@ -84,7 +83,7 @@ def parse_lightgbm(model, initial_types=None, target_opset=None,
     for variable in inputs:
         raw_model_container.add_input(variable)
 
-    outputs = _parse_lightgbm(scope, model, inputs)
+    outputs = _parse_xgboost(scope, model, inputs)
 
     for variable in outputs:
         raw_model_container.add_output(variable)

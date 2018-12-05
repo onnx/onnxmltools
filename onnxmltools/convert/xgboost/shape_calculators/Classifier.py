@@ -4,9 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .main import convert_coreml
-from .main import convert_keras
-from .main import convert_lightgbm
-from .main import convert_sklearn
-from .main import convert_xgboost
+from ...common._registration import register_shape_calculator
+from ...common.shape_calculator import calculate_linear_classifier_output_shapes
 
+register_shape_calculator('XGBClassifier', calculate_linear_classifier_output_shapes)

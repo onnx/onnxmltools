@@ -100,7 +100,7 @@ def xgboost_installed():
     try:
         _LIB.XGBoosterDumpModelEx
     except AttributeError:
-        # The version is now recent enough even though it is version 0.6.
+        # The version is not recent enough even though it is version 0.6.
         # You need to install xgboost from github and not from pypi.
         return False
     from xgboost import __version__
