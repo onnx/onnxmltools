@@ -270,7 +270,7 @@ def check_input_and_output_numbers(operator, input_count_range=None, output_coun
     if max_output_count is not None and len(operator.outputs) > max_output_count:
         raise RuntimeError(
             'For operator %s (type: %s), at most %s outputs(s) is(are) supported but we got %s output(s) which are %s' \
-            % (operator.full_name, operator.type, max_output_count, len(operator.outputs), operator.outputs_full_names))
+            % (operator.full_name, operator.type, max_output_count, len(operator.outputs), operator.output_full_names))
 
 
 def check_input_and_output_types(operator, good_input_types=None, good_output_types=None):

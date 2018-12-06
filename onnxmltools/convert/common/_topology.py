@@ -46,6 +46,12 @@ class Variable:
         Return a globally unique variable ID
         '''
         return self.onnx_name
+    
+    def __repr__(self):
+        name = self.__class__.__name__
+        return "{}('{}', '{}', '{}', {})".format(name,
+                    self.raw_name, self.onnx_name, self.scope,
+                    self.type)
 
 
 class Operator(OperatorBase):

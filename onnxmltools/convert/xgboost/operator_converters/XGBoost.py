@@ -13,6 +13,7 @@ from xgboost.core import _LIB, _check_call, from_cstr_to_pystr
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
 from ...common._registration import register_converter
 from ...common import utils
+from ..common import get_xgb_params
 
 
 class XGBConverter:
@@ -22,13 +23,7 @@ class XGBConverter:
         """
         Retrieves parameters of a model.
         """
-        if hasattr(xgb_node, 'kwargs'):
-            # XGBoost >= 0.7
-            params = xgb_node.get_xgb_params()
-        else:
-            # XGBoost < 0.7
-            params = xgb_node.__dict__
-        return params        
+        return get_xgb_params(xgb_node)
     
     @staticmethod
     def validate(xgb_node):
@@ -246,23 +241,24 @@ class XGBClassifierConverter(XGBConverter):
         attr_pairs['classlabels_int64s'] = class_labels 
 
         # add nodes
-        probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
-        container.add_node('TreeEnsembleClassifier', operator.input_full_names,
-                           [operator.outputs[0].full_name, probability_tensor_name],
-                           op_domain='ai.onnx.ml', **attr_pairs)
-        
-        
-        #if objective == "binary:logistic":
-        #    ncl = 2
-        #elif objective == "multi:softprob":
-        #    ncl = len(js_trees) // params['n_estimators']
-        #else:
-        #    raise RuntimeError("Unexpected objective: {0}".format(objective))            
+        if objective == "binary:logistic":
+            ncl = 2
+            container.add_node('TreeEnsembleClassifier', operator.input_full_names,
+                               operator.output_full_names,
+                               op_domain='ai.onnx.ml', **attr_pairs)
+        elif objective == "multi:softprob":
+            ncl = len(js_trees) // params['n_estimators']
+            probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
+            container.add_node('TreeEnsembleClassifier', operator.input_full_names,
+                               [operator.outputs[0].full_name, probability_tensor_name],
+                               op_domain='ai.onnx.ml', **attr_pairs)
+            zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
+            zipmap_attrs['classlabels_int64s'] = class_labels        
+            container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
+                                op_domain='ai.onnx.ml', **zipmap_attrs)
+        else:
+            raise RuntimeError("Unexpected objective: {0}".format(objective))            
 
-        zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-        zipmap_attrs['classlabels_int64s'] = class_labels        
-        container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
-                            op_domain='ai.onnx.ml', **zipmap_attrs)
 
 
 def convert_xgboost(scope, operator, container):

@@ -22,7 +22,6 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_single_regression(xgb)
         
-    @unittest.skip(reason="still fails")
     def test_xgb_classifier(self):
         iris = load_iris()
         X = iris.data[:, :2]
@@ -35,7 +34,6 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_binary_classification(xgb, verbose=True)
 
-    @unittest.skip(reason="still fails")
     def test_xgb_classifier_multi(self):
         iris = load_iris()
         X = iris.data[:, :2]
