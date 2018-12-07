@@ -33,31 +33,30 @@ def calculate_linear_classifier_output_shapes(operator):
     N = operator.inputs[0].type.shape[0]
 
     class_labels = operator.raw_operator.classes_
-    number_of_classes = len(class_labels)
     if all(isinstance(i, np.ndarray) for i in class_labels):
         class_labels = np.concatenate(class_labels)
     if all(isinstance(i, (six.string_types, six.text_type)) for i in class_labels):
         operator.outputs[0].type = StringTensorType(shape=[N])
-        if number_of_classes > 2 or operator.type != 'SklearnLinearSVC':
+        if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
             # For multi-class classifier, we produce a map for encoding the probabilities of all classes
             if operator.target_opset < 7:
                 operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]))
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
         else:
-            # For binary LinearSVC, we produce the probability tensor
-            operator.outputs[1].type = FloatTensorType(shape=[N, number_of_classes])
+            # For binary LinearSVC, we produce probability of the positive class
+            operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
         operator.outputs[0].type = Int64TensorType(shape=[N])
-        if number_of_classes > 2 or operator.type != 'SklearnLinearSVC':
+        if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
             # For multi-class classifier, we produce a map for encoding the probabilities of all classes
             if operator.target_opset < 7:
                 operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
         else:
-            # For binary LinearSVC, we produce the probability tensor
-            operator.outputs[1].type = FloatTensorType(shape=[N, number_of_classes])
+            # For binary LinearSVC, we produce probability of the positive class
+            operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     else:
         raise ValueError('Unsupported or mixed label types')
 

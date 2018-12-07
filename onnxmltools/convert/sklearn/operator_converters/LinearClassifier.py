@@ -7,6 +7,7 @@
 import numpy as np
 import six, numbers
 from ...common._registration import register_converter
+from ....proto import onnx_proto
 
 
 def convert_sklearn_linear_classifier(scope, operator, container):
@@ -67,9 +68,18 @@ def convert_sklearn_linear_classifier(scope, operator, container):
     probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
     
     if op.__class__.__name__ == 'LinearSVC' and op.classes_.shape[0] <= 2:
+        raw_scores_tensor_name = scope.get_unique_variable_name('raw_scores_tensor')
+        positive_class_index_name = scope.get_unique_variable_name('positive_class_index')
+
+        container.add_initializer(positive_class_index_name, onnx_proto.TensorProto.INT64,
+                              [], [1])
+
         container.add_node(classifier_type, operator.inputs[0].full_name,
-                           [label_name, operator.outputs[1].full_name],
+                           [label_name, raw_scores_tensor_name],
                            op_domain='ai.onnx.ml', **classifier_attrs)
+        container.add_node('ArrayFeatureExtractor', [raw_scores_tensor_name, positive_class_index_name],
+                           operator.outputs[1].full_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'),
+                           op_domain='ai.onnx.ml')
     else:
         container.add_node(classifier_type, operator.inputs[0].full_name,
                            [label_name, probability_tensor_name],
