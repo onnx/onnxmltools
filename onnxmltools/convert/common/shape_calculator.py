@@ -44,7 +44,7 @@ def calculate_linear_classifier_output_shapes(operator):
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
         else:
-            # For binary classifier, we produce the probability of the positive class
+            # For binary LinearSVC, we produce probability of the positive class
             operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
         operator.outputs[0].type = Int64TensorType(shape=[N])
@@ -55,7 +55,7 @@ def calculate_linear_classifier_output_shapes(operator):
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
         else:
-            # For binary classifier, we produce the probability of the positive class
+            # For binary LinearSVC, we produce probability of the positive class
             operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     else:
         raise ValueError('Unsupported or mixed label types')
