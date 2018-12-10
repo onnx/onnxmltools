@@ -28,8 +28,9 @@ def run_tests(library=None, folder=None):
     if folder is None:
         folder = 'TESTDUMP'
     os.environ["ONNXTESTDUMP"] = folder
-    
-    
+    os.environ["ONNXTESTDUMPERROR"] = "1"
+    os.environ["ONNXTESTBENCHMARK"] = "1"
+
     try:
         import onnxmltools
     except ImportError:
@@ -73,11 +74,11 @@ def run_tests(library=None, folder=None):
         warnings.filterwarnings(category=DeprecationWarning, action="ignore")
         warnings.filterwarnings(category=FutureWarning, action="ignore")
         runner = unittest.TextTestRunner()
-        for ts in suites:
+        for tsi, ts in enumerate(suites):
             for k in ts:
                 for t in k:
                     print(t.__class__.__name__)
-                    break
+                    break            
             runner.run(ts)
     
     from onnxmltools.utils.tests_helper import make_report_backend
@@ -94,6 +95,12 @@ def run_tests(library=None, folder=None):
     print(df)
     df["onnx-version"] = onnx.__version__
     df["onnxruntime-version"] = onnxruntime.__version__
+    cols = list(df.columns)
+    if 'stderr' in cols:
+        ind = cols.index('stderr')
+        del cols[ind]
+        cols += ['stderr']
+        df = df[cols]
     df.to_excel(os.path.join(folder, "report_backend.xlsx"))
                     
     

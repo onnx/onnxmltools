@@ -71,6 +71,7 @@ def compare_backend(backend, test, decimal=5, options=None, verbose=False, conte
     
     The function does not return anything but raises an error
     if the comparison failed.
+    :return: tuple (output, lambda function to call onnx prediction)
     """
     if backend == "onnxruntime":
         if sys.version_info[0] == 2:

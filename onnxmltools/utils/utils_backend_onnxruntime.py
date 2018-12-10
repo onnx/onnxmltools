@@ -24,10 +24,12 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
     :param context: specifies custom operators
     :param verbose: in case of error, the function may print
         more information on the standard output
+    :return: tuple (outut, lambda function to run the predictions)
     
     The function does not return anything but raises an error
     if the comparison failed.
     """
+    lambda_onnx = None
     if context is None:
         context = {}
     load = load_data_and_model(test, **context)
@@ -47,7 +49,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         import onnxruntime
     except ImportError as e:
         warnings.warn("Unable to import onnxruntime.")
-        return
+        return None
 
     try:
         sess = onnxruntime.InferenceSession(onnx)
@@ -101,6 +103,8 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
             for input in values:
                 try:
                     one = sess.run(None, {name: input})
+                    if lambda_onnx is None:
+                        lambda_onnx = lambda: sess.run(None, {name: input})
                 except ExpectedAssertionError as expe:
                     raise expe
                 except Exception as e:
@@ -119,6 +123,8 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
                 iii = {k: to_array(v[i]) for k, v in inputs.items()}
                 try:
                     one = sess.run(None, iii)
+                    if lambda_onnx is None:
+                        lambda_onnx = lambda: sess.run(None, iii)
                 except ExpectedAssertionError as expe:
                     raise expe
                 except Exception as e:
@@ -128,6 +134,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
     else:
         try:
             output = sess.run(None, inputs)
+            lambda_onnx = lambda: sess.run(None, inputs)
         except ExpectedAssertionError as expe:
             raise expe
         except RuntimeError as e:
@@ -147,7 +154,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
     except Exception as e:
         raise OnnxRuntimeAssertionError("Model '{0}' has discrepencies.\n{1}: {2}".format(onnx, type(e), e))
         
-    return output0
+    return output0, lambda_onnx
     
         
 def _post_process_output(res):
