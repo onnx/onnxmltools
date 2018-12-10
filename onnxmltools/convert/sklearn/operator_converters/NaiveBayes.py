@@ -11,7 +11,7 @@ from .._parse import sklearn_operator_name_map
 import numpy as np
 
 
-def convert_sklearn_naive_bayes(scope, operator, container, flag=False):
+def convert_sklearn_naive_bayes(scope, operator, container):
     # Computational graph:
     #
     # Note: In the following graph, variable names are in lower case characters only
@@ -256,10 +256,8 @@ def convert_sklearn_naive_bayes(scope, operator, container, flag=False):
                        axes=[1], keepdims=0)
     apply_reshape(scope, reduce_log_sum_exp_result_name, reshaped_log_prob_name, container, desired_shape=log_prob_shape)
     apply_sub(scope, [sum_result_name, reshaped_log_prob_name], log_prob_name, container, broadcast=1)
-    apply_exp(scope, log_prob_name, prob_tensor_name, container)
-    if flag:
-        return prob_tensor_name
-    container.add_node('ZipMap', prob_tensor_name, operator.outputs[1].full_name,
+    apply_exp(scope, log_prob_name, operator.outputs[2].full_name, container)
+    container.add_node('ZipMap', operator.outputs[2].full_name, operator.outputs[1].full_name,
                            op_domain='ai.onnx.ml', **zipmap_attrs)
 
     container.add_node('ArrayFeatureExtractor', [classes_name, argmax_output_name],

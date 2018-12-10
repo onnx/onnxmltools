@@ -129,8 +129,10 @@ def _parse_sklearn_simple_model(scope, model, inputs):
         # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
         label_variable = scope.declare_local_variable('label', FloatTensorType())
         probability_map_variable = scope.declare_local_variable('probabilities', FloatTensorType())
+        probability_tensor_variable = scope.declare_local_variable('probability_tensor', FloatTensorType())
         this_operator.outputs.append(label_variable)
         this_operator.outputs.append(probability_map_variable)
+        this_operator.outputs.append(probability_tensor_variable)
     else:
         # We assume that all scikit-learn operator can only produce a single float tensor.
         variable = scope.declare_local_variable('variable', FloatTensorType())

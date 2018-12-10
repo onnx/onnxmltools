@@ -24,7 +24,7 @@ def calculate_linear_classifier_output_shapes(operator):
 
     Note that the second case is not allowed as long as ZipMap only produces dictionary.
     '''
-    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=[1, 2])
+    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=[1, 3])
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType])
 
     if len(operator.inputs[0].type.shape) != 2:
@@ -33,6 +33,7 @@ def calculate_linear_classifier_output_shapes(operator):
     N = operator.inputs[0].type.shape[0]
 
     class_labels = operator.raw_operator.classes_
+    number_of_classes = len(class_labels)
     if all(isinstance(i, np.ndarray) for i in class_labels):
         class_labels = np.concatenate(class_labels)
     if all(isinstance(i, (six.string_types, six.text_type)) for i in class_labels):
@@ -41,22 +42,28 @@ def calculate_linear_classifier_output_shapes(operator):
             # For multi-class classifier, we produce a map for encoding the probabilities of all classes
             if operator.target_opset < 7:
                 operator.outputs[1].type = DictionaryType(StringTensorType([1]), FloatTensorType([1]))
+                operator.outputs[2].type = FloatTensorType([N, number_of_classes])
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
+                operator.outputs[2].type = FloatTensorType([N, number_of_classes])
         else:
             # For binary classifier, we produce the probability of the positive class
             operator.outputs[1].type = FloatTensorType(shape=[N, 1])
+            operator.outputs[2].type = FloatTensorType(shape=[N, 1])
     elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
         operator.outputs[0].type = Int64TensorType(shape=[N])
         if len(class_labels) > 2 or operator.type != 'SklearnLinearSVC':
             # For multi-class classifier, we produce a map for encoding the probabilities of all classes
             if operator.target_opset < 7:
                 operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
+                operator.outputs[2].type = FloatTensorType([N, number_of_classes])
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
+                operator.outputs[2].type = FloatTensorType([N, number_of_classes])
         else:
             # For binary classifier, we produce the probability of the positive class
             operator.outputs[1].type = FloatTensorType(shape=[N, 1])
+            operator.outputs[2].type = FloatTensorType([N, 1])
     else:
         raise ValueError('Unsupported or mixed label types')
 
