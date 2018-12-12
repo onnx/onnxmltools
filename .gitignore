@@ -10,7 +10,8 @@
 # setup.py intermediates
 .eggs
 *.egg-info/
-dist
+dist/
+build/
 
 # PyCharm files
 .idea
