@@ -103,7 +103,7 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
                                                    op.kernel_size,
                                                    op.strides,
                                                    op.dilation_rate,
-                                                   input_perm_axes)
+                                                   list(range(len(op.input_shape))) if channels_first else input_perm_axes)
     else:
         raise RuntimeError("Unsupported padding type '{}'".format(op.padding))
 
