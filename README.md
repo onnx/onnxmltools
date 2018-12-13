@@ -12,14 +12,10 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * Keras
 * LightGBM (through its scikit-learn interface)
 
-(To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx))
-(To convert ONNX model to Core ML, see [onnx-coreml](https://github.com/onnx/onnx-coreml))\
-If you want the converted model is compatible with certain ONNX version,
-please specify the target_opset parameter on invoking convert function,
-and the following Keras converter example code shows how it works.
+To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
 
 ## Install
-You can install latest release of ONNXMLTools from pypi:
+You can install latest release of ONNXMLTools from [PyPi](https://pypi.org/project/onnxmltools/):
 ```
 pip install onnxmltools
 ```
@@ -27,17 +23,23 @@ or install from source:
 ```
 pip install git+https://github.com/onnx/onnxmltools
 ```
-If you choose to install `onnxmltools` from its source code, you must set an environment variable `ONNX_ML=1` before installing `onnx` package.
+If you choose to install `onnxmltools` from its source code, you must set the environment variable `ONNX_ML=1` before installing the `onnx` package. 
 
 ## Dependencies
-This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Apple Core ML, Keras, or LightGBM, you need the following packages installed respectively:
+This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, or LightGBM, you will need an environment with the respective package installed from the list below:
 1. scikit-learn
 2. CoreMLTools
-3. Keras (version 2.0.8 or higher) with corresponding Tensorflow version
+3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
 4. LightGBM (scikit-learn interface)
 
-## Examples
-Here is a simple example to convert a Core ML model:
+# Examples
+
+## Converting Models 
+If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX versions in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
+
+### CoreML -> ONNX Conversion
+Here is a simple code snippet to convert a Core ML model into an ONNX model.
+
 ```python
 import onnxmltools
 import coremltools
@@ -54,7 +56,10 @@ onnxmltools.utils.save_text(onnx_model, 'example.json')
 # Save as protobuf
 onnxmltools.utils.save_model(onnx_model, 'example.onnx')
 ```
-Next, we show a simple usage of the Keras converter.
+
+### Keras -> ONNX Conversion
+Next, we show an example of converting a Keras model into an ONNX model with `target_opset=7`, which corresponds to ONNX version 1.2.
+
 ```python
 import onnxmltools
 from keras.layers import Input, Dense, Add
@@ -81,23 +86,35 @@ mapped2_2 = sub_model2(input2)
 sub_sum = Add()([mapped1_2, mapped2_2])
 keras_model = Model(inputs=[input1, input2], output=sub_sum)
 
-# Convert it!
-onnx_model = onnxmltools.convert_keras(keras_model, target_opset=8) # target_opset is optional
+# Convert it! The target_opset parameter is optional.
+onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7) 
 
 ```
 
-# Tests converted models
+### Checking the ONNX Operator Set (opset) of your converted model
 
-*onnxmltools* converts models in ONNX format which
+You can check the opset of your ONNX model using [Netron](https://github.com/lutzroeder/Netron), a viewer for Neural Network models. Alternatively, you could identify your converted model's opset version through the following line of code:
+
+```
+# add line here
+```
+
+If the result from checking your ONNX model's opset above is smaller than the `target_opset` number you passed into the onnxmltools.convert function, do not be worried. Note that the ONNXMLTools converter works by looking at each operator in your original framework's model and identifying the respective ONNX opset in which it has most recently been updated. It then takes the maximum over all of the operators used in your new ONNX model to result in the converted model's opset number.
+
+Let's take a model with two operators. If Operator A was most recently updated in Opset 6, and Operator B was most recently updated in Opset 7, the ONNX model's opset will always be 7, even if you request target_opset=8. Documentation for the [ONNX Model format] and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository. 
+
+# Testing model converters
+
+*onnxmltools* converts models into the ONNX format which
 can be then used to compute predictions with the
-backend of your choice. However, there exists a way
+backend of your choice. There exists a way
 to automatically check every converter with
 [onnxruntime](https://pypi.org/project/onnxruntime/) or
 [onnxruntime-gpu](https://pypi.org/project/onnxruntime-gpu/).
 
 ## Test all existing converters
 
-This process requires to clone the *onnxmltools* repository.
+This process requires the user to clone the *onnxmltools* repository.
 The following command runs all unit tests and generates
 dumps of models, inputs, expected outputs and converted models
 in folder ``TESTDUMP``.
@@ -106,8 +123,8 @@ in folder ``TESTDUMP``.
 python tests/main.py DUMP
 ```
 
-It requires *onnxruntime*, *numpy* for most of the models,
-*pandas* for transform related to text features,
+It requires *onnxruntime*, *numpy* for most models,
+*pandas* for transforms related to text features, and
 *scipy* for sparse features. One test also requires
 *keras* to test a custom operator. That means
 *sklearn* or any machine learning library is requested.
@@ -115,16 +132,15 @@ It requires *onnxruntime*, *numpy* for most of the models,
 ## Add a new converter
 
 Once the converter is implemented, a unit test is added
-to test it works. At the end of the unit test, function
+to confirm that it works. At the end of the unit test, function
 *dump_data_and_model* or any equivalent function must be called
 to dump the expected output and the converted model.
 Once these file are generated, a corresponding test must
 be added in *tests_backend* to compute the prediction
 with the runtime.
 
-
 # License
 [MIT License](LICENSE)
 
 ## Acknowledgments
-The package was developed by the following engineers and data scientists at Microsoft starting from winter 2017: Zeeshan Ahmed, Wei-Sheng Chin, Aidan Crook, Xavier Dupre, Costin Eseanu, Tom Finley, Lixin Gong, Scott Inglis, Pei Jiang, Ivan Matantsev, Prabhat Roy, M. Zeeshan Siddiqui, Shouheng Yi, Shauheen Zahirazami, Yiwen Zhu, Du Li, Xuan Li, Wenbing Li
+This package was developed by the following engineers and data scientists at Microsoft starting from winter 2017: Zeeshan Ahmed, Wei-Sheng Chin, Aidan Crook, Xavier Dupre, Costin Eseanu, Tom Finley, Lixin Gong, Scott Inglis, Pei Jiang, Ivan Matantsev, Prabhat Roy, M. Zeeshan Siddiqui, Shouheng Yi, Shauheen Zahirazami, Yiwen Zhu, Du Li, Xuan Li, Wenbing Li, Vinitra Swamy.
