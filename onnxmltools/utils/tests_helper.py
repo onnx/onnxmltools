@@ -93,7 +93,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     elif hasattr(model, "transform"):
         prediction = model.transform(data)
     else:
-        raise TypeError("Model has not predict or transform method.")
+        raise TypeError("Model has not predict or transform method: {0}".format(type(model)))
         
     runtime_test['expected'] = prediction
     

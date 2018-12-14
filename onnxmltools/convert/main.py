@@ -30,6 +30,16 @@ def convert_keras(model, name=None, initial_types=None, doc_string='',
                    channel_first_inputs, custom_conversion_functions, custom_shape_calculators)
 
 
+def convert_libsvm(model, name=None, initial_types=None, doc_string='', target_opset=None,
+                     targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+    if not utils.libsvm_installed():
+        raise RuntimeError('libsvm is not installed. Please install libsvm to use this feature.')
+
+    from .libsvm.convert import convert
+    return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
+                   custom_conversion_functions, custom_shape_calculators)
+
+
 def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target_opset=None,
                      targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     if not utils.lightgbm_installed():

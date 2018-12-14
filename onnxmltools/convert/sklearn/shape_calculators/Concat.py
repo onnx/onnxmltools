@@ -4,10 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .main import convert_coreml
-from .main import convert_keras
-from .main import convert_libsvm
-from .main import convert_lightgbm
-from .main import convert_sklearn
-from .main import convert_xgboost
+from ...common._registration import register_shape_calculator
+from ...common.utils import check_input_and_output_numbers
 
+
+def calculate_sklearn_concat(operator):
+    check_input_and_output_numbers(operator, output_count_range=1)
+
+
+register_shape_calculator('SklearnConcat', calculate_sklearn_concat)

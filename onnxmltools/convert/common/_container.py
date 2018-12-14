@@ -84,6 +84,10 @@ class SklearnModelContainer(CommonSklearnModelContainer):
     pass
 
 
+class LibSvmModelContainer(CommonSklearnModelContainer):
+    pass
+
+
 class LightGbmModelContainer(CommonSklearnModelContainer):
     pass
 

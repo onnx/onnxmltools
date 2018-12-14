@@ -47,11 +47,11 @@ class Variable:
         '''
         return self.onnx_name
     
-    def __repr__(self):
-        name = self.__class__.__name__
-        return "{}('{}', '{}', '{}', {})".format(name,
-                    self.raw_name, self.onnx_name, self.scope,
-                    self.type)
+    def __str__(self):
+        if self.raw_name != self.onnx_name:
+            return "Var(name='{0}', onnx='{1}', type={2})".format(self.raw_name, self.onnx_name, self.type)
+        else:
+            return "Var(name='{0}', type={1})".format(self.raw_name, self.type)
 
 
 class Operator(OperatorBase):
