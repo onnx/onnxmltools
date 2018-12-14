@@ -26,7 +26,6 @@ def calculate_linear_classifier_output_shapes(operator):
     '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=[1, 2])
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType])
-
     if len(operator.inputs[0].type.shape) != 2:
         raise RuntimeError('Input must be a [N, C]-tensor')
 
@@ -72,5 +71,10 @@ def calculate_linear_regressor_output_shapes(operator):
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 
     N = operator.inputs[0].type.shape[0]
-    operator.outputs[0].type = FloatTensorType([N, 1])
+    op = operator.raw_operator
+    if hasattr(op, 'n_outputs_'):
+        nout = op.n_outputs_
+    else:
+        nout = 1
+    operator.outputs[0].type = FloatTensorType([N, nout])
 

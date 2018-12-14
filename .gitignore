@@ -10,7 +10,8 @@
 # setup.py intermediates
 .eggs
 *.egg-info/
-dist
+dist/
+build/
 
 # PyCharm files
 .idea
@@ -35,9 +36,7 @@ TESTDUMP
 temp_*.onnx
 tests/sklearn/tests/*
 tests_backend/*.onnx
-tests/coreml/tests/*
-tests/end2end/tests/*
-tests/lightgbm/tests/*
+tests/*/tests/*
 tests/build/*
 tests/tests/
 tests/*/tests/*.pkl

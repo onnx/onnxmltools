@@ -32,10 +32,10 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         context = {}
     load = load_data_and_model(test, **context)
 
-    onnx = test['onnx']
+    onx = test['onnx']
     if options is None:
-        if isinstance(onnx, str):
-            options = extract_options(onnx)
+        if isinstance(onx, str):
+            options = extract_options(onx)
         else:
             options = {}
     elif options is None:
@@ -50,14 +50,20 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         return
 
     try:
-        sess = onnxruntime.InferenceSession(onnx)
+        sess = onnxruntime.InferenceSession(onx)
     except ExpectedAssertionError as expe:
         raise expe
     except Exception as e:
         if "CannotLoad" in options:
-            raise ExpectedAssertionError("Unable to load onnx '{0}' due to\n{1}".format(onnx, e))
+            raise ExpectedAssertionError("Unable to load onnx '{0}' due to\n{1}".format(onx, e))
         else:
-            raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'".format(onnx))
+            if verbose:
+                import onnx
+                model = onnx.load(onx)
+                smodel = "\nJSON ONNX\n" + str(model)
+            else:
+                smodel = ""
+            raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'\nONNX\n{1}".format(onx, smodel))
     
     input = load["data"]
     if isinstance(input, dict):
@@ -122,7 +128,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
                 except ExpectedAssertionError as expe:
                     raise expe
                 except Exception as e:
-                    raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e))
+                    raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onx, e))
                 res.append(one)
             output = _post_process_output(res)   
     else:
@@ -131,21 +137,27 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         except ExpectedAssertionError as expe:
             raise expe
         except RuntimeError as e:
-            if "-Fail" in onnx:
-                raise ExpectedAssertionError("onnxruntime cannot compute the prediction for '{0}'".format(onnx))
+            if "-Fail" in onx:
+                raise ExpectedAssertionError("onnxruntime cannot compute the prediction for '{0}'".format(onx))
             else:
-                raise OnnxRuntimeAssertionError("onnxruntime cannot compute the prediction for '{0}'".format(onnx))
+                raise OnnxRuntimeAssertionError("onnxruntime cannot compute the prediction for '{0}' due to {1}".format(onx, e))
         except Exception as e:
             raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e))
     
     output0 = output.copy()
 
     try:
-        _compare_expected(load["expected"], output, sess, onnx, decimal=decimal, **options)
+        _compare_expected(load["expected"], output, sess, onx, decimal=decimal, **options)
     except ExpectedAssertionError as expe:
         raise expe
     except Exception as e:
-        raise OnnxRuntimeAssertionError("Model '{0}' has discrepencies.\n{1}: {2}".format(onnx, type(e), e))
+        if verbose:
+            import onnx
+            model = onnx.load(onx)
+            smodel = "\nJSON ONNX\n" + str(model)
+        else:
+            smodel = ""
+        raise OnnxRuntimeAssertionError("Model '{0}' has discrepencies.\n{1}: {2}{3}".format(onx, type(e), e, smodel))
         
     return output0
     
@@ -203,7 +215,7 @@ def _create_column(values, dtype):
         raise OnnxRuntimeAssertionError("Unable to create one column from dtype '{0}'".format(dtype))
 
 
-def _compare_expected(expected, output, sess, onnx, decimal=5, **kwargs):
+def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, **kwargs):
     """
     Compares the expected output against the runtime outputs.
     This is specific to *onnxruntime* due to variable *sess*
@@ -212,6 +224,7 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, **kwargs):
     tested = 0
     if isinstance(expected, list):
         if isinstance(output, list):
+            onnx_shapes = [_.shape for _ in sess.get_outputs()]
             if 'Out0' in kwargs:
                 expected = expected[:1]
                 output = output[:1]
@@ -223,8 +236,8 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, **kwargs):
                                          len(output.ravel()) // len(expected)))
             if len(expected) != len(output):
                 raise OnnxRuntimeAssertionError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
-            for exp, out in zip(expected, output):
-                _compare_expected(exp, out, sess, onnx, decimal=5, **kwargs)
+            for exp, out, osh in zip(expected, output, onnx_shapes):
+                _compare_expected(exp, out, sess, onnx, decimal=5, onnx_shape=osh, **kwargs)
                 tested += 1
         else:
             raise OnnxRuntimeAssertionError("Type mismatch for '{0}', output type is {1}".format(onnx, type(output)))
@@ -254,6 +267,13 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, **kwargs):
             output = output[-1]
         if not isinstance(output, numpy.ndarray):
             raise OnnxRuntimeAssertionError("output must be an array for onnx '{0}' not {1}".format(onnx, type(output)))
+        if onnx_shape is not None:
+            if len(onnx_shape) == 2:
+                cols = onnx_shape[1]
+                ecols = output.shape[1] if len(output.shape) == 2 else 1
+                if cols != ecols:
+                    raise OnnxRuntimeAssertionError("Unexpected onnx shape {0} != {1} for onnx '{2}'".format(
+                                onnx_shape, output.shape, onnx))
         msg = compare_outputs(expected, output, decimal=decimal, **kwargs)
         if isinstance(msg, ExpectedAssertionError):
             raise msg

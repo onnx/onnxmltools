@@ -66,9 +66,11 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             return
 
         y_reference = keras_model.predict(x)
-        if onnx_model is not None:
-            y_produced = evaluate_deep_model(onnx_model, x)
-            self.assertTrue(np.allclose(y_reference, y_produced))
+        if onnx_model is None:
+            return
+        y_produced = evaluate_deep_model(onnx_model, x)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
 
         # Verify Keras-to-ONNX path
         onnx_model = onnxmltools.convert_keras(keras_model)
@@ -123,11 +125,11 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         else:
             x_t = np.transpose(x, [0, 2, 3, 1])
         y_reference = np.transpose(keras_model.predict(x_t), [0, 3, 1, 2])
-        if onnx_model_p1 is not None:
-            y_produced = evaluate_deep_model(onnx_model_p1, x)
-            self.assertTrue(np.allclose(y_reference, y_produced))
-        else:
-            y_produced = None
+        if onnx_model_p1 is None:
+            return
+        y_produced = evaluate_deep_model(onnx_model_p1, x)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
 
         # Verify Keras-to-ONNX path
         y_reference = np.transpose(y_reference, [0, 2, 3, 1])
