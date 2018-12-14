@@ -7,6 +7,7 @@ pytest
 pytest-cov
 scikit-learn
 scipy
+svm
 wheel
 xgboost
 lightgbm

@@ -46,6 +46,12 @@ class Variable:
         Return a globally unique variable ID
         '''
         return self.onnx_name
+    
+    def __str__(self):
+        if self.raw_name != self.onnx_name:
+            return "Var(name='{0}', onnx='{1}', type={2})".format(self.raw_name, self.onnx_name, self.type)
+        else:
+            return "Var(name='{0}', type={1})".format(self.raw_name, self.type)
 
 
 class Operator(OperatorBase):
