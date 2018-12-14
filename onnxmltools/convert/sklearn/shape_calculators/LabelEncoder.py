@@ -10,7 +10,7 @@ from ...common.data_types import Int64TensorType, StringTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
-def calculate_sklearn_lebel_encoder_output_shapes(operator):
+def calculate_sklearn_label_encoder_output_shapes(operator):
     '''
     This function just copy the input shape to the output because label encoder only alters input features' values, not
     their shape.
@@ -22,4 +22,4 @@ def calculate_sklearn_lebel_encoder_output_shapes(operator):
     operator.outputs[0].type = Int64TensorType(copy.deepcopy(input_shape))
 
 
-register_shape_calculator('SklearnLabelEncoder', calculate_sklearn_lebel_encoder_output_shapes)
+register_shape_calculator('SklearnLabelEncoder', calculate_sklearn_label_encoder_output_shapes)

@@ -17,7 +17,7 @@ from .utils_backend import compare_backend, extract_options, evaluate_condition,
 
 def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                         inputs=None, backend="onnxruntime", context=None,
-                        allow_failure=None, dump_issue=None, benchmark=None):
+                        allow_failure=None, dump_issue=None, benchmark=None, verbose=False):
     """
     Saves data with pickle, saves the model with pickle and *onnx*,
     runs and saves the predictions for the given model.
@@ -48,6 +48,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         if it is None, it checks the environment variable ``ONNXTESTDUMPERROR``
     :param benchmark: if True, runs a benchmark and stores the results into a file
         ``<basename>.bench``, if None, it checks the environment variable ``ONNXTESTBENCHMARK``
+    :param verbose: additional information
     :return: the created files
 
     Some convention for the name,
@@ -116,7 +117,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         prediction = model.transform(data)
         lambda_original = lambda: model.transform(dataone)
     else:
-        raise TypeError("Model has not predict or transform method.")
+        raise TypeError("Model has not predict or transform method: {0}".format(type(model)))
         
     runtime_test['expected'] = prediction
     
@@ -170,11 +171,11 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                 allow = allow_failure
             if allow is None:
                 output, lambda_onnx = compare_backend(b, runtime_test, options=extract_options(basename),
-                                                      context=context)
+                                                      context=context, verbose=verbose)
             else:
                 try:
                     output, lambda_onnx = compare_backend(b, runtime_test, options=extract_options(basename),
-                                                          context=context)
+                                                          context=context, verbose=verbose)
                 except AssertionError as e:
                     if dump_issue:
                         with open(error_dump, "w", encoding="utf-8") as f:

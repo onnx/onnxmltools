@@ -170,7 +170,7 @@ def extract_options(name):
     else:
         res = {}
         for opt in opts[1:]:
-            if opt in ("SkipDim1", "OneOff", "NoProb", "Dec4", "Dec3", 'Out0', 'Reshape'):
+            if opt in ("SkipDim1", "OneOff", "NoProb", "Dec4", "Dec3", 'Out0', 'Dec2', 'Reshape', 'Opp'):
                 res[opt] = True
             else:
                 raise NameError("Unable to parse option '{}'".format(opts[1:]))
@@ -186,13 +186,20 @@ def compare_outputs(expected, output, **kwargs):
     NoProb = kwargs.pop("NoProb", False)
     Dec4 = kwargs.pop("Dec4", False)
     Dec3 = kwargs.pop("Dec3", False)
+    Dec2 = kwargs.pop("Dec2", False)
     Disc = kwargs.pop("Disc", False)
     Mism = kwargs.pop("Mism", False)
+    Opp = kwargs.pop("Opp", False)
+    if Opp and not NoProb:
+        raise ValueError("Opp is only available if NoProb is True")
 
     if Dec4:
         kwargs["decimal"] = min(kwargs["decimal"], 4)
     if Dec3:
         kwargs["decimal"] = min(kwargs["decimal"], 3)
+    if Dec2:
+        kwargs["decimal"] = min(kwargs["decimal"], 2)
+        
     if isinstance(expected, numpy.ndarray) and isinstance(output, numpy.ndarray):
         if SkipDim1:
             # Arrays like (2, 1, 2, 3) becomes (2, 2, 3) as one dimension is useless.
@@ -203,7 +210,7 @@ def compare_outputs(expected, output, **kwargs):
             # positive for class 1
             # The other vector is (N, 2) score in two columns.
             if len(output.shape) == 2 and output.shape[1] == 2 and len(expected.shape) == 1:
-                output = output[:, 1]
+                output = output[:, 1]                
             elif len(output.shape) == 1 and len(expected.shape) == 1:
                 pass
             elif len(expected.shape) == 1 and len(output.shape) == 2 and \
@@ -211,6 +218,8 @@ def compare_outputs(expected, output, **kwargs):
                 output = output[:, 0]
             elif expected.shape != output.shape:
                 raise NotImplementedError("No good shape: {0} != {1}".format(expected.shape, output.shape))
+            if Opp:
+                output = -output
         if len(expected.shape) == 1 and len(output.shape) == 2 and output.shape[1] == 1:
             output = output.ravel()
         if expected.dtype in (numpy.str, numpy.dtype("<U1")):
