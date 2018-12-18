@@ -142,5 +142,3 @@ with the runtime.
 # License
 [MIT License](LICENSE)
 
-## Acknowledgments
-This package was developed by the following engineers and data scientists at Microsoft starting from winter 2017: Zeeshan Ahmed, Wei-Sheng Chin, Aidan Crook, Xavier Dupre, Costin Eseanu, Tom Finley, Lixin Gong, Scott Inglis, Pei Jiang, Ivan Matantsev, Prabhat Roy, M. Zeeshan Siddiqui, Shouheng Yi, Shauheen Zahirazami, Yiwen Zhu, Du Li, Xuan Li, Wenbing Li, Vinitra Swamy.
