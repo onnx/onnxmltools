@@ -440,5 +440,22 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             model.compile(optimizer='sgd', loss='mse')
             self._test_one_to_one_operator_keras(model, x)
 
+    def test_separable_convolution(self):
+        N, C, H, W = 2, 3, 5, 5
+        x = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
+        model = Sequential()
+        model.add(SeparableConv2D(filters=10, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
+                         data_format='channels_last', depth_multiplier=4))
+        model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format='channels_last'))
+        model.compile(optimizer='sgd', loss='mse')
+        self._test_one_to_one_operator_keras(model, x)
+
+        x = np.random.rand(N, H, C).astype(np.float32, copy=False)
+        model = Sequential()
+        model.add(SeparableConv1D(filters=10, kernel_size=2, strides=1, padding='valid', input_shape=(H, C),
+                         data_format='channels_last'))
+        model.compile(optimizer='sgd', loss='mse')
+        self._test_one_to_one_operator_keras(model, x)
+
 if __name__ == "__main__":
     unittest.main()
