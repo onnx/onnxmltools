@@ -7,9 +7,11 @@
 import keras
 from distutils.version import StrictVersion
 import numbers
-from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, RepeatVector
+from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, RepeatVector, SeparableConv2D
 if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
-    from keras.layers import DepthwiseConv2D, SeparableConv1D, SeparableConv2D
+    from keras.layers import DepthwiseConv2D
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
+    from keras.layers import SeparableConv1D
 from ...common._registration import register_shape_calculator
 
 

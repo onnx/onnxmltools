@@ -5,9 +5,10 @@
 # --------------------------------------------------------------------------
 import numpy
 import keras
+from keras.layers import SeparableConv2D
 from distutils.version import StrictVersion
-if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
-    from keras.layers import SeparableConv1D, SeparableConv2D
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
+    from keras.layers import SeparableConv1D
 
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_identity, apply_transpose

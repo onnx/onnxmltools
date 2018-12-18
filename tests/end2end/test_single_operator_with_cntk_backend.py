@@ -17,9 +17,9 @@ from onnxmltools.utils.tests_dl_helper import evaluate_deep_model, create_tensor
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
-    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout
-if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
-    from keras.layers import SeparableConv1D, SeparableConv2D
+    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout, SeparableConv2D
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
+    from keras.layers import SeparableConv1D
 from keras.initializers import RandomUniform
 
 
