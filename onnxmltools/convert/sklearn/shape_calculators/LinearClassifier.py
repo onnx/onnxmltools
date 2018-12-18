@@ -15,7 +15,6 @@ from ...common.shape_calculator import calculate_linear_classifier_output_shapes
 
 
 register_shape_calculator('SklearnLinearClassifier', calculate_linear_classifier_output_shapes)
-register_shape_calculator('SklearnLinearSVC', calculate_linear_classifier_output_shapes)
 register_shape_calculator('SklearnDecisionTreeClassifier', calculate_linear_classifier_output_shapes)
 register_shape_calculator('SklearnRandomForestClassifier', calculate_linear_classifier_output_shapes)
 register_shape_calculator('SklearnExtraTreesClassifier', calculate_linear_classifier_output_shapes)

@@ -25,6 +25,16 @@ install:
     - cmd: pip install %COREML_PATH% %ONNX_PATH% cntk==2.5.1
     - cmd: pip install -r requirements-dev.txt"
     - cmd: pip install %KERAS%
+    # install libsvm from github
+    - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+    - git clone --recursive https://github.com/cjlin1/libsvm libsvm
+    - cd libsvm
+    - nmake -f Makefile.win lib
+    - copy windows\*.dll python    
+    - cd ..
+    - set PYTHONPATH=libsvm\python;%PYTHONPATH%
+    - dir libsvm\python
+    - python -c "import svmutil"
 
 build: off
 
