@@ -37,17 +37,13 @@ def convert_keras_separable_conv_core(scope, operator, container, is_transpose, 
     assert (len(parameters) == 3 if op.use_bias else 2)
     weight_params = parameters[0]
 
-    input_channels, output_channels = weight_params.shape[-2:]
     kernel_size = weight_params.shape[:-2]
     assert (kernel_size == op.kernel_size)
 
-    dm = op.depth_multiplier
-    output_channels *= dm
-    group = input_channels
+    attrs_0['group'] = weight_params.shape[-2]
     shape = weight_params.shape
     new_shape = shape[:-2] + (1, shape[-2] * shape[-1])
-    weight_params = numpy.reshape(weight_params, new_shape)
-    weight_params = weight_params.transpose(weight_perm_axes)
+    weight_params = numpy.reshape(weight_params, new_shape).transpose(weight_perm_axes)
 
     weight_tensor_name = scope.get_unique_variable_name('W_0')
     container.add_initializer(weight_tensor_name, onnx_proto.TensorProto.FLOAT,
@@ -57,7 +53,6 @@ def convert_keras_separable_conv_core(scope, operator, container, is_transpose, 
     attrs_0['dilations'] = list(op.dilation_rate)
     attrs_0['strides'] = list(op.strides)
     attrs_0['kernel_shape'] = op.kernel_size
-    attrs_0['group'] = group
 
     if op.padding == 'valid':
         attrs_0['auto_pad'] = 'VALID'
@@ -80,14 +75,11 @@ def convert_keras_separable_conv_core(scope, operator, container, is_transpose, 
                        intermediate_output_name_0, **attrs_0)
 
     # the second Conv
-    op_type = 'Conv'
     convolution_input_names_1 = [intermediate_output_name_0]
     attrs_1 = {'name': operator.full_name + '1'}
 
-    weight_params = parameters[1]
-
     weight_tensor_name = scope.get_unique_variable_name('W_1')
-    weight_params = weight_params.transpose(weight_perm_axes)
+    weight_params = parameters[1].transpose(weight_perm_axes)
     container.add_initializer(weight_tensor_name, onnx_proto.TensorProto.FLOAT,
                               weight_params.shape, weight_params.flatten())
     convolution_input_names_1.append(weight_tensor_name)
@@ -98,9 +90,10 @@ def convert_keras_separable_conv_core(scope, operator, container, is_transpose, 
                                   parameters[2].shape, parameters[2].flatten())
         convolution_input_names_1.append(bias_tensor_name)
 
-    attrs_1['dilations'] = numpy.ones(n_dims, numpy.int8)
-    attrs_1['strides'] = numpy.ones(n_dims, numpy.int8)
-    attrs_1['kernel_shape'] = numpy.ones(n_dims, numpy.int8)
+    all_ones = numpy.ones(n_dims, numpy.int8)
+    attrs_1['dilations'] = all_ones
+    attrs_1['strides'] = all_ones
+    attrs_1['kernel_shape'] = all_ones
     attrs_1['group'] = 1
     attrs_1['auto_pad'] = attrs_0['auto_pad']
 
