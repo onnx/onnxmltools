@@ -9,6 +9,7 @@ import warnings
 import onnxmltools
 import coremltools
 import numpy as np
+import keras
 from distutils.version import StrictVersion
 from onnxmltools.proto import onnx
 from onnxmltools.utils.tests_dl_helper import evaluate_deep_model, create_tensor,\
@@ -17,6 +18,8 @@ from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
     Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
+    from keras.layers import SeparableConv1D, SeparableConv2D
 from keras.initializers import RandomUniform
 
 
@@ -418,6 +421,24 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         # coremltools can't convert this kind of model.
         self._test_one_to_one_operator_keras(model, [x, 2 * x])
 
+    if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
+        @unittest.skipIf(find_inference_engine() == rt_cntk, 'Skip because CNTK is not able to evaluate this model')
+        def test_separable_convolution(self):
+            N, C, H, W = 2, 3, 5, 5
+            x = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
+            model = Sequential()
+            model.add(SeparableConv2D(filters=10, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
+                             data_format='channels_last', depth_multiplier=4))
+            model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format='channels_last'))
+            model.compile(optimizer='sgd', loss='mse')
+            self._test_one_to_one_operator_keras(model, x)
+
+            x = np.random.rand(N, H, C).astype(np.float32, copy=False)
+            model = Sequential()
+            model.add(SeparableConv1D(filters=10, kernel_size=2, strides=1, padding='valid', input_shape=(H, C),
+                             data_format='channels_last'))
+            model.compile(optimizer='sgd', loss='mse')
+            self._test_one_to_one_operator_keras(model, x)
 
 if __name__ == "__main__":
     unittest.main()

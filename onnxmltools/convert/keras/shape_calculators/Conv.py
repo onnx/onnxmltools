@@ -9,7 +9,7 @@ from distutils.version import StrictVersion
 import numbers
 from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, RepeatVector
 if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
-    from keras.layers import DepthwiseConv2D
+    from keras.layers import DepthwiseConv2D, SeparableConv1D, SeparableConv2D
 from ...common._registration import register_shape_calculator
 
 
@@ -38,3 +38,5 @@ register_shape_calculator(Conv2DTranspose, calculate_keras_conv_output_shapes)
 register_shape_calculator(Conv3DTranspose, calculate_keras_conv_output_shapes)
 if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
     register_shape_calculator(DepthwiseConv2D, calculate_keras_depthwise_conv_output_shapes)
+    register_shape_calculator(SeparableConv1D, calculate_keras_conv_output_shapes)
+    register_shape_calculator(SeparableConv2D, calculate_keras_conv_output_shapes)

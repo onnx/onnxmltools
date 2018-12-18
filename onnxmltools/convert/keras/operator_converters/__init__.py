@@ -24,6 +24,7 @@ from . import Permute
 from . import Pool
 from . import RepeatVector
 from . import Reshape
+from . import SeparableConv
 from . import SimpleRNN
 from . import Upsample
 from . import ZeroPad
