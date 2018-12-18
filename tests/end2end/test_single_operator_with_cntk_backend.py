@@ -421,7 +421,7 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         # coremltools can't convert this kind of model.
         self._test_one_to_one_operator_keras(model, [x, 2 * x])
 
-    if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
+    if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
         @unittest.skipIf(find_inference_engine() == rt_cntk, 'Skip because CNTK is not able to evaluate this model')
         def test_separable_convolution(self):
             N, C, H, W = 2, 3, 5, 5

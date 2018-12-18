@@ -133,6 +133,7 @@ def convert_keras_separable_conv2d(scope, operator, container):
     is_transpose, n_dims, input_perm, output_perm, weight_perm = get_converter_config(2, False)
     convert_keras_separable_conv_core(scope, operator, container, is_transpose, n_dims, input_perm, output_perm, weight_perm)
 
-if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
+register_converter(SeparableConv2D, convert_keras_separable_conv2d)
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
     register_converter(SeparableConv1D, convert_keras_separable_conv1d)
-    register_converter(SeparableConv2D, convert_keras_separable_conv2d)
+

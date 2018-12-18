@@ -38,7 +38,8 @@ register_shape_calculator(Conv2D, calculate_keras_conv_output_shapes)
 register_shape_calculator(Conv3D, calculate_keras_conv_output_shapes)
 register_shape_calculator(Conv2DTranspose, calculate_keras_conv_output_shapes)
 register_shape_calculator(Conv3DTranspose, calculate_keras_conv_output_shapes)
+register_shape_calculator(SeparableConv2D, calculate_keras_conv_output_shapes)
 if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
     register_shape_calculator(DepthwiseConv2D, calculate_keras_depthwise_conv_output_shapes)
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
     register_shape_calculator(SeparableConv1D, calculate_keras_conv_output_shapes)
-    register_shape_calculator(SeparableConv2D, calculate_keras_conv_output_shapes)
