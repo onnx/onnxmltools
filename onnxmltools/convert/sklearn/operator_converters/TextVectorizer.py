@@ -22,13 +22,14 @@ def convert_sklearn_text_vectorizer(scope, operator, container):
         op_type = 'StringNormalizer'
         attrs = {'name': scope.get_unique_operator_name(op_type)}
         attrs.update({
-            'casechangeaction': 'LOWER',
-            'stopwords': op.stop_words_,
-            'iscasesenstive': not op.lowercase,
+            'casechangeaction': 'LOWER',            
+            'is_case_sensitive': not op.lowercase,
         })
+        if op.stop_words_:
+            attrs['stopwords'] = list(sorted(op.stop_words_))
         normalized = scope.get_unique_variable_name('normalized')
         container.add_node(op_type, operator.input_full_names, 
-                           normalized, op_domain='ai.onnx.ml', **attrs)
+                           normalized, op_domain='com.microsoft', **attrs)
     else:
         normalized = operator.input_full_names
         
@@ -37,16 +38,18 @@ def convert_sklearn_text_vectorizer(scope, operator, container):
     while padvalue in op.vocabulary_:
         padvalue += "#"
     
-    op_type = 'WordTokenizer'
+    op_type = 'Tokenizer'
     attrs = {'name': scope.get_unique_operator_name(op_type)}
     attrs.update({
-        'padvalue': padvalue,
-        'separators': [' '],
+        'pad_value': padvalue,
+        'separators': [' ', '.', '?'],
+        'mark': False,
+        'mincharnum': 1,
     })
 
     tokenized = scope.get_unique_variable_name('tokenized')
     container.add_node(op_type, normalized, tokenized,
-                       op_domain='ai.onnx.ml', **attrs)
+                       op_domain='com.microsoft', **attrs)
 
     # Ngram
     C = max(op.vocabulary_.values()) + 1
@@ -54,7 +57,6 @@ def convert_sklearn_text_vectorizer(scope, operator, container):
     weights = [0 for i in range(C)]
     indices = [None for i in range(C)]
     if hasattr(op, "idf_"):
-        print(op.idf_.shape)
         for k, v in op.vocabulary_.items():
             words[v] = k
             weights[v] = op.idf_[v]
@@ -88,14 +90,13 @@ def convert_sklearn_text_vectorizer(scope, operator, container):
         'S': 0,
         'all': True,  # is this really useful is M is specified?
         'pool_strings': words,
-        'pool_int64s': [],
-        'key_indices': key_indices,
-        'ngramcounts': ngcounts,
+        'ngram_indexes': key_indices,
+        'ngram_counts': ngcounts,
         'weights': weights,
     })
 
     container.add_node(op_type, tokenized, operator.output_full_names,
-                       op_domain='ai.onnx.ml', **attrs)
+                       op_domain='com.microsoft', **attrs)
 
 
 register_converter('SklearnCountVectorizer', convert_sklearn_text_vectorizer)

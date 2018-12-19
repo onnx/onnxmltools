@@ -12,19 +12,19 @@ from onnxmltools.utils import dump_data_and_model
 class TestSklearnTfidfVectorizer(unittest.TestCase):
 
     def test_model_tfidf_vectorizer11(self):
-        corpus = [
+        corpus = numpy.array([
                 'This is the first document.',
                 'This document is the second document.',
                 'And this is the third one.',
                 'Is this the first document?',
-                ]
+                ])
         vect = TfidfVectorizer(ngram_range=(1, 1))
         vect.fit(corpus)
         pred = vect.transform(corpus)
         model_onnx = convert_sklearn(vect, 'scikit-learn count vectorizer', [('input', StringTensorType([1, 1]))])
         self.assertTrue(model_onnx is not None)
-        # REVIEW: enable the test when the runtime implements the primitives.
-        # dump_data_and_model(corpus, vect, model_onnx, basename="SklearnTfidfVectorizer")
+        dump_data_and_model(corpus, vect, model_onnx, basename="SklearnTfidfVectorizer-OneOff",
+                            verbose=True)
 
     def test_model_tfidf_vectorizer13(self):
         corpus = [
@@ -38,8 +38,8 @@ class TestSklearnTfidfVectorizer(unittest.TestCase):
         pred = vect.transform(corpus)
         model_onnx = convert_sklearn(vect, 'scikit-learn count vectorizer', [('input', StringTensorType([1, 1]))])
         self.assertTrue(model_onnx is not None)
-        # REVIEW: enable the test when the runtime implements the primitives.
-        # dump_data_and_model(corpus, vect, model_onnx, basename="SklearnTfidfVectorizer")
+        dump_data_and_model(corpus, vect, model_onnx, basename="SklearnTfidfVectorizer-OneOff",
+                            verbose=True)
 
 
 if __name__ == "__main__":

@@ -106,11 +106,11 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
             res = []
             for input in values:
                 try:
-                    one = sess.run(None, {name: input})
+                    one = sess.run(None, {name: numpy.array([input])})
                 except ExpectedAssertionError as expe:
                     raise expe
                 except Exception as e:
-                    raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e))
+                    raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onx, e))
                 res.append(one)
             output = _post_process_output(res)
         else:
