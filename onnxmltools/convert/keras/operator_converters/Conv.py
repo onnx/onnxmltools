@@ -17,6 +17,23 @@ from ...common._registration import register_converter
 from .Dense import _activation_map
 
 
+def _calc_explicit_padding(input_size, output_shape, output_padding, kernel_shape, stride, dilation, perm):
+    to_nchw = lambda x, perm: [x[perm[n_]] for n_ in range(len(x))]
+    input_size = to_nchw(input_size, perm)[2:]
+    output_shape = to_nchw(output_shape, perm)[2:]
+
+    spatial = len(kernel_shape)
+    total_padding = []
+    pads = [None] * 2 * spatial
+    for i in range(spatial):
+        total_padding[i:] = [stride[i] * (output_shape[i] - 1) +
+                             output_padding[i] + kernel_shape[i] * dilation[i] - input_size[i]]
+        pads[i] = total_padding[i] // 2
+        pads[i + spatial] = total_padding[i] - (total_padding[i] // 2)
+
+    return pads
+
+
 def process_separable_conv_2nd(scope, operator, container, convolution_input_names, n_dims,
                                weight_perm_axes, parameters, auto_pad):
     attrs = {'name': operator.full_name + '1'}
@@ -119,16 +136,22 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     if op.padding == 'valid':
         attrs['auto_pad'] = 'VALID'
     elif op.padding == 'same':
-        if is_transpose:  # bypass onnx engine issue on convtranpose support.
-            attrs['auto_pad'] = 'SAME_LOWER'
-            shape = [-1 if i is None else i for i in op.output_shape]
-            if channels_first:
-                attrs['output_shape'] = shape
+        if op.input_shape.count(None) > 1:
+            if is_transpose:
+                attrs['auto_pad'] = 'SAME_LOWER'  # the controversial def in onnx spec.
             else:
-                attrs['output_shape'] = shape[0:1] + shape[-1:] + shape[1:-1]
-
+                attrs['auto_pad'] = 'SAME_UPPER'
         else:
-            attrs['auto_pad'] = 'SAME_LOWER'
+            output_padding = [0] * len(op.kernel_size)
+            if hasattr(op, 'output_padding') and op.output_padding is not None:
+                output_padding = op.output_padding
+            attrs['pads'] = _calc_explicit_padding(op.output_shape if is_transpose else op.input_shape,
+                                                   op.input_shape if is_transpose else op.output_shape,
+                                                   output_padding,
+                                                   op.kernel_size,
+                                                   op.strides,
+                                                   op.dilation_rate,
+                                                   list(range(len(op.input_shape))) if channels_first else input_perm_axes)
     else:
         raise RuntimeError("Unsupported padding type '{}'".format(op.padding))
 
