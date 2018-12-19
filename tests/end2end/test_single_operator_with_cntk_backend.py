@@ -14,6 +14,14 @@ from distutils.version import StrictVersion
 from onnxmltools.proto import onnx
 from onnxmltools.utils.tests_dl_helper import evaluate_deep_model, create_tensor,\
     find_inference_engine, rt_onnxruntime, rt_caffe2, rt_cntk
+    
+def has_tensorflow():
+     try:
+         import tensorflow
+         return tensorflow is not None
+     except ImportError:
+         return False    
+
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
     Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
