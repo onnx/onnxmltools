@@ -15,8 +15,8 @@ jobs:
     matrix:
       Python27:
         python.version: '2.7'
-      Python35:
-        python.version: '3.5'
+      # Python35:
+      #   python.version: '3.5'
       Python36:
         python.version: '3.6'
     maxParallel: 3
@@ -24,6 +24,8 @@ jobs:
   steps:
   - task: CondaEnvironment@1
     inputs:
+      createCustomEnvironment: true
+      environmentName: 'py$(python.version)'
       packageSpecs: 'python=$(python.version)'
 
   - script: |
@@ -36,7 +38,7 @@ jobs:
       conda install -c conda-forge tensorflow
       pip install -r requirements.txt
       pip install -r requirements-dev.txt
-      pip install onnxruntime
+      test '$(python.version)' != '2.7' && pip install onnxruntime
       pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
@@ -46,7 +48,7 @@ jobs:
   - script: |
       export PYTHONPATH=$PYTHONPATH:libsvm/python
       python -c "import svmutil"
-      python -c "import onnxruntime"
+      test '$(python.version)' != '2.7' && python -c "import onnxruntime"
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest'
 
