@@ -35,11 +35,11 @@ jobs:
       cd libsvm
       make lib
       cd ..
-      export PYTHONPATH=$PYTHONPATH:libsvm/python
-      python -c "import svmutil"
     displayName: 'Install dependencies'
 
   - script: |
+      export PYTHONPATH=$PYTHONPATH:libsvm/python
+      python -c "import svmutil"
       pip install -e .
       pip install pytest
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
