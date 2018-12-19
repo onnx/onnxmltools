@@ -9,6 +9,7 @@ import six, numbers
 from ...common._registration import register_shape_calculator
 from ...common.data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType, SequenceType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import calculate_linear_classifier_output_shapes
 
 
 def calculate_sklearn_svm_output_shapes(operator):
@@ -30,38 +31,51 @@ def calculate_sklearn_svm_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
 
-    if operator.type in ['SklearnSVC']:
+    if operator.type in ['SklearnLinearSVC']:
+        calculate_linear_classifier_output_shapes(operator)
+        
+    elif operator.type in ['SklearnSVC', 'SklearnNuSVC']:
         check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=[1, 2])
 
-        if all(isinstance(i, (six.string_types, six.text_type)) for i in op.classes_):
-            operator.outputs[0].type = StringTensorType([N])
-            if len(operator.outputs) == 2:
-                if operator.target_opset < 7:
-                    # Old ONNX ZipMap produces Map type
-                    operator.outputs[1].type = \
-                        DictionaryType(StringTensorType([1]), FloatTensorType([1]))
-                else:
-                    # New ONNX ZipMap produces Seq<Map> type
-                    operator.outputs[1].type = \
-                        SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
-        elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in op.classes_):
-            operator.outputs[0].type = Int64TensorType([N])
-            if len(operator.outputs) == 2:
-                if operator.target_opset < 7:
-                    # Old ONNX ZipMap produces Map type
-                    operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
-                else:
-                    # New ONNX ZipMap produces Seq<Map> type
-                    operator.outputs[1].type = \
-                        SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
+        if (hasattr(op, 'probA_') and len(op.probA_) > 0) or len(op.classes_) <= 2:
+            if all(isinstance(i, (six.string_types, six.text_type)) for i in op.classes_):
+                operator.outputs[0].type = StringTensorType([N])
+                if len(operator.outputs) == 2 and len(op.probA_) > 0:
+                    if operator.target_opset < 7:
+                        # Old ONNX ZipMap produces Map type
+                        operator.outputs[1].type = \
+                            DictionaryType(StringTensorType([1]), FloatTensorType([1]))
+                    else:
+                        # New ONNX ZipMap produces Seq<Map> type
+                        operator.outputs[1].type = \
+                            SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
+            elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in op.classes_):
+                operator.outputs[0].type = Int64TensorType([N])
+                if len(operator.outputs) == 2:
+                    if operator.target_opset < 7 and len(op.probA_) > 0:
+                        # Old ONNX ZipMap produces Map type
+                        operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
+                    else:
+                        # New ONNX ZipMap produces Seq<Map> type
+                        operator.outputs[1].type = \
+                            SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
+            else:
+                raise RuntimeError('Class labels should be either all strings or all integers')
         else:
-            raise RuntimeError('Class labels should be either all strings or all integers')
-
-    if operator.type in ['SklearnSVR']:
+            if all(isinstance(i, (six.string_types, six.text_type)) for i in op.classes_):
+                operator.outputs[0].type = StringTensorType([N])
+            elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in op.classes_):
+                operator.outputs[0].type = Int64TensorType([N])
+            nc = len(op.classes_)
+            operator.outputs[1].type = FloatTensorType([N, int(nc*(nc-1)/2)])
+            
+    elif operator.type in ['SklearnSVR']:
         check_input_and_output_numbers(operator, input_count_range=[1, None], output_count_range=1)
-
         operator.outputs[0].type = FloatTensorType([N, 1])
+    else:
+        raise ValueError("Unexpected type '{0}'".format(operator.type))
 
 
 register_shape_calculator('SklearnSVC', calculate_sklearn_svm_output_shapes)
 register_shape_calculator('SklearnSVR', calculate_sklearn_svm_output_shapes)
+register_shape_calculator('SklearnLinearSVC', calculate_sklearn_svm_output_shapes)

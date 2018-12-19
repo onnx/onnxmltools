@@ -3,7 +3,6 @@ import numpy
 from sklearn import datasets
 from sklearn import linear_model
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import LinearSVC
 from onnxmltools import convert_sklearn
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
@@ -37,18 +36,6 @@ class TestGLMClassifierConverter(unittest.TestCase):
         model_onnx = convert_sklearn(model, 'maximum entropy classifier', [('input', FloatTensorType([1, 3]))])
         self.assertIsNotNone(model_onnx)
         dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnLogitisticRegressionMulti")
-
-    def test_model_linear_svc_binary_class(self):
-        model, X = self._fit_model_binary_classification(LinearSVC())
-        model_onnx = convert_sklearn(model, 'linear SVC', [('input', FloatTensorType([1, 3]))])
-        self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnLinearSVCBinary-NoProb")
-
-    def test_model_linear_svc_multi_class(self):
-        model, X = self._fit_model_multiclass_classification(LinearSVC())
-        model_onnx = convert_sklearn(model, 'multi-class linear SVC', [('input', FloatTensorType([1, 3]))])
-        self.assertIsNotNone(model_onnx)
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="SklearnLinearSVCMulti")
 
     def test_model_sgd_binary_class(self):
         model, X = self._fit_model_binary_classification(linear_model.SGDClassifier())

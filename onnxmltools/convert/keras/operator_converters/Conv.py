@@ -113,22 +113,27 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     attrs['dilations'] = list(op.dilation_rate)
     attrs['strides'] = list(op.strides)
     attrs['kernel_shape'] = op.kernel_size
-    # Fix this...
     attrs['group'] = group
 
     if op.padding == 'valid':
         attrs['auto_pad'] = 'VALID'
     elif op.padding == 'same':
-        if is_transpose:  # bypass onnx engine issue on convtranpose support.
-            attrs['auto_pad'] = 'SAME_LOWER'
-            shape = [-1 if i is None else i for i in op.output_shape]
-            if channels_first:
-                attrs['output_shape'] = shape
+        if op.input_shape.count(None) > 1:
+            if is_transpose:
+                attrs['auto_pad'] = 'SAME_LOWER'  # the controversial def in onnx spec.
             else:
-                attrs['output_shape'] = shape[0:1] + shape[-1:] + shape[1:-1]
-
+                attrs['auto_pad'] = 'SAME_UPPER'
         else:
-            attrs['auto_pad'] = 'SAME_LOWER'
+            output_padding = [0] * len(op.kernel_size)
+            if hasattr(op, 'output_padding') and op.output_padding is not None:
+                output_padding = op.output_padding
+            attrs['pads'] = _calc_explicit_padding(op.output_shape if is_transpose else op.input_shape,
+                                                   op.input_shape if is_transpose else op.output_shape,
+                                                   output_padding,
+                                                   op.kernel_size,
+                                                   op.strides,
+                                                   op.dilation_rate,
+                                                   list(range(len(op.input_shape))) if channels_first else input_perm_axes)
     else:
         raise RuntimeError("Unsupported padding type '{}'".format(op.padding))
 
