@@ -9,7 +9,6 @@ import warnings
 import onnxmltools
 import coremltools
 import numpy as np
-import keras
 from distutils.version import StrictVersion
 from onnxmltools.proto import onnx
 from onnxmltools.utils.tests_dl_helper import evaluate_deep_model, create_tensor,\
@@ -22,13 +21,15 @@ def has_tensorflow():
      except ImportError:
          return False    
 
-from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
-    Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
-    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout, SeparableConv2D
-if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
-    from keras.layers import SeparableConv1D
-from keras.initializers import RandomUniform
+if has_tensorflow():
+    import keras
+    from keras.models import Sequential, Model
+    from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
+        Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
+        Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout, SeparableConv2D
+    if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
+        from keras.layers import SeparableConv1D
+    from keras.initializers import RandomUniform
 
 
 class TestKeras2CoreML2ONNX(unittest.TestCase):
