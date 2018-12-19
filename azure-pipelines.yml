@@ -57,18 +57,3 @@ jobs:
       testResultsFiles: '**/test-results.xml'
       testRunTitle: 'Python $(python.version)'
     condition: succeededOrFailed()
-
-- job: 'Publish'
-  dependsOn: 'Test'
-  pool:
-    vmImage: 'Ubuntu-16.04'
-
-  steps:
-  - task: CondaEnvironment@1
-    inputs:
-      createCustomEnvironment: true
-      environmentName: 'py$(python.version)'
-      updateConda: false
-
-  - script: python -u setup.py bdist_wheel
-    displayName: 'Build bdist_wheel'
