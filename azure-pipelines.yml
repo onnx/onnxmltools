@@ -13,8 +13,8 @@ jobs:
     vmImage: 'Ubuntu-16.04'
   strategy:
     matrix:
-      # Python27:
-      #   python.version: '2.7'
+      Python27:
+        python.version: '2.7'
       Python35:
         python.version: '3.5'
       Python36:
@@ -22,17 +22,21 @@ jobs:
     maxParallel: 3
 
   steps:
-  - task: UsePythonVersion@0
+  - task: CondaEnvironment@1
     inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
+      packageSpecs: 'python=$(python.version)'
 
   - script: |
       python -m pip install --upgrade pip
+      conda config --set always_yes yes --set changeps1 no
+      conda install -c conda-forge protobuf
+      conda install -c conda-forge numpy
+      conda install -c conda-forge cmake
+      conda install -c conda-forge openmpi
+      conda install -c conda-forge tensorflow
       pip install -r requirements.txt
       pip install -r requirements-dev.txt
       pip install onnxruntime
-      pip install numpy
       pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
@@ -42,6 +46,7 @@ jobs:
   - script: |
       export PYTHONPATH=$PYTHONPATH:libsvm/python
       python -c "import svmutil"
+      python -c "import onnxruntime"
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest'
 
@@ -57,7 +62,7 @@ jobs:
     vmImage: 'Ubuntu-16.04'
 
   steps:
-  - task: UsePythonVersion@0
+  - task: CondaEnvironment@1
     inputs:
       versionSpec: '3.x'
       architecture: 'x64'
