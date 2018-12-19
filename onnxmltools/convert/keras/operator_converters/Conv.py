@@ -16,35 +16,6 @@ from ...common._apply_operation import apply_identity, apply_transpose
 from ...common._registration import register_converter
 from .Dense import _activation_map
 
-
-def process_separable_conv_2nd(scope, operator, container, convolution_input_names, n_dims,
-                               weight_perm_axes, parameters, auto_pad)
-    attrs = {'name': operator.full_name + '1'}
-
-    weight_tensor_name = scope.get_unique_variable_name('W')
-    weight_params = parameters[1].transpose(weight_perm_axes)
-    container.add_initializer(weight_tensor_name, onnx_proto.TensorProto.FLOAT,
-                              weight_params.shape, weight_params.flatten())
-    convolution_input_names.append(weight_tensor_name)
-
-    if len(parameters) == 3:
-        bias_tensor_name = scope.get_unique_variable_name('B')
-        container.add_initializer(bias_tensor_name, onnx_proto.TensorProto.FLOAT,
-                                  parameters[2].shape, parameters[2].flatten())
-        convolution_input_names.append(bias_tensor_name)
-
-    all_ones = numpy.ones(n_dims, numpy.int8)
-    attrs['dilations'] = all_ones
-    attrs['strides'] = all_ones
-    attrs['kernel_shape'] = all_ones
-    attrs['group'] = 1
-    attrs['auto_pad'] = auto_pad
-
-    intermediate_output_name = scope.get_unique_variable_name('convolution_output')
-    container.add_node('Conv', convolution_input_names,
-                       intermediate_output_name, **attrs)
-    return intermediate_output_name
-
 def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm_axes,
                             output_perm_axes, weight_perm_axes):
     op = operator.raw_operator
