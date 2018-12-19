@@ -35,6 +35,8 @@ This package uses ONNX, NumPy, and ProtoBuf. If you are converting a model from 
 2. CoreMLTools
 3. Keras (version 2.0.8 or higher) with corresponding Tensorflow version
 4. LightGBM (scikit-learn interface)
+5. XGBoost (scikit-learn interface)
+6. libsvm
 
 ## Examples
 Here is a simple example to convert a Core ML model:
