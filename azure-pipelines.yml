@@ -66,8 +66,9 @@ jobs:
   steps:
   - task: CondaEnvironment@1
     inputs:
-      versionSpec: '3.x'
-      architecture: 'x64'
+      createCustomEnvironment: true
+      environmentName: 'py$(python.version)'
+      updateConda: false
 
   - script: python -u setup.py bdist_wheel
     displayName: 'Build bdist_wheel'
