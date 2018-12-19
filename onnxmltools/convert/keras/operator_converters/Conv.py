@@ -18,7 +18,7 @@ from .Dense import _activation_map
 
 
 def process_separable_conv_2nd(scope, operator, container, convolution_input_names, n_dims,
-                               weight_perm_axes, parameters, auto_pad)
+                               weight_perm_axes, parameters, auto_pad):
     attrs = {'name': operator.full_name + '1'}
 
     weight_tensor_name = scope.get_unique_variable_name('W')
@@ -44,6 +44,7 @@ def process_separable_conv_2nd(scope, operator, container, convolution_input_nam
     container.add_node('Conv', convolution_input_names,
                        intermediate_output_name, **attrs)
     return intermediate_output_name
+
 
 def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm_axes,
                             output_perm_axes, weight_perm_axes):
