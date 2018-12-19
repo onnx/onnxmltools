@@ -6,14 +6,11 @@
 import numpy
 import keras
 from distutils.version import StrictVersion
-from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose
-
-try:
+from keras.layers import Conv1D, Conv2D, Conv3D, Conv2DTranspose, Conv3DTranspose, SeparableConv2D
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
     from keras.layers import DepthwiseConv2D
-except ImportError:
-    # Keras < 2.1.5
-    from keras.applications.mobilenet import DepthwiseConv2D
-
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
+    from keras.layers import SeparableConv1D
 from ....proto import onnx_proto
 from ...common._apply_operation import apply_identity, apply_transpose
 from ...common._registration import register_converter
@@ -37,9 +34,41 @@ def _calc_explicit_padding(input_size, output_shape, output_padding, kernel_shap
     return pads
 
 
+def process_separable_conv_2nd(scope, operator, container, convolution_input_names, n_dims,
+                               weight_perm_axes, parameters, auto_pad):
+    attrs = {'name': operator.full_name + '1'}
+
+    weight_tensor_name = scope.get_unique_variable_name('W')
+    weight_params = parameters[1].transpose(weight_perm_axes)
+    container.add_initializer(weight_tensor_name, onnx_proto.TensorProto.FLOAT,
+                              weight_params.shape, weight_params.flatten())
+    convolution_input_names.append(weight_tensor_name)
+
+    if len(parameters) == 3:
+        bias_tensor_name = scope.get_unique_variable_name('B')
+        container.add_initializer(bias_tensor_name, onnx_proto.TensorProto.FLOAT,
+                                  parameters[2].shape, parameters[2].flatten())
+        convolution_input_names.append(bias_tensor_name)
+
+    all_ones = numpy.ones(n_dims, numpy.int8)
+    attrs['dilations'] = all_ones
+    attrs['strides'] = all_ones
+    attrs['kernel_shape'] = all_ones
+    attrs['group'] = 1
+    attrs['auto_pad'] = auto_pad
+
+    intermediate_output_name = scope.get_unique_variable_name('convolution_output')
+    container.add_node('Conv', convolution_input_names,
+                       intermediate_output_name, **attrs)
+    return intermediate_output_name
+
+
 def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm_axes,
                             output_perm_axes, weight_perm_axes):
     op = operator.raw_operator
+
+    is_separable_conv = isinstance(op, SeparableConv2D) or \
+                      (StrictVersion(keras.__version__) >= StrictVersion('2.1.3') and isinstance(op, SeparableConv1D))
 
     channels_first = n_dims > 1 and op.data_format == 'channels_first'
 
@@ -53,10 +82,15 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
 
     op_type = 'ConvTranspose' if is_transpose else 'Conv'
     convolution_input_names = [adjusted_input_name]
-    attrs = {'name': operator.full_name}
-
     parameters = op.get_weights()
-    assert (len(parameters) == 2 if op.use_bias else 1)
+
+    if is_separable_conv:
+        attrs = {'name': operator.full_name + '0'}
+        assert (len(parameters) == 3 if op.use_bias else 2)
+    else:
+        attrs = {'name': operator.full_name}
+        assert (len(parameters) == 2 if op.use_bias else 1)
+
     weight_params = parameters[0]
 
     input_channels, output_channels = weight_params.shape[-2:]
@@ -73,6 +107,11 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
         new_shape = shape[:2] + (1, shape[2] * shape[3])
         weight_params = numpy.reshape(weight_params, new_shape)
         weight_params = weight_params.transpose(weight_perm_axes)
+    elif is_separable_conv:
+        group = weight_params.shape[-2]
+        shape = weight_params.shape
+        new_shape = shape[:-2] + (1, shape[-2] * shape[-1])
+        weight_params = numpy.reshape(weight_params, new_shape).transpose(weight_perm_axes)
     else:
         weight_params = weight_params.transpose(weight_perm_axes)
         group = 1
@@ -82,7 +121,7 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
                               weight_params.shape, weight_params.flatten())
     convolution_input_names.append(weight_tensor_name)
 
-    if len(parameters) == 2:
+    if len(parameters) == 2 and not is_separable_conv:
         bias_tensor_name = scope.get_unique_variable_name('B')
         container.add_initializer(bias_tensor_name, onnx_proto.TensorProto.FLOAT,
                                   parameters[1].shape, parameters[1].flatten())
@@ -118,6 +157,10 @@ def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, in
     intermediate_output_name = scope.get_unique_variable_name('convolution_output')
     container.add_node(op_type, convolution_input_names,
                        intermediate_output_name, **attrs)
+
+    if is_separable_conv:
+        intermediate_output_name = process_separable_conv_2nd(scope, operator, container, [intermediate_output_name], n_dims,
+                                   weight_perm_axes, parameters, attrs['auto_pad'])
 
     # The construction of convolution is done. Now, we create an activation operator to apply the activation specified
     # in this Keras layer.
@@ -171,6 +214,16 @@ def convert_keras_conv_transpose_3d(scope, operator, container):
     convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm, output_perm, weight_perm)
 
 
+def convert_keras_separable_conv1d(scope, operator, container):
+    is_transpose, n_dims, input_perm, output_perm, weight_perm = get_converter_config(1, False)
+    convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm, output_perm, weight_perm)
+
+
+def convert_keras_separable_conv2d(scope, operator, container):
+    is_transpose, n_dims, input_perm, output_perm, weight_perm = get_converter_config(2, False)
+    convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm, output_perm, weight_perm)
+
+
 register_converter(Conv1D, convert_keras_conv1d)
 register_converter(Conv2D, convert_keras_conv2d)
 register_converter(Conv3D, convert_keras_conv3d)
@@ -178,3 +231,6 @@ register_converter(Conv2DTranspose, convert_keras_conv_transpose_2d)
 register_converter(Conv3DTranspose, convert_keras_conv_transpose_3d)
 if StrictVersion(keras.__version__) >= StrictVersion('2.1.5'):
     register_converter(DepthwiseConv2D, convert_keras_depthwise_conv_2d)
+register_converter(SeparableConv2D, convert_keras_separable_conv2d)
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
+    register_converter(SeparableConv1D, convert_keras_separable_conv1d)
