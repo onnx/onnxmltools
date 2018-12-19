@@ -9,24 +9,18 @@ import warnings
 import onnxmltools
 import coremltools
 import numpy as np
+import keras
 from distutils.version import StrictVersion
 from onnxmltools.proto import onnx
 from onnxmltools.utils.tests_dl_helper import evaluate_deep_model, create_tensor,\
     find_inference_engine, rt_onnxruntime, rt_caffe2, rt_cntk
-    
-def has_tensorflow():
-    try:
-        import tensorflow
-        return tensorflow is not None
-    except ImportError:
-        return False
-
-if has_tensorflow():
-    from keras.models import Sequential, Model
-    from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
-        Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
-        Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout
-    from keras.initializers import RandomUniform
+from keras.models import Sequential, Model
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Conv2DTranspose, \
+    Dot, Embedding, BatchNormalization, GRU, Activation, PReLU, LeakyReLU, ThresholdedReLU, Maximum, \
+    Add, Average, Multiply, Concatenate, UpSampling2D, Flatten, RepeatVector, Reshape, Dropout, SeparableConv2D
+if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
+    from keras.layers import SeparableConv1D
+from keras.initializers import RandomUniform
 
 
 class TestKeras2CoreML2ONNX(unittest.TestCase):
@@ -66,9 +60,11 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
             return
 
         y_reference = keras_model.predict(x)
-        if onnx_model is not None:
-            y_produced = evaluate_deep_model(onnx_model, x)
-            self.assertTrue(np.allclose(y_reference, y_produced))
+        if onnx_model is None:
+            return
+        y_produced = evaluate_deep_model(onnx_model, x)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
 
         # Verify Keras-to-ONNX path
         onnx_model = onnxmltools.convert_keras(keras_model)
@@ -123,11 +119,11 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         else:
             x_t = np.transpose(x, [0, 2, 3, 1])
         y_reference = np.transpose(keras_model.predict(x_t), [0, 3, 1, 2])
-        if onnx_model_p1 is not None:
-            y_produced = evaluate_deep_model(onnx_model_p1, x)
-            self.assertTrue(np.allclose(y_reference, y_produced))
-        else:
-            y_produced = None
+        if onnx_model_p1 is None:
+            return
+        y_produced = evaluate_deep_model(onnx_model_p1, x)
+
+        self.assertTrue(np.allclose(y_reference, y_produced))
 
         # Verify Keras-to-ONNX path
         y_reference = np.transpose(y_reference, [0, 2, 3, 1])
@@ -461,6 +457,24 @@ class TestKeras2CoreML2ONNX(unittest.TestCase):
         # coremltools can't convert this kind of model.
         self._test_one_to_one_operator_keras(model, [x, 2 * x])
 
+    if StrictVersion(keras.__version__) >= StrictVersion('2.1.3'):
+        @unittest.skipIf(find_inference_engine() == rt_cntk, 'Skip because CNTK is not able to evaluate this model')
+        def test_separable_convolution(self):
+            N, C, H, W = 2, 3, 5, 5
+            x = np.random.rand(N, H, W, C).astype(np.float32, copy=False)
+            model = Sequential()
+            model.add(SeparableConv2D(filters=10, kernel_size=(1, 2), strides=(1, 1), padding='valid', input_shape=(H, W, C),
+                             data_format='channels_last', depth_multiplier=4))
+            model.add(MaxPooling2D((2, 2), strides=(2, 2), data_format='channels_last'))
+            model.compile(optimizer='sgd', loss='mse')
+            self._test_one_to_one_operator_keras(model, x)
+
+            x = np.random.rand(N, H, C).astype(np.float32, copy=False)
+            model = Sequential()
+            model.add(SeparableConv1D(filters=10, kernel_size=2, strides=1, padding='valid', input_shape=(H, C),
+                             data_format='channels_last'))
+            model.compile(optimizer='sgd', loss='mse')
+            self._test_one_to_one_operator_keras(model, x)
 
 if __name__ == "__main__":
     unittest.main()

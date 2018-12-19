@@ -4,8 +4,5 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .main import convert_coreml
-from .main import convert_keras
-from .main import convert_libsvm
-from .main import convert_lightgbm
-from .main import convert_sklearn
+# To register converter for libsvm operators, import associated modules here.
+from . import SVMConverter
