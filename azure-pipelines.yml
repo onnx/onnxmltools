@@ -32,6 +32,8 @@ jobs:
       pip install -r requirements.txt
       pip install -r requirements-dev.txt
       pip install onnxruntime
+      pip install numpy
+      pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
       make lib
@@ -40,8 +42,6 @@ jobs:
   - script: |
       export PYTHONPATH=$PYTHONPATH:libsvm/python
       python -c "import svmutil"
-      pip install -e .
-      pip install pytest
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest'
 
