@@ -150,6 +150,29 @@ def _parse_sklearn_pipeline(scope, model, inputs):
     return inputs
 
 
+def _parse_sklearn_feature_union(scope, model, inputs):
+    '''
+    :param scope: Scope object
+    :param model: A scikit-learn FeatureUnion object
+    :param inputs: A list of Variable objects
+    :return: A list of output variables produced by feature union
+    '''
+    # Output variable name of each transform. It's a list of string.
+    transformed_result_names = []
+    # Encode each transform as our IR object
+    for name, transform in model.transformer_list:
+        transformed_result_names.append(_parse_sklearn_simple_model(scope, transform, inputs)[0])
+    # Create a Concat ONNX node
+    concat_operator = scope.declare_local_operator('SklearnConcat')
+    concat_operator.inputs = transformed_result_names
+
+    # Declare output name of scikit-learn FeatureUnion
+    union_name = scope.declare_local_variable('union', FloatTensorType())
+    concat_operator.outputs.append(union_name)
+
+    return concat_operator.outputs 
+
+
 def _parse_sklearn(scope, model, inputs):
     '''
     This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
@@ -161,6 +184,8 @@ def _parse_sklearn(scope, model, inputs):
     '''
     if isinstance(model, pipeline.Pipeline):
         return _parse_sklearn_pipeline(scope, model, inputs)
+    elif isinstance(model, pipeline.FeatureUnion):
+        return _parse_sklearn_feature_union(scope, model, inputs)
     else:
         return _parse_sklearn_simple_model(scope, model, inputs)
 

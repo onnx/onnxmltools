@@ -26,7 +26,6 @@ def calculate_linear_classifier_output_shapes(operator):
     '''
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=[1, 2])
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType])
-
     if len(operator.inputs[0].type.shape) != 2:
         raise RuntimeError('Input must be a [N, C]-tensor')
 
@@ -44,7 +43,7 @@ def calculate_linear_classifier_output_shapes(operator):
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(StringTensorType([]), FloatTensorType([])), N)
         else:
-            # For binary classifier, we produce the probability of the positive class
+            # For binary LinearSVC, we produce probability of the positive class
             operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     elif all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in class_labels):
         operator.outputs[0].type = Int64TensorType(shape=[N])
@@ -55,7 +54,7 @@ def calculate_linear_classifier_output_shapes(operator):
             else:
                 operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
         else:
-            # For binary classifier, we produce the probability of the positive class
+            # For binary LinearSVC, we produce probability of the positive class
             operator.outputs[1].type = FloatTensorType(shape=[N, 1])
     else:
         raise ValueError('Unsupported or mixed label types')
@@ -72,5 +71,10 @@ def calculate_linear_regressor_output_shapes(operator):
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 
     N = operator.inputs[0].type.shape[0]
-    operator.outputs[0].type = FloatTensorType([N, 1])
+    op = operator.raw_operator
+    if hasattr(op, 'n_outputs_'):
+        nout = op.n_outputs_
+    else:
+        nout = 1
+    operator.outputs[0].type = FloatTensorType([N, nout])
 

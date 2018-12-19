@@ -13,7 +13,7 @@ from .utils_backend import compare_backend, extract_options, evaluate_condition,
 
 def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                         inputs=None, backend="onnxruntime", context=None,
-                        allow_failure=None):
+                        allow_failure=None, verbose=False):
     """
     Saves data with pickle, saves the model with pickle and *onnx*,
     runs and saves the predictions for the given model.
@@ -40,6 +40,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
         ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
+    :param verbose: additional information
     :return: the created files
 
     Some convention for the name,
@@ -87,7 +88,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     elif hasattr(model, "transform"):
         prediction = model.transform(data)
     else:
-        raise TypeError("Model has not predict or transform method.")
+        raise TypeError("Model has not predict or transform method: {0}".format(type(model)))
         
     runtime_test['expected'] = prediction
     
@@ -137,10 +138,12 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
             else:
                 allow = allow_failure
             if allow is None:
-                output = compare_backend(b, runtime_test, options=extract_options(basename), context=context)
+                output = compare_backend(b, runtime_test, options=extract_options(basename),
+                                         context=context, verbose=verbose)
             else:
                 try:
-                    output = compare_backend(b, runtime_test, options=extract_options(basename), context=context)
+                    output = compare_backend(b, runtime_test, options=extract_options(basename),
+                                             context=context, verbose=verbose)
                 except AssertionError as e:
                     if isinstance(allow, bool) and allow:
                         warnings.warn("Issue with '{0}' due to {1}".format(basename, e))
