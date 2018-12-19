@@ -34,7 +34,6 @@ def _calc_explicit_padding(input_size, output_shape, output_padding, kernel_shap
     return pads
 
 
-<<<<<<< HEAD
 def process_separable_conv_2nd(scope, operator, container, convolution_input_names, n_dims,
                                weight_perm_axes, parameters, auto_pad):
     attrs = {'name': operator.full_name + '1'}
@@ -64,8 +63,6 @@ def process_separable_conv_2nd(scope, operator, container, convolution_input_nam
     return intermediate_output_name
 
 
-=======
->>>>>>> upstream/master
 def convert_keras_conv_core(scope, operator, container, is_transpose, n_dims, input_perm_axes,
                             output_perm_axes, weight_perm_axes):
     op = operator.raw_operator
