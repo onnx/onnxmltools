@@ -35,7 +35,7 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 # Examples
 
 ## Converting Models 
-If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX versions in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
+If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
 
 ### CoreML -> ONNX Conversion
 Here is a simple code snippet to convert a Core ML model into an ONNX model.
@@ -58,7 +58,7 @@ onnxmltools.utils.save_model(onnx_model, 'example.onnx')
 ```
 
 ### Keras -> ONNX Conversion
-Next, we show an example of converting a Keras model into an ONNX model with `target_opset=7`, which corresponds to ONNX version 1.2.
+Next, we show an example of converting a Keras model into an ONNX model with `target_opset=7`, which corresponds to ONNX release version 1.2.
 
 ```python
 import onnxmltools
@@ -91,9 +91,10 @@ onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7)
 
 ```
 
-### Checking the ONNX Operator Set (opset) of your converted model
 
-You can check the opset of your ONNX model using [Netron](https://github.com/lutzroeder/Netron), a viewer for Neural Network models. Alternatively, you could identify your converted model's opset version through the following line of code:
+### Checking the ONNX Operator Set of your converted model
+
+You can check the Operator Set (opset) of your converted ONNX model using [Netron](https://github.com/lutzroeder/Netron), a viewer for Neural Network models. Alternatively, you could identify your converted model's opset version through the following line of code:
 
 ```
 # add line here
@@ -101,7 +102,7 @@ You can check the opset of your ONNX model using [Netron](https://github.com/lut
 
 If the result from checking your ONNX model's opset above is smaller than the `target_opset` number you passed into the onnxmltools.convert function, do not be worried. Note that the ONNXMLTools converter works by looking at each operator in your original framework's model and identifying the respective ONNX opset in which it has most recently been updated. It then takes the maximum over all of the operators used in your new ONNX model to result in the converted model's opset number.
 
-Let's take a model with two operators. If Operator A was most recently updated in Opset 6, and Operator B was most recently updated in Opset 7, the ONNX model's opset will always be 7, even if you request target_opset=8. Documentation for the [ONNX Model format] and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository. 
+For example, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/master/docs/Operators.md#abs) was most recently updated in Opset 6, and [Add](https://github.com/onnx/onnx/blob/master/docs/Operators.md#add) was most recently updated in Opset 7. Therefore, the ONNX model's opset will always be 7, even if you request target_opset=8. Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository. 
 
 # Testing model converters
 
