@@ -32,12 +32,10 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
 4. LightGBM (scikit-learn interface)
 
-# Examples
-
-## Converting Models 
+# Converting Models 
 If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
 
-### CoreML -> ONNX Conversion
+## CoreML to ONNX Conversion
 Here is a simple code snippet to convert a Core ML model into an ONNX model.
 
 ```python
@@ -57,7 +55,7 @@ onnxmltools.utils.save_text(onnx_model, 'example.json')
 onnxmltools.utils.save_model(onnx_model, 'example.onnx')
 ```
 
-### Keras -> ONNX Conversion
+## Keras to ONNX Conversion
 Next, we show an example of converting a Keras model into an ONNX model with `target_opset=7`, which corresponds to ONNX release version 1.2.
 
 ```python
@@ -97,19 +95,21 @@ onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7)
 can be then used to compute predictions with the
 backend of your choice. 
 
-### Checking the Operator Set / Version of your converted ONNX model
+## Checking the operator set version of your converted ONNX model
 
-You can check the Operator Set (opset) of your converted ONNX model using [Netron](https://github.com/lutzroeder/Netron), a viewer for Neural Network models. Alternatively, you could identify your converted model's opset version through the following line of code:
+You can check the operator set of your converted ONNX model using [Netron](https://github.com/lutzroeder/Netron), a viewer for Neural Network models. Alternatively, you could identify your converted model's opset version through the following line of code.
 
 ```
-onnx_model.opset_import[0].version
+opset_version = onnx_model.opset_import[0].version
 ```
 
-If the result from checking your ONNX model's opset is **smaller** than the `target_opset` number you passed into the onnxmltools.convert function, do not be alarmed. Note that the ONNXMLTools converter works by converting each operator individually and finding the ONNX version / corresponding opset that it was most recently updated in. Once all of the operators are converted, the resultant ONNX model has the maximal opset version of all of its operators, which could be less than or equal to `target_opset`.
+If the result from checking your ONNX model's opset is *smaller* than the `target_opset` number you passed into the onnxmltools.convert function, do not be alarmed. The ONNXMLTools converter works by converting each operator individually and finding the corresponding ONNX opset version that it was most recently updated in. Once all of the operators are converted, the resultant ONNX model has the maximal opset version from all of its operators, which will be less than or equal to `target_opset`.
 
-To illustrate this concretely, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/master/docs/Operators.md#abs) was most recently updated in Opset 6, and [Add](https://github.com/onnx/onnx/blob/master/docs/Operators.md#add) was most recently updated in Opset 7. Therefore, the converted ONNX model's opset will always be 7, even if you request target_opset=8. The operator set was defined this way to ensure backwards compatibility. Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository. 
+To illustrate this concretely, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/master/docs/Operators.md#abs) was most recently updated in Opset 6, and [Add](https://github.com/onnx/onnx/blob/master/docs/Operators.md#add) was most recently updated in Opset 7. Therefore, the converted ONNX model's opset will always be 7, even if you request target_opset=8. The operator set was defined this way to ensure backwards compatibility. 
 
-### Test all existing converters
+Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository. 
+
+## Test all existing converters
 
 There exists a way
 to automatically check every converter with
