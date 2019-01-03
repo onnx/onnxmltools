@@ -91,30 +91,30 @@ onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7)
 
 ```
 
-
-### Checking the ONNX Operator Set of your converted model
-
-You can check the Operator Set (opset) of your converted ONNX model using [Netron](https://github.com/lutzroeder/Netron), a viewer for Neural Network models. Alternatively, you could identify your converted model's opset version through the following line of code:
-
-```
-# add line here
-```
-
-If the result from checking your ONNX model's opset above is smaller than the `target_opset` number you passed into the onnxmltools.convert function, do not be worried. Note that the ONNXMLTools converter works by looking at each operator in your original framework's model and identifying the respective ONNX opset in which it has most recently been updated. It then takes the maximum over all of the operators used in your new ONNX model to result in the converted model's opset number.
-
-For example, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/master/docs/Operators.md#abs) was most recently updated in Opset 6, and [Add](https://github.com/onnx/onnx/blob/master/docs/Operators.md#add) was most recently updated in Opset 7. Therefore, the ONNX model's opset will always be 7, even if you request target_opset=8. Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository. 
-
 # Testing model converters
 
 *onnxmltools* converts models into the ONNX format which
 can be then used to compute predictions with the
-backend of your choice. There exists a way
+backend of your choice. 
+
+### Checking the Operator Set / Version of your converted ONNX model
+
+You can check the Operator Set (opset) of your converted ONNX model using [Netron](https://github.com/lutzroeder/Netron), a viewer for Neural Network models. Alternatively, you could identify your converted model's opset version through the following line of code:
+
+```
+onnx_model.opset_import[0].version
+```
+
+If the result from checking your ONNX model's opset is **smaller** than the `target_opset` number you passed into the onnxmltools.convert function, do not be alarmed. Note that the ONNXMLTools converter works by converting each operator individually and finding the ONNX version / corresponding opset that it was most recently updated in. Once all of the operators are converted, the resultant ONNX model has the maximal opset version of all of its operators, which could be less than or equal to `target_opset`.
+
+To illustrate this concretely, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/master/docs/Operators.md#abs) was most recently updated in Opset 6, and [Add](https://github.com/onnx/onnx/blob/master/docs/Operators.md#add) was most recently updated in Opset 7. Therefore, the converted ONNX model's opset will always be 7, even if you request target_opset=8. The operator set was defined this way to ensure backwards compatibility. Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository. 
+
+### Test all existing converters
+
+There exists a way
 to automatically check every converter with
 [onnxruntime](https://pypi.org/project/onnxruntime/) or
 [onnxruntime-gpu](https://pypi.org/project/onnxruntime-gpu/).
-
-## Test all existing converters
-
 This process requires the user to clone the *onnxmltools* repository.
 The following command runs all unit tests and generates
 dumps of models, inputs, expected outputs and converted models
