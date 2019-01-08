@@ -56,6 +56,7 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
+      set PYTHONPATH=libsvm\python;%PYTHONPATH%
       pip install -e .
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest'
