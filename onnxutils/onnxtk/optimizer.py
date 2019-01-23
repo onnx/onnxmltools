@@ -129,6 +129,7 @@ class LinkedNode(object):
             self.input[key] = name
 
     def out_redirect(self, old_name, name):
+        assert self.in_or_out
         if old_name in self.output:
             self.output[old_name] = name
         else:
@@ -236,6 +237,10 @@ class LinkedNode(object):
 
 
 class Solution(object):
+    """
+    Solution is the base class for solutions, and it has a basic function is to
+     delete the node range of (begin, begin_n, end_p, end), where 'begin' and 'end' are excluded.
+    """
     def __init__(self, begin, begin_n, end_p, end):
         self.begin = begin
         self.begin_n = begin_n
@@ -256,13 +261,21 @@ class Solution(object):
 
     @staticmethod
     def delete_node(node_list, begin, node, end):  # type: ([],LinkedNode, LinkedNode, LinkedNode)->[]
+        if begin is None:
+            assert node is not None
+            begin = node.precedence
+        elif not isinstance(begin, list):
+            begin = [begin]
+
         if end.in_or_out:
             # if the end is output node, the output name will be kept to avoid the model output name updating.
-            begin.out_redirect(node.single_input, node.single_output)
+            for nb_ in begin:
+                nb_.out_redirect(node.single_input, node.single_output)
         else:
-            target_var_name = node.single_input
-            assert target_var_name in begin.output.values()  # since the output info never be updated, except the final.
-            end.in_redirect(node.single_output, target_var_name)
+            for nb_ in begin:
+                target_var_name = node.single_input
+                assert target_var_name in begin.output.values()  # since the output info never be updated, except the final.
+                end.in_redirect(node.single_output, target_var_name)
 
         begin.successor = [end if v_ == node else v_ for v_ in begin.successor]
         end.precedence = [begin if v_ == node else v_ for v_ in end.precedence]
@@ -271,7 +284,8 @@ class Solution(object):
         return node_list
 
     @staticmethod
-    def add_siso_node(node_list, begin, end, begin_output_name, node):  # type: ([], LinkedNode, LinkedNode, string, LinkedNode)->[]
+    def add_siso_node(node_list, begin, end, begin_output_name, node):
+        # type: ([], LinkedNode, LinkedNode, str, LinkedNode)->[]
         node.in_redirect(node.single_input, begin_output_name)
         end.in_redirect(begin_output_name, node.single_output)
         begin.successor[begin.successor.index(end)] = node
