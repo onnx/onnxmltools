@@ -7,13 +7,18 @@
 from keras.activations import get as _get_activation
 from keras.layers import Dense
 from ....proto import onnx_proto
-from ...common._apply_operation import apply_sigmoid, apply_softmax, apply_identity, apply_relu, apply_add
+from ...common._apply_operation import apply_sigmoid, apply_softmax, apply_identity, apply_add
+from ...common._apply_operation import apply_relu, apply_elu, apply_selu, apply_tanh, apply_hard_sigmoid
 from ...common._registration import register_converter
 
 _activation_map = {_get_activation('sigmoid'): apply_sigmoid,
                    _get_activation('softmax'): apply_softmax,
                    _get_activation('linear'): apply_identity,
-                   _get_activation('relu'): apply_relu}
+                   _get_activation('relu'): apply_relu,
+                   _get_activation('elu'): apply_elu,
+                   _get_activation('selu'): apply_selu,
+                   _get_activation('tanh'): apply_tanh,
+                   _get_activation('hard_sigmoid'): apply_hard_sigmoid}
 
 
 def convert_keras_dense(scope, operator, container):
