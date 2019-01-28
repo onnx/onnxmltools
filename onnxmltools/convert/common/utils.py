@@ -20,6 +20,15 @@ def sklearn_installed():
     except ImportError:
         return False
 
+def skl2onnx_installed():
+    """
+    Checks that *skl2onnx* converter is available.
+    """
+    try:
+        import skl2onnx
+        return True
+    except ImportError:
+        return False
 
 def coreml_installed():
     """
