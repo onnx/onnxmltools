@@ -1,14 +1,14 @@
 import unittest
 import numpy
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType, StringTensorType
+from skl2onnx.common.data_types import FloatTensorType, Int64TensorType, StringTensorType
 from onnxmltools.utils import dump_data_and_model
 
 
 class PipeConcatenateInput:
     def __init__(self, pipe):
         self.pipe = pipe
-        
+
     def transform(self, inp):
         if isinstance(inp, numpy.ndarray):
             return self.pipe.transform(inp)
@@ -72,7 +72,7 @@ class TestSklearnPipeline(unittest.TestCase):
         self.assertTrue(len(model_onnx.graph.node[-1].output) == 1)
         self.assertTrue(model_onnx is not None)
         data = numpy.array(data)
-        data = {'input1': data[:, 0].astype(numpy.int64), 
+        data = {'input1': data[:, 0].astype(numpy.int64),
                 'input2': data[:, 1].astype(numpy.float32)}
         dump_data_and_model(data, PipeConcatenateInput(model), model_onnx,
                             basename="SklearnPipelineScalerMixed-OneOff")

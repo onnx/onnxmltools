@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from sklearn.preprocessing import Imputer
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType
+from skl2onnx.common.data_types import FloatTensorType, Int64TensorType
 from onnxmltools.utils import dump_data_and_model
 
 

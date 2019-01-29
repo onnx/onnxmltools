@@ -4,7 +4,7 @@ from sklearn import datasets
 from sklearn import linear_model
 from sklearn.neighbors import KNeighborsClassifier
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common.data_types import FloatTensorType
+from skl2onnx.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
 

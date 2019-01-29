@@ -5,7 +5,7 @@ import unittest
 import numpy
 from sklearn.feature_extraction.text import CountVectorizer
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common.data_types import StringTensorType
+from skl2onnx.common.data_types import StringTensorType
 from onnxmltools.utils import dump_data_and_model
 
 
@@ -40,7 +40,7 @@ class TestSklearnCountVectorizer(unittest.TestCase):
         self.assertTrue(model_onnx is not None)
         # REVIEW: enable the test when the runtime implements the primitives.
         # dump_data_and_model(corpus, vect, model_onnx, basename="SklearnCountVectorizer")
-        
+
 
 
 if __name__ == "__main__":

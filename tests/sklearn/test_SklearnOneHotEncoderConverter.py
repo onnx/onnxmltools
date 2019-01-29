@@ -5,7 +5,7 @@ import unittest
 import numpy
 from sklearn.preprocessing import OneHotEncoder
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType, StringTensorType
+from skl2onnx.common.data_types import FloatTensorType, Int64TensorType, StringTensorType
 from onnxmltools.utils import dump_data_and_model
 
 
@@ -29,7 +29,7 @@ class TestSklearnOneHotEncoderConverter(unittest.TestCase):
     def test_one_hot_encoder_mixed_string_int(self):
         # categorical_features will be removed in 0.22 (this test will fail by then).
         data = [["0.4", "0.2", 3], ["1.4", "1.2", 0], ["0.2", "2.2", 1]]
-        model = OneHotEncoder(categories='auto')        
+        model = OneHotEncoder(categories='auto')
         model.fit(data)
         inputs = [('input1', StringTensorType([1, 2])), ('input2', Int64TensorType([1, 1]))]
         model_onnx = convert_sklearn(model, 'one-hot encoder mixed-type inputs', inputs)

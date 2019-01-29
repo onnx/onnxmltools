@@ -9,16 +9,16 @@ from distutils.version import StrictVersion as _StrictVersion
 import warnings
 import onnxmltools
 import numpy as np
-from onnxmltools.convert.common.data_types import FloatTensorType
+from skl2onnx.common.data_types import FloatTensorType
 from onnxmltools.utils import create_tensor
 from onnxmltools.utils import dump_data_and_model
 from sklearn.decomposition import TruncatedSVD
 
 
 class TestTruncatedSVD(unittest.TestCase):
-    
+
     def setUp(self):
-        np.random.seed(0)        
+        np.random.seed(0)
 
     def test_truncated_svd(self):
         N, C, K = 2, 3, 2

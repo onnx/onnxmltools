@@ -8,7 +8,7 @@ from sklearn.datasets import load_iris
 from sklearn.svm import SVC, SVR, NuSVC, NuSVR
 from sklearn.svm import LinearSVC
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common.data_types import FloatTensorType
+from skl2onnx.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
 

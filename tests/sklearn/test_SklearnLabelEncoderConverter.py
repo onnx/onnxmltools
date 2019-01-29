@@ -5,7 +5,7 @@ import unittest
 import numpy
 from sklearn.preprocessing import LabelEncoder
 from onnxmltools import convert_sklearn
-from onnxmltools.convert.common.data_types import StringTensorType
+from skl2onnx.common.data_types import StringTensorType
 from onnxmltools.utils import dump_data_and_model
 
 
