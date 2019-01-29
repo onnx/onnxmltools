@@ -58,5 +58,5 @@ def convert_sklearn(model, name=None, initial_types=None, doc_string='', target_
         raise RuntimeError('skl2onnx is not installed. Please install skl2onnx to use this feature.')
 
     from skl2onnx.convert import convert_sklearn as convert_skl2onnx
-    return convert_skl2onnx(model, name, initial_types, doc_string, target_opset, targeted_onnx,
+    return convert_skl2onnx(model, name, initial_types, doc_string, target_opset,
                    custom_conversion_functions, custom_shape_calculators)
