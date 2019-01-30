@@ -2,3 +2,4 @@ six
 numpy
 protobuf
 onnx
+skl2onnx
