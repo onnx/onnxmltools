@@ -13,4 +13,3 @@ svm
 wheel
 xgboost
 lightgbm
-skl2onnx
