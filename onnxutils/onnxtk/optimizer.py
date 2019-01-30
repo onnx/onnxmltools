@@ -363,10 +363,10 @@ class FanInSolution(Solution):
                 ['fan_in_adjustment_in' + str(FanInSolution.number)],
                 ['fan_in_adjustment_out' + str(FanInSolution.number)],
                 perm=self.perm,
-                name='TransposeFanIn' + str(FanOutSolution.number)))
+                name='TransposeFanIn' + str(FanInSolution.number)))
         FanInSolution.number = FanInSolution.number + 1
         precedence_list = self.begin.precedence.copy()
-        node_list = Solution.add_siso_node(node_list, self.begin, self.begin_n, list(self.begin_n.input.values())[0], nnode)
+        node_list = Solution.add_siso_node(node_list, self.begin, self.begin_n, list(self.begin.output.values())[0], nnode)
         for branch in precedence_list:
             node_list = Solution.delete_node(node_list, branch.precedence[0], branch, self.begin)
         return node_list
