@@ -8,8 +8,8 @@ def remove_cast(lnodes, op_set):
     while True:
         sln = []
         for n_ in lnodes:
-            if n_ in op_set and n_.in_single_path():
-                if n_.precedence[0].op_type == 'Cast' and n_.single_ouput().op_type == 'Cast':
+            if n_.op_type in op_set and n_.in_single_path:
+                if n_.precedence[0].op_type == 'Cast' and n_.successor[0].op_type == 'Cast':
                     sln.append(Solution(None, n_.precedence[0], n_.precedence[0], n_))
                     sln.append(Solution(n_, n_.successor[0], n_.successor[0], None))
                     break
@@ -40,7 +40,8 @@ def decast(origin_model, oplist):
                                            [o_.name for o_ in graph.output])
 
     nodes = remove_cast(all_nodes, set(oplist))
-    graph.node.extend([n_.generate for n_ in nodes])
+    for n_ in nodes:
+        graph.node.extend(n_.generate())
 
     return origin_model
 

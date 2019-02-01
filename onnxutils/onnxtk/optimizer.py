@@ -333,8 +333,11 @@ class Solution(object):
         while node != self.end:
             assert len(node.successor) == 1
             end = node.successor[0]
-            node_list = self.delete_node_1ton(node_list, self.begin, node, end)
-            node = end
+            if self.begin:
+                node_list = self.delete_node_nto1(node_list, self.begin, node, end)
+            else:
+                node_list = self.delete_node_nto1(node_list, self.begin, node, end)
+            node = self.end if self.end is None else end
 
         return node_list
 
