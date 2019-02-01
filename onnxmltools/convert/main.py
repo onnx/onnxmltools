@@ -21,12 +21,11 @@ def convert_keras(model, name=None, initial_types=None, doc_string='',
                   target_opset=None, targeted_onnx=onnx.__version__,
                   channel_first_inputs=None, custom_conversion_functions=None, custom_shape_calculators=None,
                   default_batch_size=1):
-    if not utils.keras_installed():
-        raise RuntimeError('keras is not installed. Please install it to use this feature.')
+    if not utils.ketone_installed():
+        raise RuntimeError('ketone is not installed. Please install it to use this feature.')
 
-    from .keras.convert import convert
-    return convert(model, name, default_batch_size, initial_types, doc_string, target_opset, targeted_onnx,
-                   channel_first_inputs, custom_conversion_functions, custom_shape_calculators)
+    from ketone import convert_keras as convert
+    return convert(model, name, doc_string, target_opset, channel_first_inputs)
 
 
 def convert_libsvm(model, name=None, initial_types=None, doc_string='', target_opset=None,
