@@ -5,18 +5,20 @@ from .optimizer import LinkedNode, Solution
 
 def remove_cast(lnodes, op_set):
 
-    sln = None
     while True:
+        sln = []
         for n_ in lnodes:
             if n_ in op_set and n_.in_single_path():
                 if n_.precedence[0].op_type == 'Cast' and n_.single_ouput().op_type == 'Cast':
-                    sln = Solution(None, n_.precedence[0], n_.precedence[0], n_)
+                    sln.append(Solution(None, n_.precedence[0], n_.precedence[0], n_))
+                    sln.append(Solution(n_, n_.successor[0], n_.successor[0], None))
                     break
 
-        if sln is None:
+        if len(sln) == 0:
             break
 
-        lnodes = sln.apply(lnodes)
+        for s_ in sln:
+            lnodes = s_.apply(lnodes)
 
     return lnodes
 
@@ -24,7 +26,7 @@ def remove_cast(lnodes, op_set):
 def decast(origin_model, oplist):
     """
     remove the ONNX cast op from the specified operator.
-    :param origin_model:
+    :param origin_model:these
     :param oplist:
     :return:
     """
@@ -32,9 +34,10 @@ def decast(origin_model, oplist):
     nodelist = list(graph.node)
     del graph.node[:]
 
-    all_nodes = LinkedNode.build_from_onnx(nodelist, origin_model.opset_import[0].version,
-                              inputs=graph.input,
-                              outputs=graph.output)
+    all_nodes = LinkedNode.build_from_onnx(nodelist,
+                                           [],
+                                           [i_.name for i_ in graph.input],
+                                           [o_.name for o_ in graph.output])
 
     nodes = remove_cast(all_nodes, set(oplist))
     graph.node.extend([n_.generate for n_ in nodes])
@@ -49,8 +52,7 @@ def main():
 
     input = sys.argv[1]
     output = sys.argv[2]
-    op_list = sys.argv[2:]
-
+    op_list = sys.argv[3:]
 
     oxml = onnx.load_model(input)
     oxml = decast(oxml, op_list)

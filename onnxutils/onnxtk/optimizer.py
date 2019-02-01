@@ -192,10 +192,10 @@ class LinkedNode(object):
                     if var_ in nchw_inputs:
                         nnode = LinkedNode(
                             helper.make_node(
-                            'Transpose',
-                            [var_],
-                            [new_output],
-                            perm=[0, 2, 3, 1]))
+                                'Transpose',
+                                [var_],
+                                [new_output],
+                                perm=[0, 2, 3, 1]))
                         var_map[new_output] = nnode
                         nnode.add_precedence(target, var_)
                         n_.in_redirect(var_, new_output)
@@ -260,7 +260,10 @@ class Solution(object):
         return perm == list(six.moves.range(len(perm)))
 
     @staticmethod
-    def delete_node(node_list, begin, node, end):  # type: ([],LinkedNode, LinkedNode, LinkedNode)->[]
+    def delete_node_nto1(node_list, begin, node, end):  # type: ([],LinkedNode, LinkedNode, LinkedNode)->[]
+        """
+        delete the node which has n-input and 1-output
+        """
         if begin is None:
             assert node is not None
             begin = node.precedence
@@ -274,11 +277,40 @@ class Solution(object):
         else:
             for nb_ in begin:
                 target_var_name = node.single_input
-                assert target_var_name in begin.output.values()  # since the output info never be updated, except the final.
+                assert target_var_name in nb_.output.values()  # since the output info never be updated, except the final.
                 end.in_redirect(node.single_output, target_var_name)
 
-        begin.successor = [end if v_ == node else v_ for v_ in begin.successor]
-        end.precedence = [begin if v_ == node else v_ for v_ in end.precedence]
+        for nb_ in begin:
+            nb_.successor = [end if v_ == node else v_ for v_ in nb_.successor]
+        end.precedence = [v_ for v_ in end.precedence if v_ != node] + node.precedence
+
+        node_list.remove(node)
+        return node_list
+
+    @staticmethod
+    def delete_node_1ton(node_list, begin, node, end):  # type: ([],LinkedNode, LinkedNode, LinkedNode)->[]
+        """
+        delete the node which has 1-input and n-output
+        """
+        if end is None:
+            assert end is not None
+            end = node.successor
+        elif not isinstance(end, list):
+            end = [end]
+
+        if any(e_.in_or_out for e_ in end):
+            # if the end is output node, the output name will be kept to avoid the model output name updating.
+            begin.out_redirect(node.single_input, node.single_output)
+        else:
+            for ne_ in end:
+                target_var_name = node.single_input
+                # since the output info never be updated, except the final.
+                assert target_var_name in begin.output.values()
+                ne_.in_redirect(node.single_output, target_var_name)
+
+        begin.successor = [v_ for v_ in begin.successor if v_ != node] + node.successor
+        for ne_ in end:
+            ne_.precedence = [begin if v_ == node else v_ for v_ in ne_.precedence]
 
         node_list.remove(node)
         return node_list
@@ -301,7 +333,7 @@ class Solution(object):
         while node != self.end:
             assert len(node.successor) == 1
             end = node.successor[0]
-            node_list = self.delete_node(node_list, self.begin, node, end)
+            node_list = self.delete_node_1ton(node_list, self.begin, node, end)
             node = end
 
         return node_list
@@ -320,10 +352,10 @@ class MergeSolution(Solution):
                 #    node.reshape_input_for_broadcast(perm0)
                 node = node.successor[0]
 
-            node_list = self.delete_node(node_list, self.begin, self.begin_n, self.begin_n.successor[0])
-            node_list = self.delete_node(node_list, self.end_p.precedence[0], self.end_p, self.end)
+            node_list = self.delete_node_1ton(node_list, self.begin, self.begin_n, self.begin_n.successor[0])
+            node_list = self.delete_node_1ton(node_list, self.end_p.precedence[0], self.end_p, self.end)
         else:
-            node_list = self.delete_node(node_list, self.begin_n, self.end_p, self.end)
+            node_list = self.delete_node_1ton(node_list, self.begin_n, self.end_p, self.end)
             self.begin_n.attribute['perm'] = perm_f
         return node_list
 
@@ -360,7 +392,7 @@ class FanOutSolution(Solution):
             FanOutSolution.number = FanOutSolution.number + 1
             node_list = Solution.add_siso_node(node_list, self.end_p, suc, list(suc.input.values())[0], nnode)
 
-        node_list = Solution.delete_node(node_list, self.begin, self.begin_n, self.end_p)
+        node_list = Solution.delete_node_1ton(node_list, self.begin, self.begin_n, self.end_p)
         return node_list
 
 
@@ -382,7 +414,7 @@ class FanInSolution(Solution):
         precedence_list = self.begin.precedence.copy()
         node_list = Solution.add_siso_node(node_list, self.begin, self.begin_n, list(self.begin.output.values())[0], nnode)
         for branch in precedence_list:
-            node_list = Solution.delete_node(node_list, branch.precedence[0], branch, self.begin)
+            node_list = Solution.delete_node_1ton(node_list, branch.precedence[0], branch, self.begin)
         return node_list
 
 
