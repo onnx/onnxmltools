@@ -34,7 +34,7 @@ jobs:
       python -m pip install --upgrade pip
       conda config --set always_yes yes --set changeps1 no
       conda install -c conda-forge protobuf
-      conda install -c conda-forge numpy
+      conda install -c conda-forge numpy=1.15.4
       conda install -c conda-forge cmake
       conda install -c conda-forge openmpi
       conda install -c conda-forge tensorflow
