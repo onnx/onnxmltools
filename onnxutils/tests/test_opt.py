@@ -190,13 +190,6 @@ class OptimizerTestCase(unittest.TestCase):
         self.assertEqual(len(new_nodes), 7)
         self.assertIsNotNone(model)
 
-    @unittest.skip('Need manually copy the real_yolov3.onnx, which is big.')
-    def test_onnx_model(self):
-        with open("./real_yolov3.onnx", 'rb') as fml:
-            oxml= onnx.load_model(fml)  # type: onnx.ModelProto
-            oxml = optimize_onnx_model(oxml)
-            onnx.save_model(oxml, 'real_yolov3_opt.onnx')
-
 
 if __name__ == '__main__':
     unittest.main()
