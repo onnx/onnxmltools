@@ -39,7 +39,10 @@ jobs:
       pip install $(ONNX_PATH)
       pip install -r requirements.txt
       pip install -r requirements-dev.txt
-      test '$(python.version)' != '2.7' && pip install onnxruntime==0.1.4
+      test '$(python.version)' != '2.7' && python -c "import numpy; print(numpy.__version__)"
+      test '$(python.version)' != '2.7' && pip install --upgrade numpy
+      test '$(python.version)' != '2.7' && python -c "import numpy; print(numpy.__version__)"
+      test '$(python.version)' != '2.7' && pip install onnxruntime==0.2.1
       pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
