@@ -355,10 +355,14 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
         attrs['width_scale'] = float(scales[3])
         attrs['mode'] = mode.upper()
         op_version = 1
-    else:
+    elif container.target_opset < 9:
         attrs['scales'] = list(map(float, scales))
         attrs['mode'] = mode.lower()
         op_version = 7
+    else:
+        attrs['scales'] = list(map(float, scales))
+        attrs['mode'] = mode.lower()
+        op_version = 9
 
     container.add_node('Upsample', input_name, output_name, op_version=op_version, **attrs)
 
@@ -384,9 +388,10 @@ def apply_prelu(scope, input_name, output_name, container, operator_name=None, s
                            consumed_inputs=[0, 0])
     elif container.target_opset < 7:
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=6, name=name)
-    else:
+    elif container.target_opset < 9:
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=7, name=name)
-
+    else:
+        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=9, name=name)
 
 def apply_elu(scope, input_name, output_name, container, operator_name=None, alpha=1.0):
     _apply_unary_operation(scope, 'Elu', input_name, output_name, container, operator_name, alpha=alpha)
