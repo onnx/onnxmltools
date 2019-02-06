@@ -240,7 +240,7 @@ def dump_binary_classification(model, suffix="", folder=None, allow_failure=None
     """
     X = [[0, 1], [1, 1], [2, 0]]
     X = numpy.array(X, dtype=numpy.float32)
-    y = ['A', 'B', 'A']
+    y = [0, 1, 0]
     model.fit(X, y)
     model_onnx, prefix = convert_model(model, 'tree-based binary classifier', [('input', FloatTensorType([1, 2]))])
     dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,

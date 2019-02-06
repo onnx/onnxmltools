@@ -24,14 +24,10 @@ def calculate_xgboost_classifier_output_shapes(operator):
             
     if objective == "binary:logistic":
         ncl = 2
-        operator.outputs[0].type = FloatTensorType([N, 2])
     else:
         ncl = ntrees // params['n_estimators']
-        operator.outputs[0].type = Int64TensorType(shape=[N])
-        if operator.target_opset < 7:
-            operator.outputs[1].type = DictionaryType(Int64TensorType([1]), FloatTensorType([1]))
-        else:
-            operator.outputs[1].type = SequenceType(DictionaryType(Int64TensorType([]), FloatTensorType([])), N)
+    operator.outputs[0].type = Int64TensorType(shape=[N])
+    operator.outputs[1].type = operator.outputs[1].type = FloatTensorType([N, ncl])
 
 
 register_shape_calculator('XGBClassifier', calculate_xgboost_classifier_output_shapes)

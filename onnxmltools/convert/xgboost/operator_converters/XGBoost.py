@@ -248,14 +248,9 @@ class XGBClassifierConverter(XGBConverter):
                                op_domain='ai.onnx.ml', **attr_pairs)
         elif objective == "multi:softprob":
             ncl = len(js_trees) // params['n_estimators']
-            probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
-                               [operator.outputs[0].full_name, probability_tensor_name],
+                               operator.output_full_names,
                                op_domain='ai.onnx.ml', **attr_pairs)
-            zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-            zipmap_attrs['classlabels_int64s'] = class_labels        
-            container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
-                                op_domain='ai.onnx.ml', **zipmap_attrs)
         else:
             raise RuntimeError("Unexpected objective: {0}".format(objective))            
 
