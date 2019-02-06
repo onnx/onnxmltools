@@ -20,6 +20,15 @@ def sklearn_installed():
     except ImportError:
         return False
 
+def skl2onnx_installed():
+    """
+    Checks that *skl2onnx* converter is available.
+    """
+    try:
+        import skl2onnx
+        return True
+    except ImportError:
+        return False
 
 def coreml_installed():
     """
@@ -32,12 +41,12 @@ def coreml_installed():
         return False
 
 
-def keras_installed():
+def ketone_installed():
     """
-    Checks that *keras* is available.
+    Checks that *ketone* is available.
     """
     try:
-        import keras
+        import ketone
         return True
     except ImportError:
         return False
