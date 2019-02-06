@@ -41,12 +41,12 @@ def coreml_installed():
         return False
 
 
-def ketone_installed():
+def keras2onnx_installed():
     """
-    Checks that *ketone* is available.
+    Checks that *keras2onnx* is available.
     """
     try:
-        import ketone
+        import keras2onnx
         return True
     except ImportError:
         return False
