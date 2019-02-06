@@ -9,8 +9,10 @@ import numbers, six
 import numpy as np
 from collections import Counter
 from lightgbm import LGBMClassifier, LGBMRegressor
+from ...common._apply_operation import apply_div, apply_reshape, apply_sub
 from ...common._registration import register_converter
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
+from ....proto import onnx_proto
 
 
 def _translate_split_criterion(criterion):
@@ -114,8 +116,6 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
 
 def convert_lightgbm(scope, operator, container):
     gbm_model = operator.raw_operator
-    if gbm_model.boosting_type != 'gbdt':
-        raise ValueError('Only support LightGBM classifier with boosting_type=gbdt')
     gbm_text = gbm_model.booster_.dump_model()
 
     attrs = get_default_tree_classifier_attribute_pairs()
@@ -161,8 +161,10 @@ def convert_lightgbm(scope, operator, container):
     # Create ONNX object
     if isinstance(gbm_model, LGBMClassifier):
         # Prepare label information for both of TreeEnsembleClassifier and ZipMap
+        class_type = onnx_proto.TensorProto.STRING
         zipmap_attrs = {'name': scope.get_unique_variable_name('ZipMap')}
         if all(isinstance(i, (numbers.Real, bool, np.bool_)) for i in gbm_model.classes_):
+            class_type = onnx_proto.TensorProto.INT64
             class_labels = [int(i) for i in gbm_model.classes_]
             attrs['classlabels_int64s'] = class_labels
             zipmap_attrs['classlabels_int64s'] = class_labels
@@ -175,15 +177,54 @@ def convert_lightgbm(scope, operator, container):
 
         # Create tree classifier
         probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
+        label_tensor_name = scope.get_unique_variable_name('label_tensor')
+
         container.add_node('TreeEnsembleClassifier', operator.input_full_names,
-                           [operator.outputs[0].full_name, probability_tensor_name],
+                           [label_tensor_name, probability_tensor_name],
                            op_domain='ai.onnx.ml', **attrs)
+        prob_tensor = probability_tensor_name
+
+        if gbm_model.boosting_type == 'rf':
+            col_index_name = scope.get_unique_variable_name('col_index')
+            first_col_name = scope.get_unique_variable_name('first_col')
+            zeroth_col_name = scope.get_unique_variable_name('zeroth_col')
+            denominator_name = scope.get_unique_variable_name('denominator')
+            modified_first_col_name = scope.get_unique_variable_name('modified_first_col')
+            unit_float_tensor_name = scope.get_unique_variable_name('unit_float_tensor')
+            merged_prob_name = scope.get_unique_variable_name('merged_prob')
+            predicted_label_name = scope.get_unique_variable_name('predicted_label')
+            classes_name = scope.get_unique_variable_name('classes')
+            final_label_name = scope.get_unique_variable_name('final_label')
+
+            container.add_initializer(col_index_name, onnx_proto.TensorProto.INT64, [], [1])
+            container.add_initializer(unit_float_tensor_name, onnx_proto.TensorProto.FLOAT, [], [1.0])
+            container.add_initializer(denominator_name, onnx_proto.TensorProto.FLOAT, [], [100.0])
+            container.add_initializer(classes_name, class_type,
+                                      [len(class_labels)], class_labels)
+
+            container.add_node('ArrayFeatureExtractor', [probability_tensor_name, col_index_name],
+                               first_col_name, name=scope.get_unique_operator_name('ArrayFeatureExtractor'),
+                               op_domain='ai.onnx.ml')
+            apply_div(scope, [first_col_name, denominator_name], modified_first_col_name, container, broadcast=1)
+            apply_sub(scope, [unit_float_tensor_name, modified_first_col_name], zeroth_col_name, container, broadcast=1)
+            container.add_node('Concat', [zeroth_col_name, modified_first_col_name],
+                               merged_prob_name, name=scope.get_unique_operator_name('Concat'), axis=1)
+            container.add_node('ArgMax', merged_prob_name,
+                               predicted_label_name, name=scope.get_unique_operator_name('ArgMax'), axis=1)
+            container.add_node('ArrayFeatureExtractor', [classes_name, predicted_label_name], final_label_name,
+                               name=scope.get_unique_operator_name('ArrayFeatureExtractor'), op_domain='ai.onnx.ml')
+            apply_reshape(scope, final_label_name, operator.outputs[0].full_name, container, desired_shape=[-1,])
+            prob_tensor = merged_prob_name
+        else:
+            container.add_node('Identity', label_tensor_name, operator.outputs[0].full_name)
 
         # Convert probability tensor to probability map (keys are labels while values are the associated probabilities)
-        container.add_node('ZipMap', probability_tensor_name, operator.outputs[1].full_name,
+        container.add_node('ZipMap', prob_tensor, operator.outputs[1].full_name,
                            op_domain='ai.onnx.ml', **zipmap_attrs)
     else:
         # Create tree regressor
+        output_name = scope.get_unique_variable_name('output')
+
         keys_to_be_renamed = list(k for k in attrs.keys() if k.startswith('class_'))
         for k in keys_to_be_renamed:
             # Rename class_* attribute to target_* because TreeEnsebmleClassifier and TreeEnsembleClassifier have
@@ -191,7 +232,16 @@ def convert_lightgbm(scope, operator, container):
             attrs['target' + k[5:]] = copy.deepcopy(attrs[k])
             del attrs[k]
         container.add_node('TreeEnsembleRegressor', operator.input_full_names,
-                           operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
+                           output_name, op_domain='ai.onnx.ml', **attrs)
+
+        if gbm_model.boosting_type == 'rf':
+            denominator_name = scope.get_unique_variable_name('denominator')
+
+            container.add_initializer(denominator_name, onnx_proto.TensorProto.FLOAT, [], [100.0])
+
+            apply_div(scope, [output_name, denominator_name], operator.output_full_names, container, broadcast=1)
+        else:
+            container.add_node('Identity', output_name, operator.output_full_names)
 
 
 register_converter('LgbmClassifier', convert_lightgbm)

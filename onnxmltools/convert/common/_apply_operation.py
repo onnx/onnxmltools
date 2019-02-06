@@ -378,7 +378,7 @@ def apply_prelu(scope, input_name, output_name, container, operator_name=None, s
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=7, name=name)
 
 
-def apply_elu(scope, input_name, output_name, container, operator_name=None, alpha=None):
+def apply_elu(scope, input_name, output_name, container, operator_name=None, alpha=1.0):
     _apply_unary_operation(scope, 'Elu', input_name, output_name, container, operator_name, alpha=alpha)
 
 
