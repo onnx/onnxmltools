@@ -22,13 +22,13 @@ def convert_keras(model, name=None, initial_types=None, doc_string='',
                   target_opset=None, targeted_onnx=onnx.__version__,
                   channel_first_inputs=None, custom_conversion_functions=None, custom_shape_calculators=None,
                   default_batch_size=1):
-    if not utils.ketone_installed():
-        raise RuntimeError('ketone is not installed. Please install it to use this feature.')
+    if not utils.keras2onnx_installed():
+        raise RuntimeError('keras2onnx is not installed. Please install it to use this feature.')
 
     if custom_conversion_functions:
         warnings.warn('custom_conversion_functions is not supported any more. Please set it to None.')
 
-    from ketone import convert_keras as convert
+    from keras2onnx import convert_keras as convert
     return convert(model, name, doc_string, target_opset, channel_first_inputs)
 
 
