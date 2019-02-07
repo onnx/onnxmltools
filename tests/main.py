@@ -24,6 +24,7 @@ def run_tests(library=None, folder=None):
     which can be later used to tests a backend (or a runtime).
     
     :param library: possible options,
+        ``'Sparkml'`` for *sparkml*,
         ``'Sklearn'`` for *scikit-learn*,
         ``'LightGbm'`` for *lightgbm*,
         ``'Cml'`` for *coremltools*,
@@ -42,11 +43,14 @@ def run_tests(library=None, folder=None):
     except ImportError:
         raise ImportError("Cannot import onnxmltools. It must be installed first.")
     
-    available = {'Sklearn': ['sklearn'],
-                 'LightGbm': ['lightgbm'],
-                 'LibSvm': ['svmlib'],
-                 'Cml': ['coreml'],
-                 'Keras': ['end2end']}
+    available = {
+        'Sparkml': ['sparkml'],
+        'Sklearn': ['sklearn'],
+        'LightGbm': ['lightgbm'],
+        'LibSvm': ['svmlib'],
+        'Cml': ['coreml'],
+        'Keras': ['end2end']
+    }
     
     if library is None:
         library = list(available.keys())
@@ -106,5 +110,6 @@ def run_tests(library=None, folder=None):
                     
     
 if __name__ == "__main__":
-    folder = None if len(sys.argv) < 2 else sys.argv[1]
-    run_tests(folder=folder)
+    library = None if len(sys.argv) < 2 else sys.argv[1]
+    folder = None if len(sys.argv) < 3 else sys.argv[2]
+    run_tests(library=library, folder=folder)

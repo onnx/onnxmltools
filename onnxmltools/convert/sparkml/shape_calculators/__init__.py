@@ -4,9 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .main import convert_coreml
-from .main import convert_keras
-from .main import convert_libsvm
-from .main import convert_lightgbm
-from .main import convert_sklearn
-from .main import convert_sparkml
+# To register shape calculators for sparkml operators, import associated modules here.
+from . import StringIndexer
+from . import OneHotEncoder
+from . import LogisticRegression
+from . import VectorAssembler
