@@ -10,7 +10,7 @@ from onnxmltools.utils import dump_multiple_classification, dump_single_regressi
 
 
 class TestXGBoostModels(unittest.TestCase):
-    
+
     def test_xgb_regressor(self):
         iris = load_iris()
         X = iris.data[:, :2]
@@ -21,7 +21,7 @@ class TestXGBoostModels(unittest.TestCase):
         conv_model = convert_xgboost(xgb, initial_types=[('input', FloatTensorType(shape=[1, 'None']))])
         self.assertTrue(conv_model is not None)
         dump_single_regression(xgb)
-        
+
     def test_xgb_classifier(self):
         iris = load_iris()
         X = iris.data[:, :2]
