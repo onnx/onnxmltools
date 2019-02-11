@@ -5,19 +5,11 @@ import unittest
 from pyspark.ml.feature import VectorAssembler
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from onnxmltools.utils.tests_spark_helper import start_spark,stop_spark
+from sparkml import dump_data_and_sparkml_model
+from sparkml import SparkMlTestCase
 
 
-class TestSparkmlStringIndexer(unittest.TestCase):
-    def setUp(self):
-        self.spark = start_spark()
-
-
-    def tearDown(self):
-        stop_spark(self.spark)
-
-
+class TestSparkmlStringIndexer(SparkMlTestCase):
     def test_model_vector_assembler(self):
         import numpy
         import pandas

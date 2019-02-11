@@ -5,24 +5,17 @@ import unittest
 from pyspark.ml.feature import StringIndexer
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from onnxmltools.utils.tests_spark_helper import start_spark,stop_spark
+from sparkml import dump_data_and_sparkml_model
+from sparkml import SparkMlTestCase
 
 
-class TestSparkmlStringIndexer(unittest.TestCase):
-    def setUp(self):
-        self.spark = start_spark()
-
-
-    def tearDown(self):
-        stop_spark(self.spark)
-
-
+class TestSparkmlStringIndexer(SparkMlTestCase):
     def test_model_string_indexer(self):
         indexer = StringIndexer(inputCol='cat1', outputCol='cat1_index', handleInvalid='skip')
         data = self.spark.createDataFrame([("a",), ("b",), ("c",), ("a",), ("a",), ("c",)], ['cat1'])
         model = indexer.fit(data)
-        model_onnx = convert_sparkml(model, 'Sparkml StringIndexer', [('input', StringTensorType([1, 1]))])
+        # the input name should match that of what StringIndexer.inputCol
+        model_onnx = convert_sparkml(model, 'Sparkml StringIndexer', [('cat1', StringTensorType([1, 1]))])
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
         # run the model

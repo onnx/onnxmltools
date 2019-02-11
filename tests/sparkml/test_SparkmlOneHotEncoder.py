@@ -5,25 +5,17 @@ import unittest
 from pyspark.ml.feature import OneHotEncoderEstimator
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from onnxmltools.utils.tests_spark_helper import start_spark,stop_spark
+from sparkml import dump_data_and_sparkml_model
+from sparkml import SparkMlTestCase
 
 
-class TestSparkmlOneHotEncoder(unittest.TestCase):
-    def setUp(self):
-        self.spark = start_spark()
-
-
-    def tearDown(self):
-        stop_spark(self.spark)
-
-
+class TestSparkmlOneHotEncoder(SparkMlTestCase):
     def test_model_onehot_encoder(self):
         import numpy
         encoder = OneHotEncoderEstimator(inputCols=['index'], outputCols=['indexVec'])
         data = self.spark.createDataFrame([(0.0,), (1.0,), (2.0,), (2.0,), (0.0,), (2.0,)], ['index'])
         model = encoder.fit(data)
-        model_onnx = convert_sparkml(model, 'Sparkml OneHotEncoder', [('input', FloatTensorType([1, 1]))])
+        model_onnx = convert_sparkml(model, 'Sparkml OneHotEncoder', [('index', FloatTensorType([1, 1]))])
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
         # run the model

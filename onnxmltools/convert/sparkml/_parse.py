@@ -98,12 +98,52 @@ def build_sparkml_operator_name_map():
 
 sparkml_operator_name_map = build_sparkml_operator_name_map()
 
+def build_io_name_map():
+    map = {
+        "pyspark.ml.classification.LogisticRegressionModel": (
+            lambda model: [model.getOrDefault("featuresCol")],
+            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")]
+        ),
+        "pyspark.ml.feature.OneHotEncoderModel": (
+            lambda model: model.getOrDefault("inputCols"),
+            lambda model: model.getOrDefault("outputCols")
+        ),
+        "pyspark.ml.feature.StringIndexerModel": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.feature.VectorAssembler": (
+            lambda model: model.getOrDefault("inputCols"),
+            lambda model: [model.getOrDefault("outputCol")]
+        )
+    }
+    return map
+
+io_name_map = build_io_name_map()
+
+def _get_input_names(model):
+    '''
+    Returns the name(s) of the input(s) for a SparkML operator
+    :param model: SparkML Model
+    :return: list of input names
+    '''
+    return io_name_map[_get_sparkml_operator_name(type(model))][0](model)
+
+
+def _get_output_names(model):
+    '''
+    Returns the name(s) of the output(s) for a SparkML operator
+    :param model: SparkML Model
+    :return: list of output names
+    '''
+    return io_name_map[_get_sparkml_operator_name(type(model))][1](model)
+
 
 def _get_sparkml_operator_name(model_type):
     '''
     Get operator name of the input argument
 
-    :param model_type:  A spark-ml object (e.g., SGDClassifier and Binarizer)
+    :param model_type:  A spark-ml object (LinearRegression, StringIndexer, ...)
     :return: A string which stands for the type of the input model in our conversion framework
     '''
     if model_type not in sparkml_operator_name_map:
@@ -111,33 +151,67 @@ def _get_sparkml_operator_name(model_type):
     return sparkml_operator_name_map[model_type]
 
 
-def _parse_sparkml_simple_model(scope, model, inputs):
+def _get_variable_for_input(scope, input_name, global_inputs, output_dict):
+    '''
+    Find the corresponding Variable for a given raw operator (model) name
+    The variable is either supplied as graph/global inputs or has been generated as output by previous ops
+    :param input_name:
+    :param global_inputs:
+    :param output_dict:
+    :return:
+    '''
+    if input_name in output_dict:
+        value = output_dict[input_name]
+        ref_count = value[0]
+        variable = value[1]
+        output_dict[input_name] = [ref_count+1, variable]
+        return variable
+
+    matches = [x for x in global_inputs if x.raw_name == input_name]
+    if matches:
+        return matches[0]
+    #
+    # create a new Var
+    #
+    return scope.declare_local_variable(input_name)
+
+def _parse_sparkml_simple_model(scope, model, global_inputs, output_dict):
     '''
     This function handles all non-pipeline models.
 
     :param scope: Scope object
-    :param model: A spark-ml object (e.g., OneHotEncoder and LogisticRegression)
-    :param inputs: A list of variables
+    :param model: A spark-ml Transformer/Evaluator (e.g., OneHotEncoder and LogisticRegression)
+    :param global_inputs: A list of variables
+    :param output_dict: An accumulated list of output_original_name->(ref_count, variable)
     :return: A list of output variables which will be passed to next stage
     '''
     this_operator = scope.declare_local_operator(_get_sparkml_operator_name(type(model)), model)
-    this_operator.inputs = inputs
-
-    if type(model) in sparkml_classifier_list:
-        # For classifiers, we may have two outputs, one for label and the other one for probabilities of all classes.
-        # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
-        label_variable = scope.declare_local_variable('label', FloatTensorType())
-        probability_map_variable = scope.declare_local_variable('probabilities', FloatTensorType())
-        this_operator.outputs.append(label_variable)
-        this_operator.outputs.append(probability_map_variable)
-    else:
-        # We assume that all spark-ml operator can only produce a single float tensor.
-        variable = scope.declare_local_variable('output', FloatTensorType())
+    raw_input_names = _get_input_names(model)
+    this_operator.inputs = [_get_variable_for_input(scope, x, global_inputs, output_dict) for x in raw_input_names]
+    raw_output_names = _get_output_names(model)
+    for output_name in raw_output_names:
+        variable = scope.declare_local_variable(output_name, FloatTensorType())
         this_operator.outputs.append(variable)
-    return this_operator.outputs
+        output_dict[variable.raw_name] = [0, variable]
 
 
-def _parse_sparkml_pipeline(scope, model, inputs):
+    # if type(model) in sparkml_classifier_list:
+    #     # For classifiers, we may have two outputs, one for label and the other one for probabilities of all classes.
+    #     # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
+    #     label_variable = scope.declare_local_variable('label', FloatTensorType())
+    #     probability_map_variable = scope.declare_local_variable('probabilities', FloatTensorType())
+    #     this_operator.outputs.append(label_variable)
+    #     this_operator.outputs.append(probability_map_variable)
+    #     output_dict[label_variable.raw_name] = [0, label_variable]
+    #     output_dict[probability_map_variable.raw_name] = [0, probability_map_variable]
+    # else:
+    #     # We assume that all spark-ml operator can only produce a single float tensor.
+    #     variable = scope.declare_local_variable('output', FloatTensorType())
+    #     this_operator.outputs.append(variable)
+    #     output_dict[variable.raw_name] = [0, variable]
+
+
+def _parse_sparkml_pipeline(scope, model, global_inputs, output_dict):
     '''
     The basic ideas of spark-ml parsing:
         1. Sequentially go though all stages defined in the considered spark-ml pipeline
@@ -145,14 +219,14 @@ def _parse_sparkml_pipeline(scope, model, inputs):
 
     :param scope: Scope object defined in _topology.py
     :param model: spark-ml pipeline object
-    :param inputs: A list of Variable objects
+    :param global_inputs: A list of Variable objects
+    :param output_dict: An accumulated list of output_original_name->(ref_count, variable)
     :return: A list of output variables produced by the input pipeline
     '''
-    for step in model.steps:
-        inputs = _parse_sparkml(scope, step[1], inputs)
-    return inputs
+    for stage in model.stages:
+        _parse_sparkml(scope, stage, global_inputs, output_dict)
 
-def _parse_sparkml(scope, model, inputs):
+def _parse_sparkml(scope, model, global_inputs, output_dict):
     '''
     This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
     model's type.
@@ -162,9 +236,9 @@ def _parse_sparkml(scope, model, inputs):
     :return: The output variables produced by the input model
     '''
     if isinstance(model, PipelineModel):
-        return _parse_sparkml_pipeline(scope, model, inputs)
+        return _parse_sparkml_pipeline(scope, model, global_inputs, output_dict)
     else:
-        return _parse_sparkml_simple_model(scope, model, inputs)
+        return _parse_sparkml_simple_model(scope, model, global_inputs, output_dict)
 
 
 def parse_sparkml(model, initial_types=None, target_opset=None,
@@ -195,7 +269,12 @@ def parse_sparkml(model, initial_types=None, target_opset=None,
         raw_model_container.add_input(variable)
 
     # Parse the input spark-ml model as a Topology object.
-    outputs = _parse_sparkml(scope, model, inputs)
+    output_dict = {}
+    _parse_sparkml(scope, model, inputs, output_dict)
+    outputs = []
+    for k, v in output_dict.items():
+        if v[0] == 0: # ref count is zero
+            outputs.append(v[1])
 
     # THe object raw_model_container is a part of the topology we're going to return. We use it to store the outputs of
     # the spark-ml's computational graph.

@@ -13,3 +13,4 @@ wheel
 xgboost
 lightgbm
 pyspark==2.3.2
+openpyxl

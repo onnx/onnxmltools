@@ -5,7 +5,7 @@ from pyspark.sql.types import ArrayType, FloatType, DoubleType
 import numpy
 import pickle
 import os
-from .utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
+from onnxmltools.utils.utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
 
 def start_spark():
     import os
