@@ -1,6 +1,7 @@
 """
 Tests scilit-learn's tree-based methods' converters.
 """
+import sys
 import unittest
 from sklearn.datasets import load_iris
 from xgboost import XGBRegressor, XGBClassifier
@@ -11,6 +12,7 @@ from onnxmltools.utils import dump_multiple_classification, dump_single_regressi
 
 class TestXGBoostModels(unittest.TestCase):
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converted not tested on python 2")
     def test_xgb_regressor(self):
         iris = load_iris()
         X = iris.data[:, :2]
@@ -22,6 +24,7 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_single_regression(xgb, suffix="-Dec4")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converted not tested on python 2")
     def test_xgb_classifier(self):
         iris = load_iris()
         X = iris.data[:, :2]
@@ -34,6 +37,7 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_binary_classification(xgb, verbose=True)
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converted not tested on python 2")
     def test_xgb_classifier_multi(self):
         iris = load_iris()
         X = iris.data[:, :2]
