@@ -20,7 +20,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb.fit(X, y)
         conv_model = convert_xgboost(xgb, initial_types=[('input', FloatTensorType(shape=[1, 'None']))])
         self.assertTrue(conv_model is not None)
-        dump_single_regression(xgb)
+        dump_single_regression(xgb, suffix="-Dec4")
 
     def test_xgb_classifier(self):
         iris = load_iris()
