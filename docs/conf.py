@@ -11,7 +11,7 @@ import shutil
 import sphinx_gallery.gen_gallery
 import onnxmltools
 import onnxruntime
-import sphinx_modern_theme
+import sphinx_modern_theme_modified
 
 
 # -- Project information -----------------------------------------------------
@@ -41,14 +41,14 @@ source_suffix = ['.rst']
 master_doc = 'index'
 language = "en"
 exclude_patterns = []
-pygments_style = 'sphinx'
+pygments_style = 'default'
 
 # -- Options for HTML output -------------------------------------------------
 
 html_theme = "sphinx_mo"
 html_static_path = ['_static']
-html_theme = "sphinx_modern_theme"
-html_theme_path = [sphinx_modern_theme.get_html_theme_path()]
+html_theme = "sphinx_modern_theme_modified"
+html_theme_path = [sphinx_modern_theme_modified.get_html_theme_path()]
 html_logo = "ONNXMLTools_logo_main.png"
 
 # -- Options for intersphinx extension ---------------------------------------
