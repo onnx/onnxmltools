@@ -43,15 +43,13 @@ def run_tests(library=None, folder=None):
     except ImportError:
         raise ImportError("Cannot import onnxmltools. It must be installed first.")
     
-    available = {
-        'Sparkml': ['sparkml'],
-        'Sklearn': ['sklearn'],
-        'LightGbm': ['lightgbm'],
-        'LibSvm': ['svmlib'],
-        'Cml': ['coreml'],
-        'Keras': ['end2end']
-    }
-    
+    available = {'Sklearn': ['sklearn'],
+                 'LightGbm': ['lightgbm'],
+                 'LibSvm': ['svmlib'],
+                 'Cml': ['coreml'],
+                 'Sparkml': ['sparkml']
+                 }
+
     if library is None:
         library = list(available.keys())
     elif not isinstance(library, list):

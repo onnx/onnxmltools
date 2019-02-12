@@ -6,7 +6,7 @@
 
 from ..proto import onnx
 from .common import utils
-
+import warnings
 
 def convert_coreml(model, name=None, initial_types=None, doc_string='', target_opset=None,
                    targeted_onnx=onnx.__version__ , custom_conversion_functions=None, custom_shape_calculators=None):
@@ -22,12 +22,14 @@ def convert_keras(model, name=None, initial_types=None, doc_string='',
                   target_opset=None, targeted_onnx=onnx.__version__,
                   channel_first_inputs=None, custom_conversion_functions=None, custom_shape_calculators=None,
                   default_batch_size=1):
-    if not utils.keras_installed():
-        raise RuntimeError('keras is not installed. Please install it to use this feature.')
+    if not utils.keras2onnx_installed():
+        raise RuntimeError('keras2onnx is not installed. Please install it to use this feature.')
 
-    from .keras.convert import convert
-    return convert(model, name, default_batch_size, initial_types, doc_string, target_opset, targeted_onnx,
-                   channel_first_inputs, custom_conversion_functions, custom_shape_calculators)
+    if custom_conversion_functions:
+        warnings.warn('custom_conversion_functions is not supported any more. Please set it to None.')
+
+    from keras2onnx import convert_keras as convert
+    return convert(model, name, doc_string, target_opset, channel_first_inputs)
 
 
 def convert_libsvm(model, name=None, initial_types=None, doc_string='', target_opset=None,
@@ -43,7 +45,7 @@ def convert_libsvm(model, name=None, initial_types=None, doc_string='', target_o
 def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target_opset=None,
                      targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     if not utils.lightgbm_installed():
-        raise RuntimeError('scikit-learn is not installed. Please install lightgbm to use this feature.')
+        raise RuntimeError('lightgbm is not installed. Please install lightgbm to use this feature.')
 
     from .lightgbm.convert import convert
     return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
@@ -55,8 +57,11 @@ def convert_sklearn(model, name=None, initial_types=None, doc_string='', target_
     if not utils.sklearn_installed():
         raise RuntimeError('scikit-learn is not installed. Please install scikit-learn to use this feature.')
 
-    from .sklearn.convert import convert
-    return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
+    if not utils.skl2onnx_installed():
+        raise RuntimeError('skl2onnx is not installed. Please install skl2onnx to use this feature.')
+
+    from skl2onnx.convert import convert_sklearn as convert_skl2onnx
+    return convert_skl2onnx(model, name, initial_types, doc_string, target_opset,
                    custom_conversion_functions, custom_shape_calculators)
 
 def convert_sparkml(model, name=None, initial_types=None, doc_string='', target_opset=None,
