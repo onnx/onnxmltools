@@ -1,5 +1,5 @@
 """
-Tests scikit-linear converter.
+Tests xgboost Unpickle.
 """
 import sys
 import os
@@ -24,4 +24,3 @@ class TestXGBoostUnpickle06(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
