@@ -16,6 +16,7 @@ from onnxmltools.utils import dump_data_and_model
 class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
 
     @unittest.skipIf(sys.version_info[0] == 2, reason="pickled with Python 3, cannot unpickle with 2")
+    @unittest.skipIf(sys.platform.startswith('win'), reason="pickled on linux, may not work on windows")
     def test_root_leave(self):
         this = os.path.abspath(os.path.dirname(__file__))
         for name in ["example.pkl"]:
