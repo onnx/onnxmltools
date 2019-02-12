@@ -53,14 +53,6 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
-      pip install -q scipy==1.2.0 --no-deps
-      pip show scipy
-      python -c "import numpy;print('numpy:',numpy.__version__)"
-      python -c "import numpy;from sklearn.feature_extraction import DictVectorizer;print('DictVectorizer:',DictVectorizer.__class__)"
-      
-    displayName: 'Install scipy with pip (DLL not found with conda version)'
-
-  - script: |
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       pip install -e .
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
