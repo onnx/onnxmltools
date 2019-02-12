@@ -54,7 +54,8 @@ jobs:
 
   - script: |
       conda uninstall -y scipy
-      pip install scipy
+      pip install -y scipy --force-reinstall
+      pip show scipy
     displayName: 'Install scipy with pip (DLL not found with conda version)'
 
   - script: |
