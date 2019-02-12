@@ -38,12 +38,12 @@ jobs:
       packageSpecs: 'python=$(python.version)'
 
   - script: |
-      conda install -y -c conda-forge protobuf scipy
-      python -m pip install --upgrade pip numpy
+      conda install -y -c conda-forge protobuf scipy=1.1.0 numpy
+      python -m pip install --upgrade pip
       pip install %COREML_PATH% %ONNX_PATH% numpy cntk==2.5.1
       pip install -r requirements-dev.txt
       pip install %KERAS%
-      # install libsvm from github
+      REM install libsvm from github
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
