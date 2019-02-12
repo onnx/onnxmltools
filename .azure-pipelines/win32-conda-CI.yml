@@ -39,7 +39,7 @@ jobs:
 
   - script: |
       conda install -y -c conda-forge protobuf scipy
-      python -m pip install --upgrade pip
+      python -m pip install --upgrade pip numpy
       pip install %COREML_PATH% %ONNX_PATH% numpy cntk==2.5.1
       pip install -r requirements-dev.txt
       pip install %KERAS%
