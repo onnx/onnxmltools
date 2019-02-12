@@ -107,7 +107,7 @@ def search_converted_models(root=None):
             if not os.path.exists(v):
                 ok = False
         if ok:
-            models = [basename + ".model.pkl", basename + ".model.keras"]
+            models = [basename + ".model.pkl"]
             for model in models:
                 if os.path.exists(model):
                     res['model'] = model
@@ -138,9 +138,6 @@ def load_data_and_model(items_as_dict, **context):
                         else:
                             raise ImportError("Unable to load '{0}' due to {1}".format(v, e))
                     res[k] = bin
-            elif os.path.splitext(v)[-1] == ".keras":
-                import keras.models
-                res[k] = keras.models.load_model(v, custom_objects=context)
             else:
                 res[k] = v
         else:

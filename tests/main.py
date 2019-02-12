@@ -24,10 +24,8 @@ def run_tests(library=None, folder=None):
     which can be later used to tests a backend (or a runtime).
     
     :param library: possible options,
-        ``'Sklearn'`` for *scikit-learn*,
         ``'LightGbm'`` for *lightgbm*,
         ``'Cml'`` for *coremltools*,
-        ``'Keras'`` for *keras*,
         parameter *library* can be None to test all,
         a list of them or just a string
     :param folder: where to put the dumped files
