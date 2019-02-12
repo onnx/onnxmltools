@@ -53,8 +53,9 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
-      pip install -q scipy --force-reinstall
+      pip install -q scipy==1.2.0 --no-deps
       pip show scipy
+      python -c "import numpy"
     displayName: 'Install scipy with pip (DLL not found with conda version)'
 
   - script: |
