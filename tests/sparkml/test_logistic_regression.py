@@ -35,28 +35,13 @@ class TestSparkmlLogisticRegression(SparkMlTestCase):
         # run the model
         import pandas
         predicted = model.transform(data)
-        self.spark.udf.register("sparseToArray", lambda x: x.toArray().tolist(), ArrayType(elementType=FloatType(), containsNull=False))
-        sql = get_conversion_sql(data)
-        data_np = data.selectExpr(sql).toPandas().features.apply(pandas.Series).values.astype(numpy.float32)
-        sql = get_conversion_sql(predicted)
+        data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         expected = [
-            predicted.selectExpr(sql).select('prediction').toPandas().values.astype(numpy.float32),
-            predicted.selectExpr(sql).select('probability').toPandas().probability.apply(pandas.Series).values.astype(numpy.float32)
+            predicted.toPandas().prediction.values.astype(numpy.float32),
+            predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         ]
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlLogisticRegression")
-
-
-def get_conversion_sql(df):
-    cols = df.columns
-    schema = df.schema
-    sql = []
-    for i in range(0, len(cols)):
-        if isinstance(schema.fields[i].dataType, VectorUDT):
-            sql.append("sparseToArray(" + cols[i] + ") as " + cols[i])
-        else:
-            sql.append(cols[i])
-    return sql
 
 
 if __name__ == "__main__":

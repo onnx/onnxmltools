@@ -6,7 +6,6 @@ import unittest
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAssembler
-from pyspark.sql.types import ArrayType, FloatType
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
@@ -55,11 +54,10 @@ class TestSparkmlPipeline(SparkMlTestCase):
             'education': test_data.select('education').toPandas().values,
             'marital_status': test_data.select('marital_status').toPandas().values
         }
-        self.spark.udf.register("sparseToArray", lambda x: x.toArray().tolist(), ArrayType(elementType=FloatType(), containsNull=False))
         expected = [
-            predicted.select('label').toPandas().values.astype(numpy.float32),
-            predicted.select('prediction').toPandas().values.astype(numpy.float32),
-            predicted.selectExpr("sparseToArray(probability) as probability").toPandas().probability.apply(pandas.Series).values.astype(numpy.float32)
+            predicted.toPandas().label.values.astype(numpy.float32),
+            predicted.toPandas().prediction.values.astype(numpy.float32),
+            predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         ]
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                 basename="SparkmlPipeline_4Stage")
@@ -146,7 +144,7 @@ class TestSparkmlPipeline(SparkMlTestCase):
             predicted.toPandas().education_vec.apply(lambda x: pandas.Series(x.toArray())).values,
             predicted.toPandas().marital_status_vec.apply(lambda x: pandas.Series(x.toArray())).values
             ]
-        expected = [ numpy.asarray([expand_one_hot_vec(x) for x in row]) for row in predicted_np]
+        expected = [numpy.asarray([expand_one_hot_vec(x) for x in row]) for row in predicted_np]
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                 basename="SparkmlPipeline_2Stage")
 

@@ -2,7 +2,7 @@
 Testcase Base class for SparkML tests
 '''
 import unittest
-from sparkml.sparkml_test_utils import start_spark, stop_spark
+from onnxmltools.utils.sparkml_test_utils import start_spark, stop_spark
 
 
 class SparkMlTestCase(unittest.TestCase):

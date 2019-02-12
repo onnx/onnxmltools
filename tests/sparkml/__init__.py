@@ -5,4 +5,3 @@
 # --------------------------------------------------------------------------
 
 from .sparkml_test_base import *
-from .sparkml_test_utils import *
