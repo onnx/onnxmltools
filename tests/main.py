@@ -45,8 +45,7 @@ def run_tests(library=None, folder=None):
     available = {'Sklearn': ['sklearn'],
                  'LightGbm': ['lightgbm'],
                  'LibSvm': ['svmlib'],
-                 'Cml': ['coreml'],
-                 'Keras': ['end2end']}
+                 'Cml': ['coreml']}
     
     if library is None:
         library = list(available.keys())
