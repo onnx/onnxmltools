@@ -40,8 +40,6 @@ jobs:
       python -m pip install --upgrade pip
       pip install %COREML_PATH% %ONNX_PATH% cntk==2.5.1
       pip install -r requirements-dev.txt
-      conda uninstall -y scipy
-      pip install scipy
       # install libsvm from github
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
@@ -53,6 +51,11 @@ jobs:
       dir libsvm\python
       python -c "import svmutil"
     displayName: 'Install dependencies'
+
+  - script: |
+      conda uninstall -y scipy
+      pip install scipy
+    displayName: 'Install scipy with pip (DLL not found with conda version)'
 
   - script: |
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
