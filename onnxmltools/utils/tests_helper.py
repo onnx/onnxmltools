@@ -34,8 +34,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     :param backend: backend used to compare expected output and runtime output.
         Two options are currently supported: None for no test,
         `'onnxruntime'` to use module *onnxruntime*.
-    :param context: used if the model contains a custom operator such
-        as a custom Keras function...
+    :param context: used if the model contains a custom operator
     :param allow_failure: None to raise an exception if comparison fails
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
@@ -82,11 +81,6 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         elif hasattr(model, "decision_function"):
             # Classifier without probabilities
             prediction = [model.predict(data), model.decision_function(data)]
-        elif hasattr(model, "layers"):
-            # Keras
-            if len(model.input_names) != 1:
-                raise NotImplemented("Only neural network with one input are supported")
-            prediction = [model.predict(data)]
         else:
             # Regressor
             prediction = [model.predict(data)]
@@ -108,15 +102,10 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     with open(dest, "wb") as f:
         pickle.dump(data, f)
     
-    if hasattr(model, 'save'):
-        dest = os.path.join(folder, basename + ".model.keras")
-        names.append(dest)
-        model.save(dest)
-    else:
-        dest = os.path.join(folder, basename + ".model.pkl")
-        names.append(dest)
-        with open(dest, "wb") as f:
-            pickle.dump(model, f)
+    dest = os.path.join(folder, basename + ".model.pkl")
+    names.append(dest)
+    with open(dest, "wb") as f:
+        pickle.dump(model, f)
         
     if onnx is None:
         array = numpy.array(data)
@@ -168,7 +157,7 @@ def convert_model(model, name, input_types):
     """
     Runs the appropriate conversion method.
     
-    :param model: model, *scikit-learn*, *keras*, or *coremltools* object
+    :param model: model
     :return: *onnx* model
     """
     from sklearn.base import BaseEstimator
@@ -179,13 +168,8 @@ def convert_model(model, name, input_types):
         from onnxmltools.convert import convert_sklearn
         model, prefix = convert_sklearn(model, name, input_types), "Sklearn"
     else:
-        from keras.models import Model
-        if isinstance(model, Model):
-            from onnxmltools.convert import convert_keras
-            model, prefix = convert_keras(model, name, input_types), "Keras"
-        else:
-            from onnxmltools.convert import convert_coreml
-            model, prefix = convert_coreml(model, name, input_types), "Cml"
+        from onnxmltools.convert import convert_coreml
+        model, prefix = convert_coreml(model, name, input_types), "Cml"
     if model is None:
         raise RuntimeError("Unable to convert model of type '{0}'.".format(type(model)))
     return model, prefix

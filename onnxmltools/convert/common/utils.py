@@ -41,17 +41,6 @@ def coreml_installed():
         return False
 
 
-def keras2onnx_installed():
-    """
-    Checks that *keras2onnx* is available.
-    """
-    try:
-        import keras2onnx
-        return True
-    except ImportError:
-        return False
-
-
 def torch_installed():
     """
     Checks that *pytorch* is available.

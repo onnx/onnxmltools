@@ -92,32 +92,6 @@ class LightGbmModelContainer(CommonSklearnModelContainer):
     pass
 
 
-class KerasModelContainer(RawModelContainer):
-
-    def __init__(self, keras_model):
-        super(KerasModelContainer, self).__init__(keras_model)
-        self._input_raw_names = list()
-        self._output_raw_names = list()
-
-    def add_input_name(self, name):
-        # The order of adding strings matters. The final model's input names are sequentially added as this list
-        if name not in self._input_raw_names:
-            self._input_raw_names.append(name)
-
-    def add_output_name(self, name):
-        # The order of adding strings matters. The final model's output names are sequentially added as this list
-        if name not in self._output_raw_names:
-            self._output_raw_names.append(name)
-
-    @property
-    def input_names(self):
-        return [name for name in self._input_raw_names]
-
-    @property
-    def output_names(self):
-        return [name for name in self._output_raw_names]
-
-
 class ModelComponentContainer(ModelContainer):
     '''
     In the conversion phase, this class is used to collect all materials required to build an ONNX GraphProto, which is

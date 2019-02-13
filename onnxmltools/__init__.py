@@ -18,7 +18,6 @@ __model_version__ = 0
 
 
 from .convert import convert_coreml
-from .convert import convert_keras
 from .convert import convert_lightgbm
 from .convert import convert_sklearn
 

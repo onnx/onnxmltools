@@ -501,8 +501,6 @@ class Topology:
         for operator in self.topological_operator_iterator():
             if operator.type in self.custom_shape_calculators:
                 self.custom_shape_calculators[operator.type](operator)
-            elif operator.type in self.custom_conversion_functions:
-                pass  # in Keras converter, the shape calculator can be optional.
             else:
                 operator.infer_types()
 

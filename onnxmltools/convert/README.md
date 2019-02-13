@@ -11,26 +11,18 @@ In ONNXMLTools, the conversion framework consists of several essential component
 * Containers
     * RawModelContainer
         * CoremlModelContainer
-        * SklearnModelContainer
-        * KerasModelContainer
     * ModelComponentContainer
-* Parsers (defined in coreml/sklearn/keras subdirectory's _parse.py)
+* Parsers
     * Core ML parser
-    * scikit-learn parser
-    * Keras parser
 * Compiler (defined in _topology.py)
     * Graph optimization
     * Shape inference
     * Apply post-processing rules
     * Conduct basic checks
-* Shape calculators (defined in coreml/sklearn/keras's shape_calculators subdirectory)
+* Shape calculators
     * Core ML shape calculators
-    * scikit-learn shape calculators
-    * Keras shape calculators
-* Converters (defined in coreml/sklearn/keras's operator_converters subdirectory)
+* Converters
     * Core ML converters
-    * scikit-learn converters
-    * Keras converters
 * Registration (defined in _registration.py)
     * shape calculator registration
     * converter registration
@@ -59,7 +51,7 @@ The second container is `ModelComponentContainer` class, which we use to store t
 ## Parsers
 
 A parser is used to translate the considered raw model (e.g., a Core ML model) into a `Topology` object. For Core ML, its parsing algorithm is defined in
-`onnxmltools.convert.coreml._parse`. For scikit-learn's, please see `onnxmltools.convert.sklearn._parse`. Keras parse is implemented in `onnxmltools.convert.keras._parse`.
+`onnxmltools.convert.coreml._parse`.
 
 ## Compiler
 
@@ -85,8 +77,6 @@ Core ML's batch size, `N-axis`, is ignored because it is not related to graph st
 Some more details about Core ML neural network operator can be found at this [page](https://github.com/apple/coremltools/blob/master/mlmodel/format/NeuralNetwork.proto)
 
 For scikit-learn, user may need to specify the input types for their models. In general, we expect `[1, C]` if the input is feature vector.
-
-If fortunately your model (e.g., Keras) includes shape information, you can register an empty function for all your operators.
 
 ## Converters
 

@@ -40,4 +40,3 @@ tests/build/*
 tests/tests/
 tests/*/tests/*.pkl
 tests/*/tests/*.onnx
-tests/*/tests/*.keras
