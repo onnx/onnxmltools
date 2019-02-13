@@ -19,8 +19,7 @@ def profile_sparkml_pipeline():
     input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")
     full_data = spark.read.format('csv') \
         .options(header='true', inferschema='true').load(input_path)
-    cols = ['workclass', 'education', 'marital_status']
-    training_data, test_data = full_data.select('income', *cols).limit(10000).randomSplit([0.9, 0.1], seed=1)
+    training_data, test_data = full_data.randomSplit([0.9, 0.1], seed=1)
 
     label = "income"
     dtypes = dict(training_data.dtypes)
@@ -35,7 +34,7 @@ def profile_sparkml_pipeline():
             feature_cols.append(feature_col)
 
             tmp_col = "-".join([key, "tmp"])
-            si_xvars.append(StringIndexer(inputCol=key, outputCol=tmp_col, handleInvalid="error"))
+            si_xvars.append(StringIndexer(inputCol=key, outputCol=tmp_col, handleInvalid="skip"))
             ohe_xvars.append(OneHotEncoderEstimator(inputCols=[tmp_col], outputCols=[feature_col], dropLast=False))
         else:
             feature_cols.append(key)
@@ -44,6 +43,7 @@ def profile_sparkml_pipeline():
     lr = LogisticRegression(regParam=0.001)
     pipeline = Pipeline(stages=[*si_xvars, *ohe_xvars, si_label, assembler, lr])
 
+    # filter out the records which will cause error
     model = pipeline.fit(training_data)
     model_onnx = convert_sparkml(model, 'Sparkml Pipeline', buildInitialTypesSimple(test_data))
     if model_onnx is None: raise AssertionError("Failed to create the onnx model")
@@ -54,11 +54,10 @@ def profile_sparkml_pipeline():
     rec_counts = []
     spark_times = []
     runtime_times = []
-    for i in range(0, 7):
+    for i in range(0, 4):
         rec_counts.append(test_data.count())
-        # run the model
         data_np = buildInputDictSimple(test_data)
-        # run the model
+        # run the model in Spark
         start = time.time()
         predicted = model.transform(test_data)
         pred_count = predicted.count()
@@ -71,6 +70,7 @@ def profile_sparkml_pipeline():
             predicted.toPandas().prediction.values.astype(numpy.float32),
             predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         ]
+        # run the model in onnx runtime
         start = time.time()
         output, session = run_with_runtime(data_np, model_path)
         end = time.time()
