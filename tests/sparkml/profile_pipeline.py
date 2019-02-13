@@ -5,7 +5,7 @@ from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAsse
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.sparkml import buildInitialTypesSimple, buildInputDictSimple
-from onnxmltools.utils.utils_backend_onnxruntime import run_with_runtime
+from onnxmltools.utils.utils_backend_onnxruntime import run_with_runtime, _compare_expected
 
 
 def profile_sparkml_pipeline():
@@ -51,11 +51,10 @@ def profile_sparkml_pipeline():
     with open(model_path, "wb") as f:
         f.write(model_onnx.SerializeToString())
 
-    columns = [ 'input_rec_count', 'pyspark (sec)', 'onnxruntime (sec)']
     rec_counts = []
     spark_times = []
     runtime_times = []
-    for i in range(0, 8):
+    for i in range(0, 7):
         rec_counts.append(test_data.count())
         # run the model
         data_np = buildInputDictSimple(test_data)
@@ -73,9 +72,12 @@ def profile_sparkml_pipeline():
             predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         ]
         start = time.time()
-        run_with_runtime(data_np, model_path)
+        output, session = run_with_runtime(data_np, model_path)
         end = time.time()
         runtime_times.append(1000*(end - start))
+
+        # compare results
+        _compare_expected(expected, output, session, model_path, decimal=5, onnx_shape=None)
 
         # each time in this loop double the number of rows
         test_data = test_data.union(test_data)

@@ -300,13 +300,13 @@ def run_with_runtime(inputs, model_path):
 
     :param inputs: inputs to the model
     :param model_path: onnx model file path
-    :return: output from session.run()
+    :return: (output,session)
     '''
     try:
         import onnxruntime
-        sess = onnxruntime.InferenceSession(model_path)
-        output = sess.run(None, inputs)
-        return output
+        session = onnxruntime.InferenceSession(model_path)
+        output = session.run(None, inputs)
+        return (output, session)
     except Exception as e:
         raise OnnxRuntimeAssertionError("The runtime does either not exists of fails to load model")
 
