@@ -23,7 +23,7 @@ jobs:
         COREML_PATH: https://github.com/apple/coremltools/archive/v2.0.zip
 
       Python36:
-        python.version: '3.6'
+        python.version: '3.6.7'
         ONNX_PATH: onnx==1.3.0
         KERAS: keras
         COREML_PATH: git+https://github.com/apple/coremltools
