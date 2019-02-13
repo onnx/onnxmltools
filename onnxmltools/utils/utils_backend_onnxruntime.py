@@ -295,3 +295,18 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
         raise OnnxRuntimeAssertionError("No test for onnx '{0}'".format(onnx))        
     
 
+def run_with_runtime(inputs, model_path):
+    '''
+
+    :param inputs: inputs to the model
+    :param model_path: onnx model file path
+    :return: output from session.run()
+    '''
+    try:
+        import onnxruntime
+        sess = onnxruntime.InferenceSession(model_path)
+        output = sess.run(None, inputs)
+        return output
+    except Exception as e:
+        raise OnnxRuntimeAssertionError("The runtime does either not exists of fails to load model")
+
