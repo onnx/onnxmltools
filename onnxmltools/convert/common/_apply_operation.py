@@ -386,12 +386,14 @@ def apply_prelu(scope, input_name, output_name, container, operator_name=None, s
     if container.target_opset < 6:
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=1, name=name,
                            consumed_inputs=[0, 0])
-    elif container.target_opset < 7:
-        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=6, name=name)
-    elif container.target_opset < 9:
-        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=7, name=name)
     else:
-        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=9, name=name)
+        if container.target_opset < 7:
+            op_version = 6
+        elif container.target_opset < 9:
+            op_version = 7
+        else:
+            op_version = 9
+        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=op_version, name=name)
 
 def apply_elu(scope, input_name, output_name, container, operator_name=None, alpha=1.0):
     _apply_unary_operation(scope, 'Elu', input_name, output_name, container, operator_name, alpha=alpha)
