@@ -10,7 +10,8 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * Apple Core ML
 * scikit-learn (subset of models convertible to ONNX)
 * Keras
-* LightGBM (through its scikit-learn interface)
+* LightGBM
+* libsvm
 
 To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
 
@@ -31,6 +32,8 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 2. CoreMLTools
 3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
 4. LightGBM (scikit-learn interface)
+5. XGBoost (scikit-learn interface)
+6. libsvm
 
 # Examples
 If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 

@@ -4,10 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .main import convert_coreml
-from .main import convert_keras
-from .main import convert_libsvm
-from .main import convert_lightgbm
-from .main import convert_sklearn
-from .main import convert_xgboost
-
+# To register shape calculators for lightgbm operators, import associated modules here.
+from . import Classifier
+from . import Regressor
