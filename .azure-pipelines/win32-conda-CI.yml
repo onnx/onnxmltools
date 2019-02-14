@@ -31,32 +31,36 @@ jobs:
     maxParallel: 3
 
   steps:
-  - task: CondaEnvironment@1
+  - task: UsePythonVersion@0
     inputs:
-      createCustomEnvironment: true
-      environmentName: 'py$(python.version)'
-      packageSpecs: 'python=$(python.version)'
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
+
+  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: Add conda to PATH
+
+  - script: conda create --yes --quiet --name py$(python.version) -c conda-forge python=$(python.version) numpy protobuf
+    displayName: Create Anaconda environment
 
   - script: |
-      conda install -y -c conda-forge protobuf numpy scipy=1.2.0
-      python -m pip install --upgrade pip
-      pip install onnxruntime==0.1.4
-      pip install %COREML_PATH% %ONNX_PATH% cntk==2.5.1
+
+      call activate py$(python.version)
+      python -m pip install --upgrade pip numpy
+      echo Test numpy installation... && python -c "import numpy"
+      pip install %COREML_PATH% %ONNX_PATH%
       pip install -r requirements-dev.txt
+      echo Test onnxruntime installation... && python -c "import onnxruntime"
       pip install %KERAS%
       REM install libsvm from github
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
-      cd libsvm
-      nmake -f Makefile.win lib
-      copy windows\*.dll python
-      cd ..
+      copy libsvm\windows\*.dll libsvm\python
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       dir libsvm\python
-      python -c "import svmutil"
+      echo Test libsvm installation... && python -c "import svmutil"
     displayName: 'Install dependencies'
 
   - script: |
+      call activate py$(python.version)
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       pip install -e .
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
