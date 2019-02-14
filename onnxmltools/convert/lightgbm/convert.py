@@ -20,10 +20,9 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     '''
     This function produces an equivalent ONNX model of the given lightgbm model.
     The supported lightgbm modules are listed below.
-
-    * LightGBM Python module
-      1. LGBMClassifiers (http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMClassifier)
-      2. LGBMRegressor (http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMRegressor)
+    
+    * `LGBMClassifiers <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMClassifier>`_
+    * `LGBMRegressor <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMRegressor>`_
 
     :param model: A lightgbm model
     :param initial_types: a python list. Each element is a tuple of a variable name and a type defined in data_types.py
@@ -31,7 +30,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     :param doc_string: A string attached onto the produced ONNX model
     :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
     :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
-    produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
+        produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
     :return: An ONNX model (type: ModelProto) which is equivalent to the input lightgbm model
