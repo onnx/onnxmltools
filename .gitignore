@@ -29,6 +29,7 @@ tests/utils/models/coreml_OneHotEncoder_BikeSharing_new.json
 tests/utils/models/coreml_OneHotEncoder_BikeSharing2.onnx
 tests/baseline/outmodels
 htmlcov
+build
 coverage.xml
 .coverage
 TESTDUMP
@@ -41,3 +42,7 @@ tests/tests/
 tests/*/tests/*.pkl
 tests/*/tests/*.onnx
 tests/*/tests/*.keras
+docs/auto_examples/*
+docs/examples/dense121.onnx
+docs/examples/graph.dot
+docs/examples/graph.dot.png
