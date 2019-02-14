@@ -42,6 +42,12 @@ def _parse_tree_structure(tree_id, class_id, learning_rate, tree_structure, attr
     node_id_pool = set()
 
     node_id = _create_node_id(node_id_pool)
+
+    # The root node is a leaf node.
+    if not 'left_child' in tree_structure or not 'right_child' in tree_structure:
+        _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, tree_structure, attrs)
+        return
+
     left_id = _create_node_id(node_id_pool)
     right_id = _create_node_id(node_id_pool)
 
