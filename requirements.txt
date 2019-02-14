@@ -3,3 +3,4 @@ numpy
 protobuf
 onnx
 skl2onnx
+keras2onnx
