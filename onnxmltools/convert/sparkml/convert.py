@@ -10,7 +10,6 @@ from ..common._topology import convert_topology
 from ._parse import parse_sparkml
 
 # Invoke the registration of all our converters and shape calculators
-from . import shape_calculators
 from . import operator_converters
 
 
