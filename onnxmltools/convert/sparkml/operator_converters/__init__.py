@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-# To register converter for scikit-learn operators, import associated modules here.
+# To register converter for sparkml operators, import associated modules here.
 
+from . import Binarizer
 from . import StringIndexer
 from . import LogisticRegression
 from . import OneHotEncoder
