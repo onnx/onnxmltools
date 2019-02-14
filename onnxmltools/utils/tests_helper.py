@@ -39,7 +39,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
         ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
-    :param verbose: additional information
+    :param verbose: prints more information when it fails
     :return: the created files
 
     Some convention for the name,
@@ -169,6 +169,9 @@ def convert_model(model, name, input_types):
     if model.__class__.__name__.startswith("LGBM"):
         from onnxmltools.convert import convert_lightgbm
         model, prefix = convert_lightgbm(model, name, input_types), "LightGbm"
+    elif model.__class__.__name__.startswith("XGB"):
+        from onnxmltools.convert import convert_xgboost
+        model, prefix = convert_xgboost(model, name, input_types), "XGB"
     elif isinstance(model, BaseEstimator):
         from onnxmltools.convert import convert_sklearn
         model, prefix = convert_sklearn(model, name, input_types), "Sklearn"
@@ -207,7 +210,7 @@ def dump_one_class_classification(model, suffix="", folder=None, allow_failure=N
                                basename=prefix + "One" + model.__class__.__name__ + suffix)
 
 
-def dump_binary_classification(model, suffix="", folder=None, allow_failure=None):
+def dump_binary_classification(model, suffix="", folder=None, allow_failure=None, verbose=False):
     """
     Trains and dumps a model for a binary classification problem.
     
@@ -218,6 +221,7 @@ def dump_binary_classification(model, suffix="", folder=None, allow_failure=None
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
         ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
+    :param verbose: prints more information when it fails
     :return: output of :func:`dump_data_and_model`
     
     Every created filename will follow the pattern:
@@ -225,11 +229,12 @@ def dump_binary_classification(model, suffix="", folder=None, allow_failure=None
     """
     X = [[0, 1], [1, 1], [2, 0]]
     X = numpy.array(X, dtype=numpy.float32)
-    y = ['A', 'B', 'A']
+    y = [0, 1, 0]
     model.fit(X, y)
     model_onnx, prefix = convert_model(model, 'tree-based binary classifier', [('input', FloatTensorType([1, 2]))])
     dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
-                        basename=prefix + "Bin" + model.__class__.__name__ + suffix)
+                        basename=prefix + "Bin" + model.__class__.__name__ + suffix,
+                        verbose=verbose)
 
 def dump_multiple_classification(model, suffix="", folder=None, allow_failure=None):
     """

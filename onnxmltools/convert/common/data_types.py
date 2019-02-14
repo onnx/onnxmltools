@@ -15,6 +15,10 @@ class DataType(object):
 
     def to_onnx_type(self):
         raise NotImplementedError()
+    
+    def __repr__(self):
+        name = self.__class__.__name__
+        return "{}({}, '{}')".format(name, self.shape, self.doc_string)
 
 
 class Int64Type(DataType):
