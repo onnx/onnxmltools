@@ -83,7 +83,7 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
                      epsilon=None, is_test=None, momentum=None, spatial=None):
     name = _create_name_or_use_existing_one(scope, 'BatchNormalization', operator_name)
 
-    attrs = {'name': name, 'epsilon': epsilon, 'momentum': momentum, 'spatial': spatial}
+    attrs = {'name': name, 'epsilon': epsilon, 'momentum': momentum}
 
     if container.target_opset < 6:
         attrs['consumed_inputs'] = [0] * len(input_names)
