@@ -31,10 +31,10 @@ def load_model(file_path):
         with open(file_path, 'rb') as f:
             model.ParseFromString(f.read())
     except IOError:
-        print("File '{0}' could not be opened.".format(file_path))
+        raise Exception("File '{0}' could not be opened.".format(file_path))
         return
     except:
-        print("Could not load protobuf file '{0}'.".format(file_path))
+        raise Exception("Could not load protobuf file '{0}'.".format(file_path))
         return
 
     return model
@@ -62,11 +62,7 @@ def save_model(model, file_path):
         with open(file_path, 'wb') as f:
             f.write(model.SerializeToString())
     except IOError:
-        print("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
-        return
-    except:
-        print("Failed trying to save file '{0}'.".format(file_path))
-        return
+        raise Exception("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
 
 
 def save_text(model, file_path):
@@ -89,11 +85,7 @@ def save_text(model, file_path):
         with open(file_path, "w") as f:
             f.write(str(model))
     except IOError:
-        print("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
-        return
-    except:
-        print("Failed trying to save file '{0}'.".format(file_path))
-        return
+        raise Exception("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
 
 
 def set_model_domain(model, domain):
