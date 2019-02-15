@@ -10,6 +10,7 @@
 import abc
 import six
 
+
 @six.add_metaclass(abc.ABCMeta)
 class ModelContainer:
     __metaclass = abc.ABCMeta
@@ -40,6 +41,7 @@ class ModelContainer:
         :param attrs: A Python dictionary. Keys and values are attributes' names and attributes' values, respectively.
         """
         return
+
 
 @six.add_metaclass(abc.ABCMeta)
 class OperatorBase:
@@ -76,6 +78,7 @@ class OperatorBase:
         Return the original operator/layer
         """
         pass
+
 
 @six.add_metaclass(abc.ABCMeta)
 class ScopeBase:
