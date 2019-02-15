@@ -31,7 +31,7 @@ def load_model(file_path):
         with open(file_path, 'rb') as f:
             model.ParseFromString(f.read())
     except IOError:
-        raise Exception("File '{0}' could not be opened.".format(file_path))
+        raise IOError("File '{0}' could not be opened.".format(file_path))
     except:
         raise Exception("Could not load protobuf file '{0}'.".format(file_path))
 
@@ -51,7 +51,7 @@ def save_model(model, file_path):
         from onnxmltools.utils import save_model
         save_model(onnx_model, 'c:/test_model.onnx')
     """
-    if not isinstance(model, onnx_proto.ModelProto):
+    if model is None or not isinstance(model, onnx_proto.ModelProto):
         raise ValueError("Model is not a valid ONNX model.")
     directory = os.path.dirname(os.path.abspath(file_path))
     if not path.exists(directory):
@@ -60,7 +60,7 @@ def save_model(model, file_path):
         with open(file_path, 'wb') as f:
             f.write(model.SerializeToString())
     except IOError:
-        raise Exception("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
+        raise IOError("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
 
 
 def save_text(model, file_path):
@@ -77,13 +77,13 @@ def save_text(model, file_path):
         from onnxmltools.utils import save_text
         save_text(onnx_model,"SqueezeNet.json")
     """
-    if not isinstance(model, onnx_proto.ModelProto):
+    if model is None or not isinstance(model, onnx_proto.ModelProto):
         raise ValueError("Model is not a valid ONNX model.")
     try:
         with open(file_path, "w") as f:
             f.write(str(model))
     except IOError:
-        raise Exception("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
+        raise IOError("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
 
 
 def set_model_domain(model, domain):
@@ -101,9 +101,9 @@ def set_model_domain(model, domain):
         set_model_domain(onnx_model, "com.acme")
     """
     if model is None or not isinstance(model, onnx_proto.ModelProto):
-        raise ValueError("model is not an onnx model")
+        raise ValueError("Model is not a valid ONNX model.")
     if not convert_utils.is_string_type(domain):
-        raise ValueError("domain must be a string type")
+        raise ValueError("Domain must be a string type.")
     model.domain = domain
 
 
@@ -122,9 +122,9 @@ def set_model_version(model, version):
         set_model_version(onnx_model, 1)
     """
     if model is None or not isinstance(model, onnx_proto.ModelProto):
-        raise ValueError("model is not an onnx model")
+        raise ValueError("Model is not a valid ONNX model.")
     if not convert_utils.is_numeric_type(version):
-        raise ValueError("version must be a numeric type")
+        raise ValueError("Version must be a numeric type.")
     model.model_version = version
 
 
@@ -144,9 +144,9 @@ def set_model_doc_string(model, doc, override=False):
         set_model_doc_string(onnx_model, "Sample doc string")
     """
     if model is None or not isinstance(model, onnx_proto.ModelProto):
-        raise ValueError("model is not an onnx model")
+        raise ValueError("Model is not a valid ONNX model.")
     if not convert_utils.is_string_type(doc):
-        raise ValueError("doc must be a string type")
+        raise ValueError("Doc must be a string type.")
     if model.doc_string and not doc and override is False:
-        raise ValueError("failing to overwrite the doc string with a blank string, set override to True if intentional")
+        raise ValueError("Failing to overwrite the doc string with a blank string, set override to True if intentional.")
     model.doc_string = doc
