@@ -1,4 +1,5 @@
 
+from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.ml.linalg import VectorUDT
 from pyspark.sql.types import ArrayType, FloatType, DoubleType
@@ -7,7 +8,7 @@ import pickle
 import os
 from onnxmltools.utils.utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
 
-def start_spark():
+def start_spark(options):
     import os
     import sys
     executable = sys.executable
@@ -16,7 +17,11 @@ def start_spark():
     os.environ["PYSPARK_PYTHON"] = executable
     os.environ["PYSPARK_DRIVER_PYTHON"] = executable
 
-    spark = SparkSession.builder.appName("pyspark-unittesting").master("local[1]").getOrCreate()
+    builder = SparkSession.builder.appName("pyspark-unittesting").master("local[1]")
+    if options:
+        for k,v in options.items():
+            builder.config(k, v)
+    spark = builder.getOrCreate()
 
     return spark
 
