@@ -367,6 +367,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
         attrs['mode'] = mode.lower()
         op_version = 7
     else:
+        # opset 9 supports unidirectional broadcasting
         attrs['scales'] = list(map(float, scales))
         attrs['mode'] = mode.lower()
         op_version = 9
@@ -400,6 +401,7 @@ def apply_prelu(scope, input_name, output_name, container, operator_name=None, s
             op_version = 7
         else:
             op_version = 9
+
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=op_version, name=name)
 
 def apply_elu(scope, input_name, output_name, container, operator_name=None, alpha=1.0):
