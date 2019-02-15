@@ -32,10 +32,8 @@ def load_model(file_path):
             model.ParseFromString(f.read())
     except IOError:
         raise Exception("File '{0}' could not be opened.".format(file_path))
-        return
     except:
         raise Exception("Could not load protobuf file '{0}'.".format(file_path))
-        return
 
     return model
 
