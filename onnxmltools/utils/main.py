@@ -27,14 +27,8 @@ def load_model(file_path):
     if not path.exists(file_path):
         raise FileNotFoundError("{0} was not found.".format(file_path))
     model = onnx_proto.ModelProto()
-    try:
-        with open(file_path, 'rb') as f:
-            model.ParseFromString(f.read())
-    except IOError:
-        raise IOError("File '{0}' could not be opened.".format(file_path))
-    except:
-        raise Exception("Could not load protobuf file '{0}'.".format(file_path))
-
+    with open(file_path, 'rb') as f:
+        model.ParseFromString(f.read())
     return model
 
 
@@ -56,11 +50,8 @@ def save_model(model, file_path):
     directory = os.path.dirname(os.path.abspath(file_path))
     if not path.exists(directory):
         raise FileNotFoundError("Directory does not exist {0}".format(directory))
-    try:
-        with open(file_path, 'wb') as f:
-            f.write(model.SerializeToString())
-    except IOError:
-        raise IOError("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
+    with open(file_path, 'wb') as f:
+        f.write(model.SerializeToString())
 
 
 def save_text(model, file_path):
@@ -79,11 +70,8 @@ def save_text(model, file_path):
     """
     if model is None or not isinstance(model, onnx_proto.ModelProto):
         raise ValueError("Model is not a valid ONNX model.")
-    try:
-        with open(file_path, "w") as f:
-            f.write(str(model))
-    except IOError:
-        raise IOError("Unable to write file to path '{0}', check if you have permissions.".format(file_path))
+    with open(file_path, "w") as f:
+        f.write(str(model))
 
 
 def set_model_domain(model, domain):
