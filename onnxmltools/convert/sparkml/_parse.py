@@ -100,6 +100,10 @@ sparkml_operator_name_map = build_sparkml_operator_name_map()
 
 def build_io_name_map():
     map = {
+        "pyspark.ml.feature.Normalizer": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
         "pyspark.ml.feature.Binarizer": (
             lambda model: [model.getOrDefault("inputCol")],
             lambda model: [model.getOrDefault("outputCol")]

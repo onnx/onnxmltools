@@ -40,7 +40,7 @@ def calculate_sparkml_string_indexer_output_shapes(operator):
     check_input_and_output_types(operator, good_input_types=[Int64TensorType, StringTensorType])
 
     input_shape = copy.deepcopy(operator.inputs[0].type.shape)
-    operator.outputs[0].type = Int64TensorType(copy.deepcopy(input_shape))
+    operator.outputs[0].type = Int64TensorType(input_shape)
 
 
 register_shape_calculator('pyspark.ml.feature.StringIndexerModel', calculate_sparkml_string_indexer_output_shapes)

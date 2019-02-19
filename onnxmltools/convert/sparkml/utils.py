@@ -1,8 +1,14 @@
 '''
 Utility functions for Spark ML to Onnx conversion intended for the end user mainly
 '''
-from onnxmltools.convert.common.data_types import StringTensorType, Int64TensorType, FloatTensorType
+from onnxmltools.convert.common.data_types import StringTensorType, FloatTensorType
 
+
+class SparkMLConversionError(Exception):
+    """
+    Expected failure.
+    """
+    pass
 
 def buildInitialTypesSimple(dataframe):
     types = []

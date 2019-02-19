@@ -60,7 +60,7 @@ def calculate_logistic_regression_output_shapes(operator):
     N = operator.inputs[0].type.shape[0]
 
     operator.outputs[0].type = Int64TensorType(shape=[N])
-    operator.outputs[1].type = FloatTensorType([N,class_count])
+    operator.outputs[1].type = FloatTensorType([N, class_count])
 
 
 register_shape_calculator('pyspark.ml.classification.LogisticRegressionModel', calculate_logistic_regression_output_shapes)
