@@ -7,7 +7,7 @@ from onnxmltools.utils.sparkml_test_utils import start_spark, stop_spark
 
 class SparkMlTestCase(unittest.TestCase):
     def setUp(self):
-        self.spark = start_spark()
+        self.spark = start_spark(None)
 
     def tearDown(self):
         stop_spark(self.spark)
