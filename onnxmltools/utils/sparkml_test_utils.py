@@ -11,9 +11,9 @@ from onnxmltools.utils.utils_backend import compare_backend, extract_options, ev
 def start_spark(options):
     import os
     import sys
+    import pyspark
     executable = sys.executable
-    prefix = os.path.dirname(executable)
-    os.environ["SPARK_HOME"] = os.path.join(prefix, "Lib", "site-packages", "pyspark")
+    os.environ["SPARK_HOME"] = pyspark.__path__[0]
     os.environ["PYSPARK_PYTHON"] = executable
     os.environ["PYSPARK_DRIVER_PYTHON"] = executable
 
