@@ -7,7 +7,7 @@
 from uuid import uuid4
 from ...proto import onnx, get_opset_number_from_onnx
 from ..common._topology import convert_topology
-from ._parse import parse_lightgbm
+from ._parse import parse_xgboost
 
 # Invoke the registration of all our converters and shape calculators
 # from . import shape_calculators
@@ -18,13 +18,9 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
             targeted_onnx=onnx.__version__, custom_conversion_functions=None,
             custom_shape_calculators=None):
     '''
-    This function produces an equivalent ONNX model of the given lightgbm model.
-    The supported lightgbm modules are listed below.
-    
-    * `LGBMClassifiers <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMClassifier>`_
-    * `LGBMRegressor <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMRegressor>`_
+    This function produces an equivalent ONNX model of the given xgboost model.
 
-    :param model: A lightgbm model
+    :param model: A xgboost model
     :param initial_types: a python list. Each element is a tuple of a variable name and a type defined in data_types.py
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
@@ -33,16 +29,16 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
         produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
-    :return: An ONNX model (type: ModelProto) which is equivalent to the input lightgbm model
+    :return: An ONNX model (type: ModelProto) which is equivalent to the input xgboost model
     '''
     if initial_types is None:
         raise ValueError('Initial types are required. See usage of convert(...) in \
-                           onnxmltools.convert.lightgbm.convert for details')
+                           onnxmltools.convert.xgboost.convert for details')
     if name is None:
         name = str(uuid4().hex)
 
     target_opset = target_opset if target_opset else get_opset_number_from_onnx()
-    topology = parse_lightgbm(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_xgboost(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
     onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
     return onnx_model

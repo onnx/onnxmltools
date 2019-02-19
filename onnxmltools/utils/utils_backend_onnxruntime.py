@@ -237,7 +237,7 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
             if len(expected) != len(output):
                 raise OnnxRuntimeAssertionError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
             for exp, out, osh in zip(expected, output, onnx_shapes):
-                _compare_expected(exp, out, sess, onnx, decimal=5, onnx_shape=osh, **kwargs)
+                _compare_expected(exp, out, sess, onnx, decimal=decimal, onnx_shape=osh, **kwargs)
                 tested += 1
         else:
             raise OnnxRuntimeAssertionError("Type mismatch for '{0}', output type is {1}".format(onnx, type(output)))

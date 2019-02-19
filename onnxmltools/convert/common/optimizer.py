@@ -117,7 +117,8 @@ class LinkedNode(object):
             ln = LinkedNode(o_)
             view.append(ln)
             for var_ in o_.output:
-                assert var_map.get(var_) is None
+                if var_map.get(var_) is not None:
+                    raise RuntimeError("Duplicated output name (accross all nodes) '{0}'".format(var_))
                 var_map[var_] = ln
 
         additional_nodes = []

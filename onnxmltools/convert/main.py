@@ -72,3 +72,11 @@ def convert_sparkml(model, name=None, initial_types=None, doc_string='', target_
     from .sparkml.convert import convert
     return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
                    custom_conversion_functions, custom_shape_calculators)
+
+def convert_xgboost(*args, **kwargs):
+    if not utils.xgboost_installed():
+        raise RuntimeError('xgboost is not installed. Please install xgboost to use this feature.')
+
+    from .xgboost.convert import convert
+    return convert(*args, **kwargs)
+
