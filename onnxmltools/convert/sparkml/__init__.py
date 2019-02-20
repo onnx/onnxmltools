@@ -5,4 +5,4 @@
 # --------------------------------------------------------------------------
 
 from .convert import convert
-from .utils import *
+from .utils import buildInitialTypesSimple, getTensorTypeFromSpark, buildInputDictSimple
