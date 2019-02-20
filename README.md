@@ -13,6 +13,7 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * Spark ML (experimental)
 * LightGBM
 * libsvm
+* XGBoost
 
 To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
 
