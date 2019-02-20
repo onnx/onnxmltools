@@ -6,8 +6,9 @@ from onnxmltools.utils.sparkml_test_utils import start_spark, stop_spark
 
 
 class SparkMlTestCase(unittest.TestCase):
-    def __init__(self):
-        self.spark_options = None
+    def _get_spark_options(self):
+        return None
+
     def setUp(self):
         import os
         import inspect
@@ -15,7 +16,7 @@ class SparkMlTestCase(unittest.TestCase):
             this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
             print('setting HADOOP_HOME to: ', this_script_dir)
             os.environ['HADOOP_HOME'] = this_script_dir
-        self.spark = start_spark(self.spark_options)
+        self.spark = start_spark(self._get_spark_options())
 
     def tearDown(self):
         stop_spark(self.spark)

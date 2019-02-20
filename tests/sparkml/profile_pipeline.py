@@ -13,9 +13,9 @@ from sparkml import SparkMlTestCase
 
 
 class ProfileSparkmlPipeline(SparkMlTestCase):
-    def __init__(self):
+    def _get_spark_options(self):
         # add additional jar files before creating SparkSession
-        self.spark_options = {'spark.jars.packages': "ml.combust.mleap:mleap-spark_2.11:0.13.0"}
+        return {'spark.jars.packages': "ml.combust.mleap:mleap-spark_2.11:0.13.0"}
 
     def test_profile_sparkml_pipeline(self):
         import inspect
