@@ -48,3 +48,7 @@ docs/auto_examples/*
 docs/examples/dense121.onnx
 docs/examples/graph.dot
 docs/examples/graph.dot.png
+# CMake
+CMakeCache.txt
+CMakeFiles/
+
