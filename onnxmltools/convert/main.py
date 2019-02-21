@@ -63,3 +63,20 @@ def convert_sklearn(model, name=None, initial_types=None, doc_string='', target_
     from skl2onnx.convert import convert_sklearn as convert_skl2onnx
     return convert_skl2onnx(model, name, initial_types, doc_string, target_opset,
                    custom_conversion_functions, custom_shape_calculators)
+
+def convert_sparkml(model, name=None, initial_types=None, doc_string='', target_opset=None,
+                    targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+    if not utils.sparkml_installed():
+        raise RuntimeError('Spark is not installed. Please install Spark to use this feature.')
+
+    from .sparkml.convert import convert
+    return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
+                   custom_conversion_functions, custom_shape_calculators)
+
+def convert_xgboost(*args, **kwargs):
+    if not utils.xgboost_installed():
+        raise RuntimeError('xgboost is not installed. Please install xgboost to use this feature.')
+
+    from .xgboost.convert import convert
+    return convert(*args, **kwargs)
+

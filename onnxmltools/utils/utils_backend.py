@@ -221,6 +221,8 @@ def compare_outputs(expected, output, **kwargs):
                 output = -output
         if len(expected.shape) == 1 and len(output.shape) == 2 and output.shape[1] == 1:
             output = output.ravel()
+        if len(expected.shape) == 2 and len(output.shape) == 1 and expected.shape[1] == 1:
+            expected = expected.ravel()
         if expected.dtype in (numpy.str, numpy.dtype("<U1")):
             try:
                 assert_array_equal(expected, output)

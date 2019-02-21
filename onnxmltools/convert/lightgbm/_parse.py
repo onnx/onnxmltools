@@ -21,7 +21,7 @@ def _get_lightgbm_operator_name(model_type):
     '''
     Get operator name of the input argument
 
-    :param model_type:  A scikit-learn object (e.g., SGDClassifier and Binarizer)
+    :param model_type:  A lightgbm object.
     :return: A string which stands for the type of the input model in our conversion framework
     '''
     if model_type not in lightgbm_operator_name_map:
@@ -60,7 +60,7 @@ def _parse_lightgbm(scope, model, inputs):
     This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
     model's type.
     :param scope: Scope object
-    :param model: A scikit-learn object (e.g., OneHotEncoder and LogisticRegression)
+    :param model: A lightgbm object
     :param inputs: A list of variables
     :return: The output variables produced by the input model
     '''

@@ -47,7 +47,8 @@ def _apply_basic_numerical_operation(scope, op_type, input_names, output_name, c
         else:
             op_version = 6
     else:
-        # Since ONNX-1.2 (opset 7), broadcasting behavior is Numpy-like, so we don't need to specify any attributes
+        # Since ONNX-1.2 (opset 7), broadcasting behavior is NumPy-like,
+        # so we don't need to specify any attributes
         op_version = 7
 
     container.add_node(op_type, input_names, output_name, op_version=op_version, name=name, **attrs)
@@ -82,7 +83,7 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
                      epsilon=None, is_test=None, momentum=None, spatial=None):
     name = _create_name_or_use_existing_one(scope, 'BatchNormalization', operator_name)
 
-    attrs = {'name': name, 'epsilon': epsilon, 'momentum': momentum, 'spatial': spatial}
+    attrs = {'name': name, 'epsilon': epsilon, 'momentum': momentum}
 
     if container.target_opset < 6:
         attrs['consumed_inputs'] = [0] * len(input_names)
@@ -91,12 +92,17 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
         if len(input_names) > 4:
             attrs['consumed_inputs'][4] = 2
         attrs['is_test'] = is_test
+        attrs['spatial'] = spatial
         op_version = 1
     elif container.target_opset < 7:
         attrs['is_test'] = is_test
+        attrs['spatial'] = spatial
         op_version = 6
-    else:
+    elif container.target_opset < 9:
+        attrs['spatial'] = spatial
         op_version = 7
+    else:
+        op_version = 9
 
     container.add_node('BatchNormalization', input_names, output_names, op_version=op_version, **attrs)
 
@@ -111,16 +117,27 @@ def apply_cast(scope, input_name, output_name, container, operator_name=None, to
     d = onnx_proto.TensorProto.DataType.DESCRIPTOR
     allowed_type_name_and_type_enum_pairs = {v.number: k for k, v in d.values_by_name.items()}
     if to not in allowed_type_name_and_type_enum_pairs:
-        raise ValueError('Attribute to must be one of %s' % allowed_type_name_and_type_enum_pairs.keys())
+        raise ValueError('Attribute "to" must be one of %s' % allowed_type_name_and_type_enum_pairs.keys())
 
-    if container.target_opset < 7:
-        # Convert enum to string, for example, TensorProto.INT64 to 'INT64'
-        attrs['to'] = allowed_type_name_and_type_enum_pairs[to]
-        op_version = 1
+    if container.target_opset < 9:
+        if to in [onnx_proto.TensorProto.STRING, onnx_proto.TensorProto.COMPLEX64, onnx_proto.TensorProto.COMPLEX128]:
+            raise ValueError('Attribute "to" cannot correspond to a String or Complex TensorProto type.')
+
+        if container.target_opset < 6:
+            # Convert enum to string, for example, TensorProto.INT64 to 'INT64'
+            attrs['to'] = allowed_type_name_and_type_enum_pairs[to]
+            op_version = 1
+        else:
+            # Enum, for example, TensorProto.INT64
+            attrs['to'] = to
+            op_version = 6
     else:
-        # Enum, for example, TensorProto.INT64
+        # Enum value, for example, TensorProto.INT64
+        # String casting is supported in opset 9
+        if to in [onnx_proto.TensorProto.COMPLEX64, onnx_proto.TensorProto.COMPLEX128]:
+            raise ValueError('Attribute "to" cannot correspond to a Complex TensorProto type.')
         attrs['to'] = to
-        op_version = 7
+        op_version = 9
 
     container.add_node('Cast', input_name, output_name, op_version=op_version, **attrs)
 
@@ -345,10 +362,14 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
         attrs['width_scale'] = float(scales[3])
         attrs['mode'] = mode.upper()
         op_version = 1
-    else:
+    elif container.target_opset < 9:
         attrs['scales'] = list(map(float, scales))
         attrs['mode'] = mode.lower()
         op_version = 7
+    else:
+        attrs['scales'] = list(map(float, scales))
+        attrs['mode'] = mode.lower()
+        op_version = 9
 
     container.add_node('Upsample', input_name, output_name, op_version=op_version, **attrs)
 
@@ -372,11 +393,16 @@ def apply_prelu(scope, input_name, output_name, container, operator_name=None, s
     if container.target_opset < 6:
         container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=1, name=name,
                            consumed_inputs=[0, 0])
-    elif container.target_opset < 7:
-        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=6, name=name)
     else:
-        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=7, name=name)
+        if container.target_opset < 7:
+            op_version = 6
+        elif container.target_opset < 9:
+            op_version = 7
+        else:
+            # opset 9 supports unidirectional broadcasting
+            op_version = 9
 
+        container.add_node('PRelu', [input_name, slope_tensor_name], output_name, op_version=op_version, name=name)
 
 def apply_elu(scope, input_name, output_name, container, operator_name=None, alpha=1.0):
     _apply_unary_operation(scope, 'Elu', input_name, output_name, container, operator_name, alpha=alpha)

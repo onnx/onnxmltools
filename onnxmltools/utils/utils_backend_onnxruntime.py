@@ -237,7 +237,7 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
             if len(expected) != len(output):
                 raise OnnxRuntimeAssertionError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
             for exp, out, osh in zip(expected, output, onnx_shapes):
-                _compare_expected(exp, out, sess, onnx, decimal=5, onnx_shape=osh, **kwargs)
+                _compare_expected(exp, out, sess, onnx, decimal=decimal, onnx_shape=osh, **kwargs)
                 tested += 1
         else:
             raise OnnxRuntimeAssertionError("Type mismatch for '{0}', output type is {1}".format(onnx, type(output)))
@@ -294,4 +294,19 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
     if tested ==0:
         raise OnnxRuntimeAssertionError("No test for onnx '{0}'".format(onnx))        
     
+
+def run_with_runtime(inputs, model_path):
+    '''
+
+    :param inputs: inputs to the model
+    :param model_path: onnx model file path
+    :return: (output,session)
+    '''
+    try:
+        import onnxruntime
+        session = onnxruntime.InferenceSession(model_path)
+        output = session.run(None, inputs)
+        return (output, session)
+    except Exception as e:
+        raise OnnxRuntimeAssertionError("The runtime does either not exists of fails to load model")
 

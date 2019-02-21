@@ -3,14 +3,17 @@
 
 | Linux | Windows |
 |-------|---------|
-| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)|
+| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-win32-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)|
 
 # Introduction 
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
 * Apple Core ML
 * scikit-learn (subset of models convertible to ONNX)
 * Keras
-* LightGBM (through its scikit-learn interface)
+* Spark ML (experimental)
+* LightGBM
+* libsvm
+* XGBoost
 
 To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
 
@@ -31,6 +34,9 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 2. CoreMLTools
 3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
 4. LightGBM (scikit-learn interface)
+5. SparkML (pyspark version 2.3.3 only)
+6. XGBoost (scikit-learn interface)
+7. libsvm
 
 # Examples
 If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
@@ -87,6 +93,12 @@ keras_model = Model(inputs=[input1, input2], output=sub_sum)
 # Convert it! The target_opset parameter is optional.
 onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7) 
 ```
+
+## Spark ML to ONNX Conversion
+Please refer to the following documents:
+ * [Conversion Framework](onnxmltools/README.md) and
+ * [Spark ML to Onnx Model Conversion](onnxmltools/convert/sparkml/README.md)
+ 
 
 # Testing model converters
 
