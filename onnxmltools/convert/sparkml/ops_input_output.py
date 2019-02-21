@@ -1,0 +1,54 @@
+'''
+Mapping and utilities for the names of Params(propeties) that various Spark ML models
+have for their input and output columns
+'''
+from onnxmltools.convert.sparkml import get_sparkml_operator_name
+
+
+def build_io_name_map():
+    map = {
+        "pyspark.ml.feature.Normalizer": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.feature.Binarizer": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.classification.LogisticRegressionModel": (
+            lambda model: [model.getOrDefault("featuresCol")],
+            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")]
+        ),
+        "pyspark.ml.feature.OneHotEncoderModel": (
+            lambda model: model.getOrDefault("inputCols"),
+            lambda model: model.getOrDefault("outputCols")
+        ),
+        "pyspark.ml.feature.StringIndexerModel": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.feature.VectorAssembler": (
+            lambda model: model.getOrDefault("inputCols"),
+            lambda model: [model.getOrDefault("outputCol")]
+        )
+    }
+    return map
+
+io_name_map = build_io_name_map()
+
+def get_input_names(model):
+    '''
+    Returns the name(s) of the input(s) for a SparkML operator
+    :param model: SparkML Model
+    :return: list of input names
+    '''
+    return io_name_map[get_sparkml_operator_name(type(model))][0](model)
+
+
+def get_output_names(model):
+    '''
+    Returns the name(s) of the output(s) for a SparkML operator
+    :param model: SparkML Model
+    :return: list of output names
+    '''
+    return io_name_map[get_sparkml_operator_name(type(model))][1](model)

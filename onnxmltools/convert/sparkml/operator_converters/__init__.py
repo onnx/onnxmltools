@@ -9,6 +9,6 @@
 from . import Normalizer
 from . import Binarizer
 from . import StringIndexer
-from . import LogisticRegression
+from . import LinearClassifier
 from . import OneHotEncoder
 from . import VectorAssembler

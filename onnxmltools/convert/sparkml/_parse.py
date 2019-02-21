@@ -3,160 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
+from onnxmltools.convert.sparkml import get_input_names, get_output_names, get_sparkml_operator_name
 from ..common._container import SparkmlModelContainer
 from ..common._topology import *
 
 from pyspark.ml import PipelineModel
-
-
-from pyspark.ml.feature import Binarizer
-from pyspark.ml.feature import BucketedRandomProjectionLSHModel
-from pyspark.ml.feature import Bucketizer
-from pyspark.ml.feature import ChiSqSelectorModel
-from pyspark.ml.feature import CountVectorizerModel
-from pyspark.ml.feature import DCT
-from pyspark.ml.feature import ElementwiseProduct
-from pyspark.ml.feature import HashingTF
-from pyspark.ml.feature import IDFModel
-from pyspark.ml.feature import ImputerModel
-from pyspark.ml.feature import IndexToString
-from pyspark.ml.feature import MaxAbsScalerModel
-from pyspark.ml.feature import MinHashLSHModel
-from pyspark.ml.feature import MinMaxScalerModel
-from pyspark.ml.feature import NGram
-from pyspark.ml.feature import Normalizer
-from pyspark.ml.feature import OneHotEncoderModel
-from pyspark.ml.feature import PCAModel
-from pyspark.ml.feature import PolynomialExpansion
-from pyspark.ml.feature import QuantileDiscretizer
-from pyspark.ml.feature import RegexTokenizer
-from pyspark.ml.feature import RFormulaModel
-from pyspark.ml.feature import SQLTransformer
-from pyspark.ml.feature import StandardScalerModel
-from pyspark.ml.feature import StopWordsRemover
-from pyspark.ml.feature import StringIndexerModel
-from pyspark.ml.feature import Tokenizer
-from pyspark.ml.feature import VectorAssembler
-from pyspark.ml.feature import VectorIndexerModel
-from pyspark.ml.feature import VectorSlicer
-from pyspark.ml.feature import Word2VecModel
-
-from pyspark.ml.classification import LinearSVCModel
-from pyspark.ml.classification import LogisticRegressionModel
-from pyspark.ml.classification import DecisionTreeClassifier
-from pyspark.ml.classification import GBTClassifier
-from pyspark.ml.classification import RandomForestClassifier
-from pyspark.ml.classification import NaiveBayesModel
-from pyspark.ml.classification import MultilayerPerceptronClassifier
-from pyspark.ml.classification import OneVsRestModel
-
-from pyspark.ml.regression import AFTSurvivalRegressionModel
-from pyspark.ml.regression import DecisionTreeRegressor
-from pyspark.ml.regression import GBTRegressionModel
-from pyspark.ml.regression import GeneralizedLinearRegressionModel
-from pyspark.ml.regression import IsotonicRegressionModel
-from pyspark.ml.regression import LinearRegressionModel
-from pyspark.ml.regression import RandomForestRegressor
-
-from pyspark.ml.clustering import BisectingKMeans
-from pyspark.ml.clustering import KMeans
-from pyspark.ml.clustering import GaussianMixture
-from pyspark.ml.clustering import LDA
-
-# In most cases, spark-ml operator produces only one output. However, each classifier has basically two outputs:
-#   1. prediction: selected label
-#   2. rawPrediction: Dense vector containing values for each class
-# Here is a list of supported spark-ml classifiers.
-# In the parsing stage, we produce two outputs for objects included in the following list and
-# one output for everything not in the list.
-sparkml_classifier_list = [LinearSVCModel, LogisticRegressionModel, DecisionTreeClassifier, GBTClassifier,
-                           RandomForestClassifier, NaiveBayesModel, MultilayerPerceptronClassifier, OneVsRestModel]
-
-# Associate spark-ml types with our operator names. If two spark-ml models share a single name, it means their
-# are equivalent in terms of conversion.
-
-def build_sparkml_operator_name_map():
-    res = {k: "pyspark.ml.feature." + k.__name__ for k in [
-        Binarizer, BucketedRandomProjectionLSHModel, Bucketizer,
-        ChiSqSelectorModel, CountVectorizerModel, DCT, ElementwiseProduct, HashingTF, IDFModel, ImputerModel,
-        IndexToString, MaxAbsScalerModel, MinHashLSHModel, MinMaxScalerModel, NGram, Normalizer, OneHotEncoderModel,
-        PCAModel, PolynomialExpansion, QuantileDiscretizer, RegexTokenizer, RFormulaModel, SQLTransformer,
-        StandardScalerModel, StopWordsRemover, StringIndexerModel, Tokenizer, VectorAssembler, VectorIndexerModel,
-        VectorSlicer, Word2VecModel
-    ]}
-    res.update({k: "pyspark.ml.classification." + k.__name__ for k in [
-        LinearSVCModel, LogisticRegressionModel, DecisionTreeClassifier, GBTClassifier, RandomForestClassifier,
-        NaiveBayesModel, MultilayerPerceptronClassifier, OneVsRestModel
-    ]})
-    res.update({k: "pyspark.ml.regression." + k.__name__ for k in [
-        AFTSurvivalRegressionModel, DecisionTreeRegressor, GBTRegressionModel, GBTRegressionModel,
-        GeneralizedLinearRegressionModel, IsotonicRegressionModel, LinearRegressionModel, RandomForestRegressor
-    ]})
-    return res
-
-
-sparkml_operator_name_map = build_sparkml_operator_name_map()
-
-def build_io_name_map():
-    map = {
-        "pyspark.ml.feature.Normalizer": (
-            lambda model: [model.getOrDefault("inputCol")],
-            lambda model: [model.getOrDefault("outputCol")]
-        ),
-        "pyspark.ml.feature.Binarizer": (
-            lambda model: [model.getOrDefault("inputCol")],
-            lambda model: [model.getOrDefault("outputCol")]
-        ),
-        "pyspark.ml.classification.LogisticRegressionModel": (
-            lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")]
-        ),
-        "pyspark.ml.feature.OneHotEncoderModel": (
-            lambda model: model.getOrDefault("inputCols"),
-            lambda model: model.getOrDefault("outputCols")
-        ),
-        "pyspark.ml.feature.StringIndexerModel": (
-            lambda model: [model.getOrDefault("inputCol")],
-            lambda model: [model.getOrDefault("outputCol")]
-        ),
-        "pyspark.ml.feature.VectorAssembler": (
-            lambda model: model.getOrDefault("inputCols"),
-            lambda model: [model.getOrDefault("outputCol")]
-        )
-    }
-    return map
-
-io_name_map = build_io_name_map()
-
-def _get_input_names(model):
-    '''
-    Returns the name(s) of the input(s) for a SparkML operator
-    :param model: SparkML Model
-    :return: list of input names
-    '''
-    return io_name_map[_get_sparkml_operator_name(type(model))][0](model)
-
-
-def _get_output_names(model):
-    '''
-    Returns the name(s) of the output(s) for a SparkML operator
-    :param model: SparkML Model
-    :return: list of output names
-    '''
-    return io_name_map[_get_sparkml_operator_name(type(model))][1](model)
-
-
-def _get_sparkml_operator_name(model_type):
-    '''
-    Get operator name of the input argument
-
-    :param model_type:  A spark-ml object (LinearRegression, StringIndexer, ...)
-    :return: A string which stands for the type of the input model in our conversion framework
-    '''
-    if model_type not in sparkml_operator_name_map:
-        raise ValueError("No proper operator name found for '%s'" % model_type)
-    return sparkml_operator_name_map[model_type]
 
 
 def _get_variable_for_input(scope, input_name, global_inputs, output_dict):
@@ -193,31 +44,14 @@ def _parse_sparkml_simple_model(scope, model, global_inputs, output_dict):
     :param output_dict: An accumulated list of output_original_name->(ref_count, variable)
     :return: A list of output variables which will be passed to next stage
     '''
-    this_operator = scope.declare_local_operator(_get_sparkml_operator_name(type(model)), model)
-    raw_input_names = _get_input_names(model)
+    this_operator = scope.declare_local_operator(get_sparkml_operator_name(type(model)), model)
+    raw_input_names = get_input_names(model)
     this_operator.inputs = [_get_variable_for_input(scope, x, global_inputs, output_dict) for x in raw_input_names]
-    raw_output_names = _get_output_names(model)
+    raw_output_names = get_output_names(model)
     for output_name in raw_output_names:
         variable = scope.declare_local_variable(output_name, FloatTensorType())
         this_operator.outputs.append(variable)
         output_dict[variable.raw_name] = [0, variable]
-
-
-    # if type(model) in sparkml_classifier_list:
-    #     # For classifiers, we may have two outputs, one for label and the other one for probabilities of all classes.
-    #     # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
-    #     label_variable = scope.declare_local_variable('label', FloatTensorType())
-    #     probability_map_variable = scope.declare_local_variable('probabilities', FloatTensorType())
-    #     this_operator.outputs.append(label_variable)
-    #     this_operator.outputs.append(probability_map_variable)
-    #     output_dict[label_variable.raw_name] = [0, label_variable]
-    #     output_dict[probability_map_variable.raw_name] = [0, probability_map_variable]
-    # else:
-    #     # We assume that all spark-ml operator can only produce a single float tensor.
-    #     variable = scope.declare_local_variable('output', FloatTensorType())
-    #     this_operator.outputs.append(variable)
-    #     output_dict[variable.raw_name] = [0, variable]
-
 
 def _parse_sparkml_pipeline(scope, model, global_inputs, output_dict):
     '''
