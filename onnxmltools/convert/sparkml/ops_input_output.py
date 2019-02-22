@@ -2,7 +2,7 @@
 Mapping and utilities for the names of Params(propeties) that various Spark ML models
 have for their input and output columns
 '''
-from onnxmltools.convert.sparkml import get_sparkml_operator_name
+from .ops_names import get_sparkml_operator_name
 
 
 def build_io_name_map():
@@ -14,6 +14,10 @@ def build_io_name_map():
         "pyspark.ml.feature.Binarizer": (
             lambda model: [model.getOrDefault("inputCol")],
             lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.classification.LinearSVCModel": (
+            lambda model: [model.getOrDefault("featuresCol")],
+            lambda model: [model.getOrDefault("predictionCol")]
         ),
         "pyspark.ml.classification.LogisticRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],

@@ -3,7 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from onnxmltools.convert.sparkml import get_input_names, get_output_names, get_sparkml_operator_name
+#from onnxmltools.convert.sparkml import get_sparkml_operator_name, get_input_names, get_output_names
+from .ops_names import get_sparkml_operator_name
+from .ops_input_output import get_input_names, get_output_names
 from ..common._container import SparkmlModelContainer
 from ..common._topology import *
 
