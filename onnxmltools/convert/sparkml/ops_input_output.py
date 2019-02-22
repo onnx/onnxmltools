@@ -7,6 +7,18 @@ from .ops_names import get_sparkml_operator_name
 
 def build_io_name_map():
     map = {
+        "pyspark.ml.feature.MaxAbsScalerModel": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.feature.MinMaxScalerModel": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.feature.StandardScalerModel": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
         "pyspark.ml.feature.Normalizer": (
             lambda model: [model.getOrDefault("inputCol")],
             lambda model: [model.getOrDefault("outputCol")]
