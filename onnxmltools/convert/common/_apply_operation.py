@@ -7,6 +7,7 @@
 # best to use those functions because they can produce ONNX operators according to the ONNX version specified in the
 # `container` argument. Notice that those function behaviors are defined in a way very similar to ONNX-1.2.
 
+import numpy as np
 from ...proto import onnx_proto
 
 def _create_name_or_use_existing_one(scope, op_type, name):
@@ -438,3 +439,46 @@ def apply_softmax(scope, input_name, output_name, container, operator_name=None,
 def apply_normalization(scope, input_name, output_name, container, operator_name=None, axis=1, p=2):
     name = _create_name_or_use_existing_one(scope, 'LpNormalization', operator_name)
     container.add_node('LpNormalization', input_name, output_name, name=name, p=p, axis=axis)
+
+def apply_crop_height_width(scope, input_name, output_name, container, operator_name=None,
+        top_border=0, bottom_border=0, left_border=0, right_border=0):
+    name = scope.get_unique_operator_name('CropHeightWidth')
+    if container.target_opset < 9:
+        # If operator set < 9, we can use the experimental Crop in ONNX.
+        attrs = {'name': name, 'border': [left_border, top_border, right_border, bottom_border]}
+        container.add_node('Crop', input_name, output_name, **attrs)
+    else:
+        # The experimental Crop in ONNX is removed after operator set 9, so we
+        # switch to ONNX DynamicSlice operator.
+
+        # CoreML only crops H- and W-axes.
+        axes = [2, 3]
+        axes_name = scope.get_unique_variable_name(name + '_axes')
+        container.add_initializer(axes_name, onnx_proto.TensorProto.INT64,
+                                  [len(axes)], axes)
+
+        # Number of cropped pixels is the starting index of the remained region.
+        starts = [top_border, left_border]
+        starts_name = scope.get_unique_variable_name(name + '_starts')
+        container.add_initializer(starts_name, onnx_proto.TensorProto.INT64,
+                                  [len(starts)], starts)
+
+        # First we assume no cropping is needed at the end of those axes.
+        # We will change this right below depending on Crop's configuration.
+        ends = [np.iinfo(np.int64).max] * 2
+
+        # Crop n pixel means the end index (exclusive) is -n. Note that indexing
+        # system is zero-based.
+        if bottom_border > 0:
+            ends[0] = -bottom_border
+        if right_border > 0:
+            ends[1] = -right_border
+
+        # Add the adjusted ends.
+        ends_name = scope.get_unique_variable_name(name + '_ends')
+        container.add_initializer(ends_name, onnx_proto.TensorProto.INT64,
+                                  [len(ends)], ends)
+
+        # Collect all input names as a list because DynamicSlice has multiple inputs.
+        input_list = [input_name, starts_name, ends_name, axes_name]
+        container.add_node('DynamicSlice', input_list, output_name, op_version=9)
