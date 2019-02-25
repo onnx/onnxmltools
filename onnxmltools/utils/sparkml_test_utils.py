@@ -89,7 +89,7 @@ def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="mod
     runtime_test = dict(model=model, data=input)
 
     if folder is None:
-        folder = os.environ.get('ONNXTESTDUMP', 'tests')
+        folder = os.environ.get('ONNXTESTDUMP', 'tests_dump')
     if not os.path.exists(folder):
         os.makedirs(folder)
 

@@ -6,6 +6,7 @@
 
 # To register converter for sparkml operators, import associated modules here.
 
+from . import Imputer
 from . import Scaler
 from . import Normalizer
 from . import Binarizer
