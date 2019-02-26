@@ -4,7 +4,6 @@ codecov
 #coremltools
 pandas
 pytest-cov
-scikit-learn
 scipy
 svm
 wheel
