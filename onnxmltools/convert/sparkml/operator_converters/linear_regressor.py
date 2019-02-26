@@ -6,8 +6,8 @@
 import collections
 
 from ...common._registration import register_converter, register_shape_calculator
-from onnxmltools.convert.common.data_types import Int64TensorType, FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from onnxmltools.convert.common.data_types import FloatTensorType
+from ...common.utils import check_input_and_output_numbers
 
 
 def convert_sparkml_linear_regressor(scope, operator, container):
@@ -23,6 +23,7 @@ def convert_sparkml_linear_regressor(scope, operator, container):
 
 
 register_converter('pyspark.ml.regression.LinearRegressionModel', convert_sparkml_linear_regressor)
+register_converter('pyspark.ml.regression.GeneralizedLinearRegressionModel', convert_sparkml_linear_regressor)
 
 
 def calculate_linear_regressor_output_shapes(operator):
@@ -40,3 +41,4 @@ def calculate_linear_regressor_output_shapes(operator):
 
 
 register_shape_calculator('pyspark.ml.regression.LinearRegressionModel', calculate_linear_regressor_output_shapes)
+register_shape_calculator('pyspark.ml.regression.GeneralizedLinearRegressionModel', calculate_linear_regressor_output_shapes)
