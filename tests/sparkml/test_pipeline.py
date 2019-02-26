@@ -12,7 +12,7 @@ from onnxmltools.convert.common.data_types import StringTensorType
 from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
-class TestSparkmlPipeline(SparkMlTestCase):
+#class TestSparkmlPipeline(SparkMlTestCase):
     # @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     # def test_model_pipeline_4_stage(self):
     #     import inspect
