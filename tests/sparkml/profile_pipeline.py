@@ -7,7 +7,7 @@ from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAsse
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.sparkml import buildInitialTypesSimple, buildInputDictSimple
 from onnxmltools.utils.utils_backend_onnxruntime import run_with_runtime, _compare_expected
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase
 
 
 class ProfileSparkmlPipeline(SparkMlTestCase):

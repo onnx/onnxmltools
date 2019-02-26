@@ -5,8 +5,7 @@ import unittest
 from pyspark.ml.feature import StringIndexer
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
 class TestSparkmlStringIndexer(SparkMlTestCase):
