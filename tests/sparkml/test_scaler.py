@@ -3,7 +3,7 @@ Tests SparkML StringIndexer converter.
 """
 import unittest
 
-from pyspark.ml.feature import Binarizer, StandardScaler, MaxAbsScaler, MinMaxScaler
+from pyspark.ml.feature import StandardScaler, MaxAbsScaler, MinMaxScaler
 from pyspark.ml.linalg import Vectors
 
 from onnxmltools import convert_sparkml

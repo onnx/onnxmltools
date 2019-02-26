@@ -4,7 +4,6 @@ Tests SparkML StringIndexer converter.
 import unittest
 
 from pyspark.ml.feature import Imputer
-from pyspark.sql.types import StructType, StructField, FloatType
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
