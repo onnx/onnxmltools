@@ -1,6 +1,7 @@
 """
 Tests SparkML StringIndexer converter.
 """
+import sys
 import unittest
 from pyspark.ml.feature import VectorAssembler
 from onnxmltools import convert_sparkml
@@ -9,6 +10,7 @@ from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
 class TestSparkmlStringIndexer(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_vector_assembler(self):
         import numpy
         import pandas

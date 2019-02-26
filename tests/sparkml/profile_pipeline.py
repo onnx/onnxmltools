@@ -1,5 +1,5 @@
 import unittest
-
+import sys
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAssembler
@@ -11,6 +11,7 @@ from tests.sparkml import SparkMlTestCase
 
 
 class ProfileSparkmlPipeline(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_profile_sparkml_pipeline(self):
         import inspect
         import os
