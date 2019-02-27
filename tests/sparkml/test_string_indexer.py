@@ -1,15 +1,16 @@
 """
 Tests SparkML StringIndexer converter.
 """
+import sys
 import unittest
 from pyspark.ml.feature import StringIndexer
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
 class TestSparkmlStringIndexer(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_string_indexer(self):
         indexer = StringIndexer(inputCol='cat1', outputCol='cat1_index', handleInvalid='skip')
         data = self.spark.createDataFrame([("a",), ("b",), ("c",), ("a",), ("a",), ("c",)], ['cat1'])

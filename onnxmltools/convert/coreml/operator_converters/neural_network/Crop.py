@@ -4,18 +4,19 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import numpy as np
+from .....proto import onnx_proto
+from ....common._apply_operation import apply_crop_height_width
 from ....common._registration import register_converter
 
-
 def convert_crop(scope, operator, container):
-    if len(operator.input_full_names) > 2:
-        raise RuntimeError('Unlike CoreML, ONNX only supports cropping with a single input')
-
-    op_type = 'Crop'
-    attrs = {'name': operator.full_name}
+    # Extract number of pixels cropped in CoreML operator.
     border = operator.raw_operator.crop.cropAmounts.borderAmounts
-    left_border, top_border, right_border, bottom_border = (None,) * 4
-    if len(border):
+
+    # Compute cropping amounts. left_border=1 means one pixel will be removed at the beginning
+    # of W-axis. bottom_border=1 means one pixel will be removed at the end of H-axis.
+    left_border, top_border, right_border, bottom_border = (0,) * 4
+    if len(operator.input_full_names) == 1:
         left_border = border[1].startEdgeSize
         top_border = border[0].startEdgeSize
         right_border = border[1].endEdgeSize
@@ -29,9 +30,13 @@ def convert_crop(scope, operator, container):
         right_border = in_shape[3] - left_border - out_shape[3]
         bottom_border = in_shape[2] - top_border - out_shape[2]
 
-    attrs['border'] = [left_border, top_border, right_border, bottom_border]
+    # Delegate the selection of ONNX operator to a version-dependent function.
+    apply_crop_height_width(scope,
+        operator.input_full_names[0], operator.output_full_names[0],
+        container, operator_name=operator.full_name,
+        top_border=top_border, bottom_border=bottom_border,
+        left_border=left_border, right_border=right_border)
 
-    container.add_node(op_type, operator.input_full_names[0:1], operator.output_full_names, **attrs)
 
 
 register_converter('crop', convert_crop)

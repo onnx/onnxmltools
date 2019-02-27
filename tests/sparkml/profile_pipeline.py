@@ -1,5 +1,5 @@
 import unittest
-
+import sys
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAssembler
@@ -7,10 +7,11 @@ from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAsse
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.sparkml import buildInitialTypesSimple, buildInputDictSimple
 from onnxmltools.utils.utils_backend_onnxruntime import run_with_runtime, _compare_expected
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase
 
 
 class ProfileSparkmlPipeline(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_profile_sparkml_pipeline(self):
         import inspect
         import os
