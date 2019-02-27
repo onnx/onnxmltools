@@ -10,6 +10,7 @@ from onnxmltools.convert.common.data_types import Int64TensorType, FloatTensorTy
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 from onnx import onnx_pb as onnx_proto
 
+
 def convert_sparkml_linear_classifier(scope, operator, container):
     op = operator.raw_operator
     op_type = 'LinearClassifier'
@@ -58,6 +59,7 @@ def convert_sparkml_linear_classifier(scope, operator, container):
         container.add_node(op_type, operator.inputs[0].full_name,
                            [label_name,unused_probabilities_output],
                            op_domain='ai.onnx.ml', **attrs)
+
 
 register_converter('pyspark.ml.classification.LogisticRegressionModel', convert_sparkml_linear_classifier)
 register_converter('pyspark.ml.classification.LinearSVCModel', convert_sparkml_linear_classifier)
