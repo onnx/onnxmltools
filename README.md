@@ -3,7 +3,7 @@
 
 | Linux | Windows |
 |-------|---------|
-| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)|
+| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-win32-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)|
 
 # Introduction 
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
@@ -13,6 +13,7 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * Spark ML (experimental)
 * LightGBM
 * libsvm
+* XGBoost
 
 To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
 

@@ -1,6 +1,5 @@
-
 import unittest
-
+import sys
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAssembler
@@ -9,7 +8,7 @@ from onnxmltools import convert_sparkml
 from onnxmltools.convert.sparkml import buildInitialTypesSimple, buildInputDictSimple
 from onnxmltools.utils.utils_backend import OnnxRuntimeAssertionError, compare_outputs
 from onnxmltools.utils.utils_backend_onnxruntime import run_with_runtime, _compare_expected
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase
 
 
 class ProfileSparkmlPipeline(SparkMlTestCase):
@@ -17,6 +16,9 @@ class ProfileSparkmlPipeline(SparkMlTestCase):
         # add additional jar files before creating SparkSession
         return {'spark.jars.packages': "ml.combust.mleap:mleap-spark_2.11:0.13.0"}
 
+
+class ProfileSparkmlPipeline(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_profile_sparkml_pipeline(self):
         import inspect
         import os
@@ -117,6 +119,7 @@ class ProfileSparkmlPipeline(SparkMlTestCase):
 
         gen_plot(spark_times, mleap_times, runtime_times)
 
+
 def _compare_mleap_pyspark(mleap_prediction, spark_prediction):
     import pandas
     spark_pandas = spark_prediction.toPandas()
@@ -131,6 +134,7 @@ def _compare_mleap_pyspark(mleap_prediction, spark_prediction):
     msg = compare_outputs(spark_probability, mleap_probability, decimal=5)
     if msg:
         raise OnnxRuntimeAssertionError("Probabilities in mleap and spark do not match")
+
 
 def gen_plot(spark_times, mleap_times, runtime_times):
     import matplotlib.pyplot as pyplot

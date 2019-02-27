@@ -1,20 +1,19 @@
 """
 Tests SparkML Pipeline converter.
 """
+import sys
 import unittest
-
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAssembler
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
 class TestSparkmlPipeline(SparkMlTestCase):
-
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_pipeline_4_stage(self):
         import inspect
         import os
@@ -62,7 +61,7 @@ class TestSparkmlPipeline(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                 basename="SparkmlPipeline_4Stage")
 
-
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_pipeline_3_stage(self):
         import inspect
         import os
@@ -104,7 +103,7 @@ class TestSparkmlPipeline(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx,
                                 basename="SparkmlPipeline_3Stage")
 
-
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_pipeline_2_stage(self):
         import inspect
         import os
@@ -147,6 +146,7 @@ class TestSparkmlPipeline(SparkMlTestCase):
         expected = [numpy.asarray([expand_one_hot_vec(x) for x in row]) for row in predicted_np]
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                 basename="SparkmlPipeline_2Stage")
+
 
 def expand_one_hot_vec(v):
     import numpy

@@ -1,6 +1,7 @@
 """
 Tests SparkML LinearRegressor converter.
 """
+import sys
 import unittest
 import numpy
 from pyspark.ml.linalg import Vectors
@@ -8,11 +9,11 @@ from pyspark.ml.regression import LinearRegression
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
 class TestSparkmlLinearRegression(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_linear_regression_basic(self):
         data = self.spark.createDataFrame([
             (1.0, 2.0, Vectors.dense(1.0)),
@@ -32,6 +33,7 @@ class TestSparkmlLinearRegression(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlLinearRegressor_Basic")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_linear_regression(self):
         import inspect
         import os
@@ -53,6 +55,7 @@ class TestSparkmlLinearRegression(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlLinearRegressor")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_generalized_linear_regression(self):
         import inspect
         import os

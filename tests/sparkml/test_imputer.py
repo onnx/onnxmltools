@@ -1,18 +1,25 @@
 """
 Tests SparkML StringIndexer converter.
 """
+import sys
 import unittest
 
 from pyspark.ml.feature import Imputer
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
 class TestSparkmlImputer(SparkMlTestCase):
+    pass
 
+    ## For some reason during the spark bring up and shutdown something happens causing Imputer
+    ## tests to fail. For that you need to run each test here individually
+    ## for now these will be commented out so as not to break the build
+    ##      AttributeError: 'NoneType' object has no attribute 'setCallSite' on model.surrogateDF
+    ##  Therefore we leave this out for now until a newere version of pyspark is availabe that address this issue
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_imputer_multi(self):
         import numpy
         data = self.spark.createDataFrame([
@@ -42,7 +49,7 @@ class TestSparkmlImputer(SparkMlTestCase):
 ## The 2nd run of test always fails with error:
 ##      AttributeError: 'NoneType' object has no attribute 'setCallSite' on model.surrogateDF
 ##  Therefore we leave this out for now until a newere version of pyspark is availabe that address this issue
-#
+    # @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     # def test_imputer(self):
     #     import numpy
     #     data = self.spark.createDataFrame([
