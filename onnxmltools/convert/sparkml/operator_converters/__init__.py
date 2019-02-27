@@ -6,11 +6,13 @@
 
 # To register converter for sparkml operators, import associated modules here.
 
-from . import Imputer
-from . import Scaler
-from . import Normalizer
-from . import Binarizer
-from . import StringIndexer
-from . import LinearClassifier
-from . import OneHotEncoder
-from . import VectorAssembler
+from . import linear_regressor
+from . import imputer
+from . import scaler
+from . import normalizer
+from . import binarizer
+from . import string_indexer
+from . import linear_classifier
+from . import onehot_encoder
+from . import vector_assembler
+

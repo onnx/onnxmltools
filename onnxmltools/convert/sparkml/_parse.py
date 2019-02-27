@@ -3,9 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-#from onnxmltools.convert.sparkml import get_sparkml_operator_name, get_input_names, get_output_names
 from .ops_names import get_sparkml_operator_name
 from .ops_input_output import get_input_names, get_output_names
+
 from ..common._container import SparkmlModelContainer
 from ..common._topology import *
 
@@ -36,6 +36,7 @@ def _get_variable_for_input(scope, input_name, global_inputs, output_dict):
     #
     return scope.declare_local_variable(input_name)
 
+
 def _parse_sparkml_simple_model(scope, model, global_inputs, output_dict):
     '''
     This function handles all non-pipeline models.
@@ -55,6 +56,7 @@ def _parse_sparkml_simple_model(scope, model, global_inputs, output_dict):
         this_operator.outputs.append(variable)
         output_dict[variable.raw_name] = [0, variable]
 
+
 def _parse_sparkml_pipeline(scope, model, global_inputs, output_dict):
     '''
     The basic ideas of spark-ml parsing:
@@ -69,6 +71,7 @@ def _parse_sparkml_pipeline(scope, model, global_inputs, output_dict):
     '''
     for stage in model.stages:
         _parse_sparkml(scope, stage, global_inputs, output_dict)
+
 
 def _parse_sparkml(scope, model, global_inputs, output_dict):
     '''

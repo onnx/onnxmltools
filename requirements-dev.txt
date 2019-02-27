@@ -4,7 +4,6 @@ codecov
 #coremltools
 pandas
 pytest-cov
-scikit-learn
 scipy
 svm
 wheel
@@ -14,3 +13,4 @@ pyspark==2.3.2; sys_platform == 'win32'
 pyspark; sys_platform == 'linux'
 openpyxl
 mleap
+

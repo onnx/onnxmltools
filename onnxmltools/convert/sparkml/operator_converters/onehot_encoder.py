@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common._registration import register_converter
+from ...common._registration import register_converter, register_shape_calculator
 from ....proto import onnx_proto
+from ...common.data_types import FloatTensorType
 
 
 def convert_sparkml_one_hot_encoder(scope, operator, container):
@@ -52,9 +53,6 @@ def convert_sparkml_one_hot_encoder(scope, operator, container):
 
 
 register_converter('pyspark.ml.feature.OneHotEncoderModel', convert_sparkml_one_hot_encoder)
-
-from ...common._registration import register_shape_calculator
-from ...common.data_types import FloatTensorType
 
 
 def calculate_sparkml_one_hot_encoder_output_shapes(operator):

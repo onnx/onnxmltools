@@ -1,18 +1,19 @@
 """
 Tests SparkML StringIndexer converter.
 """
+import sys
 import unittest
 
-from pyspark.ml.feature import Binarizer, StandardScaler, MaxAbsScaler, MinMaxScaler
+from pyspark.ml.feature import StandardScaler, MaxAbsScaler, MinMaxScaler
 from pyspark.ml.linalg import Vectors
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
 class TestSparkmlScaler(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_maxabs_scaler(self):
         import numpy
         import pandas
@@ -34,6 +35,7 @@ class TestSparkmlScaler(SparkMlTestCase):
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlMaxAbsScaler")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_minmax_scaler(self):
         import numpy
         import pandas
@@ -55,6 +57,7 @@ class TestSparkmlScaler(SparkMlTestCase):
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlMinMaxScaler")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_standard_scaler(self):
         import numpy
         import pandas
@@ -75,6 +78,7 @@ class TestSparkmlScaler(SparkMlTestCase):
         predicted_np = predicted.toPandas().scaled_features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlStandardScaler")
+
 
 if __name__ == "__main__":
     unittest.main()

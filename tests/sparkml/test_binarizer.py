@@ -1,17 +1,18 @@
 """
 Tests SparkML StringIndexer converter.
 """
+import sys
 import unittest
 
 from pyspark.ml.feature import Binarizer
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
 class TestSparkmlBinarizer(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_binarizer(self):
         import numpy
         data = self.spark.createDataFrame([(0, 0.1), (1, 0.8), (2, 0.2) ], ["id", "feature"])

@@ -1,6 +1,7 @@
 """
 Tests SparkML StringIndexer converter.
 """
+import sys
 import unittest
 
 from pyspark.ml.feature import Normalizer
@@ -8,11 +9,11 @@ from pyspark.ml.linalg import Vectors
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
-from sparkml import SparkMlTestCase
+from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
 class TestSparkmlNormalizer(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_normalizer_1(self):
         import numpy
         import pandas
@@ -32,6 +33,7 @@ class TestSparkmlNormalizer(SparkMlTestCase):
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlNormalizer")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_normalizer_2(self):
         import numpy
         import pandas
