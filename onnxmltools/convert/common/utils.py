@@ -10,6 +10,16 @@ import warnings
 from distutils.version import LooseVersion, StrictVersion
 
 
+def sparkml_installed():
+    """
+    Checks that *spark* is available.
+    """
+    try:
+        import pyspark
+        return True
+    except ImportError:
+        return False
+
 def sklearn_installed():
     """
     Checks that *scikit-learn* is available.

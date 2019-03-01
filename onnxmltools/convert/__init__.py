@@ -9,5 +9,5 @@ from .main import convert_keras
 from .main import convert_libsvm
 from .main import convert_lightgbm
 from .main import convert_sklearn
+from .main import convert_sparkml
 from .main import convert_xgboost
-
