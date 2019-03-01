@@ -22,7 +22,12 @@ def convert_flatten(scope, operator, container):
     op_type = 'Flatten'
     flatten_attrs = {'name': operator.full_name, 'axis': 1}
 
-    container.add_node(op_type, [variable_to_be_flattened_name], [flattened_variable_name], **flatten_attrs)
+    if container.target_opset < 9:
+        target_opset = 1
+    else:
+        target_opset = 9
+
+    container.add_node(op_type, [variable_to_be_flattened_name], [flattened_variable_name], op_version=target_opset, **flatten_attrs)
 
 
 register_converter('flatten', convert_flatten)

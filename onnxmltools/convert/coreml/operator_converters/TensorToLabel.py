@@ -66,7 +66,11 @@ def convert_tensor_to_label(scope, operator, container):
     label_loader_attrs = {'name': label_loader_name}
     label_buffer_name = scope.get_unique_variable_name('ClassLabels')
     label_loader_attrs['value'] = helper.make_tensor(label_buffer_name, label_type, [len(labels)], labels)
-    container.add_node('Constant', [], [label_buffer_name], **label_loader_attrs)
+    if container.target_opset < 9:
+        target_opset = 1
+    else:
+        target_opset = 9
+    container.add_node('Constant', [], [label_buffer_name], op_version=target_opset, **label_loader_attrs)
 
     # Extract most possible label index
     label_id_extractor_name = scope.get_unique_operator_name('LabelIndexExtractor')
