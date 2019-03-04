@@ -15,7 +15,7 @@ def convert_load_constant(scope, operator, container):
     constant = helper.make_tensor(constant_name, onnx_proto.TensorProto.FLOAT,
                                   params.shape, params.data.floatValue)
 
-    apply_constant(scope, [], operator.output_full_names, op_version=container.target_opset,
+    apply_constant(scope, operator.output_full_names, container,
                    operator_name=operator.full_name, value=constant)
 
 register_converter('loadConstant', convert_load_constant)

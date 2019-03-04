@@ -159,7 +159,7 @@ def apply_concat(scope, input_names, output_name, container, operator_name=None,
 
     container.add_node('Concat', input_names, output_name, op_version=op_version, name=name, axis=axis)
 
-def apply_constant(scope, input_names=[], output_name, operator_name=None, value=None):
+def apply_constant(scope, output_name, container, operator_name=None, value=None):
     name = _create_name_or_use_existing_one(scope, 'Constant', operator_name)
 
     if not value:
@@ -172,8 +172,12 @@ def apply_constant(scope, input_names=[], output_name, operator_name=None, value
     else:
         op_version = 9
 
-    container.add_node('Constant', input_names, output_name, op_version=op_version, **attrs)
+    container.add_node('Constant', [], output_name, op_version=op_version, **attrs)
 
+def apply_constant_of_shape():
+        if not value:
+            value = onnx.helper.make_tensor(name='const_tensor', data_type=onnx.TensorProto.FLOAT32,
+                                            dims=[1], vals=[0])
 def apply_crop_height_width(scope, input_name, output_name, container, operator_name=None,
         top_border=0, bottom_border=0, left_border=0, right_border=0):
     name = scope.get_unique_operator_name('CropHeightWidth')
