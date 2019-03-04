@@ -159,8 +159,12 @@ def apply_concat(scope, input_names, output_name, container, operator_name=None,
 
     container.add_node('Concat', input_names, output_name, op_version=op_version, name=name, axis=axis)
 
-def apply_constant(scope, input_names=[], output_name, operator_name=None, value=0.0):
+def apply_constant(scope, input_names=[], output_name, operator_name=None, value=None):
     name = _create_name_or_use_existing_one(scope, 'Constant', operator_name)
+
+    if not value:
+        raise ValueError('Attribute "value" is a required argument.')
+
     attrs = {'name': name, 'value': value}
 
     if container.target_opset < 9:
