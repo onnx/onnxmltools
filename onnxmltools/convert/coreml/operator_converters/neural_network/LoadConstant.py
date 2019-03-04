@@ -12,12 +12,10 @@ from ....common._registration import register_converter
 def convert_load_constant(scope, operator, container):
     params = operator.raw_operator.loadConstant
     constant_name = scope.get_unique_variable_name('constant')
-    constant = helper.make_tensor(constant_name, onnx_proto.TensorProto.FLOAT, params.shape, params.data.floatValue)
-    attrs = {'name': operator.full_name, 'value': constant}
-    if container.target_opset < 9:
-        target_opset = 1
-    else:
-        target_opset = 9
-    container.add_node('Constant', operator.input_full_names, operator.output_full_names, op_version=target_opset, **attrs)
+    constant = helper.make_tensor(constant_name, onnx_proto.TensorProto.FLOAT,
+                                  params.shape, params.data.floatValue)
+
+    apply_constant(scope, [], operator.output_full_names, op_version=container.target_opset,
+                   operator_name=operator.full_name, value=constant)
 
 register_converter('loadConstant', convert_load_constant)
