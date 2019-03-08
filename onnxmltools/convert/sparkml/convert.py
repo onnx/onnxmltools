@@ -11,7 +11,8 @@ from ._parse import parse_sparkml
 from . import operator_converters
 
 def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
-            targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+            targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None,
+            spark_session=None):
     '''
     This function produces an equivalent ONNX model of the given spark-ml model. The supported spark-ml
     modules are listed below.
@@ -63,7 +64,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
 
     target_opset = target_opset if target_opset else get_opset_number_from_onnx()
     # Parse spark-ml model as our internal data structure (i.e., Topology)
-    topology = parse_sparkml(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_sparkml(spark_session, model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
 
     # Infer variable shapes
     topology.compile()

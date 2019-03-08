@@ -29,6 +29,7 @@ def convert_sparkml_normalizer(scope, operator, container):
 
 register_converter('pyspark.ml.feature.Normalizer', convert_sparkml_normalizer)
 
+
 def calculate_sparkml_normalizer_output_shapes(operator):
     check_input_and_output_numbers(operator, output_count_range=1)
     check_input_and_output_types(operator,

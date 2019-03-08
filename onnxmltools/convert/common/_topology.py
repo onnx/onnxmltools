@@ -75,6 +75,7 @@ class Operator(OperatorBase):
         self.is_evaluated = None
         self.is_abandoned = False
         self.target_opset = target_opset
+        self.raw_params = None
 
     @property
     def full_name(self):
@@ -108,6 +109,12 @@ class Operator(OperatorBase):
         # Invoke a core inference function
         _registration.get_shape_calculator(self.type)(self)
 
+    @property
+    def original_params(self):
+        '''
+        Return the original operator additional parameters
+        '''
+        return self.raw_params
 
 class Scope:
 

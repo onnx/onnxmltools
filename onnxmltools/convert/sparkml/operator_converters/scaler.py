@@ -47,6 +47,7 @@ register_converter('pyspark.ml.feature.StandardScalerModel', convert_sparkml_sca
 register_converter('pyspark.ml.feature.MaxAbsScalerModel', convert_sparkml_scaler)
 register_converter('pyspark.ml.feature.MinMaxScalerModel', convert_sparkml_scaler)
 
+
 def calculate_sparkml_scaler_output_shapes(operator):
     check_input_and_output_numbers(operator, output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType])

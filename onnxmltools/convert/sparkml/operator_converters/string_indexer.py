@@ -3,16 +3,19 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
-from ...common.data_types import StringTensorType, Int64TensorType
-from ...common._registration import register_converter
+import copy
+from ...common._registration import register_converter, register_shape_calculator
+from ...common.data_types import Int64TensorType, StringTensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def convert_sparkml_string_indexer(scope, operator, container):
     op = operator.raw_operator
     op_type = 'LabelEncoder'
-    attrs = {'name': scope.get_unique_operator_name(op_type)}
-    attrs['classes_strings'] = [str(c) for c in op.labels]
+    attrs = {
+        'name': scope.get_unique_operator_name(op_type),
+        'classes_strings': [str(c) for c in op.labels]
+    }
 
     if isinstance(operator.inputs[0].type, Int64TensorType):
         attrs['default_int64'] = -1
@@ -26,10 +29,6 @@ def convert_sparkml_string_indexer(scope, operator, container):
 
 register_converter('pyspark.ml.feature.StringIndexerModel', convert_sparkml_string_indexer)
 
-import copy
-from ...common._registration import register_shape_calculator
-from ...common.data_types import Int64TensorType, StringTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 def calculate_sparkml_string_indexer_output_shapes(operator):
     '''

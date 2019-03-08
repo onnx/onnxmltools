@@ -7,6 +7,10 @@ from .ops_names import get_sparkml_operator_name
 
 def build_io_name_map():
     map = {
+        "pyspark.ml.feature.VectorIndexerModel": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
         "pyspark.ml.regression.GeneralizedLinearRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],
             lambda model: [model.getOrDefault("predictionCol")]

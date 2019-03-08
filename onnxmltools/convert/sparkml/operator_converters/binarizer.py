@@ -22,6 +22,7 @@ def convert_sparkml_binarizer(scope, operator, container):
 
 register_converter('pyspark.ml.feature.Binarizer', convert_sparkml_binarizer)
 
+
 def calculate_sparkml_binarizer_output_shapes(operator):
     check_input_and_output_numbers(operator, output_count_range=1)
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType])

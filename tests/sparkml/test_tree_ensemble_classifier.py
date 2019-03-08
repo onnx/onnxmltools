@@ -1,33 +1,38 @@
 """
 Tests SparkML TreeEnsembleClassifier converter.
 """
+import inspect
 import unittest
-import numpy
-from pyspark.ml.linalg import Vectors
-from pyspark.ml.regression import LinearRegression
+
+from pyspark.ml import Pipeline
 from  pyspark.ml.classification import DecisionTreeClassifier
 
 from onnxmltools import convert_sparkml
-from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.utils import dump_data_and_sparkml_model
+from onnxmltools.convert.common.data_types import StringTensorType, FloatTensorType
 from sparkml import SparkMlTestCase
-from pyspark.ml.linalg import Vectors
-from pyspark.ml.feature import StringIndexer
+from pyspark.ml.feature import StringIndexer, VectorIndexer
 
 
-class TestSparkmlLinearRegression(SparkMlTestCase):
-    def test_model_linear_regression_basic(self):
-        df = self.spark.createDataFrame([
-            (1.0, Vectors.dense(1.0)),
-            (0.0, Vectors.sparse(1, [], []))],
-            ["label", "features"]
-        )
-        stringIndexer = StringIndexer(inputCol="label", outputCol="indexed")
-        si_model = stringIndexer.fit(df)
-        td = si_model.transform(df)
-        dt = DecisionTreeClassifier(maxDepth=2, labelCol="indexed")
-        model = dt.fit(td)
-        print(model.numClasses)
+class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
+    def test_model_tree_ensemble_classifier(self):
+        import os
+        this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        input_path = os.path.join(this_script_dir, "data", "sample_libsvm_data.txt")
+        data = self.spark.read.format("libsvm").load(input_path)
+
+        labelIndexer = StringIndexer(inputCol="label", outputCol="indexedLabel").fit(data)
+        featureIndexer = VectorIndexer(inputCol="features", outputCol="indexedFeatures", maxCategories=4).fit(data)
+        (trainingData, testData) = data.randomSplit([0.7, 0.3])
+
+        dt = DecisionTreeClassifier(labelCol="indexedLabel", featuresCol="indexedFeatures")
+        pipeline = Pipeline(stages=[labelIndexer, featureIndexer, dt])
+        model = pipeline.fit(trainingData)
+        # C = model.numFeatures
+        model_onnx = convert_sparkml(model, 'Sparkml Pipeline', [
+            ('label', StringTensorType([1, 1])),
+            ('features', FloatTensorType([1, 2]))
+        ], spark_session=self.spark)
+
 
 
 if __name__ == "__main__":

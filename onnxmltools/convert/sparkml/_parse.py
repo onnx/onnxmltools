@@ -37,7 +37,7 @@ def _get_variable_for_input(scope, input_name, global_inputs, output_dict):
     return scope.declare_local_variable(input_name)
 
 
-def _parse_sparkml_simple_model(scope, model, global_inputs, output_dict):
+def _parse_sparkml_simple_model(spark, scope, model, global_inputs, output_dict):
     '''
     This function handles all non-pipeline models.
 
@@ -48,6 +48,7 @@ def _parse_sparkml_simple_model(scope, model, global_inputs, output_dict):
     :return: A list of output variables which will be passed to next stage
     '''
     this_operator = scope.declare_local_operator(get_sparkml_operator_name(type(model)), model)
+    this_operator.raw_params = {'SparkSession': spark}
     raw_input_names = get_input_names(model)
     this_operator.inputs = [_get_variable_for_input(scope, x, global_inputs, output_dict) for x in raw_input_names]
     raw_output_names = get_output_names(model)
@@ -57,7 +58,7 @@ def _parse_sparkml_simple_model(scope, model, global_inputs, output_dict):
         output_dict[variable.raw_name] = [0, variable]
 
 
-def _parse_sparkml_pipeline(scope, model, global_inputs, output_dict):
+def _parse_sparkml_pipeline(spark, scope, model, global_inputs, output_dict):
     '''
     The basic ideas of spark-ml parsing:
         1. Sequentially go though all stages defined in the considered spark-ml pipeline
@@ -70,10 +71,10 @@ def _parse_sparkml_pipeline(scope, model, global_inputs, output_dict):
     :return: A list of output variables produced by the input pipeline
     '''
     for stage in model.stages:
-        _parse_sparkml(scope, stage, global_inputs, output_dict)
+        _parse_sparkml(spark, scope, stage, global_inputs, output_dict)
 
 
-def _parse_sparkml(scope, model, global_inputs, output_dict):
+def _parse_sparkml(spark, scope, model, global_inputs, output_dict):
     '''
     This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
     model's type.
@@ -83,12 +84,12 @@ def _parse_sparkml(scope, model, global_inputs, output_dict):
     :return: The output variables produced by the input model
     '''
     if isinstance(model, PipelineModel):
-        return _parse_sparkml_pipeline(scope, model, global_inputs, output_dict)
+        return _parse_sparkml_pipeline(spark, scope, model, global_inputs, output_dict)
     else:
-        return _parse_sparkml_simple_model(scope, model, global_inputs, output_dict)
+        return _parse_sparkml_simple_model(spark, scope, model, global_inputs, output_dict)
 
 
-def parse_sparkml(model, initial_types=None, target_opset=None,
+def parse_sparkml(spark, model, initial_types=None, target_opset=None,
                   custom_conversion_functions=None, custom_shape_calculators=None):
     # Put spark-ml object into an abstract container so that our framework can work seamlessly on models created
     # with different machine learning tools.
@@ -117,7 +118,7 @@ def parse_sparkml(model, initial_types=None, target_opset=None,
 
     # Parse the input spark-ml model as a Topology object.
     output_dict = {}
-    _parse_sparkml(scope, model, inputs, output_dict)
+    _parse_sparkml(spark, scope, model, inputs, output_dict)
     outputs = []
     for k, v in output_dict.items():
         if v[0] == 0: # ref count is zero

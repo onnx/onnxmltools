@@ -6,6 +6,7 @@
 
 # To register converter for sparkml operators, import associated modules here.
 
+from . import vector_indexer
 from . import linear_regressor
 from . import imputer
 from . import scaler
