@@ -77,21 +77,19 @@ def apply_batch_norm(scope, input_names, output_names, container, operator_name=
     name = _create_name_or_use_existing_one(scope, 'BatchNormalization', operator_name)
     attrs = {'name': name, 'epsilon': epsilon, 'momentum': momentum}
 
+    if container.target_opset < 9: attrs['spatial'] = spatial
+    if container.target_opset < 7: attrs['is_test'] = is_test
+
     if container.target_opset < 6:
         attrs['consumed_inputs'] = [0] * len(input_names)
         if len(input_names) > 3:
             attrs['consumed_inputs'][3] = 1
         if len(input_names) > 4:
             attrs['consumed_inputs'][4] = 2
-        attrs['is_test'] = is_test
-        attrs['spatial'] = spatial
         op_version = 1
     elif container.target_opset < 7:
-        attrs['is_test'] = is_test
-        attrs['spatial'] = spatial
         op_version = 6
     elif container.target_opset < 9:
-        attrs['spatial'] = spatial
         op_version = 7
     else:
         op_version = 9
@@ -174,10 +172,6 @@ def apply_constant(scope, output_name, container, operator_name=None, value=None
 
     container.add_node('Constant', [], output_name, op_version=op_version, **attrs)
 
-def apply_constant_of_shape():
-        if not value:
-            value = onnx.helper.make_tensor(name='const_tensor', data_type=onnx.TensorProto.FLOAT32,
-                                            dims=[1], vals=[0])
 def apply_crop_height_width(scope, input_name, output_name, container, operator_name=None,
         top_border=0, bottom_border=0, left_border=0, right_border=0):
     name = scope.get_unique_operator_name('CropHeightWidth')
@@ -450,13 +444,12 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
         attrs['width_scale'] = float(scales[3])
         attrs['mode'] = mode.upper()
         op_version = 1
-    elif container.target_opset < 9:
-        attrs['scales'] = list(map(float, scales))
-        attrs['mode'] = mode.lower()
-        op_version = 7
     else:
         attrs['scales'] = list(map(float, scales))
         attrs['mode'] = mode.lower()
-        op_version = 9
+        if container.target_opset < 9:
+            op_version = 7
+        else:
+            op_version = 9
 
     container.add_node('Upsample', input_name, output_name, op_version=op_version, **attrs)
