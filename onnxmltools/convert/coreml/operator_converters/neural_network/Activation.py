@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ....common._apply_operation import apply_elu, apply_hard_sigmoid, apply_leaky_relu, apply_prelu, apply_relu, \
-    apply_sigmoid, apply_tanh
+    apply_sigmoid, apply_tanh, apply_affine
 from ....common._registration import register_converter
 
 
@@ -34,6 +34,9 @@ def convert_activation(scope, operator, container):
     elif activation_type == 'sigmoidHard':
         apply_hard_sigmoid(scope, inputs, outputs, container, operator_name=attrs['name'],
                            alpha=params.sigmoidHard.alpha, beta=params.sigmoidHard.beta)
+    elif activation_type == 'linear':
+        apply_affine(scope, inputs[0], outputs[0], container, operator_name=attrs['name'],
+                     alpha=params.linear.alpha, beta=params.linear.beta)
     else:
         if activation_type == 'thresholdedReLU':
             op_type = 'ThresholdedRelu'
@@ -42,10 +45,6 @@ def convert_activation(scope, operator, container):
             op_type = 'ScaledTanh'
             attrs['alpha'] = params.scaledTanh.alpha
             attrs['beta'] = params.scaledTanh.beta
-        elif activation_type == 'linear':
-            op_type = 'Affine'
-            attrs['alpha'] = params.linear.alpha
-            attrs['beta'] = params.linear.beta
         elif activation_type == 'softsign':
             op_type = 'Softsign'
         elif activation_type == 'softplus':

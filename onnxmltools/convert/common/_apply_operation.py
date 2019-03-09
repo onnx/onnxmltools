@@ -72,6 +72,27 @@ def apply_add(scope, input_names, output_name, container, operator_name=None, ax
     _apply_basic_numerical_operation(scope, 'Add', input_names, output_name, container, operator_name=operator_name,
                                      axis=axis, broadcast=broadcast)
 
+def apply_affine(scope, input_name, output_name, container, operator_name=None, alpha=1., beta=0.):
+    if container.target_opset < 9:
+        op_type = 'Affine'
+        name = _create_name_or_use_existing_one(scope, 'Affine', operator_name)
+        attrs = {'name': name, 'alpha': alpha, 'beta': beta}
+        container.add_node(op_type, input_name, output_name, **attrs)
+    else:
+        name = _create_name_or_use_existing_one(scope, 'Affine', operator_name)
+        # Define a and b.
+        aName = scope.get_unique_variable_name(name + '_alpha')
+        container.add_initializer(aName, onnx_proto.TensorProto.FLOAT, [1], [alpha])
+        bName = scope.get_unique_variable_name(name + '_beta')
+        container.add_initializer(bName, onnx_proto.TensorProto.FLOAT, [1], [beta])
+
+        # Compute Z = a * X, where X is the original input.
+        zName = scope.get_unique_variable_name(name + '_scaled')
+        apply_mul(scope, [aName, input_name], zName, container)
+
+        # Compute Y = Z + b, where Y is the final output.
+        apply_add(scope, [zName, bName], output_name, container)
+
 def apply_batch_norm(scope, input_names, output_names, container, operator_name=None,
                      epsilon=None, is_test=None, momentum=None, spatial=None):
     name = _create_name_or_use_existing_one(scope, 'BatchNormalization', operator_name)
