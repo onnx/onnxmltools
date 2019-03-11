@@ -49,7 +49,6 @@ def convert_random_forest_classifier(scope, operator, container):
         tree_df = save_read_sparkml_model_data(operator.raw_params['SparkSession'], tree_model)
         tree = sparkml_tree_dataset_to_sklearn(tree_df)
         add_tree_to_attribute_pairs(attr_pairs, True, tree, tree_id,
-                                    # op.treeWeights[tree_id],
                                     tree_weight, 0, True)
 
     container.add_node(
