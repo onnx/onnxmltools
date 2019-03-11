@@ -36,7 +36,7 @@ from pyspark.ml.feature import Word2VecModel
 
 from pyspark.ml.classification import LinearSVCModel
 from pyspark.ml.classification import LogisticRegressionModel
-from pyspark.ml.classification import DecisionTreeClassifier
+from pyspark.ml.classification import DecisionTreeClassificationModel
 from pyspark.ml.classification import GBTClassifier
 from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.classification import NaiveBayesModel
@@ -67,7 +67,7 @@ def build_sparkml_operator_name_map():
         VectorSlicer, Word2VecModel
     ]}
     res.update({k: "pyspark.ml.classification." + k.__name__ for k in [
-        LinearSVCModel, LogisticRegressionModel, DecisionTreeClassifier, GBTClassifier, RandomForestClassifier,
+        LinearSVCModel, LogisticRegressionModel, DecisionTreeClassificationModel, GBTClassifier, RandomForestClassifier,
         NaiveBayesModel, MultilayerPerceptronClassifier, OneVsRestModel
     ]})
     res.update({k: "pyspark.ml.regression." + k.__name__ for k in [
