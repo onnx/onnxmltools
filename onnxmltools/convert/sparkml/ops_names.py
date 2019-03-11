@@ -23,8 +23,6 @@ from pyspark.ml.feature import PCAModel
 from pyspark.ml.feature import PolynomialExpansion
 from pyspark.ml.feature import QuantileDiscretizer
 from pyspark.ml.feature import RegexTokenizer
-from pyspark.ml.feature import RFormulaModel
-from pyspark.ml.feature import SQLTransformer
 from pyspark.ml.feature import StandardScalerModel
 from pyspark.ml.feature import StopWordsRemover
 from pyspark.ml.feature import StringIndexerModel
@@ -34,22 +32,18 @@ from pyspark.ml.feature import VectorIndexerModel
 from pyspark.ml.feature import VectorSlicer
 from pyspark.ml.feature import Word2VecModel
 
-from pyspark.ml.classification import LinearSVCModel
+from pyspark.ml.classification import LinearSVCModel, RandomForestClassificationModel, GBTClassificationModel, \
+    MultilayerPerceptronClassificationModel
 from pyspark.ml.classification import LogisticRegressionModel
 from pyspark.ml.classification import DecisionTreeClassificationModel
-from pyspark.ml.classification import GBTClassifier
-from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.classification import NaiveBayesModel
-from pyspark.ml.classification import MultilayerPerceptronClassifier
 from pyspark.ml.classification import OneVsRestModel
 
-from pyspark.ml.regression import AFTSurvivalRegressionModel
-from pyspark.ml.regression import DecisionTreeRegressor
+from pyspark.ml.regression import AFTSurvivalRegressionModel, DecisionTreeRegressionModel, RandomForestRegressionModel
 from pyspark.ml.regression import GBTRegressionModel
 from pyspark.ml.regression import GeneralizedLinearRegressionModel
 from pyspark.ml.regression import IsotonicRegressionModel
 from pyspark.ml.regression import LinearRegressionModel
-from pyspark.ml.regression import RandomForestRegressor
 
 from pyspark.ml.clustering import BisectingKMeans
 from pyspark.ml.clustering import KMeans
@@ -62,17 +56,17 @@ def build_sparkml_operator_name_map():
         Binarizer, BucketedRandomProjectionLSHModel, Bucketizer,
         ChiSqSelectorModel, CountVectorizerModel, DCT, ElementwiseProduct, HashingTF, IDFModel, ImputerModel,
         IndexToString, MaxAbsScalerModel, MinHashLSHModel, MinMaxScalerModel, NGram, Normalizer, OneHotEncoderModel,
-        PCAModel, PolynomialExpansion, QuantileDiscretizer, RegexTokenizer, RFormulaModel, SQLTransformer,
+        PCAModel, PolynomialExpansion, QuantileDiscretizer, RegexTokenizer,
         StandardScalerModel, StopWordsRemover, StringIndexerModel, Tokenizer, VectorAssembler, VectorIndexerModel,
         VectorSlicer, Word2VecModel
     ]}
     res.update({k: "pyspark.ml.classification." + k.__name__ for k in [
-        LinearSVCModel, LogisticRegressionModel, DecisionTreeClassificationModel, GBTClassifier, RandomForestClassifier,
-        NaiveBayesModel, MultilayerPerceptronClassifier, OneVsRestModel
+        LinearSVCModel, LogisticRegressionModel, DecisionTreeClassificationModel, GBTClassificationModel,
+        RandomForestClassificationModel, NaiveBayesModel, MultilayerPerceptronClassificationModel, OneVsRestModel
     ]})
     res.update({k: "pyspark.ml.regression." + k.__name__ for k in [
-        AFTSurvivalRegressionModel, DecisionTreeRegressor, GBTRegressionModel, GBTRegressionModel,
-        GeneralizedLinearRegressionModel, IsotonicRegressionModel, LinearRegressionModel, RandomForestRegressor
+        AFTSurvivalRegressionModel, DecisionTreeRegressionModel, GBTRegressionModel, GBTRegressionModel,
+        GeneralizedLinearRegressionModel, IsotonicRegressionModel, LinearRegressionModel, RandomForestRegressionModel
     ]})
     return res
 
