@@ -377,6 +377,49 @@ def apply_softmax(scope, input_name, output_name, container, operator_name=None,
     name = _create_name_or_use_existing_one(scope, 'Softmax', operator_name)
     container.add_node('Softmax', input_name, output_name, name=name, axis=axis)
 
+def apply_softplus(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
+    if alpha == None:
+        alpha = [1.0]
+    if beta == None:
+        beta = [0.]
+
+    name = _create_name_or_use_existing_one(scope, 'Sofplus', operator_name)
+    if container.target_opset < 9:
+        #if len(alpha) != 1 or len(beta) != 1:
+        #    raise ValueError('alpha and beta must be 1-element lists')
+        op_type = 'ParametricSoftplus'
+        attrs = {'name': name, 'alpha': alpha[0], 'beta': beta[0]}
+        container.add_node(op_type, input_name, output_name, **attrs)
+    else:
+        # Define three scalars: a, b, 1.
+        aName = scope.get_unique_variable_name(name + '_alpha')
+        aShape = [len(alpha)] if len(alpha) == 1 else [len(alpha), 1, 1]
+        container.add_initializer(aName, onnx_proto.TensorProto.FLOAT, aShape, alpha)
+        bShape = [len(beta)] if len(beta) == 1 else [len(beta), 1, 1]
+        bName = scope.get_unique_variable_name(name + '_beta')
+        container.add_initializer(bName, onnx_proto.TensorProto.FLOAT, bShape, beta)
+        oneName = scope.get_unique_variable_name(name + '_one')
+        container.add_initializer(oneName, onnx_proto.TensorProto.FLOAT, [1], [1.])
+
+        # c = b * x
+        cName = scope.get_unique_variable_name(name + '_c')
+        apply_mul(scope, [input_name, bName], cName, container)
+
+        # d = exp(c)
+        dName = scope.get_unique_variable_name(name + '_d')
+        apply_exp(scope, cName, dName, container)
+
+        # e = 1 + d
+        eName = scope.get_unique_variable_name(name + '_e')
+        apply_add(scope, [dName, oneName], eName, container)
+
+        # f = log(e)
+        fName = scope.get_unique_variable_name(name + '_f')
+        apply_log(scope, eName, fName, container)
+
+        # g = a * f
+        apply_mul(scope, [fName, aName], output_name, container)
+
 def apply_split(scope, input_name, output_names, container, operator_name=None, split=None, axis=0):
     name = _create_name_or_use_existing_one(scope, 'Split', operator_name)
     if container.target_opset <= 1:
@@ -394,7 +437,6 @@ def apply_split(scope, input_name, output_names, container, operator_name=None, 
 
 def apply_sqrt(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Sqrt', input_name, output_name, container, operator_name=operator_name)
-
 
 def apply_sub(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=0):
     _apply_basic_numerical_operation(scope, 'Sub', input_names, output_name, container, operator_name=operator_name,
