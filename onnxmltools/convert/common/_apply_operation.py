@@ -377,16 +377,16 @@ def apply_softmax(scope, input_name, output_name, container, operator_name=None,
     name = _create_name_or_use_existing_one(scope, 'Softmax', operator_name)
     container.add_node('Softmax', input_name, output_name, name=name, axis=axis)
 
-def apply_softplus(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
+def apply_parametric_softplus(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
     if alpha == None:
         alpha = [1.0]
     if beta == None:
         beta = [0.]
 
-    name = _create_name_or_use_existing_one(scope, 'Sofplus', operator_name)
+    name = _create_name_or_use_existing_one(scope, 'ParametricSoftplus', operator_name)
     if container.target_opset < 9:
-        #if len(alpha) != 1 or len(beta) != 1:
-        #    raise ValueError('alpha and beta must be 1-element lists')
+        if len(alpha) != 1 or len(beta) != 1:
+            raise ValueError('alpha and beta must be 1-element lists')
         op_type = 'ParametricSoftplus'
         attrs = {'name': name, 'alpha': alpha[0], 'beta': beta[0]}
         container.add_node(op_type, input_name, output_name, **attrs)

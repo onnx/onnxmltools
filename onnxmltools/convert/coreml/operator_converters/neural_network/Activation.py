@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ....common._apply_operation import apply_elu, apply_hard_sigmoid, apply_leaky_relu, apply_prelu, apply_relu, \
-    apply_sigmoid, apply_tanh, apply_affine, apply_softplus
+    apply_sigmoid, apply_tanh, apply_affine, apply_parametric_softplus
 from ....common._registration import register_converter
 
 
@@ -38,8 +38,8 @@ def convert_activation(scope, operator, container):
         apply_affine(scope, inputs[0], outputs[0], container, operator_name=attrs['name'],
                      alpha=params.linear.alpha, beta=params.linear.beta)
     elif activation_type == 'parametricSoftplus':
-        apply_softplus(scope, inputs[0], outputs[0], container, operator_name=attrs['name'],
-                       alpha=params.parametricSoftplus.alpha.floatValue, beta=params.parametricSoftplus.beta.floatValue)
+        apply_parametric_softplus(scope, inputs[0], outputs[0], container, operator_name=attrs['name'],
+                                  alpha=params.parametricSoftplus.alpha.floatValue, beta=params.parametricSoftplus.beta.floatValue)
     else:
         if activation_type == 'thresholdedReLU':
             op_type = 'ThresholdedRelu'
