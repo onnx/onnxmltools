@@ -11,7 +11,7 @@ from pyspark.ml.linalg import VectorUDT, SparseVector, Vectors
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType, FloatTensorType
-from sparkml import SparkMlTestCase, dump_data_and_sparkml_model
+from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 from pyspark.ml.feature import StringIndexer, VectorIndexer
 
 
