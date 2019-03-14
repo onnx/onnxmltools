@@ -16,6 +16,7 @@ from pyspark.ml.feature import StringIndexer, VectorIndexer
 
 
 class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_tree_pipeline(self):
         import os
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -55,6 +56,7 @@ class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlDecisionTreePipeline")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_tree_one_class_classification(self):
         features = [[0., 1.], [1., 1.], [2., 0.]]
         features = numpy.array(features, dtype=numpy.float32)
@@ -76,6 +78,7 @@ class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlDecisionTreeOneClass")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_tree_binary_classification(self):
         features = [[0, 1], [1, 1], [2, 0]]
         features = numpy.array(features, dtype=numpy.float32)
@@ -97,6 +100,7 @@ class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlDecisionTreeBinaryClass")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_tree_multiple_classification(self):
         features = [[0, 1], [1, 1], [2, 0], [0.5, 0.5], [1.1, 1.1], [2.1, 0.1]]
         features = numpy.array(features, dtype=numpy.float32)
@@ -118,6 +122,7 @@ class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlDecisionTreeMultiClass")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_random_forrest_classification(self):
         import os
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))

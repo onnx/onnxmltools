@@ -16,6 +16,7 @@ from pyspark.ml.feature import VectorIndexer, StringIndexer
 
 
 class TestSparkmTreeEnsembleRegressor(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_decision_tree_regressor_pipeline(self):
         import os
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -42,6 +43,7 @@ class TestSparkmTreeEnsembleRegressor(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlDecisionTreeRegressorPipeline")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_decision_tree_regressor(self):
         features = [[0, 1], [1, 1], [2, 0]]
         features = numpy.array(features, dtype=numpy.float32)
@@ -64,6 +66,7 @@ class TestSparkmTreeEnsembleRegressor(SparkMlTestCase):
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlDecisionTreeRegressor")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_random_forrest_regression(self):
         import os
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
