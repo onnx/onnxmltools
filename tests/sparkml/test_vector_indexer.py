@@ -3,6 +3,9 @@ Tests SparkML StringIndexer converter.
 """
 import sys
 import unittest
+from distutils.version import StrictVersion
+
+import onnx
 from pyspark.ml.feature import VectorIndexer
 from pyspark.ml.linalg import Vectors
 
@@ -13,6 +16,7 @@ from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 class TestSparkmlVectorIndexer(SparkMlTestCase):
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_model_vector_indexer_multi(self):
         import numpy
         import pandas
@@ -36,6 +40,7 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
                                     basename="SparkmlVectorIndexerMulti")
 
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_model_vector_indexer_single(self):
         import numpy
         import pandas

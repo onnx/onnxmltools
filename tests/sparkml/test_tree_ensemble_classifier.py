@@ -4,6 +4,9 @@ Tests SparkML TreeEnsembleClassifier converter.
 import sys
 import inspect
 import unittest
+from distutils.version import StrictVersion
+
+import onnx
 import pandas
 import numpy
 from pyspark.ml import Pipeline
@@ -18,6 +21,7 @@ from pyspark.ml.feature import StringIndexer, VectorIndexer
 
 class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_tree_pipeline(self):
         import os
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -124,6 +128,7 @@ class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
                                     basename="SparkmlDecisionTreeMultiClass")
 
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_random_forrest_classification(self):
         import os
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
