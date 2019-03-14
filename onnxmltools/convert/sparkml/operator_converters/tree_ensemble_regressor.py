@@ -31,6 +31,32 @@ def convert_tree_ensemble_regressor(scope, operator, container):
 register_converter('pyspark.ml.regression.DecisionTreeRegressionModel', convert_tree_ensemble_regressor)
 
 
+def convert_random_forest_regressor(scope, operator, container):
+    op = operator.raw_operator
+    op_type = 'TreeEnsembleRegressor'
+
+    attrs = get_default_tree_regressor_attribute_pairs()
+    attrs['name'] = scope.get_unique_operator_name(op_type)
+    attrs['n_targets'] = 1
+
+    # random forest calculate the final score by averaging over all trees'
+    # outcomes, so all trees' weights are identical.
+    tree_weight = 1. / op.getNumTrees
+
+    for tree_id in range(0, op.getNumTrees):
+        tree_model = op.trees[tree_id]
+        tree_df = save_read_sparkml_model_data(operator.raw_params['SparkSession'], tree_model)
+        tree = sparkml_tree_dataset_to_sklearn(tree_df, is_classifier=False)
+        add_tree_to_attribute_pairs(attrs, False, tree, tree_id,
+                                    tree_weight, 0, False)
+
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names,
+                       op_domain='ai.onnx.ml', **attrs)
+
+
+register_converter('pyspark.ml.regression.RandomForestRegressionModel', convert_random_forest_regressor)
+
+
 def calculate_tree_ensemble_regressor_output_shapes(operator):
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
     N = operator.inputs[0].type.shape[0]
@@ -38,4 +64,6 @@ def calculate_tree_ensemble_regressor_output_shapes(operator):
 
 
 register_shape_calculator('pyspark.ml.regression.DecisionTreeRegressionModel',
+                          calculate_tree_ensemble_regressor_output_shapes)
+register_shape_calculator('pyspark.ml.regression.RandomForestRegressionModel',
                           calculate_tree_ensemble_regressor_output_shapes)

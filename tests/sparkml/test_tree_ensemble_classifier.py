@@ -138,7 +138,7 @@ class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
         rf = RandomForestClassifier(labelCol="indexedLabel", featuresCol="indexedFeatures", numTrees=10)
         pipeline = Pipeline(stages=[label_indexer, feature_indexer, rf])
         model = pipeline.fit(data)
-        model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Pipeline', [
+        model_onnx = convert_sparkml(model, 'Sparkml RandomForest Classifier', [
             ('label', StringTensorType([1, 1])),
             ('features', FloatTensorType([1, feature_count]))
         ], spark_session=self.spark)
@@ -155,7 +155,7 @@ class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
             predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         ]
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
-                                    basename="SparkmlDecisionTreePipeline")
+                                    basename="SparkmlRandomForestClassifier")
 
 
 if __name__ == "__main__":
