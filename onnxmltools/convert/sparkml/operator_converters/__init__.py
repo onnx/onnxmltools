@@ -6,6 +6,7 @@
 
 # To register converter for sparkml operators, import associated modules here.
 
+from . import tree_ensemble_regressor
 from . import tree_ensemble_classifier
 from . import vector_indexer
 from . import linear_regressor
