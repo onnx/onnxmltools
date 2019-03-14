@@ -4,7 +4,6 @@ Tests SparkML LogisticRegression converter.
 import sys
 import unittest
 import numpy
-import sys
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.linalg import VectorUDT, SparseVector
 
