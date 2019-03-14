@@ -1,8 +1,8 @@
 """
 Tests SparkML Pipeline converter.
 """
-import sys
 import unittest
+import sys
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAssembler

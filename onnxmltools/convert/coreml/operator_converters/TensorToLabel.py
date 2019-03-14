@@ -7,7 +7,7 @@
 from ....proto import helper
 from ....proto import onnx_proto
 from ...common._registration import register_converter
-
+from ...common._apply_operation import apply_constant
 
 def convert_tensor_to_label(scope, operator, container):
     '''
@@ -63,10 +63,10 @@ def convert_tensor_to_label(scope, operator, container):
 
     # Use a Constant operator to load and output all labels as a tensor
     label_loader_name = scope.get_unique_operator_name('LabelLoader')
-    label_loader_attrs = {'name': label_loader_name}
     label_buffer_name = scope.get_unique_variable_name('ClassLabels')
-    label_loader_attrs['value'] = helper.make_tensor(label_buffer_name, label_type, [len(labels)], labels)
-    container.add_node('Constant', [], [label_buffer_name], **label_loader_attrs)
+    label_loader_value = helper.make_tensor(label_buffer_name, label_type, [len(labels)], labels)
+    apply_constant(scope, [label_buffer_name], container,
+                    operator_name=label_loader_name, value=label_loader_value)
 
     # Extract most possible label index
     label_id_extractor_name = scope.get_unique_operator_name('LabelIndexExtractor')
