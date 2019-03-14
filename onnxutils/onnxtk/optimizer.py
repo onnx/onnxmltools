@@ -171,7 +171,7 @@ class LinkedNode(object):
         assert tname in self.input.values() and tname in pre.output.values()
 
     @staticmethod
-    def build_from_onnx(onnx_nodes, nchw_inputs, inputs, outputs):
+    def build_from_onnx(onnx_nodes, nchw_inputs, inputs, outputs, initializers):
         view = []
         var_map = {}
         for o_ in onnx_nodes:
@@ -186,7 +186,7 @@ class LinkedNode(object):
             for var_ in n_.origin.input:
                 target = var_map.get(var_)
                 if target is None:
-                    assert var_ == '' or var_ in inputs
+                    assert var_ == '' or var_ in inputs or var_ in initializers
                     target = LinkedNode(out_n=[var_])  # create an empty node as input
                     new_output = var_ + '_nhwc'
                     if var_ in nchw_inputs:
@@ -538,7 +538,7 @@ def _build_onnx_model(node_list):
     return regenerated
 
 
-def optimize_onnx(onnx_nodes, opset=None, nchw_inputs=None, inputs=None, outputs=None):
+def optimize_onnx(onnx_nodes, opset=None, nchw_inputs=None, inputs=None, outputs=None, initializers=None):
     """
     Optimize onnx model by several approaches.
     :param onnx_nodes: the onnx node list in onnx model.
@@ -551,7 +551,8 @@ def optimize_onnx(onnx_nodes, opset=None, nchw_inputs=None, inputs=None, outputs
     node_list = LinkedNode.build_from_onnx(onnx_nodes,
                                            nchw_inputs if nchw_inputs else [],
                                            [] if inputs is None else [i_.name for i_ in inputs],
-                                           [] if outputs is None else [o_.name for o_ in outputs])
+                                           [] if outputs is None else [o_.name for o_ in outputs],
+                                           [] if initializers is None else [i_.name for i_ in initializers])
     solution = _find_an_optimization(node_list)
     while solution:
         node_list = _apply_optimization(solution, node_list)
@@ -573,7 +574,8 @@ def optimize_onnx_model(origin_model, nchw_inputs=None):
 
     all_nodes = optimize_onnx(nodelist, origin_model.opset_import[0].version,
                               inputs=graph.input,
-                              outputs=graph.output)
+                              outputs=graph.output,
+                              initializers=graph.initializer)
     nodes = [n_ for n_ in all_nodes if not isinstance(n_, tuple)]
     graph.node.extend(nodes)
 
