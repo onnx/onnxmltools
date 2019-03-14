@@ -97,8 +97,7 @@ class TestSparkmTreeEnsembleRegressor(SparkMlTestCase):
         }
         expected = [
             predicted.toPandas().indexedLabel.values.astype(numpy.int64),
-            predicted.toPandas().prediction.values.astype(numpy.float32),
-            predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
+            predicted.toPandas().prediction.values.astype(numpy.float32)
         ]
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
                                     basename="SparkmlRandomForestRegressor")
