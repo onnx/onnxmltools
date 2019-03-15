@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from .....proto import onnx_proto
 from ....common._apply_operation import *
 from ....common._registration import register_converter
 
@@ -13,12 +12,10 @@ def convert_unary(scope, operator, container):
     from coremltools.proto.NeuralNetwork_pb2 import UnaryFunctionLayerParams as Params
 
     params = operator.raw_operator.unary
-    preprocessor_type = 'Affine'
-    preprocessor_name = scope.get_unique_operator_name(preprocessor_type)
-    preprocessor_attrs = {'name': preprocessor_name, 'alpha': params.scale, 'beta': params.shift}
-
+    preprocessor_name = scope.get_unique_operator_name('Affine')
     preprocessed_variable_name = scope.get_unique_variable_name(preprocessor_name + '_output')
-    container.add_node(preprocessor_type, operator.input_full_names, [preprocessed_variable_name], **preprocessor_attrs)
+    apply_affine(scope, operator.input_full_names[0], preprocessed_variable_name, container,
+                 operator_name=preprocessor_name, alpha=params.scale, beta=params.shift)
 
     if params.type == Params.RSQRT:
         sqrt_tensor_name = scope.get_unique_variable_name(operator.full_name + '_intra_tensor')
