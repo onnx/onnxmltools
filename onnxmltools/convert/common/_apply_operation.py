@@ -421,12 +421,16 @@ def apply_parametric_softplus(scope, input_name, output_name, container, operato
         apply_mul(scope, [fName, aName], output_name, container)
 
 
-def apply_scaled_tanh(scope, input_name, output_name, container, operator_name=None, alpha=[1.0], beta=[1.0]):
+def apply_scaled_tanh(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
+    if alpha == None:
+        alpha = [1.0]
+    if beta == None:
+        beta = [1.0]
+    if len(alpha) != 1 or len(beta) != 1:
+        raise ValueError('alpha and beta must be 1-element lists')
 
     name = _create_name_or_use_existing_one(scope, 'ScaledTanh', operator_name)
     if container.target_opset < 9:
-        if len(alpha) != 1 or len(beta) != 1:
-            raise ValueError('alpha and beta must be 1-element lists')
         attrs = {'name': name, 'alpha': alpha[0], 'beta': beta[0]}
         container.add_node('ScaledTanh', input_name, output_name, **attrs)
     else:
