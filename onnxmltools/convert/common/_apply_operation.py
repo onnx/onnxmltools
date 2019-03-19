@@ -427,9 +427,8 @@ def apply_scaled_tanh(scope, input_name, output_name, container, operator_name=N
     if container.target_opset < 9:
         if len(alpha) != 1 or len(beta) != 1:
             raise ValueError('alpha and beta must be 1-element lists')
-        op_type = 'ScaledTanh'
         attrs = {'name': name, 'alpha': alpha[0], 'beta': beta[0]}
-        container.add_node(op_type, input_name, output_name, **attrs)
+        container.add_node('ScaledTanh', input_name, output_name, **attrs)
     else:
         # Define scalar a, initialize with parameter alpha.
         aName = scope.get_unique_variable_name(name + '_alpha')
