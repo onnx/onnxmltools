@@ -420,6 +420,39 @@ def apply_parametric_softplus(scope, input_name, output_name, container, operato
         # g = a * f
         apply_mul(scope, [fName, aName], output_name, container)
 
+
+def apply_scaled_tanh(scope, input_name, output_name, container, operator_name=None, alpha=[1.0], beta=[1.0]):
+
+    name = _create_name_or_use_existing_one(scope, 'ScaledTanh', operator_name)
+    if container.target_opset < 9:
+        if len(alpha) != 1 or len(beta) != 1:
+            raise ValueError('alpha and beta must be 1-element lists')
+        op_type = 'ScaledTanh'
+        attrs = {'name': name, 'alpha': alpha[0], 'beta': beta[0]}
+        container.add_node(op_type, input_name, output_name, **attrs)
+    else:
+        # Define scalar a, initialize with parameter alpha.
+        aName = scope.get_unique_variable_name(name + '_alpha')
+        aShape = [len(alpha)] if len(alpha) == 1 else [len(alpha), 1, 1]
+        container.add_initializer(aName, onnx_proto.TensorProto.FLOAT, aShape, alpha)
+
+        # Define scalar b, initialize with parameter beta.
+        bShape = [len(beta)] if len(beta) == 1 else [len(beta), 1, 1]
+        bName = scope.get_unique_variable_name(name + '_beta')
+        container.add_initializer(bName, onnx_proto.TensorProto.FLOAT, bShape, beta)
+
+        # c = b * x
+        cName = scope.get_unique_variable_name(name + '_c')
+        apply_mul(scope, [input_name, bName], cName, container)
+
+        # d = tanh(c)
+        dName = scope.get_unique_variable_name(name + '_d')
+        apply_tanh(scope, cName, dName, container)
+
+        # output = a * d
+        apply_mul(scope, [aName, dName], output_name, container)
+
+
 def apply_split(scope, input_name, output_names, container, operator_name=None, split=None, axis=0):
     name = _create_name_or_use_existing_one(scope, 'Split', operator_name)
     if container.target_opset <= 1:
