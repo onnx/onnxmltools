@@ -730,32 +730,31 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
     # However, for ONNX target opset < 9, initializers should also be model's (GraphProto) inputs.
     # Thus, we create ValueInfoProto objects from initializers (type: TensorProto) directly and
     # then add them into model's input list.
-    if container.target_opset < 9:
-        extra_inputs = []  # ValueInfoProto list of the initializers
-        for tensor in container.initializers:
-            # Sometimes (especially when creating optional input values such as RNN's initial hidden state), an initializer
-            # is also one of the original model's input, so it has been added into the container's input list. If this is
-            # the case, we need to skip one iteration to avoid duplicated inputs.
-            if tensor.name in [value_info.name for value_info in container.inputs]:
-                continue
+    extra_inputs = []  # ValueInfoProto list of the initializers
+    for tensor in container.initializers:
+        # Sometimes (especially when creating optional input values such as RNN's initial hidden state), an initializer
+        # is also one of the original model's input, so it has been added into the container's input list. If this is
+        # the case, we need to skip one iteration to avoid duplicated inputs.
+        if tensor.name in [value_info.name for value_info in container.inputs]:
+            continue
 
-            # Initializers are always tensors so we can just call make_tensor_value_info(...)
-            value_info = helper.make_tensor_value_info(tensor.name, tensor.data_type, tensor.dims)
-            extra_inputs.append(value_info)
-
-        # Before ONNX opset 9, initializers need to be passed in with inputs
-        graph_inputs = container.inputs + extra_inputs
-    else:
-        # In ONNX target opset 9 and above, initializers are included as operator
-        # inputs, and therefore do not need to be passed to the graph
-        graph_inputs = container.inputs
+        # Initializers are always tensors so we can just call make_tensor_value_info(...)
+        value_info = helper.make_tensor_value_info(tensor.name, tensor.data_type, tensor.dims)
+        extra_inputs.append(value_info)
 
     # enable the ONNX optimizations
-    nodes = optimize_onnx(container.nodes, nhwc_inputs, graph_inputs, container.outputs)
+    nodes = optimize_onnx(container.nodes, nhwc_inputs, container.inputs + extra_inputs, container.outputs)
 
     # Create a graph from its main components
-    graph = helper.make_graph(nodes, model_name, graph_inputs,
-                              container.outputs, container.initializers)
+    if container.target_opset < 9:
+        # Before ONNX opset 9, initializers need to be passed in with inputs
+        graph = helper.make_graph(nodes, model_name, container.inputs + extra_inputs,
+                                  container.outputs, container.initializers)
+    else:
+        # In ONNX opset 9 and above, initializers are included as operator
+        # inputs, and therefore do not need to be passed as extra_inputs
+        graph = helper.make_graph(nodes, model_name, container.inputs,
+                                  container.outputs, container.initializers)
 
     # Add extra information related to the graph
     graph.value_info.extend(container.value_info)
