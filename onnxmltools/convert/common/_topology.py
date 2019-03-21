@@ -46,7 +46,7 @@ class Variable:
         Return a globally unique variable ID
         '''
         return self.onnx_name
-    
+
     def __str__(self):
         if self.raw_name != self.onnx_name:
             return "Var(name='{0}', onnx='{1}', type={2})".format(self.raw_name, self.onnx_name, self.type)
@@ -726,9 +726,10 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
             # Convert the selected operator into some ONNX objects and save them into the container
             _registration.get_converter(operator.type)(scope, operator, container)
 
-    # When calling ModelComponentContainer's add_initializer(...), nothing is added into the input list. However, in
-    # ONNX initializers should also be model's (GraphProto) inputs. Thus, we create ValueInfoProto objects from
-    # initializers (type: TensorProto) directly and then add them into model's input list.
+    # When calling ModelComponentContainer's add_initializer(...), nothing is added into the input list.
+    # However, for ONNX target opset < 9, initializers should also be model's (GraphProto) inputs.
+    # Thus, we create ValueInfoProto objects from initializers (type: TensorProto) directly and
+    # then add them into model's input list.
     extra_inputs = []  # ValueInfoProto list of the initializers
     for tensor in container.initializers:
         # Sometimes (especially when creating optional input values such as RNN's initial hidden state), an initializer
@@ -745,8 +746,15 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
     nodes = optimize_onnx(container.nodes, nhwc_inputs, container.inputs + extra_inputs, container.outputs)
 
     # Create a graph from its main components
-    graph = helper.make_graph(nodes, model_name, container.inputs + extra_inputs,
-                              container.outputs, container.initializers)
+    if container.target_opset < 9:
+        # Before ONNX opset 9, initializers need to be passed in with inputs
+        graph = helper.make_graph(nodes, model_name, container.inputs + extra_inputs,
+                                  container.outputs, container.initializers)
+    else:
+        # In ONNX opset 9 and above, initializers are included as operator
+        # inputs, and therefore do not need to be passed as extra_inputs
+        graph = helper.make_graph(nodes, model_name, container.inputs,
+                                  container.outputs, container.initializers)
 
     # Add extra information related to the graph
     graph.value_info.extend(container.value_info)
