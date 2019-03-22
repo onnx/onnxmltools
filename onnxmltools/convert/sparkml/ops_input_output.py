@@ -7,6 +7,18 @@ from .ops_names import get_sparkml_operator_name
 
 def build_io_name_map():
     map = {
+        "pyspark.ml.feature.VectorSlicer": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.feature.StopWordsRemover": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.feature.NGram": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
         "pyspark.ml.feature.Bucketizer": (
             lambda model: [model.getOrDefault("inputCol")],
             lambda model: [model.getOrDefault("outputCol")]
