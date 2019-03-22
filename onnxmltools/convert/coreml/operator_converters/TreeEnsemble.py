@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common._registration import register_converter
+from onnxutils.onnxtk.common._registration import register_converter
 
 COREML_TREE_NODE_BEHAVIOR_TO_ONNX_TREE_NODE_MODE = {
     0: 'BRANCH_LEQ',

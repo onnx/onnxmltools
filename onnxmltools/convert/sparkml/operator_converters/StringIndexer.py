@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common.data_types import StringTensorType, Int64TensorType
-from ...common._registration import register_converter
+from onnxutils.onnxtk.common.data_types import StringTensorType, Int64TensorType
+from onnxutils.onnxtk.common._registration import register_converter
 
 
 def convert_sparkml_string_indexer(scope, operator, container):

@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ....common._apply_operation import apply_split
-from ....common._registration import register_converter
+from onnxutils.onnxtk.common._apply_operation import apply_split
+from onnxutils.onnxtk.common._registration import register_converter
 
 
 def convert_split(scope, operator, container):

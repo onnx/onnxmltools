@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 from .....proto import onnx_proto
-from ....common._apply_operation import apply_mul
-from ....common._registration import register_converter
+from onnxutils.onnxtk.common._apply_operation import apply_mul
+from onnxutils.onnxtk.common._registration import register_converter
 
 
 def convert_multiply(scope, operator, container):

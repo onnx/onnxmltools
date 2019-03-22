@@ -5,9 +5,9 @@
 # --------------------------------------------------------------------------
 
 import copy
-from ....common._registration import register_shape_calculator
-from ....common.data_types import FloatTensorType
-from ....common.utils import check_input_and_output_numbers, check_input_and_output_types
+from onnxutils.onnxtk.common._registration import register_shape_calculator
+from onnxutils.onnxtk.common.data_types import FloatTensorType
+from onnxutils.onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_dot_output_shapes(operator):

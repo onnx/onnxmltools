@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ....common._apply_operation import apply_elu, apply_hard_sigmoid, apply_leaky_relu, apply_prelu, apply_relu, \
+from onnxutils.onnxtk.common._apply_operation import apply_elu, apply_hard_sigmoid, apply_leaky_relu, apply_prelu, apply_relu, \
     apply_sigmoid, apply_tanh, apply_affine, apply_parametric_softplus, apply_scaled_tanh
-from ....common._registration import register_converter
+from onnxutils.onnxtk.common._registration import register_converter
 
 
 def convert_activation(scope, operator, container):

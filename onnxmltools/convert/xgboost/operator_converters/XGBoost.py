@@ -10,9 +10,9 @@ import numpy
 import json
 from xgboost import XGBRegressor, XGBClassifier
 from xgboost.core import _LIB, _check_call, from_cstr_to_pystr
-from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
-from ...common._registration import register_converter
-from ...common import utils
+from onnxutils.onnxtk.common.tree_ensemble import get_default_tree_classifier_attribute_pairs
+from onnxutils.onnxtk.common._registration import register_converter
+from onnxutils.onnxtk.common import utils
 from ..common import get_xgb_params
 
 

@@ -6,8 +6,8 @@
 
 import math
 import numpy as np
-from ....common._apply_operation import apply_affine, apply_mul, apply_div, apply_pad
-from ....common._registration import register_converter
+from onnxutils.onnxtk.common._apply_operation import apply_affine, apply_mul, apply_div, apply_pad
+from onnxutils.onnxtk.common._registration import register_converter
 
 
 def calculate_legacy_pad_amount(H_in, pad_h, k_h, s_h):

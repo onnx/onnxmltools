@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ....common._registration import register_shape_calculator
-from ....common.data_types import Int64Type, Int64TensorType
-from ....common.utils import check_input_and_output_numbers, check_input_and_output_types
+from onnxutils.onnxtk.common._registration import register_shape_calculator
+from onnxutils.onnxtk.common.data_types import Int64Type, Int64TensorType
+from onnxutils.onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_embedding_output_shapes(operator):

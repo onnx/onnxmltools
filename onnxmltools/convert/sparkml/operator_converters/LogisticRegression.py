@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ...common._registration import register_converter
+from onnxutils.onnxtk.common._registration import register_converter
 
 def convert_sparkml_logitic_regression(scope, operator, container):
     op = operator.raw_operator

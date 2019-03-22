@@ -4,9 +4,9 @@
 # license information.
 #--------------------------------------------------------------------------
 
-from ....common._registration import register_shape_calculator
-from ....common.data_types import TensorType, FloatTensorType
-from ....common.utils import check_input_and_output_numbers
+from onnxutils.onnxtk.common._registration import register_shape_calculator
+from onnxutils.onnxtk.common.data_types import TensorType, FloatTensorType
+from onnxutils.onnxtk.common.utils import check_input_and_output_numbers
 
 def calculate_load_constant_output_shapes(operator):
     check_input_and_output_numbers(operator, input_count_range=None, output_count_range=1)

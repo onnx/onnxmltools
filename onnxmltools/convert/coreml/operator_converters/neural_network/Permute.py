@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ....common._apply_operation import apply_transpose
-from ....common._registration import register_converter
+from onnxutils.onnxtk.common._apply_operation import apply_transpose
+from onnxutils.onnxtk.common._registration import register_converter
 
 
 def convert_permute(scope, operator, container):
