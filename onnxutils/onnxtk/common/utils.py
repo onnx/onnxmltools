@@ -145,7 +145,7 @@ def get_producer():
     """
     Internal helper function to return the producer
     """
-    from ... import __producer__
+    from .. import __producer__
     return __producer__
 
 
@@ -153,7 +153,7 @@ def get_producer_version():
     """
     Internal helper function to return the producer version
     """
-    from ... import __producer_version__
+    from .. import __producer_version__
     return __producer_version__
 
 
@@ -161,7 +161,7 @@ def get_domain():
     """
     Internal helper function to return the model domain
     """
-    from ... import __domain__
+    from .. import __domain__
     return __domain__
 
 
@@ -169,7 +169,7 @@ def get_model_version():
     """
     Internal helper function to return the model version
     """
-    from ... import __model_version__
+    from .. import __model_version__
     return __model_version__
 
 
