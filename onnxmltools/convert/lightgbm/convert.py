@@ -6,7 +6,7 @@
 
 from uuid import uuid4
 from ...proto import onnx, get_opset_number_from_onnx
-from ..common._topology import convert_topology
+from ....onnxutils.onnxtk.common._topology import convert_topology
 from ._parse import parse_lightgbm
 
 # Invoke the registration of all our converters and shape calculators

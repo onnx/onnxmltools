@@ -8,9 +8,9 @@ import re
 import warnings
 from logging import getLogger
 from distutils.version import StrictVersion
-from ...proto import onnx
-from ...proto import helper
-from ...proto import get_opset_number_from_onnx
+from ....onnxmltools.proto import onnx
+from ....onnxmltools.proto import helper
+from ....onnxmltools.proto import get_opset_number_from_onnx
 from ...utils.metadata_props import add_metadata_props
 from . import _registration
 from . import utils
