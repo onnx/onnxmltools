@@ -6,7 +6,7 @@
 
 from uuid import uuid4
 from ...proto import onnx, get_opset_number_from_onnx
-from ....onnxutils.onnxtk.common._topology import convert_topology
+from onnxutils.onnxtk.common._topology import convert_topology
 from ._parse import parse_lightgbm
 
 # Invoke the registration of all our converters and shape calculators
@@ -20,7 +20,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     '''
     This function produces an equivalent ONNX model of the given lightgbm model.
     The supported lightgbm modules are listed below.
-    
+
     * `LGBMClassifiers <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMClassifier>`_
     * `LGBMRegressor <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMRegressor>`_
 

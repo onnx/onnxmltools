@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 import six
-from ....onnxmltools.proto import helper
+from onnxmltools.proto import helper
 from .interface import ModelContainer
 
 

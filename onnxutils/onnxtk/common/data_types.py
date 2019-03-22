@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 import numbers
-from ....onnxmltools.proto import onnx_proto
+from onnxmltools.proto import onnx_proto
 
 
 class DataType(object):

@@ -6,7 +6,7 @@
 
 from uuid import uuid4
 from ...proto import onnx
-from ....onnxutils.onnxtk.common._topology import convert_topology
+from onnxutils.onnxtk.common._topology import convert_topology
 from ._parse import parse_libsvm
 
 # Invoke the registration of all our converters and shape calculators
