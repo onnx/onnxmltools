@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ..proto import onnx
-from onnxutils.onnxtk.common import utils
+from onnxtk.common import utils
 import warnings
 
 def convert_coreml(model, name=None, initial_types=None, doc_string='', target_opset=None,

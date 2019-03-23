@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxutils.onnxtk.common._apply_operation import apply_concat
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_concat
+from onnxtk.common._registration import register_converter
 
 
 def convert_concat(scope, operator, container):

@@ -6,8 +6,8 @@
 
 
 from .....proto import onnx_proto
-from onnxutils.onnxtk.common._apply_operation import apply_sub
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_sub
+from onnxtk.common._registration import register_converter
 
 
 def convert_preprocessing_mean_image(scope, operator, container):

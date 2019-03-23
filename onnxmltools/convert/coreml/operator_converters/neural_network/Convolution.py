@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from .....proto import onnx_proto
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._registration import register_converter
 
 
 def convert_convolution(scope, operator, container):

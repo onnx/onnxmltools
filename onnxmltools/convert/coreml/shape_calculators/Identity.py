@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 import copy
-from onnxutils.onnxtk.common._registration import register_shape_calculator
-from onnxutils.onnxtk.common.utils import check_input_and_output_numbers
+from onnxtk.common._registration import register_shape_calculator
+from onnxtk.common.utils import check_input_and_output_numbers
 
 
 def calculate_identity_output_shapes(operator):

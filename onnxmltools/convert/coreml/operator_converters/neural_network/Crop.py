@@ -6,8 +6,8 @@
 
 import numpy as np
 from .....proto import onnx_proto
-from onnxutils.onnxtk.common._apply_operation import apply_crop_height_width
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_crop_height_width
+from onnxtk.common._registration import register_converter
 
 def convert_crop(scope, operator, container):
     # Extract number of pixels cropped in CoreML operator.

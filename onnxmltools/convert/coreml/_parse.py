@@ -6,9 +6,9 @@
 
 import warnings
 from ...proto import onnx
-from onnxutils.onnxtk.common._container import CoremlModelContainer
-from onnxutils.onnxtk.common._topology import Topology
-from onnxutils.onnxtk.common.data_types import *
+from onnxtk.common._container import CoremlModelContainer
+from onnxtk.common._topology import Topology
+from onnxtk.common.data_types import *
 
 
 def _parse_coreml_feature(feature_info, target_opset, batch_size=1):

@@ -7,7 +7,7 @@ import numpy
 import pickle
 import os
 import warnings
-from onnxutils.onnxtk.common.data_types import FloatTensorType
+from onnxtk.common.data_types import FloatTensorType
 from .utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
 
 

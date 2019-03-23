@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 
-from onnxutils.onnxtk.common._apply_operation import apply_mean
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_mean
+from onnxtk.common._registration import register_converter
 
 
 def convert_average(scope, operator, container):

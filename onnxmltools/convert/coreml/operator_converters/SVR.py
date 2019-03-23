@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._registration import register_converter
 from .SVC import extract_support_vectors_as_dense_tensor
 
 

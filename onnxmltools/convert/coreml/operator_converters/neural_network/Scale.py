@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 from .....proto import onnx_proto
-from onnxutils.onnxtk.common._apply_operation import apply_add, apply_mul
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_add, apply_mul
+from onnxtk.common._registration import register_converter
 
 
 def deduce_broadcast_axis_and_shape(target_opset, shape):

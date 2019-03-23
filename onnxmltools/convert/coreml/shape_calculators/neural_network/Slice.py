@@ -5,9 +5,9 @@
 # --------------------------------------------------------------------------
 
 import copy
-from onnxutils.onnxtk.common._registration import register_shape_calculator
-from onnxutils.onnxtk.common.data_types import FloatTensorType
-from onnxutils.onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
+from onnxtk.common._registration import register_shape_calculator
+from onnxtk.common.data_types import FloatTensorType
+from onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_slice_output_shapes(operator):

@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxutils.onnxtk.common._registration import register_shape_calculator, register_shape_calculator
-from onnxutils.onnxtk.common.data_types import FloatTensorType
-from onnxutils.onnxtk.common.utils import check_input_and_output_numbers
+from onnxtk.common._registration import register_shape_calculator, register_shape_calculator
+from onnxtk.common.data_types import FloatTensorType
+from onnxtk.common.utils import check_input_and_output_numbers
 
 
 def calculate_regressor_output_shapes(operator):

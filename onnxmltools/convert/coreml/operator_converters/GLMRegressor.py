@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._registration import register_converter
 
 
 def convert_glm_regressor(scope, operator, container):

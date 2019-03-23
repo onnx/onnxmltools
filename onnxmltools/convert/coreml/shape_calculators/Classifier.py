@@ -4,10 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxutils.onnxtk.common._registration import register_shape_calculator
-from onnxutils.onnxtk.common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type, DictionaryType, StringType, \
+from onnxtk.common._registration import register_shape_calculator
+from onnxtk.common.data_types import FloatTensorType, Int64TensorType, FloatType, Int64Type, DictionaryType, StringType, \
     SequenceType, StringTensorType
-from onnxutils.onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
+from onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_traditional_classifier_output_shapes(operator):

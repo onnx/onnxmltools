@@ -9,9 +9,9 @@ import numbers, six
 import numpy as np
 from collections import Counter
 from lightgbm import LGBMClassifier, LGBMRegressor
-from onnxutils.onnxtk.common._apply_operation import apply_div, apply_reshape, apply_sub
-from onnxutils.onnxtk.common._registration import register_converter
-from onnxutils.onnxtk.common.tree_ensemble import get_default_tree_classifier_attribute_pairs
+from onnxtk.common._apply_operation import apply_div, apply_reshape, apply_sub
+from onnxtk.common._registration import register_converter
+from onnxtk.common.tree_ensemble import get_default_tree_classifier_attribute_pairs
 from ....proto import onnx_proto
 
 

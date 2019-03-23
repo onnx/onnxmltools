@@ -5,8 +5,8 @@
 #--------------------------------------------------------------------------
 
 from ....proto import onnx_proto
-from onnxutils.onnxtk.common._registration import register_converter
-from onnxutils.onnxtk.common import utils
+from onnxtk.common._registration import register_converter
+from onnxtk.common import utils
 
 import svm
 import svmutil

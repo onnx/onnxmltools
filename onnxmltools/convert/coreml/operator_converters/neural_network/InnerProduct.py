@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 from .....proto import onnx_proto
-from onnxutils.onnxtk.common._apply_operation import apply_reshape
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_reshape
+from onnxtk.common._registration import register_converter
 
 
 def convert_inner_product(scope, operator, container):

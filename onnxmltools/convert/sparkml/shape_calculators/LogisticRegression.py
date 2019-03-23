@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 from onnxmltools.convert.common.data_types import Int64TensorType, DictionaryType, SequenceType, FloatTensorType
-from onnxutils.onnxtk.common._registration import register_shape_calculator
-from onnxutils.onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
+from onnxtk.common._registration import register_shape_calculator
+from onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 def calculate_logistic_regression_output_shapes(operator):
     '''

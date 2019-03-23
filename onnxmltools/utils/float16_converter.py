@@ -8,7 +8,7 @@ import numpy as np
 import itertools
 from struct import unpack
 from ..proto import onnx_proto
-from onnxutils.onnxtk.common._container import ModelComponentContainer
+from onnxtk.common._container import ModelComponentContainer
 import onnx
 
 

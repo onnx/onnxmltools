@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 from .....proto import onnx_proto
-from onnxutils.onnxtk.common._registration import register_converter
-from onnxutils.onnxtk.common._apply_operation import apply_add
+from onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_add
 
 
 def convert_add(scope, operator, container):

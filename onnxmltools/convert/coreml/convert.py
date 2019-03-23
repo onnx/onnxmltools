@@ -8,7 +8,7 @@ import coremltools
 from uuid import uuid4
 from ...proto import onnx
 from ...proto import onnx_proto, get_opset_number_from_onnx
-from onnxutils.onnxtk.common._topology import convert_topology
+from onnxtk.common._topology import convert_topology
 from ._parse import parse_coreml
 
 # Import modules to invoke function registrations

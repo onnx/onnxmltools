@@ -1,4 +1,4 @@
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._registration import register_converter
 
 
 def convert_sparkml_vector_assembler(scope, operator, container):

@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxutils.onnxtk.common._apply_operation import apply_upsample
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_upsample
+from onnxtk.common._registration import register_converter
 
 
 def convert_upsample(scope, operator, container):

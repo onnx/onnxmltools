@@ -6,8 +6,8 @@
 
 from .....proto import helper
 from .....proto import onnx_proto
-from onnxutils.onnxtk.common._registration import register_converter
-from onnxutils.onnxtk.common._apply_operation import apply_constant
+from onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_constant
 
 def convert_load_constant(scope, operator, container):
     params = operator.raw_operator.loadConstant

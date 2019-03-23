@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 import numbers
-from onnxutils.onnxtk.common._apply_operation import apply_reshape
-from onnxutils.onnxtk.common._registration import register_converter
+from onnxtk.common._apply_operation import apply_reshape
+from onnxtk.common._registration import register_converter
 
 
 def convert_tensor_to_probability_map(scope, operator, container):

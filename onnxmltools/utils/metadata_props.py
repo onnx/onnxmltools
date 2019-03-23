@@ -1,5 +1,5 @@
 import warnings
-from onnxutils.onnxtk.common.case_insensitive_dict import CaseInsensitiveDict
+from onnxtk.common.case_insensitive_dict import CaseInsensitiveDict
 from ..proto import onnx, onnx_proto
 
 
