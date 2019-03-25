@@ -10,7 +10,7 @@ from sklearn.datasets import load_iris
 from onnxmltools.convert.libsvm import convert
 from svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
 import svmutil
-from onnxmltools.convert.common.data_types import FloatTensorType
+from onnxtk.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
 try:

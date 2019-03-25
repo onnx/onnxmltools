@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+import onnxtk
 
 # To register converters for Core ML operators, import associated modules here.
 from . import ArrayFeatureExtractor

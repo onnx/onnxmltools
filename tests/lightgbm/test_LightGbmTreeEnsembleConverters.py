@@ -8,7 +8,7 @@ import unittest
 import numpy
 from lightgbm import LGBMClassifier, LGBMRegressor
 from onnxmltools import convert_lightgbm
-from onnxmltools.convert.common.data_types import FloatTensorType
+from onnxtk.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 from onnxmltools.utils import dump_binary_classification, dump_multiple_classification
 from onnxmltools.utils import dump_multiple_regression, dump_single_regression

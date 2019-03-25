@@ -5,7 +5,7 @@ import sys
 import unittest
 from pyspark.ml.feature import VectorAssembler
 from onnxmltools import convert_sparkml
-from onnxmltools.convert.common.data_types import FloatTensorType
+from onnxtk.common.data_types import FloatTensorType
 from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 

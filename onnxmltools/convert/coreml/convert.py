@@ -43,7 +43,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
 
     ::
 
-        from onnxmltools.convert.common.data_types import FloatTensorType
+        from onnxtk.common.data_types import FloatTensorType
         initial_type = [('A', FloatTensorType([40, 12, 1, 1])),
                         ('B', FloatTensorType([1, 32, 1, 1]))]
     '''

@@ -52,7 +52,7 @@ to convert other model formats into ONNX. Here we will use
 
     from onnxmltools import convert_sklearn
     from onnxmltools.utils import save_model
-    from onnxmltools.convert.common.data_types import FloatTensorType
+    from onnxtk.common.data_types import FloatTensorType
 
     initial_type = [('float_input', FloatTensorType([1, 4]))]
     onx = convert_sklearn(clr, initial_types=initial_type)

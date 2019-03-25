@@ -9,7 +9,7 @@ import numpy
 import pickle
 import os
 from onnxmltools import convert_lightgbm
-from onnxmltools.convert.common.data_types import FloatTensorType
+from onnxtk.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
 
