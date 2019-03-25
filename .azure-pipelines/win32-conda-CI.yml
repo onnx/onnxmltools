@@ -53,7 +53,7 @@ jobs:
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       dir libsvm\python
       echo Test libsvm installation... && python -c "import svmutil"
-      mkdir dependencies
+      mkdir dependencies && cd dependencies
       git clone https://github.com/vinitra/onnxmltools
       cd onnxmltools/onnxutils
       git fetch && git checkout refactor-common
