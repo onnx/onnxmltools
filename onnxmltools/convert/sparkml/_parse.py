@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ..common._container import SparkmlModelContainer
-from ..common._topology import *
+from onnxtk.common._container import SparkmlModelContainer
+from onnxtk.common._topology import *
 
 from pyspark.ml import PipelineModel
 

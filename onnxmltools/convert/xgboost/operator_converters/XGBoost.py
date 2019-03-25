@@ -13,7 +13,7 @@ from xgboost.core import _LIB, _check_call, from_cstr_to_pystr
 from onnxtk.common.tree_ensemble import get_default_tree_classifier_attribute_pairs
 from onnxtk.common._registration import register_converter
 from onnxtk.common import utils
-from ..common import get_xgb_params
+from onnxtk.common import get_xgb_params
 
 
 class XGBConverter:

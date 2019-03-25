@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ..common._container import LightGbmModelContainer
-from ..common._topology import *
+from onnxtk.common._container import LightGbmModelContainer
+from onnxtk.common._topology import *
 
 from lightgbm import LGBMClassifier, LGBMRegressor
 
