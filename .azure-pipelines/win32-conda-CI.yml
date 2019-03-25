@@ -46,6 +46,7 @@ jobs:
       echo Test numpy installation... && python -c "import numpy"
       pip install %COREML_PATH% %ONNX_PATH%
       pip install -r requirements-dev.txt
+      pip install onnxruntime==0.1.4
       echo Test onnxruntime installation... && python -c "import onnxruntime"
       REM install libsvm from github
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
