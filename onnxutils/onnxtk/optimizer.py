@@ -7,7 +7,7 @@ import six
 import numpy as np
 import onnx
 from onnx import helper
-from onnxmltools.proto import onnx_proto
+from onnx import onnx_pb as onnx_proto
 
 class LinkedNode(object):
 
