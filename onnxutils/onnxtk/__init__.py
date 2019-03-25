@@ -6,7 +6,8 @@
 
 """
 The entry point to onnxtk.
-This framework performs optimization for onnx model.
+This framework performs optimization for ONNX models and
+includes common utilities for ONNX converters.
 """
 __version__ = "0.0.1"
 __author__ = "Microsoft"
