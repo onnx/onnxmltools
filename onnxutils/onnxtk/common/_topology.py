@@ -8,10 +8,10 @@ import re
 import warnings
 from logging import getLogger
 from distutils.version import StrictVersion
-from onnxmltools.proto import onnx
-from onnxmltools.proto import helper
-from onnxmltools.proto import get_opset_number_from_onnx
-from onnxmltools.utils.metadata_props import add_metadata_props
+import onnx
+from onnx import onnx_pb as onnx_proto
+from onnx import helper
+from ..metadata_props import add_metadata_props
 from . import _registration
 from . import utils
 from .data_types import *
@@ -650,9 +650,10 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
             '*** ONNX version conflict found. The installed version is %s while the targeted version is %s' % (
                 onnx.__version__, targeted_onnx))
 
+    opset_from_onnx_version = onnx.defs.onnx_opset_version()
     if target_opset is None:
-        target_opset = get_opset_number_from_onnx()
-    elif target_opset > get_opset_number_from_onnx():
+        target_opset = opset_from_onnx_version
+    elif target_opset > opset_from_onnx_version:
         raise RuntimeError("target_opset %d is higher than the number of the installed onnx package.")
 
     topology._initialize_graph_status_for_traversing()

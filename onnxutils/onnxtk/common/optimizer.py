@@ -4,8 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 import six
-from onnxmltools.proto import onnx_proto, helper
-
+import onnx
+from onnx import onnx_pb as onnx_proto
+from onnx import helper
 
 class LinkedNode(object):
 

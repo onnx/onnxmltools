@@ -8,7 +8,8 @@
 # `container` argument. Notice that those function behaviors are defined in a way very similar to ONNX-1.2.
 
 import numpy as np
-from onnxmltools.proto import onnx_proto
+import onnx
+from onnx import onnx_pb as onnx_proto
 
 def _create_name_or_use_existing_one(scope, op_type, name):
     if name is None:
