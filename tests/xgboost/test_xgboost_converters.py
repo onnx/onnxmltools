@@ -12,7 +12,7 @@ from onnxmltools.utils import dump_multiple_classification, dump_single_regressi
 
 class TestXGBoostModels(unittest.TestCase):
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converted not tested on python 2")
+    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converter not tested on python 2")
     def test_xgb_regressor(self):
         iris = load_iris()
         X = iris.data[:, :2]
@@ -24,7 +24,7 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_single_regression(xgb, suffix="-Dec4")
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converted not tested on python 2")
+    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converter not tested on python 2")
     def test_xgb_classifier(self):
         iris = load_iris()
         X = iris.data[:, :2]
@@ -37,7 +37,7 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_binary_classification(xgb)
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converted not tested on python 2")
+    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi(self):
         iris = load_iris()
         X = iris.data[:, :2]
@@ -49,7 +49,7 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_multiple_classification(xgb, allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converted not tested on python 2")
+    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi_reglog(self):
         iris = load_iris()
         X = iris.data[:, :2]
@@ -62,7 +62,7 @@ class TestXGBoostModels(unittest.TestCase):
         dump_multiple_classification(xgb, suffix="RegLog",
                                      allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converted not tested on python 2")
+    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_reglog(self):
         iris = load_iris()
         X = iris.data[:, :2]
