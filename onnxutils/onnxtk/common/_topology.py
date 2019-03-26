@@ -16,7 +16,7 @@ from . import _registration
 from . import utils
 from .data_types import *
 from ._container import ModelComponentContainer
-from .optimizer import optimize_onnx
+from ..optimizer import optimize_onnx
 from .interface import OperatorBase
 
 
