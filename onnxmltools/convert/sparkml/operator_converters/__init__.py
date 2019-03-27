@@ -6,6 +6,7 @@
 
 # To register converter for sparkml operators, import associated modules here.
 
+from . import naive_bayes
 from . import vector_slicer
 from . import stop_words_remover
 from . import ngram
