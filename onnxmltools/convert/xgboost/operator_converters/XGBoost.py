@@ -219,10 +219,10 @@ class XGBClassifierConverter(XGBConverter):
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
         
         params = XGBConverter.get_xgb_params(xgb_node)
-        
+
         attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], True)
-        
+
         if len(attr_pairs['class_treeids']) == 0:
             raise RuntimeError("XGBoost model is empty.")
         ncl = (max(attr_pairs['class_treeids']) + 1) // params['n_estimators']
@@ -248,6 +248,13 @@ class XGBClassifierConverter(XGBConverter):
                                op_domain='ai.onnx.ml', **attr_pairs)
         elif objective == "multi:softprob":
             ncl = len(js_trees) // params['n_estimators']
+            container.add_node('TreeEnsembleClassifier', operator.input_full_names,
+                               operator.output_full_names,
+                               op_domain='ai.onnx.ml', **attr_pairs)
+        elif objective == "reg:logistic":
+            ncl = len(js_trees) // params['n_estimators']
+            if ncl == 1:
+                ncl = 2
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
                                op_domain='ai.onnx.ml', **attr_pairs)
