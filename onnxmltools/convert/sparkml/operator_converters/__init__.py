@@ -9,7 +9,6 @@
 from . import naive_bayes
 from . import vector_slicer
 from . import stop_words_remover
-from . import ngram
 from . import bucketizer
 from . import tree_ensemble_regressor
 from . import tree_ensemble_classifier

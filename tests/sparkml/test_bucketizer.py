@@ -1,15 +1,16 @@
 import unittest
-
+import sys
 import numpy
 from pyspark.ml.feature import Bucketizer
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from sparkml import dump_data_and_sparkml_model
+from tests.sparkml import dump_data_and_sparkml_model
 from tests.sparkml import SparkMlTestCase
 
 
 class TestSparkmlBucketizer(SparkMlTestCase):
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_spark_bucketizer(self):
         values = [(0.1,), (0.4,), (1.2,), (1.5,)]
         data = self.spark.createDataFrame(values, ["features"])
