@@ -9,7 +9,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from .utils_backend import load_data_and_model, extract_options, ExpectedAssertionError, OnnxRuntimeAssertionError, compare_outputs
 
 
-def compare_runtime(test, decimal=3, options=None, verbose=False, context=None):
+def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
     """
     The function compares the expected output (computed with
     the model before being converted to ONNX) and the ONNX output
