@@ -58,6 +58,8 @@ jobs:
       git fetch && git checkout refactor-common
       pip install -e .
       echo Test onnxtk installation... && python -c "import onnxtk"
+      pip install onnxruntime==0.3.0
+      echo Test onnxruntime installation... && python -c "import onnxruntime"
     displayName: 'Install dependencies'
 
   - script: |
