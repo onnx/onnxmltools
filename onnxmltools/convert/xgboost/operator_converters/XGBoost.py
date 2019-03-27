@@ -251,6 +251,13 @@ class XGBClassifierConverter(XGBConverter):
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
                                op_domain='ai.onnx.ml', **attr_pairs)
+        elif objective == "reg:logistic":
+            ncl = len(js_trees) // params['n_estimators']
+            if ncl == 1:
+                ncl = 2
+            container.add_node('TreeEnsembleClassifier', operator.input_full_names,
+                               operator.output_full_names,
+                               op_domain='ai.onnx.ml', **attr_pairs)
         else:
             raise RuntimeError("Unexpected objective: {0}".format(objective))
 

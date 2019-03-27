@@ -26,6 +26,8 @@ def calculate_xgboost_classifier_output_shapes(operator):
         ncl = 2
     else:
         ncl = ntrees // params['n_estimators']
+        if objective == "reg:logistic" and ncl == 1:
+            ncl = 2
     operator.outputs[0].type = Int64TensorType(shape=[N])
     operator.outputs[1].type = operator.outputs[1].type = FloatTensorType([N, ncl])
 
