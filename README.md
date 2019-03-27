@@ -113,7 +113,7 @@ You can check the operator set of your converted ONNX model using [Netron](https
 opset_version = onnx_model.opset_import[0].version
 ```
 
-If the result from checking your ONNX model's opset is smaller than the `target_opset` number you specified in the onnxmltools.convert function, do not be alarmed. The ONNXMLTools converter works by converting each operator to the ONNX format individually and finding the corresponding opset version that it was most recently updated in. Once all of the operators are converted, the resultant ONNX model has the maximal opset version of all of its operators.
+If the result from checking your ONNX model's opset is smaller than the `target_opset` number you specified in the onnxmltools.convert function, be assured that this is likely intended behavior. The ONNXMLTools converter works by converting each operator to the ONNX format individually and finding the corresponding opset version that it was most recently updated in. Once all of the operators are converted, the resultant ONNX model has the maximal opset version of all of its operators.
 
 To illustrate this concretely, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/master/docs/Operators.md#abs) was most recently updated in opset 6, and [Add](https://github.com/onnx/onnx/blob/master/docs/Operators.md#add) was most recently updated in opset 7. Therefore, the converted ONNX model's opset will always be 7, even if you request `target_opset=8`. The converter behavior was defined this way to ensure backwards compatibility. 
 
