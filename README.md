@@ -96,9 +96,8 @@ onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7)
 
 ## Spark ML to ONNX Conversion
 Please refer to the following documents:
- * [Conversion Framework](onnxmltools/README.md) and
- * [Spark ML to Onnx Model Conversion](onnxmltools/convert/sparkml/README.md)
- 
+ * [Conversion Framework](onnxmltools/convert/README.md)
+ * [Spark ML to ONNX Model Conversion](onnxmltools/convert/sparkml/README.md)
 
 # Testing model converters
 
