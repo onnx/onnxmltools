@@ -46,6 +46,7 @@ jobs:
       echo Test numpy installation... && python -c "import numpy"
       pip install %COREML_PATH% %ONNX_PATH%
       pip install -r requirements-dev.txt
+      echo Test onnxruntime installation... && python -c "import onnxruntime"
       REM install libsvm from github
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       copy libsvm\windows\*.dll libsvm\python
@@ -58,8 +59,6 @@ jobs:
       git fetch && git checkout refactor-common
       pip install -e .
       echo Test onnxtk installation... && python -c "import onnxtk"
-      pip install onnxruntime==0.3.0
-      echo Test onnxruntime installation... && python -c "import onnxruntime"
     displayName: 'Install dependencies'
 
   - script: |
