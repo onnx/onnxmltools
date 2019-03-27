@@ -18,7 +18,7 @@ jobs:
       #   python.version: '2.7'
       Python35:
         python.version: '3.5'
-        ONNX_PATH: onnx==1.2.3
+        ONNX_PATH: onnx==1.4.1
         ONNXRT_PATH: onnxruntime==0.3.0
         COREML_PATH: https://github.com/apple/coremltools/archive/v2.0.zip
 
