@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._container import XGBoostModelContainer
-from onnxtk.common._topology import *
+from ..common._container import XGBoostModelContainer
+from ..common._topology import *
 
 from xgboost import XGBRegressor, XGBClassifier
 

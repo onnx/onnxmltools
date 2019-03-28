@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._registration import register_shape_calculator
-from onnxtk.common.utils import check_input_and_output_numbers
-from onnxtk.common.data_types import *
+from ...common._registration import register_shape_calculator
+from ...common.utils import check_input_and_output_numbers
+from onnxmltools.convert.common.data_types import *
 
 def calculate_vector_assembler_shapes(operator):
     check_input_and_output_numbers(operator, output_count_range=1)

@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common.data_types import Int64Type, Int64TensorType
-from onnxtk.common._registration import register_converter
+from ...common.data_types import Int64Type, Int64TensorType
+from ...common._registration import register_converter
 
 
 def convert_feature_vectorizer(scope, operator, container):

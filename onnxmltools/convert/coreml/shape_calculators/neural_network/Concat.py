@@ -5,8 +5,8 @@
 #--------------------------------------------------------------------------
 
 import copy
-from onnxtk.common.utils import check_input_and_output_numbers
-from onnxtk.common._registration import register_shape_calculator
+from ....common.utils import check_input_and_output_numbers
+from ....common._registration import register_shape_calculator
 
 def calculate_concat_output_shapes(operator):
     '''

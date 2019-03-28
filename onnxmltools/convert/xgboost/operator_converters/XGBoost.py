@@ -10,21 +10,21 @@ import numpy
 import json
 from xgboost import XGBRegressor, XGBClassifier
 from xgboost.core import _LIB, _check_call, from_cstr_to_pystr
-from onnxtk.common.tree_ensemble import get_default_tree_classifier_attribute_pairs
-from onnxtk.common._registration import register_converter
-from onnxtk.common import utils
+from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
+from ...common._registration import register_converter
+from ...common import utils
 from ..common import get_xgb_params
 
 
 class XGBConverter:
-
+    
     @staticmethod
     def get_xgb_params(xgb_node):
         """
         Retrieves parameters of a model.
         """
         return get_xgb_params(xgb_node)
-
+    
     @staticmethod
     def validate(xgb_node):
         params = XGBConverter.get_xgb_params(xgb_node)
@@ -45,9 +45,9 @@ class XGBConverter:
         js_tree_list = booster.get_dump(with_stats=True, dump_format = 'json')
         js_trees = [json.loads(s) for s in js_tree_list]
         return objective, base_score, js_trees
-
+        
     @staticmethod
-    def _get_default_tree_attribute_pairs(is_classifier):
+    def _get_default_tree_attribute_pairs(is_classifier):        
         attrs = {}
         for k in {'nodes_treeids',  'nodes_nodeids',
                   'nodes_featureids', 'nodes_modes', 'nodes_values',
@@ -62,7 +62,7 @@ class XGBConverter:
         return attrs
 
     @staticmethod
-    def _add_node(attr_pairs, is_classifier, tree_id, tree_weight, node_id,
+    def _add_node(attr_pairs, is_classifier, tree_id, tree_weight, node_id, 
                   feature_id, mode, value, true_child_id, false_child_id, weights, weight_id_bias,
                   missing, hitrate):
         if isinstance(feature_id, str):
@@ -77,14 +77,14 @@ class XGBConverter:
                     feature_id = int(feature_id)
                 except ValueError:
                     raise RuntimeError("Unable to interpret '{0}'".format(feature_id))
-
+                    
         # Split condition for sklearn
-        # * if X_ptr[X_sample_stride * i + X_fx_stride * node.feature] <= node.threshold:
-        # * https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/tree/_tree.pyx#L946
-        # Split condition for xgboost
-        # * if (fvalue < split_value)
-        # * https://github.com/dmlc/xgboost/blob/master/include/xgboost/tree_model.h#L804
-
+        # * if X_ptr[X_sample_stride * i + X_fx_stride * node.feature] <= node.threshold: 
+        # * https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/tree/_tree.pyx#L946 
+        # Split condition for xgboost 
+        # * if (fvalue < split_value) 
+        # * https://github.com/dmlc/xgboost/blob/master/include/xgboost/tree_model.h#L804             
+    
         attr_pairs['nodes_treeids'].append(tree_id)
         attr_pairs['nodes_nodeids'].append(node_id)
         attr_pairs['nodes_featureids'].append(feature_id)
@@ -108,17 +108,17 @@ class XGBConverter:
                     attr_pairs['target_nodeids'].append(node_id)
                     attr_pairs['target_ids'].append(i + weight_id_bias)
                     attr_pairs['target_weights'].append(float(tree_weight * w))
-
+        
     @staticmethod
     def _fill_node_attributes(treeid, tree_weight, jsnode, attr_pairs, is_classifier, remap):
         if 'children' in jsnode:
-            XGBConverter._add_node(attr_pairs=attr_pairs, is_classifier=is_classifier,
-                        tree_id=treeid, tree_weight=tree_weight,
-                        value=jsnode['split_condition'], node_id=remap[jsnode['nodeid']],
-                        feature_id=jsnode['split'],
+            XGBConverter._add_node(attr_pairs=attr_pairs, is_classifier=is_classifier, 
+                        tree_id=treeid, tree_weight=tree_weight, 
+                        value=jsnode['split_condition'], node_id=remap[jsnode['nodeid']], 
+                        feature_id=jsnode['split'], 
                         mode='BRANCH_LT', # 'BRANCH_LEQ' --> is for sklearn
-                        true_child_id=remap[jsnode['yes']], # ['children'][0]['nodeid'],
-                        false_child_id=remap[jsnode['no']], # ['children'][1]['nodeid'],
+                        true_child_id=remap[jsnode['yes']], # ['children'][0]['nodeid'], 
+                        false_child_id=remap[jsnode['no']], # ['children'][1]['nodeid'], 
                         weights=None, weight_id_bias=None,
                         missing=jsnode.get('missing', -1) == jsnode['yes'], # ['children'][0]['nodeid'],
                         hitrate=jsnode.get('cover', 0))
@@ -127,16 +127,16 @@ class XGBConverter:
                 if 'children' in ch or 'leaf' in ch:
                     XGBConverter._fill_node_attributes(treeid, tree_weight, ch, attr_pairs, is_classifier, remap)
                 else:
-                    raise RuntimeError("Unable to convert this node {0}".format(ch))
-
+                    raise RuntimeError("Unable to convert this node {0}".format(ch))                        
+                
         else:
             weights = [jsnode['leaf']]
             weights_id_bias = 0
-            XGBConverter._add_node(attr_pairs=attr_pairs, is_classifier=is_classifier,
-                        tree_id=treeid, tree_weight=tree_weight,
-                        value=0., node_id=remap[jsnode['nodeid']],
+            XGBConverter._add_node(attr_pairs=attr_pairs, is_classifier=is_classifier, 
+                        tree_id=treeid, tree_weight=tree_weight, 
+                        value=0., node_id=remap[jsnode['nodeid']], 
                         feature_id=0, mode='LEAF',
-                        true_child_id=0, false_child_id=0,
+                        true_child_id=0, false_child_id=0, 
                         weights=weights, weight_id_bias=weights_id_bias,
                         missing=False, hitrate=jsnode.get('cover', 0))
 
@@ -150,7 +150,7 @@ class XGBConverter:
             for ch in jsnode['children']:
                 XGBConverter._remap_nodeid(ch, remap)
         return remap
-
+            
     @staticmethod
     def fill_tree_attributes(js_xgb_node, attr_pairs, tree_weights, is_classifier):
         if not isinstance(js_xgb_node, list):
@@ -178,16 +178,16 @@ class XGBRegressorConverter(XGBConverter):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
-
+        
         if objective in ["reg:gamma", "reg:tweedie"]:
             raise RuntimeError("Objective '{}' not supported.".format(objective))
-
+        
         booster = xgb_node.get_booster()
-
+        
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
         attr_pairs['base_values'] = [base_score]
         XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], False)
-
+        
         # add nodes
         container.add_node('TreeEnsembleRegressor', operator.input_full_names,
                            operator.output_full_names, op_domain='ai.onnx.ml', **attr_pairs)
@@ -215,9 +215,9 @@ class XGBClassifierConverter(XGBConverter):
     def convert(scope, operator, container):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
-
+        
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
-
+        
         params = XGBConverter.get_xgb_params(xgb_node)
 
         attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
@@ -238,7 +238,7 @@ class XGBClassifierConverter(XGBConverter):
             attr_pairs['class_ids'] = [v % ncl for v in attr_pairs['class_treeids']]
         class_labels = list(range(ncl))
 
-        attr_pairs['classlabels_int64s'] = class_labels
+        attr_pairs['classlabels_int64s'] = class_labels 
 
         # add nodes
         if objective == "binary:logistic":
@@ -259,7 +259,7 @@ class XGBClassifierConverter(XGBConverter):
                                operator.output_full_names,
                                op_domain='ai.onnx.ml', **attr_pairs)
         else:
-            raise RuntimeError("Unexpected objective: {0}".format(objective))
+            raise RuntimeError("Unexpected objective: {0}".format(objective))            
 
 
 

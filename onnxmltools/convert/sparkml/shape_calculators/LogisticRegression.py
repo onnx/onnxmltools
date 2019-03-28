@@ -3,9 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from onnxtk.common.data_types import Int64TensorType, DictionaryType, SequenceType, FloatTensorType
-from onnxtk.common._registration import register_shape_calculator
-from onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
+from onnxmltools.convert.common.data_types import Int64TensorType, DictionaryType, SequenceType, FloatTensorType
+from ...common._registration import register_shape_calculator
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 def calculate_logistic_regression_output_shapes(operator):
     '''

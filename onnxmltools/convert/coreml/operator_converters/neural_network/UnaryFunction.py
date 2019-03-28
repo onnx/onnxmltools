@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._apply_operation import *
-from onnxtk.common._registration import register_converter
+from ....common._apply_operation import *
+from ....common._registration import register_converter
 
 
 def convert_unary(scope, operator, container):

@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
-from onnxtk.common._registration import register_converter
+from ...common._registration import register_converter
 
 
 def convert_glm_classifier(scope, operator, container):

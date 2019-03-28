@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common.data_types import Int64TensorType, Int64Type, FloatTensorType, FloatType, StringTensorType, StringType
+from ...common.data_types import Int64TensorType, Int64Type, FloatTensorType, FloatType, StringTensorType, StringType
 
 
 def convert_integer_to_float(scope, variable, container):

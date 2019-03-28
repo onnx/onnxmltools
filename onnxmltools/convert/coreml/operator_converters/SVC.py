@@ -6,7 +6,7 @@
 
 import itertools
 import numpy as np
-from onnxtk.common._registration import register_converter
+from ...common._registration import register_converter
 
 
 def extract_support_vectors_as_dense_tensor(svm_model):

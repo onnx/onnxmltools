@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._registration import register_shape_calculator
-from onnxtk.common.data_types import FloatTensorType, FloatType, Int64TensorType, Int64Type
-from onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, FloatType, Int64TensorType, Int64Type
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_feature_vectorizer_output_shapes(operator):

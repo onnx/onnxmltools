@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 
-
 # To register converters for Core ML neural network operators, import associated modules here.
 from . import Activation
 from . import Add

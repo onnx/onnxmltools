@@ -8,7 +8,7 @@ import coremltools
 from uuid import uuid4
 from ...proto import onnx
 from ...proto import onnx_proto, get_opset_number_from_onnx
-from onnxtk.common._topology import convert_topology
+from ..common._topology import convert_topology
 from ._parse import parse_coreml
 
 # Import modules to invoke function registrations
@@ -23,7 +23,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
     ONNX model name can be specified.
-
+    
     :param model: A `CoreML model <https://apple.github.io/coremltools/coremlspecification/sections/Model.html#model>`_ or
         a CoreML MLModel object
     :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
@@ -38,13 +38,13 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     :return: An ONNX model (type: ModelProto) which is equivalent to the input CoreML model
 
     Example of initial types:
-    Assume that 'A' and 'B' are two root variable names used in the CoreML
+    Assume that 'A' and 'B' are two root variable names used in the CoreML 
     model you want to convert. We can specify their types via:
-
+    
     ::
-
-        from onnxtk.common.data_types import FloatTensorType
-        initial_type = [('A', FloatTensorType([40, 12, 1, 1])),
+    
+        from onnxmltools.convert.common.data_types import FloatTensorType
+        initial_type = [('A', FloatTensorType([40, 12, 1, 1])), 
                         ('B', FloatTensorType([1, 32, 1, 1]))]
     '''
     if isinstance(model, coremltools.models.MLModel):

@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._registration import register_shape_calculator
-from onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
-from onnxtk.common.data_types import Int64TensorType, FloatTensorType, DictionaryType, SequenceType
+from ...common._registration import register_shape_calculator
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.data_types import Int64TensorType, FloatTensorType, DictionaryType, SequenceType
 from ..common import get_xgb_params
 
 
@@ -21,7 +21,7 @@ def calculate_xgboost_classifier_output_shapes(operator):
     atts = booster.attributes()
     ntrees = len(booster.get_dump(with_stats=True, dump_format = 'json'))
     objective = params["objective"]
-
+            
     if objective == "binary:logistic":
         ncl = 2
     else:

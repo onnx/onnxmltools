@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._registration import register_shape_calculator
-from onnxtk.common.data_types import DictionaryType, FloatTensorType, SequenceType, StringTensorType, Int64TensorType
-from onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common._registration import register_shape_calculator
+from ...common.data_types import DictionaryType, FloatTensorType, SequenceType, StringTensorType, Int64TensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculate_tensor_to_probability_map_output_shapes(operator):

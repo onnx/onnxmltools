@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._apply_operation import apply_max
-from onnxtk.common._registration import register_converter
+from ....common._apply_operation import apply_max
+from ....common._registration import register_converter
 
 
 def convert_max(scope, operator, container):

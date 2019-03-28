@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._registration import register_shape_calculator
-from onnxtk.common.data_types import FloatTensorType, Int64TensorType, Int64Type, StringTensorType, StringType
-from onnxtk.common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, Int64TensorType, Int64Type, StringTensorType, StringType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 
 
 def calculte_tensor_to_label_output_shapes(operator):

@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 from .....proto import onnx_proto
-from onnxtk.common._apply_operation import apply_batch_norm, apply_instance_norm
-from onnxtk.common._registration import register_converter
+from ....common._apply_operation import apply_batch_norm, apply_instance_norm
+from ....common._registration import register_converter
 
 
 def convert_batch_normalization(scope, operator, container):

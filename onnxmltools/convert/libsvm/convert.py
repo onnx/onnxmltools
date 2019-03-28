@@ -6,7 +6,7 @@
 
 from uuid import uuid4
 from ...proto import onnx
-from onnxtk.common._topology import convert_topology
+from ..common._topology import convert_topology
 from ._parse import parse_libsvm
 
 # Invoke the registration of all our converters and shape calculators
@@ -26,7 +26,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
-    :return: An ONNX model (type: ModelProto) which is equivalent to the input scikit-learn model
+    :return: An ONNX model (type: ModelProto) which is equivalent to the input scikit-learn model    
     """
     if initial_types is None:
         raise ValueError('Initial types are required. See usage of convert(...) in \
@@ -36,7 +36,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
         name = str(uuid4().hex)
 
     # Parse scikit-learn model as our internal data structure (i.e., Topology)
-    topology = parse_libsvm(model, initial_types, custom_conversion_functions,
+    topology = parse_libsvm(model, initial_types, custom_conversion_functions, 
                             custom_shape_calculators)
 
     # Infer variable shapes

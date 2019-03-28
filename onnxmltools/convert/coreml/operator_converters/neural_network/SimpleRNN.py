@@ -6,7 +6,7 @@
 
 import numpy as np
 from .....proto import onnx_proto
-from onnxtk.common._registration import register_converter
+from ....common._registration import register_converter
 from .Reshape import apply_reshape
 
 

@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 from ..proto import onnx
-from onnxtk.common import utils
+from .common import utils
 import warnings
 
 def convert_coreml(model, name=None, initial_types=None, doc_string='', target_opset=None,
@@ -79,3 +79,4 @@ def convert_xgboost(*args, **kwargs):
 
     from .xgboost.convert import convert
     return convert(*args, **kwargs)
+

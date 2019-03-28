@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._registration import register_shape_calculator
-from onnxtk.common.data_types import FloatTensorType, Int64TensorType
-from onnxtk.common.utils import check_input_and_output_numbers
+from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, Int64TensorType
+from ...common.utils import check_input_and_output_numbers
 from svm import C_SVC, NU_SVC
 
 

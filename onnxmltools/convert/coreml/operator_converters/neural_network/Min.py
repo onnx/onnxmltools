@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._apply_operation import apply_min
-from onnxtk.common._registration import register_converter
+from ....common._apply_operation import apply_min
+from ....common._registration import register_converter
 
 
 def convert_min(scope, operator, container):

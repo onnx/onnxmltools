@@ -4,8 +4,8 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._apply_operation import apply_transpose, apply_reshape
-from onnxtk.common._registration import register_converter
+from ....common._apply_operation import apply_transpose, apply_reshape
+from ....common._registration import register_converter
 
 
 def convert_reshape(scope, operator, container):

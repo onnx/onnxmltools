@@ -6,7 +6,7 @@
 
 from uuid import uuid4
 from ...proto import onnx, get_opset_number_from_onnx
-from onnxtk.common._topology import convert_topology
+from ..common._topology import convert_topology
 from ._parse import parse_sparkml
 
 # Invoke the registration of all our converters and shape calculators
@@ -55,7 +55,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     Assume that the specified spark-ml model takes a heterogeneous list as its input. If the first 5 elements are
     floats and the last 10 elements are integers, we need to specify initial types as below. The [1] in [1, 5] indicates
     the batch size here is 1.
-    >>> from onnxtk.common.data_types import FloatTensorType, Int64TensorType
+    >>> from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType
     >>> initial_type = [('float_input', FloatTensorType([1, 5])), ('int64_input', Int64TensorType([1, 10]))]
     '''
     if initial_types is None:
