@@ -6,7 +6,7 @@
 
 from ....proto import onnx_proto
 from ...common._registration import register_converter
-from ...common.utils import _check_has_attr
+from ...common.utils import _check_has_attr, cast_list
 
 import svm
 import svmutil
@@ -137,7 +137,7 @@ class SVCConverter(SVMConverter):
         else:
             nb["attrs"]['rho'] = [svm_node.rho[0] * sign_rho]
 
-        class_labels = utils.cast_list(int, svm_node.get_labels())
+        class_labels = cast_list(int, svm_node.get_labels())
         # Predictions are different when label are not sorted (multi-classification).
         class_labels.sort()
         nb["attrs"]['classlabels_ints'] = class_labels
