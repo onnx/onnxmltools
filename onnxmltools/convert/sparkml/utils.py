@@ -1,7 +1,7 @@
 '''
 Utility functions for Spark ML to Onnx conversion intended for the end user mainly
 '''
-from ...common.data_types import StringTensorType, Int64TensorType, FloatTensorType
+from ..common.data_types import StringTensorType, Int64TensorType, FloatTensorType
 
 
 def buildInitialTypesSimple(dataframe):
