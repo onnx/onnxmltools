@@ -3,14 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+# This file defines the interface of the converter internal object for callback,
+# So the usage of the methods and properties list here will not be affected among the different versions.
 
-from ._apply_operation import *
-from ._container import *
-from ._registration import *
-from ._topology import *
-from .case_insensitive_dict import *
-from .data_types import *
-from .interface import *
-from .shape_calculator import *
-from .tree_ensemble import *
-from .utils import *
+from onnxtk.common.interface import *
