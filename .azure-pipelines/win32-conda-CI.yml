@@ -53,7 +53,7 @@ jobs:
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       dir libsvm\python
       echo Test libsvm installation... && python -c "import svmutil"
-      cd onnxmltools/onnxutils
+      cd ../onnxmltools/onnxutils
       pip install -e .
       echo Test onnxtk installation... && python -c "import onnxtk"
     displayName: 'Install dependencies'
