@@ -6,7 +6,7 @@ import os
 from onnxmltools.convert.xgboost import convert as convert_xgboost
 import unittest
 import pickle
-from onnxtk.common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types import FloatTensorType
 
 
 class TestXGBoostUnpickle06(unittest.TestCase):
@@ -24,4 +24,3 @@ class TestXGBoostUnpickle06(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

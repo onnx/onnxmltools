@@ -10,7 +10,7 @@ from sklearn.datasets import load_iris
 from onnxmltools.convert.libsvm import convert
 from svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
 import svmutil
-from onnxtk.common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
 try:
@@ -24,27 +24,27 @@ except ImportError:
 class SkAPI:
     def __init__(self, model):
         self.model = model
-        
+
     def predict(self, X, options=""):
         if hasattr(X, 'shape'):
             X = X.tolist()
         res = svmutil.svm_predict([0 for i in X], list(X), self.model, options=options)
         return res
-        
+
     def __getstate__(self):
         f = tempfile.NamedTemporaryFile(delete=False)
         svmutil.svm_save_model(f.name, self.model)
         with open(f.name, "rb") as h:
             return {'data': h.read()}
         os.remove(f)
-        
+
     def __setstate__(self, data):
         f = tempfile.NamedTemporaryFile(delete=False)
         with open(f.name, "wb") as h:
             h.write(data['by'])
         self.model = svmutil.svm_load_model(f.name)
         os.remove(f)
-        
+
 
 class SkAPIReg(SkAPI):
     def predict(self, X):
@@ -54,7 +54,7 @@ class SkAPIReg(SkAPI):
 
 
 class SkAPIClProba2(SkAPI):
-    
+
     def predict(self, X):
         res = SkAPI.predict(self, X)
         ret = numpy.array(res[0]).ravel()
@@ -68,7 +68,7 @@ class SkAPIClProba2(SkAPI):
 
 
 class SkAPICl(SkAPI):
-    
+
     def predict(self, X):
         res = SkAPI.predict(self, X)
         ret = numpy.array(res[0]).ravel()
@@ -76,12 +76,12 @@ class SkAPICl(SkAPI):
 
     def decision_function(self, X):
         res = SkAPI.predict(self, X)
-        pro = numpy.array(res[-1]).ravel()        
+        pro = numpy.array(res[-1]).ravel()
         pro = pro.reshape(X.shape[0], len(pro) // X.shape[0]).astype(numpy.float32)
         if pro.shape[1] == 1:
             pro = numpy.hstack([-pro, pro])
         elif pro.shape[1] > 2:
-            
+
             # see from sklearn.utils.multiclass import _ovr_decision_function
             if False:
                 conf = pro.copy()
@@ -104,8 +104,8 @@ class TestSvmLibSVM(unittest.TestCase):
         X = iris.data[:, :2]
         y = iris.target
         y[y == 2] = 1
-        
-        prob = svmutil.svm_problem(y, X.tolist())        
+
+        prob = svmutil.svm_problem(y, X.tolist())
 
         param = svmutil.svm_parameter()
         param.svm_type = SVC
@@ -114,7 +114,7 @@ class TestSvmLibSVM(unittest.TestCase):
         param.probability = 1
         if noprint:
             param.print_func = noprint
-        
+
         libsvm_model = svmutil.svm_train(prob, param)
 
         node = convert(libsvm_model, "LibSvmSvmcLinear", [('input', FloatTensorType(shape=[1, 'None']))])
@@ -129,8 +129,8 @@ class TestSvmLibSVM(unittest.TestCase):
         X = iris.data[:, :2]
         y = iris.target
         y[y == 2] = 1
-        
-        prob = svmutil.svm_problem(y, X.tolist())        
+
+        prob = svmutil.svm_problem(y, X.tolist())
 
         param = svmutil.svm_parameter()
         param.svm_type = SVC
@@ -139,7 +139,7 @@ class TestSvmLibSVM(unittest.TestCase):
         param.probability = 1
         if noprint:
             param.print_func = noprint
-        
+
         libsvm_model = svmutil.svm_train(prob, param)
 
         node = convert(libsvm_model, "LibSvmSvmc", [('input', FloatTensorType(shape=[1, 'None']))])
@@ -152,8 +152,8 @@ class TestSvmLibSVM(unittest.TestCase):
 
         X = iris.data[:, :2]
         y = iris.target
-        prob = svmutil.svm_problem(y, X.tolist())        
-                
+        prob = svmutil.svm_problem(y, X.tolist())
+
         param = svmutil.svm_parameter()
         param.svm_type = SVR
         param.kernel_type = svmutil.LINEAR
@@ -173,8 +173,8 @@ class TestSvmLibSVM(unittest.TestCase):
 
         X = iris.data[:, :2]
         y = iris.target
-        prob = svmutil.svm_problem(y, X.tolist())        
-                
+        prob = svmutil.svm_problem(y, X.tolist())
+
         param = svmutil.svm_parameter()
         param.svm_type = SVR
         param.kernel_type = svmutil.RBF
@@ -196,8 +196,8 @@ class TestSvmLibSVM(unittest.TestCase):
         X = iris.data[:, :2]
         y = iris.target
         y[y == 2] = 1
-        prob = svmutil.svm_problem(y, X.tolist())        
-                
+        prob = svmutil.svm_problem(y, X.tolist())
+
         param = svmutil.svm_parameter()
         param.svm_type = NuSVR
         param.kernel_type = svmutil.RBF
@@ -218,8 +218,8 @@ class TestSvmLibSVM(unittest.TestCase):
         X = iris.data[:, :2]
         y = iris.target
         y[y == 2] = 1
-        
-        prob = svmutil.svm_problem(y, X.tolist())        
+
+        prob = svmutil.svm_problem(y, X.tolist())
 
         param = svmutil.svm_parameter()
         param.svm_type = NuSVC
@@ -228,7 +228,7 @@ class TestSvmLibSVM(unittest.TestCase):
         param.probability = 1
         if noprint:
             param.print_func = noprint
-        
+
         libsvm_model = svmutil.svm_train(prob, param)
 
         node = convert(libsvm_model, "LibSvmNuSvmc", [('input', FloatTensorType(shape=[1, 'None']))])
@@ -243,8 +243,8 @@ class TestSvmLibSVM(unittest.TestCase):
         X = iris.data[:, :2]
         y = iris.target
         y[y == 2] = 1
-        
-        prob = svmutil.svm_problem(y, X.tolist())        
+
+        prob = svmutil.svm_problem(y, X.tolist())
 
         param = svmutil.svm_parameter()
         param.svm_type = SVC
@@ -253,7 +253,7 @@ class TestSvmLibSVM(unittest.TestCase):
         param.probability = 0
         if noprint:
             param.print_func = noprint
-        
+
         libsvm_model = svmutil.svm_train(prob, param)
 
         node = convert(libsvm_model, "LibSvmSvmcLinearRaw", [('input', FloatTensorType(shape=[1, 'None']))])
@@ -268,8 +268,8 @@ class TestSvmLibSVM(unittest.TestCase):
         X = iris.data[:, :2]
         y = iris.target
         y[y == 2] = 1
-        
-        prob = svmutil.svm_problem(y, X.tolist())        
+
+        prob = svmutil.svm_problem(y, X.tolist())
 
         param = svmutil.svm_parameter()
         param.svm_type = SVC
@@ -278,7 +278,7 @@ class TestSvmLibSVM(unittest.TestCase):
         param.probability = 0
         if noprint:
             param.print_func = noprint
-        
+
         libsvm_model = svmutil.svm_train(prob, param)
 
         node = convert(libsvm_model, "LibSvmSvmcRaw", [('input', FloatTensorType(shape=[1, 'None']))])
@@ -294,8 +294,8 @@ class TestSvmLibSVM(unittest.TestCase):
         X = iris.data[:, :2]
         y = iris.target
         y[y == 2] = 1
-        
-        prob = svmutil.svm_problem(y, X.tolist())        
+
+        prob = svmutil.svm_problem(y, X.tolist())
 
         param = svmutil.svm_parameter()
         param.svm_type = NuSVC
@@ -304,7 +304,7 @@ class TestSvmLibSVM(unittest.TestCase):
         param.probability = 0
         if noprint:
             param.print_func = noprint
-        
+
         libsvm_model = svmutil.svm_train(prob, param)
 
         node = convert(libsvm_model, "LibSvmNuSvmcRaw", [('input', FloatTensorType(shape=[1, 'None']))])
@@ -320,8 +320,8 @@ class TestSvmLibSVM(unittest.TestCase):
         X = iris.data[:, :2]
         y = iris.target
         y[-5:] = 3
-        
-        prob = svmutil.svm_problem(y, X.tolist())        
+
+        prob = svmutil.svm_problem(y, X.tolist())
 
         param = svmutil.svm_parameter()
         param.svm_type = SVC
@@ -330,7 +330,7 @@ class TestSvmLibSVM(unittest.TestCase):
         param.probability = 0
         if noprint:
             param.print_func = noprint
-        
+
         libsvm_model = svmutil.svm_train(prob, param)
 
         node = convert(libsvm_model, "LibSvmNuSvmcMultiRbfRaw", [('input', FloatTensorType(shape=[1, 'None']))])
@@ -346,8 +346,8 @@ class TestSvmLibSVM(unittest.TestCase):
         X = iris.data[:, :2]
         y = iris.target
         y[-5:] = 3
-        
-        prob = svmutil.svm_problem(y, X.tolist())        
+
+        prob = svmutil.svm_problem(y, X.tolist())
 
         param = svmutil.svm_parameter()
         param.svm_type = SVC
@@ -356,7 +356,7 @@ class TestSvmLibSVM(unittest.TestCase):
         param.probability = 0
         if noprint:
             param.print_func = noprint
-        
+
         libsvm_model = svmutil.svm_train(prob, param)
 
         node = convert(libsvm_model, "LibSvmNuSvmcMultiRaw", [('input', FloatTensorType(shape=[1, 2]))])

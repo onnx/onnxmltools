@@ -6,7 +6,7 @@
 
 import os
 from ..proto import onnx_proto
-from onnxtk.common import utils as convert_utils
+from ..common import utils as convert_utils
 from os import path
 
 

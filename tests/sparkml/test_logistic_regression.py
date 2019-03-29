@@ -8,7 +8,7 @@ from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.linalg import VectorUDT, SparseVector
 
 from onnxmltools import convert_sparkml
-from onnxtk.common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
