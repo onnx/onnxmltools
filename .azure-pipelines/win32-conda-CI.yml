@@ -45,6 +45,10 @@ jobs:
       python -m pip install --upgrade pip numpy
       echo Test numpy installation... && python -c "import numpy"
       pip install %COREML_PATH% %ONNX_PATH%
+      cd onnxutils
+      pip install -e .
+      echo Test onnxtk installation... && python -c "import onnxtk"
+      cd ..
       pip install -r requirements-dev.txt
       echo Test onnxruntime installation... && python -c "import onnxruntime"
       REM install libsvm from github
@@ -53,9 +57,6 @@ jobs:
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       dir libsvm\python
       echo Test libsvm installation... && python -c "import svmutil"
-      cd ../onnxmltools/onnxutils
-      pip install -e .
-      echo Test onnxtk installation... && python -c "import onnxtk"
     displayName: 'Install dependencies'
 
   - script: |

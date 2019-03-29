@@ -38,14 +38,16 @@ jobs:
       conda install -c conda-forge cmake
       pip install $(ONNX_PATH)
       pip install -r requirements.txt
+      cd onnxutils
+      pip install -e .
+      echo Test onnxtk installation... && python -c "import onnxtk"
+      cd ..
       pip install -r requirements-dev.txt
       test '$(python.version)' != '2.7' && pip install onnxruntime==0.1.4
       pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
       make lib
-      cd ../onnxmltools/onnxutils
-      pip install -e .
     displayName: 'Install dependencies'
 
   - script: |
