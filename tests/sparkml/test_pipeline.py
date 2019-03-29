@@ -8,7 +8,7 @@ from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAssembler
 
 from onnxmltools import convert_sparkml
-from onnxtk.common.data_types import StringTensorType
+from onnxmltools.convert.common.data_types import StringTensorType
 from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 
