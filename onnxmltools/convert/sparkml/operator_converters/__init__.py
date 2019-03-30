@@ -6,6 +6,8 @@
 
 # To register converter for sparkml operators, import associated modules here.
 
+from . import polynomial_expansion
+from . import tokenizer
 from . import naive_bayes
 from . import vector_slicer
 from . import stop_words_remover
