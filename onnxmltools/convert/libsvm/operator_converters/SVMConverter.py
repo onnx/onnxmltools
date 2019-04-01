@@ -6,7 +6,7 @@
 
 from ....proto import onnx_proto
 from ...common._registration import register_converter
-from ...common import utils
+from ...common.utils import _check_has_attr, cast_list
 
 import svm
 import svmutil
@@ -20,20 +20,20 @@ class SVMConverter:
     @staticmethod
     def validate(svm_node):
         try:
-            utils._check_has_attr(svm_node, 'param')
-            utils._check_has_attr(svm_node, 'SV')
-            utils._check_has_attr(svm_node, 'nSV')
-            utils._check_has_attr(svm_node, 'sv_coef')
-            utils._check_has_attr(svm_node, 'l')
-            utils._check_has_attr(svm_node.param, 'gamma')
-            utils._check_has_attr(svm_node.param, 'coef0')
-            utils._check_has_attr(svm_node.param, 'degree')
-            utils._check_has_attr(svm_node.param, 'kernel_type')
-            utils._check_has_attr(svm_node, 'rho')
+            _check_has_attr(svm_node, 'param')
+            _check_has_attr(svm_node, 'SV')
+            _check_has_attr(svm_node, 'nSV')
+            _check_has_attr(svm_node, 'sv_coef')
+            _check_has_attr(svm_node, 'l')
+            _check_has_attr(svm_node.param, 'gamma')
+            _check_has_attr(svm_node.param, 'coef0')
+            _check_has_attr(svm_node.param, 'degree')
+            _check_has_attr(svm_node.param, 'kernel_type')
+            _check_has_attr(svm_node, 'rho')
         except AttributeError as e:
             raise RuntimeError("Missing type from svm node:" + str(e))
 
-            
+
     @staticmethod
     def get_sv(svm_node):
         labels = svm_node.get_labels()
@@ -43,7 +43,7 @@ class SVMConverter:
 
         maxk = max(max(row.keys() for row in sv))
         mat = numpy.zeros((len(sv), maxk+1), dtype=numpy.float32)
-        
+
         for i, row in enumerate(sv):
             for k,v in row.items():
                 if k == -1:
@@ -54,7 +54,7 @@ class SVMConverter:
                     raise RuntimeError("Issue with one dimension\nlabels={0}\n#sv={1}\nshape={2}\npos={3}x{4}-maxk={5}-svm.l={6}\nrow={7}".format(labels, nsv, mat.shape, i, k, maxk, svm_node.l, row))
         # We do not consider the first row (class -1).
         mat = mat[:, 1:]
-        
+
         # mat.shape should be (n_vectors, X.shape[1])
         # where X.shape[1] is the number of features.
         # However, it can be <= X.shape.[1] if the last
@@ -85,13 +85,13 @@ class SVMConverter:
                 for j in range(nrc):
                     res[i, j] = svm_node.sv_coef[j][i]
             return res.T
-            
+
         if nb_class > 2:
             # See above.
             coef = copy_sv_coef(svm_node.sv_coef)
         else:
             coef = numpy.array(svm_node.get_sv_coef()).ravel()
-        
+
         atts = dict(kernel_type=kt,
                     kernel_params=[float(_) for _ in [svm_node.param.gamma, svm_node.param.coef0, svm_node.param.degree]],
                     coefficients=list(coef.ravel()))
@@ -101,16 +101,16 @@ class SVMConverter:
                     op_domain='ai.onnx.ml', attrs=atts)
 
 class SVCConverter(SVMConverter):
-    
+
     @staticmethod
     def validate(svm_node):
         SVMConverter.validate(svm_node)
         try:
-            utils._check_has_attr(svm_node, 'probA')
-            utils._check_has_attr(svm_node, 'probB')
+            _check_has_attr(svm_node, 'probA')
+            _check_has_attr(svm_node, 'probB')
         except AttributeError as e:
             raise RuntimeError("Missing type from svm node:" + str(e))
-    
+
     @staticmethod
     def convert(operator, scope, container, svm_node, inputs):
         nbclass = len(svm_node.get_labels())
@@ -118,7 +118,7 @@ class SVCConverter(SVMConverter):
         nb = SVMConverter.convert(operator, scope, container, svm_node, inputs, "SVMClassifier", nbclass)
         sign_rho = -1.
         st = svm_node.param.svm_type
-        
+
         if svm_node.is_probability_model():
             if st == svm.C_SVC or st == svm.NU_SVC:
                 n_class = len(svm_node.get_labels())
@@ -136,8 +136,8 @@ class SVCConverter(SVMConverter):
             nb["attrs"]['rho'] = [svm_node.rho[i] * sign_rho for i in range(n)]
         else:
             nb["attrs"]['rho'] = [svm_node.rho[0] * sign_rho]
-            
-        class_labels = utils.cast_list(int, svm_node.get_labels())
+
+        class_labels = cast_list(int, svm_node.get_labels())
         # Predictions are different when label are not sorted (multi-classification).
         class_labels.sort()
         nb["attrs"]['classlabels_ints'] = class_labels
@@ -145,30 +145,23 @@ class SVCConverter(SVMConverter):
 
         if len(nb['outputs']) != 2:
             raise RuntimeError("The model outputs label and probabilities not {0}".format(nb['outputs']))
-            
+
         nbclass = len(svm_node.get_labels())
         nb["attrs"]['vectors_per_class'] = [svm_node.nSV[i] for i in range(nbclass)]
         nb["attrs"]['post_transform'] = "NONE"
         nb["attrs"]['support_vectors'] = SVCConverter.get_sv(svm_node)
-        
+
         # Add a vec dictionizer to handle the map output
         prob_input = scope.get_unique_variable_name('Probability')
-        
+
         proba_tensor_name = scope.get_unique_variable_name("scores")
         outputs = [nb['outputs'][0], proba_tensor_name]
         outputs = nb['outputs']
-        
+
         container.add_node('SVMClassifier', nb['inputs'],
-                           outputs, op_domain='ai.onnx.ml', 
+                           outputs, op_domain='ai.onnx.ml',
                            name=scope.get_unique_operator_name('SVMClassifier'),
                            **nb['attrs'])
-                           
-        # zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-                           
-        # zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-        #zipmap_attrs['classlabels_int64s'] = class_labels
-        # container.add_node('ZipMap', [proba_tensor_name], [nb['outputs'][1]],
-        #                    op_domain='ai.onnx.ml', **zipmap_attrs)        
 
 
 class SVRConverter(SVMConverter):
@@ -177,27 +170,27 @@ class SVRConverter(SVMConverter):
     def validate(svm_node):
         SVMConverter.validate(svm_node)
         try:
-            utils._check_has_attr(svm_node, 'l')
+            _check_has_attr(svm_node, 'l')
         except AttributeError as e:
             raise RuntimeError("Missing type from svm node:" + str(e))
-    
+
     @staticmethod
     def convert(operator, scope, container, svm_node, inputs):
         nb = SVMConverter.convert(operator, scope, container, svm_node, inputs, "SVMRegressor", 0)
-        
+
         nb['attrs']["n_supports"] =  svm_node.l
         nb['attrs']['post_transform'] = "NONE"
         nb['attrs']['rho'] = [-svm_node.rho[0]]
         nb['attrs']['support_vectors'] = SVCConverter.get_sv(svm_node)
-        
+
         container.add_node('SVMRegressor', nb['inputs'],
-                           nb['outputs'], op_domain='ai.onnx.ml', 
+                           nb['outputs'], op_domain='ai.onnx.ml',
                            name=scope.get_unique_operator_name('SVMRegressor'),
                            **nb['attrs'])
 
 
 class AnyLibSvmConverter:
-    
+
     @staticmethod
     def select(svm_node):
         if svm_node.param.svm_type in (svm.C_SVC, svm.NU_SVC):
@@ -205,12 +198,12 @@ class AnyLibSvmConverter:
         if svm_node.param.svm_type in (svm.EPSILON_SVR, svm.NU_SVR):
             return SVRConverter
         raise RuntimeError("svm_node type is unexpected '{0}'".format(svm_node.param.svm_type))
-    
+
     @staticmethod
     def validate(svm_node):
         sel = AnyLibSvmConverter.select(svm_node)
         sel.validate(svm_node)
-    
+
     @staticmethod
     def convert(operator, scope, container, svm_node, inputs):
         sel = AnyLibSvmConverter.select(svm_node)
@@ -231,4 +224,3 @@ def convert_libsvm(scope, operator, container):
 # Register the class for processing
 register_converter("LibSvmSVC", convert_libsvm)
 register_converter("LibSvmSVR", convert_libsvm)
-

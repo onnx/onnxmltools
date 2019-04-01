@@ -9,7 +9,6 @@ import onnx
 from onnx import helper
 from onnx import onnx_pb as onnx_proto
 
-
 class LinkedNode(object):
 
     def __init__(self, node=None, in_n=None, out_n=None):
@@ -538,7 +537,7 @@ def _build_onnx_model(node_list):
     return regenerated
 
 
-def optimize_onnx(onnx_nodes, opset=None, nchw_inputs=None, inputs=None, outputs=None):
+def optimize_onnx(onnx_nodes, nchw_inputs=None, inputs=None, outputs=None):
     """
     Optimize onnx model by several approaches.
     :param onnx_nodes: the onnx node list in onnx model.
@@ -571,7 +570,7 @@ def optimize_onnx_model(origin_model, nchw_inputs=None):
     nodelist = list(graph.node)
     del graph.node[:]
 
-    all_nodes = optimize_onnx(nodelist, origin_model.opset_import[0].version,
+    all_nodes = optimize_onnx(nodelist,
                               inputs=graph.input,
                               outputs=graph.output)
     nodes = [n_ for n_ in all_nodes if not isinstance(n_, tuple)]
