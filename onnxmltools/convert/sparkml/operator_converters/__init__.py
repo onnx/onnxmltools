@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 # To register converter for sparkml operators, import associated modules here.
-
+from . import pca
 from . import polynomial_expansion
 from . import tokenizer
 from . import naive_bayes

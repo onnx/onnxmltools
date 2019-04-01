@@ -272,6 +272,11 @@ def apply_leaky_relu(scope, input_name, output_name, container, operator_name=No
 def apply_log(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Log', input_name, output_name, container, operator_name=operator_name)
 
+def apply_matmul(scope, input_names, output_name, container, operator_name=None):
+    op_type = 'MatMul'
+    name = _create_name_or_use_existing_one(scope, op_type, operator_name)
+    container.add_node(op_type, input_names, output_name, op_version=9, name=name)
+
 def apply_max(scope, input_names, output_name, container, operator_name=None):
     _apply_pointwise_operation(scope, 'Max', input_names, output_name, container, operator_name)
 
