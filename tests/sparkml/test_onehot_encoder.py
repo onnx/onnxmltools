@@ -1,6 +1,3 @@
-"""
-Tests SparkML OneHotEncoder converter.
-"""
 import sys
 import unittest
 from pyspark.ml.feature import OneHotEncoderEstimator

@@ -1,6 +1,3 @@
-"""
-Tests SparkML TreeEnsembleClassifier converter.
-"""
 import sys
 import inspect
 import unittest

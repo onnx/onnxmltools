@@ -1,6 +1,3 @@
-"""
-Tests SparkML StringIndexer converter.
-"""
 import sys
 import unittest
 from pyspark.ml.feature import StringIndexer

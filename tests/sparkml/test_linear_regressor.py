@@ -1,6 +1,3 @@
-"""
-Tests SparkML LinearRegressor converter.
-"""
 import sys
 import unittest
 import numpy

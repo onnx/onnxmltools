@@ -1,6 +1,3 @@
-"""
-Tests SparkML PCA converter.
-"""
 import pandas
 import sys
 import unittest

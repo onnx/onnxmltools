@@ -1,6 +1,3 @@
-"""
-Tests SparkML StringIndexer converter.
-"""
 import pandas
 import sys
 import unittest

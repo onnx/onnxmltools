@@ -1,6 +1,3 @@
-"""
-Tests SparkML Pipeline converter.
-"""
 import unittest
 import sys
 from pyspark.ml import Pipeline

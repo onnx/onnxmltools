@@ -1,6 +1,3 @@
-"""
-Tests SparkML LogisticRegression converter.
-"""
 import sys
 import unittest
 import numpy

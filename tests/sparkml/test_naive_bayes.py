@@ -1,6 +1,3 @@
-"""
-Tests SparkML NGram converter.
-"""
 import pandas
 import sys
 import unittest
