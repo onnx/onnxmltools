@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 # To register converter for sparkml operators, import associated modules here.
+from . import dct
 from . import pca
 from . import polynomial_expansion
 from . import tokenizer
