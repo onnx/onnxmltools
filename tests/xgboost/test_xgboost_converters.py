@@ -6,7 +6,7 @@ import unittest
 from sklearn.datasets import load_iris
 from xgboost import XGBRegressor, XGBClassifier
 from onnxmltools.convert import convert_xgboost
-from onnxtk.common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_multiple_classification, dump_single_regression, dump_binary_classification
 
 
