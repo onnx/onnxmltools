@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onntk.optimizer import *
+from onnxtk.optimizer import *
