@@ -40,8 +40,10 @@ class TestSparkmlLogisticRegression(SparkMlTestCase):
             predicted.toPandas().prediction.values.astype(numpy.float32),
             predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         ]
+        # known error in onnxruntime 0.3.0 case
         dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
-                                    basename="SparkmlLogisticRegression")
+                                    basename="SparkmlLogisticRegression",
+                                    allow_failure="StrictVersion(onnxruntime.__version__) == StrictVersion('0.3.0')")
 
 
 if __name__ == "__main__":
