@@ -73,6 +73,7 @@ def build_sparkml_operator_name_map():
 
 sparkml_operator_name_map = build_sparkml_operator_name_map()
 
+
 def get_sparkml_operator_name(model_type):
     '''
     Get operator name of the input argument

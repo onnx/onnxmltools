@@ -6,7 +6,15 @@ from .ops_names import get_sparkml_operator_name
 
 
 def build_io_name_map():
+    '''
+    map of spark models to input-output tuples
+    Each lambda gets the corresponding input or output column name from the model
+    '''
     map = {
+        "pyspark.ml.classification.GBTClassificationModel": (
+            lambda model: [model.getOrDefault("featuresCol")],
+            lambda model: ['label', model.getOrDefault("predictionCol")]
+        ),
         "pyspark.ml.feature.DCT": (
             lambda model: [model.getOrDefault("inputCol")],
             lambda model: [model.getOrDefault("outputCol")]
