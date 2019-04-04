@@ -1,8 +1,7 @@
 import sys
 import unittest
 
-from pyspark import Row
-from pyspark.ml.feature import NGram, StopWordsRemover
+from pyspark.ml.feature import StopWordsRemover
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType

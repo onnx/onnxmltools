@@ -11,9 +11,13 @@ def build_io_name_map():
     Each lambda gets the corresponding input or output column name from the model
     '''
     map = {
+        "pyspark.ml.regression.GBTRegressionModel": (
+            lambda model: [model.getOrDefault("featuresCol")],
+            lambda model: [model.getOrDefault("predictionCol")]
+        ),
         "pyspark.ml.classification.GBTClassificationModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: ['label', model.getOrDefault("predictionCol")]
+            lambda model: [model.getOrDefault("predictionCol"), 'probability']
         ),
         "pyspark.ml.feature.DCT": (
             lambda model: [model.getOrDefault("inputCol")],

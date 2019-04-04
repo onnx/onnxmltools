@@ -7,7 +7,7 @@ import onnx
 import pandas
 import numpy
 from pyspark.ml import Pipeline
-from pyspark.ml.classification import DecisionTreeClassifier, RandomForestClassifier, GBTClassifier
+from pyspark.ml.classification import DecisionTreeClassifier, RandomForestClassifier
 from pyspark.ml.linalg import VectorUDT, SparseVector, Vectors
 
 from onnxmltools import convert_sparkml
