@@ -493,6 +493,15 @@ def apply_sub(scope, input_names, output_name, container, operator_name=None, ax
     _apply_basic_numerical_operation(scope, 'Sub', input_names, output_name, container, operator_name=operator_name,
                                      axis=axis, broadcast=broadcast)
 
+
+def apply_sum(scope, input_names, output_name, container, operator_name=None):
+    name = _create_name_or_use_existing_one(scope, 'Sum', operator_name)
+    if container.target_opset < 6:
+        op_version = 1
+    else:
+        op_version = 6
+    container.add_node('Sum', input_names, output_name, op_version=op_version, name=name)
+
 def apply_tanh(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Tanh', input_name, output_name, container, operator_name)
 

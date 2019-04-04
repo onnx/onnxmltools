@@ -42,23 +42,23 @@ def convert_sparkml_linear_classifier(scope, operator, container):
     attrs["classlabels_ints"] = range(0, op.numClasses)
 
     label_name = operator.outputs[0].full_name
-    if not isinstance(operator.raw_operator, LinearSVCModel):
-        probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
-        container.add_node(op_type, operator.inputs[0].full_name,
-                           [label_name, probability_tensor_name],
-                           op_domain='ai.onnx.ml', **attrs)
+    # if not isinstance(operator.raw_operator, LinearSVCModel):
+    probability_tensor_name = scope.get_unique_variable_name('probability_tensor')
+    container.add_node(op_type, operator.inputs[0].full_name,
+                       [label_name, probability_tensor_name],
+                       op_domain='ai.onnx.ml', **attrs)
 
-        # Make sure the probability sum is 1 over all classes
-        normalizer_type = 'Normalizer'
-        normalizer_attrs = {'name': scope.get_unique_operator_name(normalizer_type), 'norm': 'L1'}
-        container.add_node(normalizer_type, probability_tensor_name, operator.outputs[1].full_name,
-                           op_domain='ai.onnx.ml', **normalizer_attrs)
-    else:
-        # add a dummy output variable since onnx LinearClassififer has 2
-        unused_probabilities_output = scope.get_unique_variable_name('probabilities')
-        container.add_node(op_type, operator.inputs[0].full_name,
-                           [label_name,unused_probabilities_output],
-                           op_domain='ai.onnx.ml', **attrs)
+    # Make sure the probability sum is 1 over all classes
+    normalizer_type = 'Normalizer'
+    normalizer_attrs = {'name': scope.get_unique_operator_name(normalizer_type), 'norm': 'L1'}
+    container.add_node(normalizer_type, probability_tensor_name, operator.outputs[1].full_name,
+                       op_domain='ai.onnx.ml', **normalizer_attrs)
+    # else:
+    #     # add a dummy output variable since onnx LinearClassifier has 2
+    #     unused_probabilities_output = scope.get_unique_variable_name('probabilities')
+    #     container.add_node(op_type, operator.inputs[0].full_name,
+    #                        [label_name,unused_probabilities_output],
+    #                        op_domain='ai.onnx.ml', **attrs)
 
 
 register_converter('pyspark.ml.classification.LogisticRegressionModel', convert_sparkml_linear_classifier)
@@ -80,11 +80,9 @@ def calculate_linear_classifier_output_shapes(operator):
         raise RuntimeError('Input must be a [N, C]-tensor')
 
     N = operator.inputs[0].type.shape[0]
-
-    class_count = operator.raw_operator.numClasses
     operator.outputs[0].type = Int64TensorType(shape=[N])
-    if not isinstance(operator.raw_operator, LinearSVCModel):
-        operator.outputs[1].type = FloatTensorType([N, class_count])
+    class_count = operator.raw_operator.numClasses
+    operator.outputs[1].type = FloatTensorType([N, class_count])
 
 
 register_shape_calculator('pyspark.ml.classification.LogisticRegressionModel', calculate_linear_classifier_output_shapes)

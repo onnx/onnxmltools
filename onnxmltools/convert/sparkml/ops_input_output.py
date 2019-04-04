@@ -11,6 +11,10 @@ def build_io_name_map():
     Each lambda gets the corresponding input or output column name from the model
     '''
     map = {
+        "pyspark.ml.classification.OneVsRestModel": (
+            lambda model: [model.getOrDefault("featuresCol")],
+            lambda model: [model.getOrDefault("predictionCol")]
+        ),
         "pyspark.ml.regression.GBTRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],
             lambda model: [model.getOrDefault("predictionCol")]
@@ -109,7 +113,7 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.LinearSVCModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol")]
+            lambda model: [model.getOrDefault("predictionCol"), 'probability']
         ),
         "pyspark.ml.classification.LogisticRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],
