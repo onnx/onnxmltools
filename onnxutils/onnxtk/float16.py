@@ -120,7 +120,7 @@ def convert_float_to_float16(model):
                     else:
                         if n.op_type == 'Cast':
                             for attr in n.attribute:
-                                if attr.name == 'to' and attr.i = 1:
+                                if attr.name == 'to' and attr.i == 1:
                                     attr.i = 10
                         next_level.append(n.attribute)
             # if q is model.graph.node.attribute, push q.g and q.graphs (GraphProto)
