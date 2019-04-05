@@ -15,6 +15,8 @@ from . import naive_bayes
 from . import vector_slicer
 from . import stop_words_remover
 from . import bucketizer
+from . import random_forest_classifier
+from . import random_forest_regressor
 from . import decision_tree_regressor
 from . import decision_tree_classifier
 from . import vector_indexer
