@@ -25,7 +25,7 @@ def convert_tensor_to_probability_map(scope, operator, container):
     if model_type == 'neuralNetworkClassifier':
         model = operator.raw_operator.neuralNetworkClassifier
         if model.WhichOneof('ClassLabels') == 'stringClassLabels':
-            attrs['classlabels_strings'] = list(s.encode('ascii') for s in model.stringClassLabels.vector)
+            attrs['classlabels_strings'] = list(s.encode('utf-8') for s in model.stringClassLabels.vector)
         elif model.WhichOneof('ClassLabels') == 'int64ClassLabels':
             attrs['classlabels_int64s'] = list(int(i) for i in model.int64ClassLabels.vector)
         else:
@@ -33,7 +33,7 @@ def convert_tensor_to_probability_map(scope, operator, container):
     elif model_type == 'pipelineClassifier':
         model = operator.raw_operator.pipelineClassifier
         if model.WhichOneof('ClassLabels') == 'stringClassLabels':
-            attrs['classlabels_strings'] = list(s.encode('ascii') for s in model.stringClassLabels.vector)
+            attrs['classlabels_strings'] = list(s.encode('utf-8') for s in model.stringClassLabels.vector)
         elif model.WhichOneof('ClassLabels') == 'int64ClassLabels':
             attrs['classlabels_int64s'] = list(int(i) for i in model.int64ClassLabels.vector)
         else:

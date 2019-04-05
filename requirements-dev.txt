@@ -1,14 +1,14 @@
 numpy
 protobuf
 codecov
-tensorflow
-keras==2.1.6
 coremltools
 pandas
-pytest
 pytest-cov
 scikit-learn
 scipy
+svm
 wheel
 xgboost
 lightgbm
+pyspark==2.3.2
+openpyxl

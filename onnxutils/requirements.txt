@@ -1,0 +1,4 @@
+six
+numpy
+protobuf
+onnx

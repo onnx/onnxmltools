@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
-from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._apply_operation import apply_concat, apply_split
 from ....common._registration import register_converter
@@ -303,14 +302,14 @@ def convert_bidirectional_lstm(scope, operator, container):
     betas = []
     for activation in params.activationsForwardLSTM:
         activation_type, alpha, beta = extract_rnn_activation_info(activation)
-        activation_types.append(activation_type.encode('ascii'))
+        activation_types.append(activation_type.encode('utf-8'))
         if alpha is not None:
             alphas.append(alpha)
         if beta is not None:
             betas.append(beta)
     for activation in params.activationsBackwardLSTM:
         activation_type, alpha, beta = extract_rnn_activation_info(activation)
-        activation_types.append(activation_type.encode('ascii'))
+        activation_types.append(activation_type.encode('utf-8'))
         if alpha is not None:
             alphas.append(alpha)
         if beta is not None:
@@ -328,7 +327,7 @@ def convert_bidirectional_lstm(scope, operator, container):
     lstm_attrs['input_forget'] = lstm_params.coupledInputAndForgetGate
 
     # Set up version-dependent attributes
-    if operator.targeted_onnx_version < StrictVersion('1.2'):
+    if container.target_opset < 7:
         lstm_attrs['output_sequence'] = lstm_params.sequenceOutput
         op_version = 1
     else:
@@ -348,7 +347,7 @@ def convert_bidirectional_lstm(scope, operator, container):
 
         if len(operator.outputs) > 1:
             lstm_y_h_reshape_name = scope.get_unique_variable_name(lstm_op_name + '_Y_h_reshape')
-            apply_reshape(scope, lstm_y_name, lstm_y_h_reshape_name, container, desired_shape=[2, hidden_size])
+            apply_reshape(scope, lstm_y_h_name, lstm_y_h_reshape_name, container, desired_shape=[2, hidden_size])
 
             apply_split(scope, lstm_y_h_reshape_name, [operator.outputs[1].full_name, operator.outputs[3].full_name],
                         container, split=[1, 1], axis=0)

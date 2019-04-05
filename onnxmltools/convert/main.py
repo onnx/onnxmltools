@@ -6,27 +6,77 @@
 
 from ..proto import onnx
 from .common import utils
+import warnings
 
-
-def convert_sklearn(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
-    if not utils.sklearn_installed():
-        raise RuntimeError('scikit-learn is not installed. Please install scikit-learn to use this feature.')
-
-    from .sklearn.convert import convert
-    return convert(model, name=name, initial_types=initial_types, doc_string=doc_string, targeted_onnx=targeted_onnx)
-
-
-def convert_coreml(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
+def convert_coreml(model, name=None, initial_types=None, doc_string='', target_opset=None,
+                   targeted_onnx=onnx.__version__ , custom_conversion_functions=None, custom_shape_calculators=None):
     if not utils.coreml_installed():
         raise RuntimeError('coremltools is not installed. Please install coremltools to use this feature.')
 
     from .coreml.convert import convert
-    return convert(model, name=name, initial_types=initial_types, doc_string=doc_string, targeted_onnx=targeted_onnx)
+    return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
+                   custom_conversion_functions, custom_shape_calculators)
 
 
-def convert_keras(model, name=None, initial_types=None, doc_string='', targeted_onnx=onnx.__version__):
-    if not utils.keras_installed():
-        raise RuntimeError('keras is not installed. Please install coremltools to use this feature.')
+def convert_keras(model, name=None, initial_types=None, doc_string='',
+                  target_opset=None, targeted_onnx=onnx.__version__,
+                  channel_first_inputs=None, custom_conversion_functions=None, custom_shape_calculators=None,
+                  default_batch_size=1):
+    if not utils.keras2onnx_installed():
+        raise RuntimeError('keras2onnx is not installed. Please install it to use this feature.')
 
-    from .keras.convert import convert
-    return convert(model, name, initial_types=initial_types, doc_string=doc_string, targeted_onnx=targeted_onnx)
+    if custom_conversion_functions:
+        warnings.warn('custom_conversion_functions is not supported any more. Please set it to None.')
+
+    from keras2onnx import convert_keras as convert
+    return convert(model, name, doc_string, target_opset, channel_first_inputs)
+
+
+def convert_libsvm(model, name=None, initial_types=None, doc_string='', target_opset=None,
+                     targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+    if not utils.libsvm_installed():
+        raise RuntimeError('libsvm is not installed. Please install libsvm to use this feature.')
+
+    from .libsvm.convert import convert
+    return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
+                   custom_conversion_functions, custom_shape_calculators)
+
+
+def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target_opset=None,
+                     targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+    if not utils.lightgbm_installed():
+        raise RuntimeError('lightgbm is not installed. Please install lightgbm to use this feature.')
+
+    from .lightgbm.convert import convert
+    return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
+                   custom_conversion_functions, custom_shape_calculators)
+
+
+def convert_sklearn(model, name=None, initial_types=None, doc_string='', target_opset=None,
+                    targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+    if not utils.sklearn_installed():
+        raise RuntimeError('scikit-learn is not installed. Please install scikit-learn to use this feature.')
+
+    if not utils.skl2onnx_installed():
+        raise RuntimeError('skl2onnx is not installed. Please install skl2onnx to use this feature.')
+
+    from skl2onnx.convert import convert_sklearn as convert_skl2onnx
+    return convert_skl2onnx(model, name, initial_types, doc_string, target_opset,
+                   custom_conversion_functions, custom_shape_calculators)
+
+def convert_sparkml(model, name=None, initial_types=None, doc_string='', target_opset=None,
+                    targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+    if not utils.sparkml_installed():
+        raise RuntimeError('Spark is not installed. Please install Spark to use this feature.')
+
+    from .sparkml.convert import convert
+    return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
+                   custom_conversion_functions, custom_shape_calculators)
+
+def convert_xgboost(*args, **kwargs):
+    if not utils.xgboost_installed():
+        raise RuntimeError('xgboost is not installed. Please install xgboost to use this feature.')
+
+    from .xgboost.convert import convert
+    return convert(*args, **kwargs)
+

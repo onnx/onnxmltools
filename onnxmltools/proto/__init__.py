@@ -48,3 +48,7 @@ def _make_tensor_fixed(name, data_type, dims, vals, raw=False):
 
 
 helper.make_tensor = _make_tensor_fixed
+
+
+def get_opset_number_from_onnx():
+    return onnx.defs.onnx_opset_version()

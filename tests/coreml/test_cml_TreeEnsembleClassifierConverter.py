@@ -1,10 +1,13 @@
 """
 Tests CoreML TreeEnsembleClassifier converter.
 """
-import coremltools
 import unittest
+import numpy
+import coremltools
 from sklearn.ensemble import RandomForestClassifier
 from onnxmltools.convert.coreml.convert import convert
+from onnxmltools.utils import dump_data_and_model
+
 
 class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
 
@@ -17,10 +20,16 @@ class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
         self.assertTrue('classProbability' in node.output)
 
     def test_tree_ensemble_classifier(self):
-        X = [[0, 1], [1, 1], [2, 0]]
+        X = numpy.array([[0, 1], [1, 1], [2, 0]], dtype=numpy.float32)
         y = [1, 0, 1]
         model = RandomForestClassifier().fit(X, y)
         model_coreml = coremltools.converters.sklearn.convert(model)
         model_onnx = convert(model_coreml.get_spec())
         self.assertTrue(model_onnx is not None)
         self.validate_zipmap(model_onnx)
+        dump_data_and_model(X, model, model_onnx, basename="CmlBinRandomForestClassifier",
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
+
+
+if __name__ == "__main__":
+    unittest.main()

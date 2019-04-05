@@ -63,18 +63,21 @@ def get_edges(graph):
     return edge_list
 
 
-def visualize_model(onnx_model):
+def visualize_model(onnx_model, open_browser=True, dest="index.html"):
     """
     Creates a graph visualization of an ONNX protobuf model.
+    It creates a SVG graph with *d3.js* and stores it into a file.
 
-    :param model: ONNX model (protobuf object)
+    :param model: ONNX model (protobuf object)    
+    :param open_browser: opens the browser
+    :param dest: destination file
 
     Example:
 
     ::
 
-        from onnxmltools.utils import visualize
-        visualize(model)
+        from onnxmltools.utils import visualize_model
+        visualize_model(model)
     """
     graph = onnx_model.graph
     model_info = "Model produced by: " + onnx_model.producer_name + \
@@ -132,7 +135,7 @@ def visualize_model(onnx_model):
 
     html_str = html_str.replace("[model_info]", model_info)
 
-    Html_file = open("index.html", "w")
+    Html_file = open(dest, "w")
     Html_file.write(html_str)
     Html_file.close()
 

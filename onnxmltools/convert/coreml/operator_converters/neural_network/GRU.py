@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
-from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 from .Reshape import apply_reshape
@@ -143,7 +142,7 @@ def convert_gru(scope, operator, container):
     betas = []
     for activation in params.activations:
         activation_type, alpha, beta = extract_rnn_activation_info(activation)
-        activation_types.append(activation_type.encode('ascii'))
+        activation_types.append(activation_type.encode('utf-8'))
         if alpha is not None:
             alphas.append(alpha)
         if beta is not None:
@@ -157,10 +156,10 @@ def convert_gru(scope, operator, container):
     gru_attrs['hidden_size'] = hidden_size
 
     # Set up version-dependent attributes
-    if operator.targeted_onnx_version < StrictVersion('1.0'):
+    if container.target_opset < 5:
         gru_attrs['output_sequence'] = params.sequenceOutput
         op_version = 1
-    elif operator.targeted_onnx_version < StrictVersion('1.2'):
+    elif container.target_opset < 7:
         gru_attrs['linear_before_reset'] = 0
         gru_attrs['output_sequence'] = params.sequenceOutput
         op_version = 3

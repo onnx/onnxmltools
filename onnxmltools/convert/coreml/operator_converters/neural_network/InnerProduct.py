@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._apply_operation import apply_reshape
 from ....common._registration import register_converter
@@ -45,15 +44,17 @@ def convert_inner_product(scope, operator, container):
     attrs['transB'] = 1
 
     # Get the correct version number for Gemm in ONNX
-    if container.targeted_onnx_version <= StrictVersion('1.0'):
+    if container.target_opset < 5:
         attrs['broadcast'] = 1
         op_version = 1
-    elif container.targeted_onnx_version < StrictVersion('1.2'):
+    elif container.target_opset < 7:
         attrs['broadcast'] = 1
         op_version = 6
-    else:
+    elif container.target_opset < 9:
         op_version = 7
-
+    else:
+        op_version = 9
+        
     # Create the major ONNX operator, Gemm, to do CoreML inner product and possibly add shape adjustment
     if len(operator.inputs[0].type.shape) == 4:
         # Input shape is [N, C, 1, 1] so we expect output is also 4-D, [N, C', 1, 1].

@@ -6,8 +6,7 @@
 
 import math
 import numpy as np
-from distutils.version import StrictVersion
-from ....common._apply_operation import apply_mul, apply_div, apply_pad
+from ....common._apply_operation import apply_affine, apply_mul, apply_div, apply_pad
 from ....common._registration import register_converter
 
 
@@ -181,10 +180,13 @@ def convert_pooling(scope, operator, container):
     # From here to the end of this function, we will handle local pooling mode
     if params.type == Params.MAX:
         op_type = 'MaxPool'
-        op_version = 1
+        if container.target_opset < 8:
+            op_version = 1
+        else:
+            op_version = 8
     elif params.type == Params.AVERAGE:
         op_type = 'AveragePool'
-        if operator.targeted_onnx_version < StrictVersion('1.2'):
+        if container.target_opset < 7:
             op_version = 1
         else:
             op_version = 7
@@ -264,8 +266,7 @@ def convert_pooling(scope, operator, container):
         X_name = operator.inputs[0].full_name
         Y_name = operator.outputs[0].full_name
         Z_name = scope.get_unique_variable_name('Z')
-        container.add_node('Affine', X_name, Z_name, name=scope.get_unique_operator_name('Affine'),
-                           alpha=0., beta=1. / (kernel_shape[0] * kernel_shape[1]))
+        apply_affine(scope, X_name, Z_name, container, alpha=0., beta=1. / (kernel_shape[0] * kernel_shape[1]))
 
         Z_prime_name = scope.get_unique_variable_name('Z_prime')
         Y_prime_name = scope.get_unique_variable_name('Y_prime')

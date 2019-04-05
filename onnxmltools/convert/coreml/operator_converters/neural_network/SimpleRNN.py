@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
-from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 from .Reshape import apply_reshape
@@ -179,7 +178,7 @@ def convert_simple_rnn(scope, operator, container):
 
     # Add RNN's information of activation function
     activation, alpha, beta = extract_rnn_activation_info(params.activation)
-    rnn_attrs['activations'] = [activation.encode('ascii')]
+    rnn_attrs['activations'] = [activation.encode('utf-8')]
     if alpha is not None:
         rnn_attrs['activation_alpha'] = [alpha]
     if beta is not None:
@@ -190,7 +189,7 @@ def convert_simple_rnn(scope, operator, container):
     rnn_attrs['hidden_size'] = hidden_size
 
     # Set up version-dependent attributes
-    if operator.targeted_onnx_version < StrictVersion('1.2'):
+    if container.target_opset < 7:
         rnn_attrs['output_sequence'] = params.sequenceOutput
         op_version = 1
     else:

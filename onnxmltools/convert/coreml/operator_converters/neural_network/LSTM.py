@@ -5,7 +5,6 @@
 # --------------------------------------------------------------------------
 
 import numpy as np
-from distutils.version import StrictVersion
 from .....proto import onnx_proto
 from ....common._registration import register_converter
 from .Reshape import apply_reshape
@@ -236,7 +235,7 @@ def convert_unidirectional_lstm(scope, operator, container):
     betas = []
     for activation in params.activations:
         activation_type, alpha, beta = extract_rnn_activation_info(activation)
-        activation_types.append(activation_type.encode('ascii'))
+        activation_types.append(activation_type.encode('utf-8'))
         if alpha is not None:
             alphas.append(alpha)
         if beta is not None:
@@ -254,7 +253,7 @@ def convert_unidirectional_lstm(scope, operator, container):
     lstm_attrs['input_forget'] = lstm_params.coupledInputAndForgetGate
 
     # Set up version-dependent attributes
-    if operator.targeted_onnx_version < StrictVersion('1.2'):
+    if container.target_opset < 7:
         lstm_attrs['output_sequence'] = lstm_params.sequenceOutput
         op_version = 1
     else:
