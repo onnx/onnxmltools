@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 from onnxmltools.convert.common.data_types import Int64TensorType, FloatTensorType
 from onnxmltools.convert.common.tree_ensemble import get_default_tree_classifier_attribute_pairs, \
-    add_tree_to_attribute_pairs, get_default_tree_regressor_attribute_pairs
+    add_tree_to_attribute_pairs
 from onnxmltools.convert.common.utils import check_input_and_output_numbers, check_input_and_output_types
 from onnxmltools.convert.sparkml.operator_converters.tree_ensemble_common import save_read_sparkml_model_data, \
     sparkml_tree_dataset_to_sklearn
