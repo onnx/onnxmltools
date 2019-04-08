@@ -8,6 +8,7 @@ import os
 from ..proto import onnx_proto
 from ..convert.common import utils as convert_utils
 from os import path
+import json
 
 
 def load_model(file_path):
@@ -71,8 +72,8 @@ def save_text(model, file_path):
     if model is None or not isinstance(model, onnx_proto.ModelProto):
         raise ValueError("Model is not a valid ONNX model.")
     with open(file_path, "w") as f:
-        f.write(str(model))
-
+        from google.protobuf.json_format import MessageToJson
+        f.write(MessageToJson(model))
 
 def set_model_domain(model, domain):
     """
