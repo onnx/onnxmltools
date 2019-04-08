@@ -75,6 +75,7 @@ def save_text(model, file_path):
         from google.protobuf.json_format import MessageToJson
         f.write(MessageToJson(model))
 
+
 def set_model_domain(model, domain):
     """
     Sets the domain on the ONNX model.
