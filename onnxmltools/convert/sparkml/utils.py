@@ -37,3 +37,6 @@ def buildInputDictSimple(dataframe):
             result[field.name] = dataframe.select(field.name).toPandas().values.astype(numpy.float32)
     return result
 
+
+class SparkMlConversionError(Exception):
+    pass

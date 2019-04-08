@@ -11,6 +11,10 @@ def build_io_name_map():
     Each lambda gets the corresponding input or output column name from the model
     '''
     map = {
+        "pyspark.ml.feature.IndexToString": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
         "pyspark.ml.feature.ChiSqSelectorModel": (
             lambda model: [model.getOrDefault("featuresCol")],
             lambda model: [model.getOrDefault("outputCol")]
