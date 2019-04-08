@@ -41,7 +41,10 @@ class TestUtils(unittest.TestCase):
         this = os.path.dirname(__file__)
         onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
         onnx_model = load_model(onnx_file)
-        json_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.json")
+        if StrictVersion(onnx.__version__) < StrictVersion('1.4.0'):
+           json_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.json")
+        else:
+            json_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing_Op9.json")
         json_file_new = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing_new.json")
         save_text(onnx_model, json_file_new)
         try:

@@ -48,10 +48,10 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     The name can contain some flags. Expected outputs refer to the
     outputs computed with the original library, computed outputs
     refer to the outputs computed with a ONNX runtime.
-    
+
     * ``-CannotLoad``: the model can be converted but the runtime cannot load it
     * ``-Dec3``: compares expected and computed outputs up to 3 decimals (5 by default)
-    * ``-Dec4``: compares expected and computed outputs up to 4 decimals (5 by default)    
+    * ``-Dec4``: compares expected and computed outputs up to 4 decimals (5 by default)
     * ``-NoProb``: The original models computed probabilites for two classes *size=(N, 2)*
       but the runtime produces a vector of size *N*, the test will compare the second column
       to the column
@@ -62,18 +62,18 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     * ``-Reshape``: merges all outputs into one single vector and resizes it before comparing
     * ``-SkipDim1``: before comparing expected and computed output,
       arrays with a shape like *(2, 1, 2)* becomes *(2, 2)*
-    
+
     If the *backend* is not None, the function either raises an exception
     if the comparison between the expected outputs and the backend outputs
     fails or it saves the backend output and adds it to the results.
     """
     runtime_test = dict(model=model, data=data)
-    
+
     if folder is None:
         folder = os.environ.get('ONNXTESTDUMP', 'tests')
     if not os.path.exists(folder):
         os.makedirs(folder)
-    
+
     if hasattr(model, "predict"):
         if hasattr(model, "predict_proba"):
             # Classifier
@@ -93,38 +93,38 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         prediction = model.transform(data)
     else:
         raise TypeError("Model has not predict or transform method: {0}".format(type(model)))
-        
+
     runtime_test['expected'] = prediction
-    
+
     names = []
     dest = os.path.join(folder, basename + ".expected.pkl")
     names.append(dest)
     with open(dest, "wb") as f:
         pickle.dump(prediction, f)
-    
+
     dest = os.path.join(folder, basename + ".data.pkl")
     names.append(dest)
     with open(dest, "wb") as f:
         pickle.dump(data, f)
-    
+
     dest = os.path.join(folder, basename + ".model.pkl")
     names.append(dest)
     with open(dest, "wb") as f:
         pickle.dump(model, f)
-        
+
     if onnx is None:
         array = numpy.array(data)
         if inputs is None:
             inputs = [('input', FloatTensorType(list(array.shape)))]
         onnx, _ = convert_model(model, basename, inputs)
-    
+
     dest = os.path.join(folder, basename + ".model.onnx")
     names.append(dest)
     with open(dest, "wb") as f:
         f.write(onnx.SerializeToString())
-    
+
     runtime_test["onnx"] = dest
-    
+
     # backend
     if backend is not None:
         if not isinstance(backend, list):
@@ -154,14 +154,14 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                 names.append(dest)
                 with open(dest, "wb") as f:
                     pickle.dump(output, f)
-        
+
     return names
 
 
 def convert_model(model, name, input_types):
     """
     Runs the appropriate conversion method.
-    
+
     :param model: model
     :return: *onnx* model
     """
@@ -181,14 +181,14 @@ def convert_model(model, name, input_types):
     if model is None:
         raise RuntimeError("Unable to convert model of type '{0}'.".format(type(model)))
     return model, prefix
-    
-    
+
+
 def dump_one_class_classification(model, suffix="", folder=None, allow_failure=None):
     """
     Trains and dumps a model for a One Class outlier problem.
     The function trains a model and calls
     :func:`dump_data_and_model`.
-    
+
     :param model: any model following *scikit-learn* API
     :param suffix: added to filenames
     :param folder: where to save the file
@@ -197,7 +197,7 @@ def dump_one_class_classification(model, suffix="", folder=None, allow_failure=N
         whether or not the test can fail, example:
         ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
-    
+
     Every created filename will follow the pattern:
     ``<folder>/<prefix><task><classifier-name><suffix>.<data|expected|model|onnx>.<pkl|onnx>``.
     """
@@ -213,7 +213,7 @@ def dump_one_class_classification(model, suffix="", folder=None, allow_failure=N
 def dump_binary_classification(model, suffix="", folder=None, allow_failure=None, verbose=False):
     """
     Trains and dumps a model for a binary classification problem.
-    
+
     :param model: any model following *scikit-learn* API
     :param suffix: added to filenames
     :param folder: where to save the file
@@ -223,7 +223,7 @@ def dump_binary_classification(model, suffix="", folder=None, allow_failure=None
         ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :param verbose: prints more information when it fails
     :return: output of :func:`dump_data_and_model`
-    
+
     Every created filename will follow the pattern:
     ``<folder>/<prefix><task><classifier-name><suffix>.<data|expected|model|onnx>.<pkl|onnx>``.
     """
@@ -239,7 +239,7 @@ def dump_binary_classification(model, suffix="", folder=None, allow_failure=None
 def dump_multiple_classification(model, suffix="", folder=None, allow_failure=None):
     """
     Trains and dumps a model for a binary classification problem.
-    
+
     :param model: any model following *scikit-learn* API
     :param suffix: added to filenames
     :param folder: where to save the file
@@ -248,7 +248,7 @@ def dump_multiple_classification(model, suffix="", folder=None, allow_failure=No
         whether or not the test can fail, example:
         ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
-    
+
     Every created filename will follow the pattern:
     ``<folder>/<prefix><task><classifier-name><suffix>.<data|expected|model|onnx>.<pkl|onnx>``.
     """
@@ -264,7 +264,7 @@ def dump_multiple_classification(model, suffix="", folder=None, allow_failure=No
 def dump_multiple_regression(model, suffix="", folder=None, allow_failure=None):
     """
     Trains and dumps a model for a multi regression problem.
-    
+
     :param model: any model following *scikit-learn* API
     :param suffix: added to filenames
     :param folder: where to save the file
@@ -273,7 +273,7 @@ def dump_multiple_regression(model, suffix="", folder=None, allow_failure=None):
         whether or not the test can fail, example:
         ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
-    
+
     Every created filename will follow the pattern:
     ``<folder>/<prefix><task><classifier-name><suffix>.<data|expected|model|onnx>.<pkl|onnx>``.
     """
@@ -289,7 +289,7 @@ def dump_multiple_regression(model, suffix="", folder=None, allow_failure=None):
 def dump_single_regression(model, suffix="", folder=None, allow_failure=None):
     """
     Trains and dumps a model for a regression problem.
-    
+
     :param model: any model following *scikit-learn* API
     :param prefix: library name
     :param suffix: added to filenames
@@ -299,7 +299,7 @@ def dump_single_regression(model, suffix="", folder=None, allow_failure=None):
         whether or not the test can fail, example:
         ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
-    
+
     Every created filename will follow the pattern:
     ``<folder>/<prefix><task><classifier-name><suffix>.<data|expected|model|onnx>.<pkl|onnx>``.
     """
@@ -331,10 +331,10 @@ def make_report_backend(folder):
             if model not in res:
                 res[model] = {}
             res[model][bk] = True
-    
+
     def dict_update(d, u):
         d.update(u)
         return d
-    
+
     aslist = [dict_update(dict(_model=k), v) for k, v in res.items()]
     return aslist
