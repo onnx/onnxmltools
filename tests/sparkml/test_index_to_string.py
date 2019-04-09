@@ -27,6 +27,7 @@ class TestSparkmlIndexToString(SparkMlTestCase):
         with pytest.raises(SparkMlConversionError):
             model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([1, 1]))])
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_index_to_string(self):
         original_data = self.spark.createDataFrame(
             [(0, "a"), (1, "b"), (2, "c"), (3, "a"), (4, "a"), (5, "c")],
