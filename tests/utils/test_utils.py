@@ -37,26 +37,6 @@ class TestUtils(unittest.TestCase):
         save_model(onnx_model, new_onnx_file)
         self.assertTrue(os.path.exists(new_onnx_file))
 
-    def test_save_text(self):
-        this = os.path.dirname(__file__)
-        onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
-        onnx_model = load_model(onnx_file)
-        if StrictVersion(onnx.__version__) < StrictVersion('1.4.0'):
-           json_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.json")
-        else:
-            json_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing_Op9.json")
-        json_file_new = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing_new.json")
-        save_text(onnx_model, json_file_new)
-        try:
-            filecmp.clear_cache()
-        except AttributeError:
-            # Only available in Python 3
-            pass
-        content1 = self._parseEOL(json_file)
-        content2 = self._parseEOL(json_file_new)
-        self.assertTrue(content1 == content2,
-                        "Output file from save_text is different than reference output.")
-
     def test_model_setters(self):
         this = os.path.dirname(__file__)
         onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
