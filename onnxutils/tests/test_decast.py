@@ -2,7 +2,7 @@ import unittest
 
 from onnx import helper
 from onnx import onnx_pb as onnx_proto
-from onnxtk.decast import decast
+from onnxconverter-common.decast import decast
 
 
 class DecastTestCase(unittest.TestCase):

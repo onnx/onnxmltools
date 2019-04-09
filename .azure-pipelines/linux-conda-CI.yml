@@ -40,7 +40,7 @@ jobs:
       pip install -r requirements.txt
       cd onnxutils
       pip install -e .
-      echo Test onnxtk installation... && python -c "import onnxtk"
+      echo Test onnxconverter-common installation... && python -c "import onnxconverter-common"
       cd ..
       pip install -r requirements-dev.txt
       test '$(python.version)' != '2.7' && pip install onnxruntime==0.1.4

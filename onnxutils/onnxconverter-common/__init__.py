@@ -17,3 +17,13 @@ __domain__ = "onnxtk"
 __model_version__ = 0
 
 from .optimizer import optimize_onnx
+from .apply_operation import *
+from .container import *
+from .registration import *
+from .topology import *
+from .case_insensitive_dict import *
+from .data_types import *
+from .interface import *
+from .shape_calculator import *
+from .tree_ensemble import *
+from .utils import *

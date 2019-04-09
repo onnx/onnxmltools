@@ -5,7 +5,7 @@ import numpy as np
 import onnx
 from onnx import helper
 from onnx import onnx_pb as onnx_proto
-from onnxtk.optimizer import optimize_onnx, optimize_onnx_model
+from onnxconverter-common.optimizer import optimize_onnx, optimize_onnx_model
 
 working_path = os.path.abspath(os.path.dirname(__file__))
 tmp_path = os.path.join(working_path, 'temp')

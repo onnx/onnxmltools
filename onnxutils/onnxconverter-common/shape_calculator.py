@@ -9,7 +9,7 @@ Common functions to convert any learner based on trees.
 import numpy as np
 import numbers
 import six
-from ._registration import register_shape_calculator
+from .registration import register_shape_calculator
 from .data_types import Int64TensorType, FloatTensorType, StringTensorType, DictionaryType, SequenceType
 from .utils import check_input_and_output_numbers, check_input_and_output_types
 
@@ -77,4 +77,3 @@ def calculate_linear_regressor_output_shapes(operator):
     else:
         nout = 1
     operator.outputs[0].type = FloatTensorType([N, nout])
-

@@ -47,7 +47,7 @@ jobs:
       pip install %COREML_PATH% %ONNX_PATH%
       cd onnxutils
       pip install -e .
-      echo Test onnxtk installation... && python -c "import onnxtk"
+      echo Test onnxconverter-common installation... && python -c "import onnxconverter-common"
       cd ..
       pip install -r requirements-dev.txt
       echo Test onnxruntime installation... && python -c "import onnxruntime"
