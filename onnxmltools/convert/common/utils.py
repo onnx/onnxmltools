@@ -4,5 +4,5 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common.utils import _check_has_attr
-from onnxtk.common.utils import *
+from onnxconverter_common.utils import _check_has_attr
+from onnxconverter_common.utils import *

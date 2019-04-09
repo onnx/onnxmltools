@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common.topology import *
+from onnxconverter_common.topology import *
