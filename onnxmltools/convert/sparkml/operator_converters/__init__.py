@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 # To register converter for sparkml operators, import associated modules here.
+from . import word2vec
 from . import index_to_string
 from . import chi_sq_selector
 from . import one_vs_rest

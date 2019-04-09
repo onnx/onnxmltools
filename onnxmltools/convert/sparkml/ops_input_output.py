@@ -11,6 +11,10 @@ def build_io_name_map():
     Each lambda gets the corresponding input or output column name from the model
     '''
     map = {
+        "pyspark.ml.feature.Word2VecModel": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
         "pyspark.ml.feature.IndexToString": (
             lambda model: [model.getOrDefault("inputCol")],
             lambda model: [model.getOrDefault("outputCol")]
@@ -142,7 +146,9 @@ def build_io_name_map():
     }
     return map
 
+
 io_name_map = build_io_name_map()
+
 
 def get_input_names(model):
     '''
