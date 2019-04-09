@@ -66,7 +66,7 @@ def save_text(model, file_path):
     ::
 
         from onnxmltools.utils import save_text
-        save_text(onnx_model,"SqueezeNet.json")
+        save_text(onnx_model,"SqueezeNet.txt")
     """
     if model is None or not isinstance(model, onnx_proto.ModelProto):
         raise ValueError("Model is not a valid ONNX model.")

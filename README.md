@@ -5,7 +5,7 @@
 |-------|---------|
 | [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-win32-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)|
 
-# Introduction 
+# Introduction
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
 * Apple Core ML
 * scikit-learn (subset of models convertible to ONNX)
@@ -26,7 +26,7 @@ or install from source:
 ```
 pip install git+https://github.com/onnx/onnxmltools
 ```
-If you choose to install `onnxmltools` from its source code, you must set the environment variable `ONNX_ML=1` before installing the `onnx` package. 
+If you choose to install `onnxmltools` from its source code, you must set the environment variable `ONNX_ML=1` before installing the `onnx` package.
 
 ## Dependencies
 This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, or LightGBM, you will need an environment with the respective package installed from the list below:
@@ -39,7 +39,7 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 7. libsvm
 
 # Examples
-If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
+If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions).
 
 ## CoreML to ONNX Conversion
 Here is a simple code snippet to convert a Core ML model into an ONNX model.
@@ -55,7 +55,7 @@ coreml_model = coremltools.utils.load_spec('example.mlmodel')
 onnx_model = onnxmltools.convert_coreml(coreml_model, 'Example Model')
 
 # Save as text
-onnxmltools.utils.save_text(onnx_model, 'example.json')
+onnxmltools.utils.save_text(onnx_model, 'example.txt')
 
 # Save as protobuf
 onnxmltools.utils.save_model(onnx_model, 'example.onnx')
@@ -91,7 +91,7 @@ sub_sum = Add()([mapped1_2, mapped2_2])
 keras_model = Model(inputs=[input1, input2], output=sub_sum)
 
 # Convert it! The target_opset parameter is optional.
-onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7) 
+onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7)
 ```
 
 ## Spark ML to ONNX Conversion
@@ -103,7 +103,7 @@ Please refer to the following documents:
 
 *onnxmltools* converts models into the ONNX format which
 can be then used to compute predictions with the
-backend of your choice. 
+backend of your choice.
 
 ## Checking the operator set version of your converted ONNX model
 
@@ -115,9 +115,9 @@ opset_version = onnx_model.opset_import[0].version
 
 If the result from checking your ONNX model's opset is smaller than the `target_opset` number you specified in the onnxmltools.convert function, be assured that this is likely intended behavior. The ONNXMLTools converter works by converting each operator to the ONNX format individually and finding the corresponding opset version that it was most recently updated in. Once all of the operators are converted, the resultant ONNX model has the maximal opset version of all of its operators.
 
-To illustrate this concretely, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/master/docs/Operators.md#abs) was most recently updated in opset 6, and [Add](https://github.com/onnx/onnx/blob/master/docs/Operators.md#add) was most recently updated in opset 7. Therefore, the converted ONNX model's opset will always be 7, even if you request `target_opset=8`. The converter behavior was defined this way to ensure backwards compatibility. 
+To illustrate this concretely, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/master/docs/Operators.md#abs) was most recently updated in opset 6, and [Add](https://github.com/onnx/onnx/blob/master/docs/Operators.md#add) was most recently updated in opset 7. Therefore, the converted ONNX model's opset will always be 7, even if you request `target_opset=8`. The converter behavior was defined this way to ensure backwards compatibility.
 
-Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository. 
+Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository.
 
 ## Test all existing converters
 
