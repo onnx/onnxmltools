@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common._apply_operation import *
+from onnxtk.common.onnx_ops import *
