@@ -118,6 +118,10 @@ def convert_float_to_float16(model):
                     if n.op_type in op_black_list:
                         node_list.append(n)
                     else:
+                        if n.op_type == 'Cast':
+                            for attr in n.attribute:
+                                if attr.name == 'to' and attr.i == 1:
+                                    attr.i = 10
                         next_level.append(n.attribute)
             # if q is model.graph.node.attribute, push q.g and q.graphs (GraphProto)
             if isinstance(q, onnx_proto.AttributeProto):
@@ -142,7 +146,7 @@ def convert_float_to_float16(model):
 
     # process the nodes in black list that doesn't support tensor(float16)
     for node in node_list:
-        # if input's name is in the value_info_list meaning input is tensor(float16) type, insert a Cast node
+        # if input's name is in the value_info_list meaning input is tensor(float16) type, insert a float16 to float Cast node
         # before the node, change current node's input name and create new value_info for the new name
         for i in range(len(node.input)):
             input = node.input[i]
@@ -162,8 +166,8 @@ def convert_float_to_float16(model):
                     node.input[i] = input + '_casted'
                     domain_flag = 1
                     continue
-        # if output's name is in the value_info_list meaning output is tensor(float16) type, insert a float16 to
-        # float Cast node after the node, change current node's output name and create new value_info for the new name
+        # if output's name is in the value_info_list meaning output is tensor(float16) type, insert a float to
+        # float16 Cast node after the node, change current node's output name and create new value_info for the new name
         for i in range(len(node.output)):
             output = node.output[i]
             for value_info in value_info_list:
