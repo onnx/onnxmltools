@@ -152,7 +152,7 @@ class DictionaryType(DataType):
             msg = msg.format(str(self), str(self.value_type.to_onnx_type()))
             info = [onnx.__version__, str(onnx_type)]
             msg += "\n".join(info)
-            raise RuntimeError(msg) from e
+            raise RuntimeError(msg)
         return onnx_type
 
     def __repr__(self):
@@ -177,7 +177,7 @@ class SequenceType(DataType):
             msg = msg.format(str(self), str(self.element_type.to_onnx_type()))
             info = [onnx.__version__, str(onnx_type)]
             msg += "\n".join(info)
-            raise RuntimeError(msg) from e
+            raise RuntimeError(msg)
         return onnx_type
 
     def __repr__(self):

@@ -12,8 +12,8 @@ import onnx
 from onnx import onnx_pb as onnx_proto
 from onnx import helper
 from ..metadata_props import add_metadata_props
-from . import _registration
-from . import utils
+import ._registration
+import .utils
 from .data_types import *
 from ._container import ModelComponentContainer
 from ..optimizer import optimize_onnx
