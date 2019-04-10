@@ -20,7 +20,7 @@ assert packages
 
 # read version from the package file.
 version_str = '1.0.0'
-with (open(os.path.join(this, 'onnxconverter-common/__init__.py'), "r")) as f:
+with (open(os.path.join(this, 'onnxconverter_common/__init__.py'), "r")) as f:
     line = [_ for _ in [_.strip("\r\n ")
                         for _ in f.readlines()] if _.startswith("__version__")]
     if len(line) > 0:
