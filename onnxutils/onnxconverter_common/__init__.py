@@ -17,7 +17,7 @@ __domain__ = "onnxconverter-common"
 __model_version__ = 0
 
 from .optimizer import optimize_onnx
-from .apply_operation import *
+from .onnx_ops import *
 from .container import *
 from .registration import *
 from .topology import *

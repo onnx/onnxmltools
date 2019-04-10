@@ -1,5 +1,5 @@
 import warnings
-from .common.case_insensitive_dict import CaseInsensitiveDict
+from .case_insensitive_dict import CaseInsensitiveDict
 import onnx
 from onnx import onnx_pb as onnx_proto
 
