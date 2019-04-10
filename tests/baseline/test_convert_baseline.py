@@ -4,10 +4,7 @@ Tests converters for a baseline.
 import os
 import re
 import unittest
-
 from onnxmltools.convert import convert_coreml
-from onnxmltools.utils import save_text
-
 import coremltools
 
 
@@ -26,7 +23,8 @@ class TestBaseLine(unittest.TestCase):
         output_file = os.path.join(this, "outmodels", ref_file)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        save_text(onnx_model, output_file)
+        with open(output_file, 'w') as f:
+            f.write(str(onnx_model))
         reference_model = os.path.join(this, "models", ref_file)
         with open(reference_model, 'r') as ref_file:
             with open(output_file, 'r') as output_file:
