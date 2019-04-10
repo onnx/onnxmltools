@@ -6,7 +6,7 @@ import re
 import unittest
 
 from onnxmltools.convert import convert_coreml
-from onnxmltools.utils import save_text
+from onnxmltools.utils import save_model
 
 import coremltools
 
@@ -26,7 +26,7 @@ class TestBaseLine(unittest.TestCase):
         output_file = os.path.join(this, "outmodels", ref_file)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        save_text(onnx_model, output_file)
+        save_model(onnx_model, output_file)
         reference_model = os.path.join(this, "models", ref_file)
         with open(reference_model, 'r') as ref_file:
             with open(output_file, 'r') as output_file:

@@ -27,4 +27,3 @@ from .convert import convert_sparkml
 
 from .utils import load_model
 from .utils import save_model
-from .utils import save_text
