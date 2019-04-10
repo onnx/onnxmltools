@@ -72,7 +72,7 @@ def calculate_word2vec_output_shapes(operator):
     if N != 1:
         raise SparkMlConversionError('Word2Vec converter cannot handle batch size of more than 1')
     C = operator.raw_operator.getOrDefault('vectorSize')
-    operator.outputs[0].type = FloatTensorType([5, C])
+    operator.outputs[0].type = FloatTensorType([N, C])
 
 
 register_shape_calculator('pyspark.ml.feature.Word2VecModel', calculate_word2vec_output_shapes)
