@@ -9,7 +9,7 @@ import numpy as np
 
 from onnxmltools.proto import onnx, onnx_proto, helper, get_opset_number_from_onnx
 from onnxmltools.convert.common.optimizer import optimize_onnx
-from onnxmltools.utils import load_model, save_model, save_text
+from onnxmltools.utils import load_model, save_model
 from onnxmltools.utils import set_denotation, set_model_version, set_model_domain, set_model_doc_string
 from onnxmltools.utils.utils_backend import evaluate_condition, is_backend_enabled
 
