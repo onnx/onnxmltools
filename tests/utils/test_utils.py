@@ -9,7 +9,7 @@ import numpy as np
 
 from onnxmltools.proto import onnx, onnx_proto, helper, get_opset_number_from_onnx
 from onnxmltools.convert.common.optimizer import optimize_onnx
-from onnxmltools.utils import load_model, save_model, save_text
+from onnxmltools.utils import load_model, save_model
 from onnxmltools.utils import set_denotation, set_model_version, set_model_domain, set_model_doc_string
 from onnxmltools.utils.utils_backend import evaluate_condition, is_backend_enabled
 
@@ -36,26 +36,6 @@ class TestUtils(unittest.TestCase):
 
         save_model(onnx_model, new_onnx_file)
         self.assertTrue(os.path.exists(new_onnx_file))
-
-    def test_save_text(self):
-        this = os.path.dirname(__file__)
-        onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
-        onnx_model = load_model(onnx_file)
-        if StrictVersion(onnx.__version__) < StrictVersion('1.4.0'):
-           json_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.json")
-        else:
-            json_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing_Op9.json")
-        json_file_new = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing_new.json")
-        save_text(onnx_model, json_file_new)
-        try:
-            filecmp.clear_cache()
-        except AttributeError:
-            # Only available in Python 3
-            pass
-        content1 = self._parseEOL(json_file)
-        content2 = self._parseEOL(json_file_new)
-        self.assertTrue(content1 == content2,
-                        "Output file from save_text is different than reference output.")
 
     def test_model_setters(self):
         this = os.path.dirname(__file__)
