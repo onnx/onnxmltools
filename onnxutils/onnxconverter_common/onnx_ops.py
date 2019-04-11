@@ -247,12 +247,13 @@ def apply_elu(scope, input_name, output_name, container, operator_name=None, alp
 def apply_exp(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Exp', input_name, output_name, container, operator_name=operator_name)
 
-def apply_gemm(scope, input_name, output_name, container, operator_name=None,
-               **attrs):
+def apply_gemm(scope, input_name, output_name, container, operator_name=None, alpha=1.0, beta=1.0,
+               transA=0, transB=0):
     """
-    Applies operator
-    `gemm <https://github.com/onnx/onnx/blob/master/docs/Operators.md#gemm>`_.
+    Applies operator `gemm <https://github.com/onnx/onnx/blob/master/docs/Operators.md#gemm>`.
     """
+    name = _create_name_or_use_existing_one(scope, 'Gemm', operator_name)
+    attrs = {'alpha': alpha, 'beta': beta, 'transA': transA, 'transB': transB}
     if container.target_opset < 5:
         attrs['op_version'] = 1
         attrs['broadcast'] = 1
@@ -262,8 +263,7 @@ def apply_gemm(scope, input_name, output_name, container, operator_name=None,
     else:
         attrs['op_version'] = 7
 
-    container.add_node('Gemm', input_name, output_name,
-            name=(operator_name or scope.get_unique_operator_name('Gemm')), **attrs)
+    container.add_node('Gemm', input_name, output_name, name=name, **attrs)
 
 def apply_hard_sigmoid(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
     _apply_unary_operation(scope, 'HardSigmoid', input_name, output_name, container, operator_name,
@@ -542,21 +542,15 @@ def apply_tile(scope, input_name, output_name, container, operator_name=None, re
         container.add_initializer(repeat_tensor_name, onnx_proto.TensorProto.INT64, [len(repeats)], repeats)
         container.add_node('Tile', [input_name, repeat_tensor_name], output_name, op_version=7, name=name)
 
-def apply_topk(scope, input_name, output_names, container, k,
-               operator_name=None):
+def apply_topk(scope, input_name, output_names, container, k, operator_name=None):
     name = _create_name_or_use_existing_one(scope, 'TopK', operator_name)
 
     if container.target_opset < 10:
-        container.add_node('TopK', input_name, output_names,
-                           name=name, k=k, op_version=1)
+        container.add_node('TopK', input_name, output_names, name=name, k=k, op_version=1)
     else:
         k_value_name = scope.get_unique_variable_name('k_value')
-
-        container.add_initializer(k_value_name, onnx_proto.TensorProto.INT64,
-                                  [1], [k])
-
-        container.add_node('TopK', [input_name, k_value_name],
-                           output_names, name=name, op_version=10)
+        container.add_initializer(k_value_name, onnx_proto.TensorProto.INT64, [1], [k])
+        container.add_node('TopK', [input_name, k_value_name], output_names, name=name, op_version=10)
 
 def apply_transpose(scope, input_name, output_name, container, operator_name=None, perm=None):
     name = _create_name_or_use_existing_one(scope, 'Transpose', operator_name)
