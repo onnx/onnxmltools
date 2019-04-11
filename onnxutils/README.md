@@ -1,6 +1,5 @@
 # Introduction
-The onnxconverter-common package enables users to check and optimize [ONNX](https://onnx.ai) models for an ONNX inference engine.
-It also provides core utilities for use in converters from various frameworks to ONNX.
+The onnxconverter-common package provides some common functions and utilities for use in converters from various frameworks to ONNX. And it also enables the different converter work together to convert the model from the mixed frameworks, like a scikit-learn pipeline embedding a xgboost model.
 
 
 # License
