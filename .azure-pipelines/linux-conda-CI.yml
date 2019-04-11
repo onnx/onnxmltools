@@ -40,7 +40,6 @@ jobs:
       pip install -r requirements.txt
       cd onnxutils
       pip install -e .
-      echo Test onnxconverter-common installation... && python -c "import onnxconverter_common"
       cd ..
       pip install -r requirements-dev.txt
       test '$(python.version)' != '2.7' && pip install onnxruntime==0.3.0
@@ -53,7 +52,7 @@ jobs:
   - script: |
       export PYTHONPATH=$PYTHONPATH:libsvm/python
       python -c "import svmutil"
-      python -c "import onnxtk"
+      python -c "import onnxconverter_common"
       test '$(python.version)' != '2.7' && python -c "import onnxruntime"
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest'
