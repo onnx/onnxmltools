@@ -4,13 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 
-# This dictionary defines the converters which can be invoked in the conversion framework defined in _topology.py. A key
+# This dictionary defines the converters which can be invoked in the conversion framework defined in topology.py. A key
 # in this dictionary is an operator's unique ID (e.g., string and type) while the associated value is the callable
 # object used to convert the operator specified by the key.
 _converter_pool = {}
 
 # This dictionary defines the shape calculators which can be invoked in the conversion framework defined in
-# _topology.py. A key in this dictionary is an operator's unique ID (e.g., string and type) while the associated value
+# topology.py. A key in this dictionary is an operator's unique ID (e.g., string and type) while the associated value
 # is the callable object used to infer the output shape(s) for the operator specified by the key.
 _shape_calculator_pool = {}
 
@@ -29,7 +29,7 @@ def register_converter(operator_name, conversion_function, overwrite=False):
 
 def get_converter(operator_name):
     '''
-    Given an Operator object (named operator) defined in _topology.py, we can retrieve its conversion function.
+    Given an Operator object (named operator) defined in topology.py, we can retrieve its conversion function.
     >>> from onnxmltools.convert.common._topology import Operator
     >>> operator = Operator('dummy_name', 'dummy_scope', 'dummy_operator_type', None)
     >>> get_converter(operator.type)  # Use 'dummy_operator_type' for dictionary looking-up
@@ -56,7 +56,7 @@ def register_shape_calculator(operator_name, calculator_function, overwrite=Fals
 
 def get_shape_calculator(operator_name):
     '''
-    Given an Operator object (named operator) defined in _topology.py, we can retrieve its shape calculation function.
+    Given an Operator object (named operator) defined in topology.py, we can retrieve its shape calculation function.
     >>> from onnxmltools.convert.common._topology import Operator
     >>> operator = Operator('dummy_name', 'dummy_scope', 'dummy_operator_type', None)
     >>> get_shape_calculator(operator.type)  # Use 'dummy_operator_type' for dictionary looking-up
