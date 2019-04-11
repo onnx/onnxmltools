@@ -196,7 +196,7 @@ def is_string_type(item):
     return isinstance(item, types)
 
 
-def _check_has_attr(obj, attribute):
+def check_has_attr(obj, attribute):
     if not hasattr(obj, attribute):
         raise AttributeError(attribute)
 
