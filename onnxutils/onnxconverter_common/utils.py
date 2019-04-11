@@ -194,12 +194,7 @@ def is_string_type(item):
     if isinstance(item, np.ndarray):
         return np.issubdtype(item.dtype, np.str_)
     return isinstance(item, types)
-
-
-def check_has_attr(obj, attribute):
-    if not hasattr(obj, attribute):
-        raise AttributeError(attribute)
-
+    
 
 def cast_list(type, items):
     return [type(item) for item in items]

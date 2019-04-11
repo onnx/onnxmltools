@@ -6,7 +6,7 @@
 
 from ....proto import onnx_proto
 from ...common._registration import register_converter
-from ...common.utils import check_has_attr, cast_list
+from ...common.utils import cast_list
 
 import svm
 import svmutil
@@ -20,16 +20,16 @@ class SVMConverter:
     @staticmethod
     def validate(svm_node):
         try:
-            check_has_attr(svm_node, 'param')
-            check_has_attr(svm_node, 'SV')
-            check_has_attr(svm_node, 'nSV')
-            check_has_attr(svm_node, 'sv_coef')
-            check_has_attr(svm_node, 'l')
-            check_has_attr(svm_node.param, 'gamma')
-            check_has_attr(svm_node.param, 'coef0')
-            check_has_attr(svm_node.param, 'degree')
-            check_has_attr(svm_node.param, 'kernel_type')
-            check_has_attr(svm_node, 'rho')
+            has_attr(svm_node, 'param')
+            has_attr(svm_node, 'SV')
+            has_attr(svm_node, 'nSV')
+            has_attr(svm_node, 'sv_coef')
+            has_attr(svm_node, 'l')
+            has_attr(svm_node.param, 'gamma')
+            has_attr(svm_node.param, 'coef0')
+            has_attr(svm_node.param, 'degree')
+            has_attr(svm_node.param, 'kernel_type')
+            has_attr(svm_node, 'rho')
         except AttributeError as e:
             raise RuntimeError("Missing type from svm node:" + str(e))
 
@@ -106,8 +106,8 @@ class SVCConverter(SVMConverter):
     def validate(svm_node):
         SVMConverter.validate(svm_node)
         try:
-            check_has_attr(svm_node, 'probA')
-            check_has_attr(svm_node, 'probB')
+            has_attr(svm_node, 'probA')
+            has_attr(svm_node, 'probB')
         except AttributeError as e:
             raise RuntimeError("Missing type from svm node:" + str(e))
 
@@ -170,7 +170,7 @@ class SVRConverter(SVMConverter):
     def validate(svm_node):
         SVMConverter.validate(svm_node)
         try:
-            check_has_attr(svm_node, 'l')
+            has_attr(svm_node, 'l')
         except AttributeError as e:
             raise RuntimeError("Missing type from svm node:" + str(e))
 
