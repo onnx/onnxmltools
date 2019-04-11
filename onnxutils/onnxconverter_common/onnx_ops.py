@@ -247,6 +247,24 @@ def apply_elu(scope, input_name, output_name, container, operator_name=None, alp
 def apply_exp(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Exp', input_name, output_name, container, operator_name=operator_name)
 
+def apply_gemm(scope, input_name, output_name, container, operator_name=None,
+               **attrs):
+    """
+    Applies operator
+    `gemm <https://github.com/onnx/onnx/blob/master/docs/Operators.md#gemm>`_.
+    """
+    if container.target_opset < 5:
+        attrs['op_version'] = 1
+        attrs['broadcast'] = 1
+    elif container.target_opset < 7:
+        attrs['op_version'] = 6
+        attrs['broadcast'] = 1
+    else:
+        attrs['op_version'] = 7
+
+    container.add_node('Gemm', input_name, output_name,
+            name=(operator_name or scope.get_unique_operator_name('Gemm')), **attrs)
+
 def apply_hard_sigmoid(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
     _apply_unary_operation(scope, 'HardSigmoid', input_name, output_name, container, operator_name,
                            alpha=alpha, beta=beta)
@@ -307,6 +325,49 @@ def apply_pad(scope, input_name, output_name, container, operator_name=None, mod
 
     container.add_node('Pad', input_name, output_name, op_version=op_version, **attrs)
 
+def apply_parametric_softplus(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
+    if alpha == None:
+        alpha = [1.0]
+    if beta == None:
+        beta = [0.]
+
+    name = _create_name_or_use_existing_one(scope, 'ParametricSoftplus', operator_name)
+    if container.target_opset < 9:
+        if len(alpha) != 1 or len(beta) != 1:
+            raise ValueError('alpha and beta must be 1-element lists')
+        op_type = 'ParametricSoftplus'
+        attrs = {'name': name, 'alpha': alpha[0], 'beta': beta[0]}
+        container.add_node(op_type, input_name, output_name, **attrs)
+    else:
+        # Define three scalars: a, b, 1.
+        aName = scope.get_unique_variable_name(name + '_alpha')
+        aShape = [len(alpha)] if len(alpha) == 1 else [len(alpha), 1, 1]
+        container.add_initializer(aName, onnx_proto.TensorProto.FLOAT, aShape, alpha)
+        bShape = [len(beta)] if len(beta) == 1 else [len(beta), 1, 1]
+        bName = scope.get_unique_variable_name(name + '_beta')
+        container.add_initializer(bName, onnx_proto.TensorProto.FLOAT, bShape, beta)
+        oneName = scope.get_unique_variable_name(name + '_one')
+        container.add_initializer(oneName, onnx_proto.TensorProto.FLOAT, [1], [1.])
+
+        # c = b * x
+        cName = scope.get_unique_variable_name(name + '_c')
+        apply_mul(scope, [input_name, bName], cName, container)
+
+        # d = exp(c)
+        dName = scope.get_unique_variable_name(name + '_d')
+        apply_exp(scope, cName, dName, container)
+
+        # e = 1 + d
+        eName = scope.get_unique_variable_name(name + '_e')
+        apply_add(scope, [dName, oneName], eName, container)
+
+        # f = log(e)
+        fName = scope.get_unique_variable_name(name + '_f')
+        apply_log(scope, eName, fName, container)
+
+        # g = a * f
+        apply_mul(scope, [fName, aName], output_name, container)
+
 def apply_pow(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
     name = _create_name_or_use_existing_one(scope, 'Pow', operator_name)
 
@@ -352,21 +413,26 @@ def apply_relu(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Relu', input_name, output_name, container, operator_name)
 
 def apply_reshape(scope, input_name, output_name, container, operator_name=None, desired_shape=None):
-    if len(list(i for i in desired_shape if i is not None and i < 0)) > 1:
-        raise ValueError('There can only be one -1 in the targeted shape of a Reshape but got %s' % desired_shape)
 
     name = _create_name_or_use_existing_one(scope, 'Reshape', operator_name)
 
     if container.target_opset < 7:
-        container.add_node('Reshape', input_name, output_name, op_version=1, name=name, shape=desired_shape,
-                           consumed_inputs=[0])
-    else:
-        # The shape attribute of Reshape becomes a tensor input, so we create one tensor to store that attribute.
+        if len(list(i for i in desired_shape if i < 0)) > 1:
+            raise ValueError('There can only be one -1 in the targeted shape '
+                             'of a Reshape but got %s' % desired_shape)
+        container.add_node('Reshape', input_name, output_name, op_version=1,
+                           name=name, shape=desired_shape, consumed_inputs=[0])
+    elif desired_shape:
+        # The shape attribute of Reshape becomes a tensor input, so we
+        # create one tensor to store that attribute.
         desired_shape_name = scope.get_unique_variable_name('shape_tensor')
-        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64, [len(desired_shape)], desired_shape)
+        container.add_initializer(desired_shape_name, onnx_proto.TensorProto.INT64,
+                                  [len(desired_shape)], desired_shape)
 
         # Create ONNX Reshape operator
         container.add_node('Reshape', [input_name, desired_shape_name], output_name, op_version=5, name=name)
+    else:
+        container.add_node('Reshape', input_name, output_name, name=name)
 
 def apply_sigmoid(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Sigmoid', input_name, output_name, container, operator_name)
@@ -377,50 +443,6 @@ def apply_selu(scope, input_name, output_name, container, operator_name=None, al
 def apply_softmax(scope, input_name, output_name, container, operator_name=None, axis=1):
     name = _create_name_or_use_existing_one(scope, 'Softmax', operator_name)
     container.add_node('Softmax', input_name, output_name, name=name, axis=axis)
-
-def apply_parametric_softplus(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
-    if alpha == None:
-        alpha = [1.0]
-    if beta == None:
-        beta = [0.]
-
-    name = _create_name_or_use_existing_one(scope, 'ParametricSoftplus', operator_name)
-    if container.target_opset < 9:
-        if len(alpha) != 1 or len(beta) != 1:
-            raise ValueError('alpha and beta must be 1-element lists')
-        op_type = 'ParametricSoftplus'
-        attrs = {'name': name, 'alpha': alpha[0], 'beta': beta[0]}
-        container.add_node(op_type, input_name, output_name, **attrs)
-    else:
-        # Define three scalars: a, b, 1.
-        aName = scope.get_unique_variable_name(name + '_alpha')
-        aShape = [len(alpha)] if len(alpha) == 1 else [len(alpha), 1, 1]
-        container.add_initializer(aName, onnx_proto.TensorProto.FLOAT, aShape, alpha)
-        bShape = [len(beta)] if len(beta) == 1 else [len(beta), 1, 1]
-        bName = scope.get_unique_variable_name(name + '_beta')
-        container.add_initializer(bName, onnx_proto.TensorProto.FLOAT, bShape, beta)
-        oneName = scope.get_unique_variable_name(name + '_one')
-        container.add_initializer(oneName, onnx_proto.TensorProto.FLOAT, [1], [1.])
-
-        # c = b * x
-        cName = scope.get_unique_variable_name(name + '_c')
-        apply_mul(scope, [input_name, bName], cName, container)
-
-        # d = exp(c)
-        dName = scope.get_unique_variable_name(name + '_d')
-        apply_exp(scope, cName, dName, container)
-
-        # e = 1 + d
-        eName = scope.get_unique_variable_name(name + '_e')
-        apply_add(scope, [dName, oneName], eName, container)
-
-        # f = log(e)
-        fName = scope.get_unique_variable_name(name + '_f')
-        apply_log(scope, eName, fName, container)
-
-        # g = a * f
-        apply_mul(scope, [fName, aName], output_name, container)
-
 
 def apply_scaled_tanh(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
     if alpha == None:
@@ -524,6 +546,22 @@ def apply_tile(scope, input_name, output_name, container, operator_name=None, re
         repeat_tensor_name = scope.get_unique_variable_name(name + '_repeats')
         container.add_initializer(repeat_tensor_name, onnx_proto.TensorProto.INT64, [len(repeats)], repeats)
         container.add_node('Tile', [input_name, repeat_tensor_name], output_name, op_version=7, name=name)
+
+def apply_topk(scope, input_name, output_names, container, k,
+               operator_name=None):
+    name = _create_name_or_use_existing_one(scope, 'TopK', operator_name)
+
+    if container.target_opset < 10:
+        container.add_node('TopK', input_name, output_names,
+                           name=name, k=k, op_version=1)
+    else:
+        k_value_name = scope.get_unique_variable_name('k_value')
+
+        container.add_initializer(k_value_name, onnx_proto.TensorProto.INT64,
+                                  [1], [k])
+
+        container.add_node('TopK', [input_name, k_value_name],
+                           output_names, name=name, op_version=10)
 
 def apply_transpose(scope, input_name, output_name, container, operator_name=None, perm=None):
     name = _create_name_or_use_existing_one(scope, 'Transpose', operator_name)
