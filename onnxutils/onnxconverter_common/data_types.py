@@ -127,6 +127,7 @@ class BooleanTensorType(TensorType):
     def __repr__(self):
         return "BooleanTensorType(shape={0})".format(self.shape)
 
+
 class FloatTensorType(TensorType):
     def __init__(self, shape=None, color_space=None, doc_string='',
                  denotation=None, channel_denotations=None):
@@ -139,6 +140,15 @@ class FloatTensorType(TensorType):
 
     def __repr__(self):
         return "FloatTensorType(shape={0})".format(self.shape)
+
+
+class DoubleTensorType(TensorType):
+    def __init__(self, shape=None, color_space=None, doc_string=''):
+        super(DoubleTensorType, self).__init__(shape, doc_string)
+        self.color_space = color_space
+
+    def _get_element_onnx_type(self):
+        return onnx_proto.TensorProto.DOUBLE
 
 
 class StringTensorType(TensorType):
