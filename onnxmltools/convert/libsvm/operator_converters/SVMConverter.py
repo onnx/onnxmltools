@@ -20,16 +20,16 @@ class SVMConverter:
     @staticmethod
     def validate(svm_node):
         try:
-            has_attr(svm_node, 'param')
-            has_attr(svm_node, 'SV')
-            has_attr(svm_node, 'nSV')
-            has_attr(svm_node, 'sv_coef')
-            has_attr(svm_node, 'l')
-            has_attr(svm_node.param, 'gamma')
-            has_attr(svm_node.param, 'coef0')
-            has_attr(svm_node.param, 'degree')
-            has_attr(svm_node.param, 'kernel_type')
-            has_attr(svm_node, 'rho')
+            hasattr(svm_node, 'param')
+            hasattr(svm_node, 'SV')
+            hasattr(svm_node, 'nSV')
+            hasattr(svm_node, 'sv_coef')
+            hasattr(svm_node, 'l')
+            hasattr(svm_node.param, 'gamma')
+            hasattr(svm_node.param, 'coef0')
+            hasattr(svm_node.param, 'degree')
+            hasattr(svm_node.param, 'kernel_type')
+            hasattr(svm_node, 'rho')
         except AttributeError as e:
             raise RuntimeError("Missing type from svm node:" + str(e))
 
@@ -106,8 +106,8 @@ class SVCConverter(SVMConverter):
     def validate(svm_node):
         SVMConverter.validate(svm_node)
         try:
-            has_attr(svm_node, 'probA')
-            has_attr(svm_node, 'probB')
+            hasattr(svm_node, 'probA')
+            hasattr(svm_node, 'probB')
         except AttributeError as e:
             raise RuntimeError("Missing type from svm node:" + str(e))
 
@@ -170,7 +170,7 @@ class SVRConverter(SVMConverter):
     def validate(svm_node):
         SVMConverter.validate(svm_node)
         try:
-            has_attr(svm_node, 'l')
+            hasattr(svm_node, 'l')
         except AttributeError as e:
             raise RuntimeError("Missing type from svm node:" + str(e))
 
