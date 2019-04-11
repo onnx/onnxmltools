@@ -95,6 +95,17 @@ class TensorType(DataType):
         return onnx_type
 
 
+class Int32TensorType(TensorType):
+    def __init__(self, shape=None, doc_string=''):
+        super(Int32TensorType, self).__init__(shape, doc_string)
+
+    def _get_element_onnx_type(self):
+        return onnx_proto.TensorProto.INT32
+
+    def __repr__(self):
+        return "Int32TensorType(shape={0})".format(self.shape)
+
+
 class Int64TensorType(TensorType):
     def __init__(self, shape=None, doc_string=''):
         super(Int64TensorType, self).__init__(shape, doc_string)
@@ -105,6 +116,16 @@ class Int64TensorType(TensorType):
     def __repr__(self):
         return "Int64TensorType(shape={0})".format(self.shape)
 
+
+class BooleanTensorType(TensorType):
+    def __init__(self, shape=None, doc_string=''):
+        super(BooleanTensorType, self).__init__(shape, doc_string)
+
+    def _get_element_onnx_type(self):
+        return onnx_proto.TensorProto.BOOL
+
+    def __repr__(self):
+        return "BooleanTensorType(shape={0})".format(self.shape)
 
 class FloatTensorType(TensorType):
     def __init__(self, shape=None, color_space=None, doc_string='',
