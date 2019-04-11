@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-# ONNXMLTools common code has been refactored into onnxtk.
+# ONNXMLTools common code has been refactored into onnxconverter-common.

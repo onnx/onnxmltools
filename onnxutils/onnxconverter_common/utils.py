@@ -145,7 +145,7 @@ def get_producer():
     """
     Internal helper function to return the producer
     """
-    from .. import __producer__
+    from . import __producer__
     return __producer__
 
 
@@ -153,7 +153,7 @@ def get_producer_version():
     """
     Internal helper function to return the producer version
     """
-    from .. import __producer_version__
+    from . import __producer_version__
     return __producer_version__
 
 
@@ -161,7 +161,7 @@ def get_domain():
     """
     Internal helper function to return the model domain
     """
-    from .. import __domain__
+    from . import __domain__
     return __domain__
 
 
@@ -169,7 +169,7 @@ def get_model_version():
     """
     Internal helper function to return the model version
     """
-    from .. import __model_version__
+    from . import __model_version__
     return __model_version__
 
 
@@ -194,12 +194,7 @@ def is_string_type(item):
     if isinstance(item, np.ndarray):
         return np.issubdtype(item.dtype, np.str_)
     return isinstance(item, types)
-
-
-def _check_has_attr(obj, attribute):
-    if not hasattr(obj, attribute):
-        raise AttributeError(attribute)
-
+    
 
 def cast_list(type, items):
     return [type(item) for item in items]

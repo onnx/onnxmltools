@@ -11,12 +11,12 @@ from distutils.version import StrictVersion
 import onnx
 from onnx import onnx_pb as onnx_proto
 from onnx import helper
-from ..metadata_props import add_metadata_props
-from . import _registration
+from .metadata_props import add_metadata_props
+from . import registration
 from . import utils
 from .data_types import *
-from ._container import ModelComponentContainer
-from ..optimizer import optimize_onnx
+from .container import ModelComponentContainer
+from .optimizer import optimize_onnx
 from .interface import OperatorBase
 
 
@@ -106,7 +106,7 @@ class Operator(OperatorBase):
 
     def infer_types(self):
         # Invoke a core inference function
-        _registration.get_shape_calculator(self.type)(self)
+        registration.get_shape_calculator(self.type)(self)
 
 
 class Scope:
@@ -725,7 +725,7 @@ def convert_topology(topology, model_name, doc_string, target_opset, targeted_on
             topology.custom_conversion_functions[operator.type](scope, operator, container)
         else:
             # Convert the selected operator into some ONNX objects and save them into the container
-            _registration.get_converter(operator.type)(scope, operator, container)
+            registration.get_converter(operator.type)(scope, operator, container)
 
     # When calling ModelComponentContainer's add_initializer(...), nothing is added into the input list.
     # However, for ONNX target opset < 9, initializers should also be model's (GraphProto) inputs.

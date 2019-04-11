@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxtk.common.data_types import *
+from onnxconverter_common.data_types import *
