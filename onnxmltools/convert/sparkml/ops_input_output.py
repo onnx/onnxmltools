@@ -11,6 +11,14 @@ def build_io_name_map():
     Each lambda gets the corresponding input or output column name from the model
     '''
     map = {
+        "pyspark.ml.feature.ElementwiseProduct": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.feature.MinHashLSHModel": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
         "pyspark.ml.feature.Word2VecModel": (
             lambda model: [model.getOrDefault("inputCol")],
             lambda model: [model.getOrDefault("outputCol")]

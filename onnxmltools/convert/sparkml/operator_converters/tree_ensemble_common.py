@@ -33,7 +33,9 @@ def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
 def save_read_sparkml_model_data(spark, model):
     import tempfile
     import os
-    path = os.path.join(tempfile.tempdir, type(model).__name__)
+    import time
+    path = os.path.join(tempfile.tempdir, type(model).__name__ + "_" + str(time.time()))
+    print(path)
     model.write().overwrite().save(path)
     df = spark.read.parquet(os.path.join(path, 'data'))
     #df.show(100)
