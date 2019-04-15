@@ -23,7 +23,6 @@ def convert_sparkml_polynomial_expansion(scope, operator, container):
     transformed_columns = []
 
     for i, comb in enumerate(all_combinations):
-        print("%d : %s" % (i, str(comb)))
         if comb is None:
             pass
         else:

@@ -30,7 +30,6 @@ class TestSparkmMinHashLSH(SparkMlTestCase):
 
         # run the model
         predicted = model.transform(data.limit(1))
-        predicted.show(100, False)
         data_np = data.limit(1).toPandas().features.apply(
             lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         expected = [
