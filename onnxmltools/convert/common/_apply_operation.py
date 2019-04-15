@@ -253,6 +253,11 @@ def apply_elu(scope, input_name, output_name, container, operator_name=None, alp
 def apply_exp(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Exp', input_name, output_name, container, operator_name=operator_name)
 
+
+def apply_floor(scope, input_name, output_name, container, operator_name=None):
+    _apply_unary_operation(scope, 'Floor', input_name, output_name, container, operator_name=operator_name)
+
+
 def apply_hard_sigmoid(scope, input_name, output_name, container, operator_name=None, alpha=None, beta=None):
     _apply_unary_operation(scope, 'HardSigmoid', input_name, output_name, container, operator_name,
                            alpha=alpha, beta=beta)
