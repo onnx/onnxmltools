@@ -141,7 +141,7 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.LinearSVCModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), 'probability']
+            lambda model: [model.getOrDefault("predictionCol")]
         ),
         "pyspark.ml.classification.LogisticRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],
