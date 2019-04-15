@@ -8,7 +8,6 @@ from pyspark.ml.linalg import Vectors
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.convert.sparkml.operator_converters.tree_ensemble_common import save_read_sparkml_model_data
 from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 

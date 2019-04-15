@@ -9,9 +9,9 @@ from pyspark.ml.classification import GBTClassifier
 from pyspark.ml.linalg import Vectors
 
 from onnxmltools import convert_sparkml
-from onnxmltools.convert.common.data_types import StringTensorType, FloatTensorType
+from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
-from pyspark.ml.feature import StringIndexer, VectorIndexer
+from pyspark.ml.feature import StringIndexer
 
 
 class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
