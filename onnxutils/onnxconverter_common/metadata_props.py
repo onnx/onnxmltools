@@ -1,7 +1,7 @@
 import warnings
-from ..convert.common.case_insensitive_dict import CaseInsensitiveDict
-from ..proto import onnx, onnx_proto
-
+from .case_insensitive_dict import CaseInsensitiveDict
+import onnx
+from onnx import onnx_pb as onnx_proto
 
 KNOWN_METADATA_PROPS = CaseInsensitiveDict({
     'Image.BitmapPixelFormat': ['gray8', 'rgb8', 'bgr8', 'rgba8', 'bgra8'],

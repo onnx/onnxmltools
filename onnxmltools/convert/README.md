@@ -46,7 +46,7 @@ In `Topology`, we provide some functions for processing the whole graph. For exa
 
 There are two major functions a `Scope` may provide. First, it includes a naming mechanism for variables/operators so that all variable/operator names are unique. Note that variables' naming mechanism is independent from that of operators so that an operator and a variable can share the same name. Second, a `Scope` works like a container of operators and variables. Because two different `Scope` objects are essentially independent, we can use them in a recursive parsing algorithm to isolate components found at different stages.
 
-`Variable` and `Operator` are the smallest objects in a computational graph. To encode the topological dependencies between operators, each `Operator` object has an input list and an output list. The two lists are python lists of `Variable` objects. As you may expect, an operator computes its output(s) from its given input(s). The computationa is described in . One important attribute of a `Variable` object is its `type` field (i.e., a member variable in C++). Allowed `type` values such as `FloatTensorType` and `Int64TensorType` are defined in `onnxmltools.convert.common.data_types`. Shape information is also included in `type`. To access the shape of a variable, `x`, you can do `x.type.shape`, which returns a list of integers and strings. Note that the only allowed string is `'None'`, which stands for a variable-length coordinate.
+`Variable` and `Operator` are the smallest objects in a computational graph. To encode the topological dependencies between operators, each `Operator` object has an input list and an output list. The two lists are python lists of `Variable` objects. As you may expect, an operator computes its output(s) from its given input(s). One important attribute of a `Variable` object is its `type` field (i.e., a member variable in C++). Allowed `type` values such as `FloatTensorType` and `Int64TensorType` are defined in `onnxconverter_common.data_types`. Shape information is also included in `type`. To access the shape of a variable, `x`, you can do `x.type.shape`, which returns a list of integers and strings. Note that the only allowed string is `'None'`, which stands for a variable-length coordinate.
 
 ## Containers
 
@@ -100,7 +100,7 @@ To invoke converters in a topological order, call `convert_topology(...)` define
 
 ## Registration
 
-For each `Operator` type we want to support, one shape calculator and one converter function must be registrated. Detailed instructions can be found in `onnxmltools.convert.common._registration`.
+For each `Operator` type we want to support, one shape calculator and one converter function must be registrated. Detailed instructions can be found in `onnxconverter_common.registration`.
 
 ## A Typical Model Conversion Procedure
 

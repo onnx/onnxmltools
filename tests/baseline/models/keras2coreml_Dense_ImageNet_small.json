@@ -1,7 +1,7 @@
 ir_version: 3
 producer_name: "OnnxMLTools"
 producer_version: "0.1.0.0000"
-domain: "onnxml"
+domain: "onnxconverter-common"
 model_version: 0
 doc_string: ""
 graph {
@@ -162,4 +162,3 @@ opset_import {
   domain: ""
   version: 1
 }
-

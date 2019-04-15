@@ -17,7 +17,7 @@ At a high level, you can:
    for more details.
 3. Load and run the model using *ONNX Runtime*.
 
-In this tutorial, we will briefly create a 
+In this tutorial, we will briefly create a
 pipeline with *scikit-learn*, convert it into
 ONNX format and run the first predictions.
 
@@ -61,7 +61,7 @@ to convert other model formats into ONNX. Here we will use
 Step 3: Load and run the model using ONNX Runtime
 +++++++++++++++++++++++++++++++++++++++++++++++++
 
-We will use *ONNX Runtime* to compute the predictions 
+We will use *ONNX Runtime* to compute the predictions
 for this machine learning model.
 
 ::
@@ -69,5 +69,5 @@ for this machine learning model.
     import onnxruntime as rt
     sess = rt.InferenceSession("logreg_iris.onnx")
     input_name = sess.get_inputs()[0].name
-    
+
     pred_onx = sess.run([label_name], {input_name: X_test.astype(numpy.float32)})[0]

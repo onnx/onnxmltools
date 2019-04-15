@@ -6,6 +6,7 @@ from pyspark.sql.types import ArrayType, FloatType, DoubleType
 import numpy
 import pickle
 import os
+import warnings
 from onnxmltools.utils.utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
 
 def start_spark(options):

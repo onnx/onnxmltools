@@ -54,26 +54,6 @@ def save_model(model, file_path):
         f.write(model.SerializeToString())
 
 
-def save_text(model, file_path):
-    """
-    Save the ONNX model in text form.
-
-    :param model: ONNX model (object)
-    :param file_path: the path including file name to save the model
-
-    Example:
-
-    ::
-
-        from onnxmltools.utils import save_text
-        save_text(onnx_model,"SqueezeNet.json")
-    """
-    if model is None or not isinstance(model, onnx_proto.ModelProto):
-        raise ValueError("Model is not a valid ONNX model.")
-    with open(file_path, "w") as f:
-        f.write(str(model))
-
-
 def set_model_domain(model, domain):
     """
     Sets the domain on the ONNX model.

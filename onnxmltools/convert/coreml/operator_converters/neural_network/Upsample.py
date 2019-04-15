@@ -22,7 +22,7 @@ def convert_upsample(scope, operator, container):
     width_scale = float(params.scalingFactor[1])
     height_scale = float(params.scalingFactor[0])
 
-    apply_upsample(scope, operator.input_full_names, operator.output_full_names, container, operator_name=None,
+    apply_upsample(scope, operator.input_full_names[0], operator.output_full_names, container, operator_name=None,
                    mode=mode, scales=[1, 1, height_scale, width_scale])
 
 
