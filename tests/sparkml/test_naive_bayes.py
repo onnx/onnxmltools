@@ -36,6 +36,7 @@ class TestSparkmlNaiveBayes(SparkMlTestCase):
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlNaiveBayesBernoulli")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_naive_bayes_multinomial(self):
         data = self.spark.createDataFrame([
             Row(label=0.0, weight=0.1, features=Vectors.dense([0.0, 0.0])),
@@ -57,6 +58,7 @@ class TestSparkmlNaiveBayes(SparkMlTestCase):
             ]
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlNaiveBayesMultinomial")
+
 
 if __name__ == "__main__":
     unittest.main()
