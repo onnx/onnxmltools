@@ -1,3 +1,6 @@
+from distutils.version import StrictVersion
+
+import onnx
 import pandas
 import unittest
 import sys
@@ -10,6 +13,7 @@ from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 
 class TestSparkmlTokenizer(SparkMlTestCase):
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.5'), 'Need Greater Opset 10')
     def test_tokenizer(self):
         data = self.spark.createDataFrame([("a b c",)], ["text"])
         model = Tokenizer(inputCol='text', outputCol='words')

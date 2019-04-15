@@ -16,7 +16,7 @@ from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
 from pyspark.ml.feature import VectorIndexer, StringIndexer
 
 
-class TestSparkmTreeEnsembleRegressor(SparkMlTestCase):
+class TestSparkmRandomForestRegressor(SparkMlTestCase):
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_random_forrest_regression(self):

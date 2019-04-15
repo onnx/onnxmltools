@@ -28,7 +28,6 @@ class TestSparkmlNaiveBayes(SparkMlTestCase):
 
         # run the model
         predicted = model.transform(data)
-        predicted.show(20, False)
         predicted_np = [
             predicted.toPandas().prediction.values.astype(numpy.float32),
             predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
@@ -51,7 +50,6 @@ class TestSparkmlNaiveBayes(SparkMlTestCase):
 
         # run the model
         predicted = model.transform(data)
-        predicted.show(20, False)
         predicted_np = [
             predicted.toPandas().prediction.values.astype(numpy.float32),
             predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
