@@ -26,7 +26,7 @@ def convert_sparkml_tokenizer(scope, operator, container):
                        name=scope.get_unique_operator_name('Tokenizer'),
                        op_version=1,
                        mark=0,
-                       tokenexp='([^\\s]+)(?:\\s+|$)',
+                       separators=[' ', '\t', '\r', '\n'],
                        pad_value='##ERROR##',
                        mincharnum=1)
 
