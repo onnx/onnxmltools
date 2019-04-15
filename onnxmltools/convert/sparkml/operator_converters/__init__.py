@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 # To register converter for sparkml operators, import associated modules here.
+from . import aft_survival_regression
 from . import element_wise_product
 from . import min_hash_lsh
 from . import word2vec
