@@ -563,7 +563,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
     '''
     if container.target_opset < 10:
         name = _create_name_or_use_existing_one(scope, 'Upsample', operator_name)
-        inputs = input_name
+        inputs = [input_name]
         attrs = {'name': name}
         if container.target_opset < 7:
             if len(scales) != 4:
@@ -581,7 +581,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
                 # scales moved from attribute to input in opset 9
                 scales_tensor_name = scope.get_unique_variable_name(name + '_scales')
                 container.add_initializer(scales_tensor_name, onnx_proto.TensorProto.FLOAT, [len(scales)], scales)
-                inputs = [input_name[0], scales_tensor_name]
+                inputs = [input_name, scales_tensor_name]
                 op_version = 9
 
         container.add_node('Upsample', inputs, output_name, op_version=op_version, **attrs)
@@ -593,7 +593,7 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
 
         scales_tensor_name = scope.get_unique_variable_name(name + '_scales')
         container.add_initializer(scales_tensor_name, onnx_proto.TensorProto.FLOAT, [len(scales)], scales)
-        inputs = [input_name[0], scales_tensor_name]
+        inputs = [input_name, scales_tensor_name]
         op_version = 10
 
         container.add_node('Resize', inputs, output_name, op_version=op_version, **attrs)
