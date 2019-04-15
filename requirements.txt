@@ -4,3 +4,4 @@ protobuf
 onnx
 skl2onnx
 keras2onnx
+onnxconverter-common>=1.4.0
