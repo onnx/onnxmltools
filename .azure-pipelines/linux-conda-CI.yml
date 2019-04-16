@@ -55,7 +55,13 @@ jobs:
       python -c "import onnxconverter_common"
       test '$(python.version)' != '2.7' && python -c "import onnxruntime"
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
-    displayName: 'pytest'
+    displayName: 'pytest - onnxmltools'
+
+  - script: |
+      export PYTHONPATH=$PYTHONPATH:libsvm/python
+      python -c "import onnxconverter_common"
+      pytest onnxutils/tests --doctest-modules --junitxml=junit/test-results-onnxutils.xml
+    displayName: 'pytest - onnxutils'
 
   - task: PublishTestResults@2
     inputs:
