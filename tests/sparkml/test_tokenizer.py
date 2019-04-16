@@ -8,7 +8,8 @@ from pyspark.ml.feature import Tokenizer
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
-from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
+from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
+from tests.sparkml import SparkMlTestCase
 
 
 class TestSparkmlTokenizer(SparkMlTestCase):
@@ -24,9 +25,12 @@ class TestSparkmlTokenizer(SparkMlTestCase):
         ])
         self.assertTrue(model_onnx is not None)
         # run the model
-        predicted_np = predicted.toPandas().words.apply(pandas.Series).values
-        data_np = data.toPandas().text.values.reshape([1,1])
-        dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlTokenizer")
+        expected = predicted.toPandas().words.apply(pandas.Series).values
+        data_np = data.toPandas().text.values.reshape([1, 1])
+        paths = save_data_models(data_np, expected, model, model_onnx, basename="SparkmlTokenizer")
+        onnx_model_path = paths[3]
+        output, output_shapes = run_onnx_model(['prediction'], data_np, onnx_model_path)
+        compare_results(expected, output, decimal=5)
 
 
 if __name__ == "__main__":

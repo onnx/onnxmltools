@@ -1,22 +1,22 @@
 import sys
 import unittest
 from distutils.version import StrictVersion
-
+import numpy
+import pandas
 import onnx
 from pyspark.ml.feature import VectorIndexer
 from pyspark.ml.linalg import Vectors
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
+from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
+from tests.sparkml import SparkMlTestCase
 
 
 class TestSparkmlVectorIndexer(SparkMlTestCase):
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_model_vector_indexer_multi(self):
-        import numpy
-        import pandas
         vi = VectorIndexer(maxCategories=2, inputCol="a", outputCol="indexed")
         data = self.spark.createDataFrame([
             (Vectors.dense([-1.0, 1.0, 3.1]),),
@@ -31,16 +31,17 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)
-        predicted_np = predicted.toPandas().indexed.apply(lambda x: pandas.Series(x.toArray())).values
+        expected = predicted.toPandas().indexed.apply(lambda x: pandas.Series(x.toArray())).values
         data_np = data.toPandas().a.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
-        dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx,
+        paths = save_data_models(data_np, expected, model, model_onnx,
                                     basename="SparkmlVectorIndexerMulti")
+        onnx_model_path = paths[3]
+        output, output_shapes = run_onnx_model(['indexed'], data_np, onnx_model_path)
+        compare_results(expected, output, decimal=5)
 
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_model_vector_indexer_single(self):
-        import numpy
-        import pandas
         vi = VectorIndexer(maxCategories=3, inputCol="a", outputCol="indexed")
         data = self.spark.createDataFrame([
             (Vectors.dense([-1.0]),),
@@ -55,10 +56,13 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)
-        predicted_np = predicted.toPandas().indexed.apply(lambda x: pandas.Series(x.toArray())).values
+        expected = predicted.toPandas().indexed.apply(lambda x: pandas.Series(x.toArray())).values
         data_np = data.toPandas().a.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
-        dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx,
+        paths = save_data_models(data_np, expected, model, model_onnx,
                                     basename="SparkmlVectorIndexerSingle")
+        onnx_model_path = paths[3]
+        output, output_shapes = run_onnx_model(['indexed'], data_np, onnx_model_path)
+        compare_results(expected, output, decimal=5)
 
 
 if __name__ == "__main__":

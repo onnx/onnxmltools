@@ -5,7 +5,8 @@ from pyspark.ml.feature import Binarizer
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
+from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
+from tests.sparkml import SparkMlTestCase
 
 
 class TestSparkmlBinarizer(SparkMlTestCase):
@@ -21,10 +22,12 @@ class TestSparkmlBinarizer(SparkMlTestCase):
 
         # run the model
         predicted = model.transform(data)
-        predicted_np = predicted.select("binarized").toPandas().values.astype(numpy.float32)
+        expected = predicted.select("binarized").toPandas().values.astype(numpy.float32)
         data_np = data.select('feature').toPandas().values.astype(numpy.float32)
-        dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlBinarizer")
-
+        paths = save_data_models(data_np, expected, model, model_onnx, basename="SparkmlBinarizer")
+        onnx_model_path = paths[3]
+        output, output_shapes = run_onnx_model(['binarized'], data_np, onnx_model_path)
+        compare_results(expected, output, decimal=5)
 
 if __name__ == "__main__":
     unittest.main()

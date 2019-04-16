@@ -1,21 +1,22 @@
 import unittest
 import sys
+import inspect
+import os
+import numpy
+import pandas
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAssembler
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
-from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
+from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
+from tests.sparkml import SparkMlTestCase
 
 
 class TestSparkmlPipeline(SparkMlTestCase):
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_pipeline_4_stage(self):
-        import inspect
-        import os
-        import numpy
-        import pandas
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")
         full_data = self.spark.read.format('csv')\
@@ -55,15 +56,14 @@ class TestSparkmlPipeline(SparkMlTestCase):
             predicted.toPandas().prediction.values.astype(numpy.float32),
             predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         ]
-        dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
+        paths = save_data_models(data_np, expected, model, model_onnx,
                                 basename="SparkmlPipeline_4Stage")
+        onnx_model_path = paths[3]
+        output, output_shapes = run_onnx_model(['label', 'prediction', 'probability'], data_np, onnx_model_path)
+        compare_results(expected, output, decimal=5)
 
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_pipeline_3_stage(self):
-        import inspect
-        import os
-        import numpy
-        import pandas
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")
         full_data = self.spark.read.format('csv')\
@@ -96,16 +96,15 @@ class TestSparkmlPipeline(SparkMlTestCase):
             'education': test_data.select('education').toPandas().values,
             'marital_status': test_data.select('marital_status').toPandas().values
         }
-        predicted_np = predicted.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values
-        dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx,
+        expected = predicted.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values
+        paths = save_data_models(data_np, expected, model, model_onnx,
                                 basename="SparkmlPipeline_3Stage")
+        onnx_model_path = paths[3]
+        output, output_shapes = run_onnx_model(['features'], data_np, onnx_model_path)
+        compare_results(expected, output, decimal=5)
 
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_model_pipeline_2_stage(self):
-        import inspect
-        import os
-        import numpy
-        import pandas
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")
         full_data = self.spark.read.format('csv')\
@@ -141,8 +140,12 @@ class TestSparkmlPipeline(SparkMlTestCase):
             predicted.toPandas().marital_status_vec.apply(lambda x: pandas.Series(x.toArray())).values
             ]
         expected = [numpy.asarray([expand_one_hot_vec(x) for x in row]) for row in predicted_np]
-        dump_data_and_sparkml_model(data_np, expected, model, model_onnx,
-                                basename="SparkmlPipeline_2Stage")
+        paths = save_data_models(data_np, expected, model, model_onnx,
+                                 basename="SparkmlPipeline_2Stage")
+        onnx_model_path = paths[3]
+        output, output_shapes = run_onnx_model(['workclass_vec', 'education_vec', 'marital_status_vec'],
+                                               data_np, onnx_model_path)
+        compare_results(expected, output, decimal=5)
 
 
 def expand_one_hot_vec(v):

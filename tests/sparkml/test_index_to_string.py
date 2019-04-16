@@ -7,7 +7,8 @@ from pyspark.ml.feature import IndexToString, StringIndexer
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import Int64TensorType
 from onnxmltools.convert.sparkml.utils import SparkMlConversionError
-from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
+from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
+from tests.sparkml import SparkMlTestCase
 
 
 class TestSparkmlIndexToString(SparkMlTestCase):
@@ -43,11 +44,13 @@ class TestSparkmlIndexToString(SparkMlTestCase):
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)
-        predicted_np = predicted.select("originalCategory").toPandas().values
+        expected = predicted.select("originalCategory").toPandas().values
         data_np = data.select('categoryIndex').toPandas().values.astype(numpy.int64)
-        dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx,
+        paths = save_data_models(data_np, expected, model, model_onnx,
                                     basename="SparkmlIndexToString")
-
+        onnx_model_path = paths[3]
+        output, output_shapes = run_onnx_model(['originalCategory'], data_np, onnx_model_path)
+        compare_results(expected, output, decimal=5)
 
 if __name__ == "__main__":
     unittest.main()

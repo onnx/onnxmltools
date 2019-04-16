@@ -7,7 +7,10 @@ import numpy
 import pickle
 import os
 import warnings
-from onnxmltools.utils.utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
+from onnxmltools.utils.utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled, \
+    OnnxRuntimeAssertionError, compare_outputs, ExpectedAssertionError
+from onnxmltools.utils.utils_backend_onnxruntime import _create_column
+
 
 def start_spark(options):
     import os
@@ -29,6 +32,146 @@ def start_spark(options):
 
 def stop_spark(spark):
     spark.sparkContext.stop()
+
+
+def save_data_models(input, expected, model, onnx_model, basename="model", folder=None):
+    if folder is None:
+        folder = os.environ.get('ONNXTESTDUMP', 'tests_dump')
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    paths = []
+    dest = os.path.join(folder, basename + ".expected.pkl")
+    paths.append(dest)
+    with open(dest, "wb") as f:
+        pickle.dump(expected, f)
+
+    dest = os.path.join(folder, basename + ".data.pkl")
+    paths.append(dest)
+    with open(dest, "wb") as f:
+        pickle.dump(input, f)
+
+    dest = os.path.join(folder, basename + ".model")
+    paths.append(dest)
+    model.write().overwrite().save(dest)
+
+    dest = os.path.join(folder, basename + ".model.onnx")
+    paths.append(dest)
+    with open(dest, "wb") as f:
+        f.write(onnx_model.SerializeToString())
+    return paths
+
+
+def run_onnx_model(output_names, input, onnx_model):
+    import onnxruntime
+    sess = onnxruntime.InferenceSession(onnx_model)
+    if isinstance(input, dict):
+        inputs = input
+    elif isinstance(input, (list, numpy.ndarray)):
+        inp = sess.get_inputs()
+        if len(inp) == len(input):
+            inputs = {i.name: v for i, v in zip(inp, input)}
+        elif len(inp) == 1:
+            inputs = {inp[0].name: input}
+        elif isinstance(input, numpy.ndarray):
+            shape = sum(i.shape[1] if len(i.shape) == 2 else i.shape[0] for i in inp)
+            if shape == input.shape[1]:
+                inputs = {n.name: input[:, i] for i, n in enumerate(inp)}
+            else:
+                raise OnnxRuntimeAssertionError(
+                    "Wrong number of inputs onnx {0} != original shape {1}, onnx='{2}'".format(
+                        len(inp), input.shape, onnx_model))
+        elif isinstance(input, list):
+            try:
+                array_input = numpy.array(input)
+            except Exception as e:
+                raise OnnxRuntimeAssertionError(
+                    "Wrong number of inputs onnx {0} != original {1}, onnx='{2}'".format(
+                        len(inp), len(input), onnx_model))
+            shape = sum(i.shape[1] for i in inp)
+            if shape == array_input.shape[1]:
+                inputs = {n.name: _create_column([row[i] for row in input], n.type) for i, n in enumerate(inp)}
+            else:
+                raise OnnxRuntimeAssertionError(
+                    "Wrong number of inputs onnx {0} != original shape {1}, onnx='{2}'*".format(
+                        len(inp), array_input.shape, onnx_model))
+        else:
+            raise OnnxRuntimeAssertionError(
+                "Wrong number of inputs onnx {0} != original {1}, onnx='{2}'".format(
+                    len(inp), len(input), onnx_model))
+    else:
+        raise OnnxRuntimeAssertionError(
+            "Dict or list is expected, not {0}".format(type(input)))
+
+    for k in inputs:
+        if isinstance(inputs[k], list):
+            inputs[k] = numpy.array(inputs[k])
+    output = sess.run(output_names, inputs)
+    output_shapes = [_.shape for _ in sess.get_outputs()]
+    return output, output_shapes
+
+
+def compare_results(expected, output, decimal=5):
+    tested = 0
+    if isinstance(expected, list):
+        if isinstance(output, list):
+            if len(expected) != len(output):
+                raise OnnxRuntimeAssertionError(
+                    "Unexpected number of outputs: expected={0}, got={1}".format(len(expected), len(output)))
+            for exp, out in zip(expected, output):
+                compare_results(exp, out, decimal=decimal)
+                tested += 1
+        else:
+            raise OnnxRuntimeAssertionError(
+                "Type mismatch: output type is {0}".format(type(output)))
+    elif isinstance(expected, dict):
+        if not isinstance(output, dict):
+            raise OnnxRuntimeAssertionError("Type mismatch fo")
+        for k, v in output.items():
+            if k not in expected:
+                continue
+            msg = compare_outputs(expected[k], v, decimal=decimal)
+            if msg:
+                raise OnnxRuntimeAssertionError("Unexpected output '{0}': \n{2}".format(k, msg))
+            tested += 1
+    elif isinstance(expected, numpy.ndarray):
+        if isinstance(output, list):
+            if expected.shape[0] == len(output) and isinstance(output[0], dict):
+                import pandas
+                output = pandas.DataFrame(output)
+                output = output[list(sorted(output.columns))]
+                output = output.values
+        if isinstance(output, (dict, list)):
+            if len(output) != 1:
+                ex = str(output)
+                if len(ex) > 70:
+                    ex = ex[:70] + "..."
+                raise OnnxRuntimeAssertionError(
+                    "More than one output when 1 is expected\n{0}".format(ex))
+            output = output[-1]
+        if not isinstance(output, numpy.ndarray):
+            raise OnnxRuntimeAssertionError(
+                "output must be an array not {0}".format(type(output)))
+        msg = compare_outputs(expected, output, decimal=decimal)
+        if isinstance(msg, ExpectedAssertionError):
+            raise msg
+        if msg:
+            raise OnnxRuntimeAssertionError("Unexpected output\n{1}".format(msg))
+        tested += 1
+    else:
+        from scipy.sparse.csr import csr_matrix
+        if isinstance(expected, csr_matrix):
+            # DictVectorizer
+            one_array = numpy.array(output)
+            msg = compare_outputs(expected.todense(), one_array, decimal=decimal)
+            if msg:
+                raise OnnxRuntimeAssertionError("Unexpected output\n{1}".format(msg))
+            tested += 1
+        else:
+            raise OnnxRuntimeAssertionError(
+                "Unexpected type for expected output ({0})".format(type(expected)))
+    if tested == 0:
+        raise OnnxRuntimeAssertionError("No test for model")
 
 
 def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="model", folder=None,

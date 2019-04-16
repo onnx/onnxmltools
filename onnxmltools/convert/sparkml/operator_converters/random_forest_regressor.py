@@ -3,8 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from onnxmltools.convert.common.tree_ensemble import get_default_tree_classifier_attribute_pairs, \
-    add_tree_to_attribute_pairs, get_default_tree_regressor_attribute_pairs
+from onnxmltools.convert.common.tree_ensemble import add_tree_to_attribute_pairs, \
+    get_default_tree_regressor_attribute_pairs
 from onnxmltools.convert.sparkml.operator_converters.decision_tree_classifier import save_read_sparkml_model_data
 from onnxmltools.convert.sparkml.operator_converters.decision_tree_regressor import \
     calculate_decision_tree_regressor_output_shapes
@@ -31,7 +31,7 @@ def convert_random_forest_regressor(scope, operator, container):
         add_tree_to_attribute_pairs(attrs, False, tree, tree_id,
                                     tree_weight, 0, False)
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names,
+    container.add_node(op_type, operator.input_full_names, operator.output_full_names[0],
                        op_domain='ai.onnx.ml', **attrs)
 
 

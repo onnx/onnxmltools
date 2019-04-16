@@ -5,7 +5,8 @@ from pyspark.ml.feature import Imputer
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
-from tests.sparkml import SparkMlTestCase, dump_data_and_sparkml_model
+from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
+from tests.sparkml import SparkMlTestCase
 
 ## For some reason during the spark bring up and shutdown something happens causing Imputer
 ## tests to fail. For that you need to run each test here individually
@@ -41,9 +42,12 @@ class TestSparkmlImputer(SparkMlTestCase):
     #
     #     # run the model
     #     predicted = model.transform(data)
-    #     predicted_np = predicted.select("out_a", "out_b").toPandas().values.astype(numpy.float32)
+    #     expected = predicted.select("out_a", "out_b").toPandas().values.astype(numpy.float32)
     #     data_np = [ data.toPandas().values.astype(numpy.float32) ]
-    #     dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlImputerMulti")
+    #     paths = save_data_models(data_np, expected, model, model_onnx, basename="SparkmlImputerMulti")
+    #     onnx_model_path = paths[3]
+    #     output, output_shapes = run_onnx_model(['prediction'], data_np, onnx_model_path)
+    #     compare_results(expected, output, decimal=5)
     #
     # def _imputer_test_single(self):
     #     import numpy
@@ -67,8 +71,10 @@ class TestSparkmlImputer(SparkMlTestCase):
     #     predicted = model.transform(data)
     #     predicted_np = predicted.select("out_a").toPandas().values.astype(numpy.float32)
     #     data_np = data.toPandas().a.values.astype(numpy.float32)
-    #     dump_data_and_sparkml_model(data_np, predicted_np, model, model_onnx, basename="SparkmlImputerSingle")
-
+    #     paths = save_data_models(data_np, expected, model, model_onnx, basename="SparkmlImputerSingle")
+    #     onnx_model_path = paths[3]
+    #     output, output_shapes = run_onnx_model(['prediction'], data_np, onnx_model_path)
+    #     compare_results(expected, output, decimal=5)
 
 if __name__ == "__main__":
     unittest.main()
