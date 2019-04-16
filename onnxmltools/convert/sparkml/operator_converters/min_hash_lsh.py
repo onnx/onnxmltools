@@ -77,7 +77,6 @@ def convert_min_hash_lsh(scope, operator, container):
     apply_concat(scope, remainders, operator.output_full_names, container, axis=1)
 
 
-
 register_converter('pyspark.ml.feature.MinHashLSHModel', convert_min_hash_lsh)
 
 
