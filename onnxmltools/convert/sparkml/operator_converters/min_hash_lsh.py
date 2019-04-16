@@ -68,6 +68,7 @@ def convert_min_hash_lsh(scope, operator, container):
         apply_sub(scope, [coeff_1_added, prime_x_floor], remainder, container)
         min_remainder = scope.get_unique_variable_name('min_remainder_tensor')
         container.add_node('ReduceMin', remainder, min_remainder,
+                           op_version=1,
                            axes=[1],
                            keepdims=1)
         float_min = scope.get_unique_variable_name('float_min_tensor')

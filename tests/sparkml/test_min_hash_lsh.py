@@ -43,5 +43,6 @@ class TestSparkmMinHashLSH(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['hashes'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+
 if __name__ == "__main__":
     unittest.main()
