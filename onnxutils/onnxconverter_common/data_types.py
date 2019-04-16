@@ -8,6 +8,7 @@ import numbers
 import onnx
 from onnx import onnx_pb as onnx_proto
 
+
 class DataType(object):
     def __init__(self, shape=None, doc_string=''):
         self.shape = shape

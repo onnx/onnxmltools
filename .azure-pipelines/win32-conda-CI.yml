@@ -67,7 +67,13 @@ jobs:
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       pip install -e .
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
-    displayName: 'pytest'
+    displayName: 'pytest - onnxmltools'
+
+  - script: |
+      call activate py$(python.version)
+      set PYTHONPATH=libsvm\python;%PYTHONPATH%
+      pytest onnxutils/tests --doctest-modules --junitxml=junit/test-results-onnxutils.xml
+    displayName: 'pytest - onnxutils'
 
   - task: PublishTestResults@2
     inputs:
