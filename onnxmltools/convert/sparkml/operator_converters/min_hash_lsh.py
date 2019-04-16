@@ -30,27 +30,31 @@ def get_rand_coefficients(operator):
 
 
 def convert_min_hash_lsh(scope, operator, container):
+    spark = operator.raw_params['SparkSession']
+    int_type = onnx_proto.TensorProto.INT64
+    if spark.version < '2.4.0':
+        int_type = onnx_proto.TensorProto.INT32
     rand_coefficients = get_rand_coefficients(operator)
     coeffs = []
     for i in range(0, len(rand_coefficients), 2):
         coeffs.append((rand_coefficients[i], rand_coefficients[i + 1]))
     one = scope.get_unique_variable_name('one_tensor')
-    container.add_initializer(one, onnx_proto.TensorProto.INT32, [1], [1])
+    container.add_initializer(one, int_type, [1], [1])
     prime = scope.get_unique_variable_name('prime_tensor')
-    container.add_initializer(prime, onnx_proto.TensorProto.INT32, [1], [MinHashLSH_HASH_PRIME])
+    container.add_initializer(prime, int_type, [1], [MinHashLSH_HASH_PRIME])
 
     non_zeros_int = scope.get_unique_variable_name('non_zero_int_tensor')
     container.add_node('NonZero', operator.input_full_names, non_zeros_int, op_version=9)
     non_zeros = scope.get_unique_variable_name('non_zeros_tensor')
-    apply_cast(scope, non_zeros_int, non_zeros, container, to=onnx_proto.TensorProto.INT32)
+    apply_cast(scope, non_zeros_int, non_zeros, container, to=int_type)
     remainders = []
     for coeff in coeffs:
         one_added = scope.get_unique_variable_name('one_added_tensor')
         apply_add(scope, [one, non_zeros], one_added, container)
         a = scope.get_unique_variable_name('a_coeff_tensor')
-        container.add_initializer(a, onnx_proto.TensorProto.INT32, [1], [coeff[0]])
+        container.add_initializer(a, int_type, [1], [coeff[0]])
         b = scope.get_unique_variable_name('b_coeff_tensor')
-        container.add_initializer(b, onnx_proto.TensorProto.INT32, [1], [coeff[1]])
+        container.add_initializer(b, int_type, [1], [coeff[1]])
         coeff_0_times = scope.get_unique_variable_name('coeff_0_times_tensor')
         apply_mul(scope, [a, one_added], coeff_0_times, container)
         coeff_1_added = scope.get_unique_variable_name('coeff_1_added_tensor')
