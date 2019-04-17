@@ -3,11 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-import copy
-
-from onnxmltools.convert.common.data_types import Int64TensorType, FloatTensorType, StringTensorType
+from onnxmltools.convert.common.data_types import StringTensorType
 from onnxmltools.convert.common.utils import check_input_and_output_numbers, check_input_and_output_types
-#from onnxmltools.convert.sparkml import SparkMLConversionError
 from ...common._registration import register_converter, register_shape_calculator
 
 

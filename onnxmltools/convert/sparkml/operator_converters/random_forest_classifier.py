@@ -3,10 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from onnxmltools.convert.common.data_types import Int64TensorType, FloatTensorType
 from onnxmltools.convert.common.tree_ensemble import get_default_tree_classifier_attribute_pairs, \
-    add_tree_to_attribute_pairs, get_default_tree_regressor_attribute_pairs
-from onnxmltools.convert.common.utils import check_input_and_output_numbers, check_input_and_output_types
+    add_tree_to_attribute_pairs
 from onnxmltools.convert.sparkml.operator_converters.decision_tree_classifier import \
     calculate_decision_tree_classifier_output_shapes
 from onnxmltools.convert.sparkml.operator_converters.tree_ensemble_common import save_read_sparkml_model_data, \

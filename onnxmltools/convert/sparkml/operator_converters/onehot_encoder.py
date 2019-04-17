@@ -3,7 +3,6 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
 from ...common._registration import register_converter, register_shape_calculator
 from ....proto import onnx_proto
 from ...common.data_types import FloatTensorType

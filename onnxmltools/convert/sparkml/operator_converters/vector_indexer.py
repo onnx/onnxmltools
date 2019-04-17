@@ -1,3 +1,9 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+from onnx import onnx_pb as onnx_proto
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.utils import check_input_and_output_numbers
 from onnxmltools.convert.common.data_types import *
@@ -16,14 +22,12 @@ def convert_sparkml_vector_indexer(scope, operator, container):
     else:
         split_output_names = operator.input_full_names
     concat_inputs = split_output_names.copy()
-    STRING_TYPE = 8
-    FLOAT_TYPE = 1
     for i in category_map.keys():
         converted_output = scope.get_unique_variable_name('converted_tensor_%d' % i)
         container.add_node('Cast', split_output_names[i], converted_output,
                            name=scope.get_unique_operator_name('Cast'),
                            op_version=9,
-                           to=STRING_TYPE)
+                           to=onnx_proto.TensorProto.STRING)
         attrs = {
             'name': scope.get_unique_operator_name('LabelEncoder'),
             'classes_strings': ['{0:g}'.format(c) for c in category_map[i].keys()],
@@ -39,7 +43,7 @@ def convert_sparkml_vector_indexer(scope, operator, container):
         container.add_node('Cast', encoded_output_name, converted_float_output,
                            name=scope.get_unique_operator_name('Cast'),
                            op_version=9,
-                           to=FLOAT_TYPE)
+                           to=onnx_proto.TensorProto.FLOAT)
         concat_inputs[i] = converted_float_output
     # add the final Concat
     if feature_count > 1:

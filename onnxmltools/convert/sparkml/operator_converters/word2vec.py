@@ -4,7 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 import pandas
-
 import numpy
 
 from onnxmltools.convert.common._apply_operation import apply_add, apply_mul, apply_sum

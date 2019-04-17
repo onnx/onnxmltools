@@ -4,11 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 import copy
-from itertools import combinations_with_replacement, chain
 from onnx import onnx_pb as onnx_proto
-
-import numpy
-
 from onnxmltools.convert.common._apply_operation import apply_concat, apply_cast
 from onnxmltools.convert.common.data_types import Int64TensorType, FloatTensorType
 from onnxmltools.convert.common.utils import check_input_and_output_numbers, check_input_and_output_types

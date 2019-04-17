@@ -1,4 +1,12 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
 from ...common._registration import register_converter
+from ...common._registration import register_shape_calculator
+from ...common.utils import check_input_and_output_numbers
+from ...common.data_types import *
 
 
 def convert_sparkml_vector_assembler(scope, operator, container):
@@ -11,10 +19,6 @@ def convert_sparkml_vector_assembler(scope, operator, container):
 register_converter('pyspark.ml.feature.VectorAssembler', convert_sparkml_vector_assembler)
 
 
-from ...common._registration import register_shape_calculator
-from ...common.utils import check_input_and_output_numbers
-from ...common.data_types import *
-
 def calculate_vector_assembler_shapes(operator):
     check_input_and_output_numbers(operator, output_count_range=1)
     C = len(operator.raw_operator.getInputCols())
@@ -26,7 +30,6 @@ def calculate_vector_assembler_shapes(operator):
     else:
         raise TypeError("Unsupported input type")
     operator.outputs[0].type = col_type
-
 
 
 register_shape_calculator('pyspark.ml.feature.VectorAssembler', calculate_vector_assembler_shapes)

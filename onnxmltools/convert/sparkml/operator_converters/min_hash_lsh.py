@@ -3,10 +3,6 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-import pandas
-
-import numpy
-
 from onnxmltools.convert.common._apply_operation import apply_add, apply_mul, apply_sum, apply_div, apply_sub, \
     apply_concat, apply_cast
 from onnxmltools.convert.sparkml.operator_converters.tree_ensemble_common import save_read_sparkml_model_data

@@ -1,3 +1,8 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
 import copy
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
