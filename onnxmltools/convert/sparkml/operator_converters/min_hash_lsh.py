@@ -66,14 +66,14 @@ def convert_min_hash_lsh(scope, operator, container):
         apply_mul(scope, [div_by_prime, prime], prime_x_floor, container)
         remainder = scope.get_unique_variable_name('remainder_tensor')
         apply_sub(scope, [coeff_1_added, prime_x_floor], remainder, container)
+        float_remainder = scope.get_unique_variable_name('float_remainder_tensor')
+        apply_cast(scope, remainder, float_remainder, container, to=onnx_proto.TensorProto.FLOAT)
         min_remainder = scope.get_unique_variable_name('min_remainder_tensor')
-        container.add_node('ReduceMin', remainder, min_remainder,
+        container.add_node('ReduceMin', float_remainder, min_remainder,
                            op_version=1,
                            axes=[1],
                            keepdims=1)
-        float_min = scope.get_unique_variable_name('float_min_tensor')
-        apply_cast(scope, min_remainder, float_min, container, to=onnx_proto.TensorProto.FLOAT)
-        remainders.append(float_min)
+        remainders.append(min_remainder)
     apply_concat(scope, remainders, operator.output_full_names, container, axis=1)
 
 
