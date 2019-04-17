@@ -381,7 +381,8 @@ class FanOutSolution(Solution):
     number = 0
     def apply(self, node_list):
         cur_perm = Solution.get_perm(self.begin_n.origin)
-        successor_list = self.end_p.successor.copy()
+        # make a copy of self.end_p.successor
+        successor_list = list(self.end_p.successor)
 
         for suc in successor_list:
             nnode = LinkedNode(
@@ -413,7 +414,8 @@ class FanInSolution(Solution):
                 perm=self.perm,
                 name='TransposeFanIn' + str(FanInSolution.number)))
         FanInSolution.number = FanInSolution.number + 1
-        precedence_list = self.begin.precedence.copy()
+        # make a copy of self.begin.precedence
+        precedence_list = list(self.begin.precedence)
         node_list = Solution.add_siso_node(node_list, self.begin, self.begin_n, list(self.begin.output.values())[0], nnode)
         for branch in precedence_list:
             node_list = Solution.delete_node_1ton(node_list, branch.precedence[0], branch, self.begin)
