@@ -13,14 +13,15 @@ jobs:
     vmImage: 'Ubuntu-16.04'
   strategy:
     matrix:
-      Python27:
-        python.version: '2.7'
-        ONNX_PATH: onnx==1.2.3
-      # Python35:
-      #   python.version: '3.5'
+      # No python 2.x since incompatible with ONNX Runtime
       Python36:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1
+        ORT_PATH: onnxruntime==0.3.0
+      Python36-nightly:
+        python.version: '3.6'
+        ONNX_PATH: onnx==1.4.1
+        ORT_PATH: -i https://test.pypi.org/simple/ ort-nightly
     maxParallel: 3
 
   steps:
@@ -42,7 +43,7 @@ jobs:
       pip install -e .
       cd ..
       pip install -r requirements-dev.txt
-      test '$(python.version)' != '2.7' && pip install onnxruntime==0.3.0
+      pip install $(ORT_PATH)
       pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
