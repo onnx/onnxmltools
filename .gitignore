@@ -37,8 +37,11 @@ temp_*.onnx
 tests/sklearn/tests/*
 tests_backend/*.onnx
 tests/*/tests/*
+tests/*/tests_dump/*
 tests/build/*
 tests/tests/
+derby.log
+metastore_db/
 tests/*/tests/*.pkl
 tests/*/tests/*.onnx
 tests/*/tests/*.keras
@@ -46,3 +49,7 @@ docs/auto_examples/*
 docs/examples/dense121.onnx
 docs/examples/graph.dot
 docs/examples/graph.dot.png
+# CMake
+CMakeCache.txt
+CMakeFiles/
+

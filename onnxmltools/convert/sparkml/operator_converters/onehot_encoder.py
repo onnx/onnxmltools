@@ -3,9 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
+from ...common._registration import register_converter, register_shape_calculator
 from ....proto import onnx_proto
-from ...common._registration import register_converter
+from ...common.data_types import FloatTensorType
 
 
 def convert_sparkml_one_hot_encoder(scope, operator, container):
@@ -52,4 +52,29 @@ def convert_sparkml_one_hot_encoder(scope, operator, container):
 
 
 register_converter('pyspark.ml.feature.OneHotEncoderModel', convert_sparkml_one_hot_encoder)
+
+
+def calculate_sparkml_one_hot_encoder_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1. [N, C] ---> [N, C']
+        2. [N, 'None'] ---> [N, 'None']
+    '''
+    op = operator.raw_operator
+
+    # encoded_slot_sizes[i] is the number of output coordinates associated with the ith categorical feature.
+    encoded_slot_sizes = op.categorySizes
+
+    N = operator.inputs[0].type.shape[0]
+    # Calculate the output feature length by replacing the count of categorical
+    # features with their encoded widths
+    if operator.inputs[0].type.shape[1] != 'None':
+        C = operator.inputs[0].type.shape[1] - 1 + sum(encoded_slot_sizes)
+    else:
+        C = 'None'
+
+    operator.outputs[0].type = FloatTensorType([N, C])
+
+
+register_shape_calculator('pyspark.ml.feature.OneHotEncoderModel', calculate_sparkml_one_hot_encoder_output_shapes)
 

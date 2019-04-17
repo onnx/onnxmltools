@@ -39,6 +39,7 @@ class Variable:
         self.is_root = None
         self.is_leaf = None
         self.is_abandoned = False
+        self.raw_params = None
 
     @property
     def full_name(self):

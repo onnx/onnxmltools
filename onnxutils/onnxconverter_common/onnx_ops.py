@@ -73,6 +73,13 @@ def apply_add(scope, input_names, output_name, container, operator_name=None, ax
     _apply_basic_numerical_operation(scope, 'Add', input_names, output_name, container, operator_name=operator_name,
                                      axis=axis, broadcast=broadcast)
 
+
+def apply_argmax(scope, input_name, output_name, container, operator_name=None, axis=0, keepdims=1):
+    name = _create_name_or_use_existing_one(scope, 'ArgMax', operator_name)
+    container.add_node('ArgMax', input_name, output_name, op_version=1, name=name,
+                       axis=axis, keepdims=keepdims)
+
+
 def apply_affine(scope, input_name, output_name, container, operator_name=None, alpha=1., beta=0.):
     if container.target_opset < 9:
         op_type = 'Affine'
@@ -247,6 +254,11 @@ def apply_elu(scope, input_name, output_name, container, operator_name=None, alp
 def apply_exp(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Exp', input_name, output_name, container, operator_name=operator_name)
 
+
+def apply_floor(scope, input_name, output_name, container, operator_name=None):
+    _apply_unary_operation(scope, 'Floor', input_name, output_name, container, operator_name=operator_name)
+
+
 def apply_gemm(scope, input_name, output_name, container, operator_name=None, alpha=1.0, beta=1.0,
                transA=0, transB=0):
     """
@@ -291,6 +303,13 @@ def apply_leaky_relu(scope, input_name, output_name, container, operator_name=No
 def apply_log(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Log', input_name, output_name, container, operator_name=operator_name)
 
+
+def apply_matmul(scope, input_names, output_name, container, operator_name=None):
+    op_type = 'MatMul'
+    name = _create_name_or_use_existing_one(scope, op_type, operator_name)
+    container.add_node(op_type, input_names, output_name, op_version=9, name=name)
+
+
 def apply_max(scope, input_names, output_name, container, operator_name=None):
     _apply_pointwise_operation(scope, 'Max', input_names, output_name, container, operator_name)
 
@@ -303,6 +322,11 @@ def apply_min(scope, input_names, output_name, container, operator_name=None):
 def apply_mul(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=None):
     _apply_basic_numerical_operation(scope, 'Mul', input_names, output_name, container, operator_name=operator_name,
                                      axis=axis, broadcast=broadcast)
+
+
+def apply_neg(scope, input_name, output_name, container, operator_name=None, axis=None, broadcast=None):
+    _apply_unary_operation(scope, 'Neg', input_name, output_name, container, operator_name)
+
 
 def apply_normalization(scope, input_name, output_name, container, operator_name=None, axis=1, p=2):
     name = _create_name_or_use_existing_one(scope, 'LpNormalization', operator_name)
@@ -495,6 +519,16 @@ def apply_sqrt(scope, input_name, output_name, container, operator_name=None):
 def apply_sub(scope, input_names, output_name, container, operator_name=None, axis=None, broadcast=0):
     _apply_basic_numerical_operation(scope, 'Sub', input_names, output_name, container, operator_name=operator_name,
                                      axis=axis, broadcast=broadcast)
+
+
+def apply_sum(scope, input_names, output_name, container, operator_name=None):
+    name = _create_name_or_use_existing_one(scope, 'Sum', operator_name)
+    if container.target_opset < 6:
+        op_version = 1
+    else:
+        op_version = 6
+    container.add_node('Sum', input_names, output_name, op_version=op_version, name=name)
+
 
 def apply_tanh(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Tanh', input_name, output_name, container, operator_name)
