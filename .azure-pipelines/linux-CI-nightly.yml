@@ -13,11 +13,6 @@ jobs:
     vmImage: 'Ubuntu-16.04'
   strategy:
     matrix:
-      # No python 2.x since incompatible with ONNX Runtime
-      Python36:
-        python.version: '3.6'
-        ONNX_PATH: onnx==1.4.1
-        ORT_PATH: onnxruntime==0.3.0
       Python36-nightly:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1
