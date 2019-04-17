@@ -8,6 +8,8 @@ from uuid import uuid4
 from ...proto import onnx, get_opset_number_from_onnx
 from ..common._topology import convert_topology
 from ._parse import parse_sparkml
+from . import operator_converters
+
 
 def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
             targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None,
