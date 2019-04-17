@@ -223,7 +223,7 @@ def compare_outputs(expected, output, **kwargs):
             output = output.ravel()
         if len(expected.shape) == 2 and len(output.shape) == 1 and expected.shape[1] == 1:
             expected = expected.ravel()
-        if expected.dtype in (numpy.str, numpy.dtype("<U1")):
+        if not numpy.issubdtype(expected.dtype, numpy.number):
             try:
                 assert_array_equal(expected, output)
             except Exception as e:
