@@ -14,8 +14,6 @@ jobs:
   strategy:
     matrix:
       # No python 2.x since no available ONNX package for Windows
-      # Python27:
-      #   python.version: '2.7'
       Python35:
         python.version: '3.5'
         ONNX_PATH: onnx==1.4.1
