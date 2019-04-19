@@ -1,5 +1,6 @@
 import sys
 import unittest
+from distutils.version import StrictVersion
 
 import pandas
 import numpy

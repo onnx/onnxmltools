@@ -7,6 +7,7 @@ import pandas
 import numpy
 from pyspark.ml.classification import GBTClassifier
 from pyspark.ml.linalg import Vectors
+import onnxruntime
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType

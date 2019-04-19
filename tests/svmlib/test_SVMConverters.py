@@ -2,10 +2,11 @@
 Tests scikit-linear converter.
 """
 import tempfile
+import unittest
+from distutils.version import StrictVersion
 import numpy
 import svm
 import numpy as np
-import unittest
 from sklearn.datasets import load_iris
 import onnxruntime
 from onnxmltools.convert.libsvm import convert
