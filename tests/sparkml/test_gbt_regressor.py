@@ -5,6 +5,7 @@ import pandas
 import numpy
 from pyspark.ml.linalg import Vectors
 from pyspark.ml.regression import GBTRegressor
+import onnxruntime
 
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
@@ -14,6 +15,7 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+    @unittest.skipIf(StrictVersion(onnxruntime.__version__) <= StrictVersion('0.4.0'), 'Input tensors of wrong rank (0).')
     def test_gbt_regressor(self):
         data = self.spark.createDataFrame([
             (1.0, Vectors.dense(1.0)),

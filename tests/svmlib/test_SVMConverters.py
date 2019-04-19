@@ -7,6 +7,7 @@ import svm
 import numpy as np
 import unittest
 from sklearn.datasets import load_iris
+import onnxruntime
 from onnxmltools.convert.libsvm import convert
 from svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
 import svmutil
@@ -147,6 +148,7 @@ class TestSvmLibSVM(unittest.TestCase):
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
                             basename="LibSvmSvmc-Dec2")
 
+    @unittest.skipIf(StrictVersion(onnxruntime.__version__) <= StrictVersion('0.4.0'), 'Input tensors of wrong rank (0).')
     def test_convert_svmr_linear(self):
         iris = load_iris()
 
