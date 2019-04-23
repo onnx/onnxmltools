@@ -1,0 +1,72 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+- master
+
+jobs:
+
+- job: 'Test'
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python36-nightly:
+        python.version: '3.6'
+        ONNX_PATH: onnx==1.4.1
+        ONNXRT_PATH: -i https://test.pypi.org/simple/ ort-nightly
+        COREML_PATH: git+https://github.com/apple/coremltools
+    maxParallel: 3
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
+
+  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: Add conda to PATH
+
+  - script: conda create --yes --quiet --name py$(python.version) -c conda-forge python=$(python.version) numpy protobuf
+    displayName: Create Anaconda environment
+
+  - script: |
+      call activate py$(python.version)
+      python -m pip install --upgrade pip numpy
+      echo Test numpy installation... && python -c "import numpy"
+      pip install %COREML_PATH% %ONNX_PATH%
+      cd onnxutils
+      pip install -e .
+      echo Test onnxconverter-common installation... && python -c "import onnxconverter_common"
+      cd ..
+      pip install -r requirements-dev.txt
+      pip install %ONNXRT_PATH%
+      echo Test onnxruntime installation... && python -c "import onnxruntime"
+      REM install libsvm from github
+      git clone --recursive https://github.com/cjlin1/libsvm libsvm
+      copy libsvm\windows\*.dll libsvm\python
+      set PYTHONPATH=libsvm\python;%PYTHONPATH%
+      dir libsvm\python
+      echo Test libsvm installation... && python -c "import svmutil"
+    displayName: 'Install dependencies'
+
+  - script: |
+      call activate py$(python.version)
+      set PYTHONPATH=libsvm\python;%PYTHONPATH%
+      pip install -e .
+      pytest tests --doctest-modules --junitxml=junit/test-results.xml
+    displayName: 'pytest - onnxmltools'
+
+  - script: |
+      call activate py$(python.version)
+      set PYTHONPATH=libsvm\python;%PYTHONPATH%
+      pytest onnxutils/tests --doctest-modules --junitxml=junit/test-results-onnxutils.xml
+    displayName: 'pytest - onnxutils'
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFiles: '**/test-results.xml'
+      testRunTitle: 'Python $(python.version)'
+    condition: succeededOrFailed()
