@@ -13,7 +13,7 @@ For examples, please see the unit tests under `tests/sparkml`
 For simple cases you can use `buildInitialTypesSimple()` function in `convert/sparkml/utils.py`.
 To use this function just pass your test DataFrame.
 
-Otherwise, the conversion code requires a list of tuples of input name and its Tensor type such as:
+Otherwise, the conversion code requires a list of tuples with input names and their corresponding Tensor types, as shown below:
 ```python
 initial_types = [ 
     ("label", StringTensorType([1, 1])),
@@ -74,5 +74,5 @@ which you can use to make sure the last bit is included in the vector: `dropLast
 
 3. Use FloatTensorType for all numbers (instead of Int6t4Tensor or other variations)
 
-4. Some conversions such as the one for Word2Vec can only handle batch size of 1 (one input row)
+4. Some conversions, such as the one for Word2Vec, can only handle batch size of 1 (one input row)
 
