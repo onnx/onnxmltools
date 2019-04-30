@@ -497,6 +497,35 @@ def apply_scaled_tanh(scope, input_name, output_name, container, operator_name=N
         # output = a * d
         apply_mul(scope, [aName, dName], output_name, container)
 
+def apply_slice(scope, input_name, output_names, container, starts, ends,
+                axes=None, steps=None, operator_name=None):
+    name = _create_name_or_use_existing_one(scope, 'Slice', operator_name)
+
+    if container.target_opset < 10:
+        container.add_node('Slice', input_name, output_names, name=name,
+                           starts=starts, ends=ends, axes=axes, op_version=1)
+    else:
+        inputs = [input_name]
+        starts_name = scope.get_unique_variable_name('starts')
+        ends_name = scope.get_unique_variable_name('ends')
+        container.add_initializer(starts_name, onnx_proto.TensorProto.INT64,
+                                  [len(starts)], starts)
+        container.add_initializer(ends_name, onnx_proto.TensorProto.INT64,
+                                  [len(ends)], ends)
+        inputs.append(starts_name)
+        inputs.append(ends_name)
+        if axes:
+            axes_name = scope.get_unique_variable_name('axes')
+            container.add_initializer(axes_name, onnx_proto.TensorProto.INT64,
+                                      [len(axes)], axes)
+            inputs.append(axes_name)
+        if steps:
+            steps_name = scope.get_unique_variable_name('steps')
+            container.add_initializer(steps_name, onnx_proto.TensorProto.INT64,
+                                      [len(steps)], steps)
+            inputs.append(steps_name)
+        container.add_node('Slice', inputs, output_names, name=name,
+                           op_version=10)
 
 def apply_split(scope, input_name, output_names, container, operator_name=None, split=None, axis=0):
     name = _create_name_or_use_existing_one(scope, 'Split', operator_name)
