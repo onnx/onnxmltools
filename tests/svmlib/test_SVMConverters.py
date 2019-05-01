@@ -258,10 +258,10 @@ class TestSvmLibSVM(unittest.TestCase):
 
         node = convert(libsvm_model, "LibSvmSvmcLinearRaw", [('input', FloatTensorType(shape=[1, 'None']))])
         self.assertTrue(node is not None)
-        # known svm runtime dimension error in ONNX Runtime 0.3.0
+        # known svm runtime dimension error in ONNX Runtime
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
                             basename="LibSvmSvmcLinearRaw-Dec3", verbose=False,
-                            allow_failure="StrictVersion(onnxruntime.__version__) < StrictVersion('0.4.0')")
+                            allow_failure="StrictVersion(onnxruntime.__version__) < StrictVersion('0.5.0')")
 
     def test_convert_svmc_raw(self):
         iris = load_iris()
@@ -282,12 +282,12 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        # known svm runtime dimension error in ONNX Runtime 0.3.0
+        # known svm runtime dimension error in ONNX Runtime
         node = convert(libsvm_model, "LibSvmSvmcRaw", [('input', FloatTensorType(shape=[1, 'None']))])
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
                             basename="LibSvmSvmcRaw",
-                            allow_failure="StrictVersion(onnxruntime.__version__) < StrictVersion('0.4.0')")
+                            allow_failure="StrictVersion(onnxruntime.__version__) < StrictVersion('0.5.0')")
 
     @unittest.skip(reason="libsvm crashes.")
     def test_convert_nusvmc_linear_raw(self):
