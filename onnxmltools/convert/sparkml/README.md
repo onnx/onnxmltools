@@ -1,22 +1,19 @@
 # Spark ML to Onnx Model Conversion
 
-As of this writing there are only 4 SparkML Transformers/Evaluators 
-are converted and for most of those only basic options are supported.
-
-There are prep work needed above and beyond calling the API. In short these steps are:
+There is prep work needed above and beyond calling the API. In short these steps are:
 
 * providing the API with the types of Tensors being input to the Session.
 * creating proper Tensors from the DataFrame you are going to use for prediction.
 * taking the output Tensor(s) and converting it(them) back to a DataFrame if further processing is required.
 
 ## Instructions
-For examples, please see the unit tests under `test/sparkml`
+For examples, please see the unit tests under `tests/sparkml`
 
-1- Create a list of input types needed to be supplied to the model conversion call.
+1- Create a list of input types needed to be supplied to the `convert_sparkml()` call.
 For simple cases you can use `buildInitialTypesSimple()` function in `convert/sparkml/utils.py`.
 To use this function just pass your test DataFrame.
 
-   Otherwise, the conversion code requires a list of tuples of input name and its Tensor type such as:
+Otherwise, the conversion code requires a list of tuples with input names and their corresponding Tensor types, as shown below:
 ```python
 initial_types = [ 
     ("label", StringTensorType([1, 1])),
@@ -69,11 +66,13 @@ output = sess.run(None, input_data)
 
 ## Known Issues
 
-1. StringIndexer must not drop any records: StringIndexer in Spark has a `handleInvalid` option.
-Do not set this to 'drop'.
+1. Overall invalid data handling is problematic and not implemented in most cases. 
+Make sure your data is clean.
 
 2. OneHotEncoderEstimator must not drop the last bit: OneHotEncoderEstimator has an option
 which you can use to make sure the last bit is included in the vector: `dropLast=False`
 
 3. Use FloatTensorType for all numbers (instead of Int6t4Tensor or other variations)
+
+4. Some conversions, such as the one for Word2Vec, can only handle batch size of 1 (one input row)
 

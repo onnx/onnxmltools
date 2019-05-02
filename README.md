@@ -34,7 +34,7 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 2. CoreMLTools
 3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
 4. LightGBM (scikit-learn interface)
-5. SparkML (pyspark version 2.3.3 only)
+5. SparkML
 6. XGBoost (scikit-learn interface)
 7. libsvm
 
