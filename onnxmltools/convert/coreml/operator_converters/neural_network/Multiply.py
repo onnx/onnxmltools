@@ -13,7 +13,7 @@ def convert_multiply(scope, operator, container):
     if len(operator.input_full_names) == 1:
         # Multiply the input tensor by a scalar, named alpha.
         scaler_name = scope.get_unique_variable_name(operator.full_name + '_B')
-        container.add_initializer(scaler_name, onnx_proto.TensorProto.FLOAT, [], [operator.raw_operator.add.alpha])
+        container.add_initializer(scaler_name, onnx_proto.TensorProto.FLOAT, [], [operator.raw_operator.multiply.alpha])
         inputs = [operator.inputs[0].full_name, scaler_name]
         broadcast = 1
         apply_mul(scope, inputs, operator.output_full_names, container, operator_name=operator.full_name,
