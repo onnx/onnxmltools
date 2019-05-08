@@ -29,7 +29,7 @@ pip install git+https://github.com/onnx/onnxmltools
 If you choose to install `onnxmltools` from its source code, you must set the environment variable `ONNX_ML=1` before installing the `onnx` package. 
 
 ## Dependencies
-This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, or LightGBM, you will need an environment with the respective package installed from the list below:
+This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, LightGBM, SparkML, XGBoost, or LibSVM, you will need an environment with the respective package installed from the list below:
 1. scikit-learn
 2. CoreMLTools
 3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
@@ -37,6 +37,8 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 5. SparkML
 6. XGBoost (scikit-learn interface)
 7. libsvm
+
+`onnxmltools` has been tested with Python **2.7**, **3.5**, **3.6**, and **3.7**.
 
 # Examples
 If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
