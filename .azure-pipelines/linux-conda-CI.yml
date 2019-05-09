@@ -21,6 +21,9 @@ jobs:
       Python36:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1
+      Python37:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.5.0
     maxParallel: 3
 
   steps:
@@ -42,7 +45,7 @@ jobs:
       pip install -e .
       cd ..
       pip install -r requirements-dev.txt
-      test '$(python.version)' != '2.7' && pip install onnxruntime==0.3.0
+      test '$(python.version)' != '2.7' && pip install onnxruntime==0.4.0
       pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
