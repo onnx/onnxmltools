@@ -182,14 +182,20 @@ def convert_pooling(scope, operator, container):
         op_type = 'MaxPool'
         if container.target_opset < 8:
             op_version = 1
-        else:
+        elif container.target_opset < 10:
             op_version = 8
+        else:
+            op_version = 10
+            attrs['ceil_mode'] = 1
     elif params.type == Params.AVERAGE:
         op_type = 'AveragePool'
         if container.target_opset < 7:
             op_version = 1
-        else:
+        elif container.target_opset < 10:
             op_version = 7
+        else:
+            op_version = 10
+            attrs['ceil_mode'] = 1
     elif params.type == Params.L2:
         op_type = 'LpPool'
         attrs['p'] = 2
@@ -307,7 +313,7 @@ def convert_pooling(scope, operator, container):
 
             # Associated sub-graph of case 6: Z' ---> L1Pool ---> Z''
             lp_pool_attrs = {'name': scope.get_unique_operator_name('LpPool'), 'kernel_shape': kernel_shape,
-                             'strides': strides, 'p': 1, 'audo_pad': 'VALID'}
+                             'strides': strides, 'p': 1, 'auto_pad': 'VALID'}
             container.add_node('LpPool', Z_prime_name, Z_prime_prime_name, op_version=2, **lp_pool_attrs)
 
             # Element-wisely apply adjustment coefficients and create the expected CoreML output
