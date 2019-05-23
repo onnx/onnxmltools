@@ -23,7 +23,5 @@ from .convert import convert_lightgbm
 from .convert import convert_sklearn
 from .convert import convert_sparkml
 
-# from .convert.common.interface import *
-
 from .utils import load_model
 from .utils import save_model
