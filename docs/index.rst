@@ -81,4 +81,9 @@ Pei Jiang, Ivan Matantsev, Prabhat Roy, M. Zeeshan Siddiqui,
 Shouheng Yi, Shauheen Zahirazami, Yiwen Zhu, Du Li, Xuan Li, Wenbing Li.
 It is licensed with `MIT License <../LICENSE>`_.
 
+**Contribute**
+
+* `onnx/sklearn-onnx <https://github.com/onnx/onnxmltools>`_
+* `Raise an issue <https://github.com/onnx/onnxmltools/issues>`_
+* `Unit Tests Coverage <coverage_html/index.html>`_
 
