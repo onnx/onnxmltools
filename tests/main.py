@@ -43,11 +43,11 @@ def run_tests(library=None, folder=None):
     except ImportError:
         raise ImportError("Cannot import onnxmltools. It must be installed first.")
     
-    available = {'Sklearn': ['sklearn'],
-                 'LightGbm': ['lightgbm'],
+    available = {'LightGbm': ['lightgbm'],
                  'LibSvm': ['svmlib'],
                  'Cml': ['coreml'],
-                 'Sparkml': ['sparkml']
+                 'Sparkml': ['sparkml'],
+                 'onnxconverter_common': ['../onnxutils/tests'],
                  }
 
     if library is None:
@@ -85,9 +85,13 @@ def run_tests(library=None, folder=None):
         runner = unittest.TextTestRunner()
         for ts in suites:
             for k in ts:
-                for t in k:
-                    print(t.__class__.__name__)
-                    break
+                try:
+                    for t in k:
+                        print(t.__class__.__name__)
+                        break
+                except TypeError as e:
+                    warnings.warn("[ERROR] Unable to run test '{}' - "
+                                  "{}.".format(ts, str(e).replace("\n", " ")))
             runner.run(ts)
     
     from onnxmltools.utils.tests_helper import make_report_backend
