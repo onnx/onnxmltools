@@ -46,7 +46,8 @@ def run_tests(library=None, folder=None):
     available = {'LightGbm': ['lightgbm'],
                  'LibSvm': ['svmlib'],
                  'Cml': ['coreml'],
-                 'Sparkml': ['sparkml']
+                 'Sparkml': ['sparkml'],
+                 'onnxconverter_common': ['../onnxutils/tests'],
                  }
 
     if library is None:
