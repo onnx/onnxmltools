@@ -67,6 +67,9 @@ jobs:
     displayName: 'pytest - onnxutils'
 
   - script: |
+      export PYTHONPATH=$PYTHONPATH:libsvm/python
+      python -c "import onnxconverter_common"
+      python -c "import onnxmltools"
       coverage run --include=onnxmltools/** tests/main.py
       coverage report -m
       coverage html
