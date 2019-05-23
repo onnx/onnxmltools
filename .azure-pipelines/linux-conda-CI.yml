@@ -66,6 +66,12 @@ jobs:
       pytest onnxutils/tests --doctest-modules --junitxml=junit/test-results-onnxutils.xml
     displayName: 'pytest - onnxutils'
 
+  - script: |
+      coverage run --include=onnxmltools/** tests/main.py
+      coverage report -m
+      coverage html
+    displayName: 'coverage'
+
   - task: PublishTestResults@2
     inputs:
       testResultsFiles: '**/test-results.xml'
