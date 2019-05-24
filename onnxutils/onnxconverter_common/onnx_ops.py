@@ -455,8 +455,8 @@ def apply_reshape(scope, input_name, output_name, container, operator_name=None,
 
 def apply_resize(scope, input_name, output_name, container, operator_name=None, mode='nearest', scales=None):
     '''
-    :param mode: nearest or linear
-    :param scales: a float tensor of scaling rate of all input dimensions
+    :param mode: "nearest" or "linear"
+    :param scales: a float tensor for scaling (upsampling or downsampling) all input dimensions
     '''
     name = _create_name_or_use_existing_one(scope, 'Resize', operator_name)
     attrs = {'name': name}
@@ -668,5 +668,5 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
         container.add_node('Upsample', inputs, output_name, op_version=op_version, **attrs)
     else:
         # Upsample op is deprecated in ONNX opset 10
-        # We can implement Upsample through Resize instead
+        # We implement Upsample through Resize instead
         apply_resize(scope, input_name, output_name, container, operator_name, mode, scales)
