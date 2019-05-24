@@ -46,6 +46,7 @@ def convert_activation(scope, operator, container):
     else:
         if activation_type == 'thresholdedReLU':
             op_type = 'ThresholdedRelu'
+            attrs['op_version'] = 10
             attrs['alpha'] = params.thresholdedReLU.alpha
         elif activation_type == 'softsign':
             op_type = 'Softsign'
