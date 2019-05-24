@@ -667,4 +667,6 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
 
         container.add_node('Upsample', inputs, output_name, op_version=op_version, **attrs)
     else:
+        # Upsample op is deprecated in ONNX opset 10
+        # We can implement Upsample through Resize instead
         apply_resize(scope, input_name, output_name, container, operator_name, mode, scales)
