@@ -453,6 +453,22 @@ def apply_reshape(scope, input_name, output_name, container, operator_name=None,
         # Create ONNX Reshape operator
         container.add_node('Reshape', [input_name, desired_shape_name], output_name, op_version=5, name=name)
 
+def apply_resize(scope, input_name, output_name, container, operator_name=None, mode='nearest', scales=None):
+    '''
+    :param mode: nearest or linear
+    :param scales: a float tensor of scaling rate of all input dimensions
+    '''
+    name = _create_name_or_use_existing_one(scope, 'Resize', operator_name)
+    attrs = {'name': name}
+    attrs['mode'] = mode.lower()
+
+    scales_tensor_name = scope.get_unique_variable_name(name + '_scales')
+    container.add_initializer(scales_tensor_name, onnx_proto.TensorProto.FLOAT, [len(scales)], scales)
+    inputs = [input_name, scales_tensor_name]
+    op_version = 10
+
+    container.add_node('Resize', inputs, output_name, op_version=op_version, **attrs)
+
 def apply_sigmoid(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Sigmoid', input_name, output_name, container, operator_name)
 
@@ -651,14 +667,4 @@ def apply_upsample(scope, input_name, output_name, container, operator_name=None
 
         container.add_node('Upsample', inputs, output_name, op_version=op_version, **attrs)
     else:
-        # TODO, we need verify this after onnx opset 10 release
-        name = _create_name_or_use_existing_one(scope, 'Resize', operator_name)
-        attrs = {'name': name}
-        attrs['mode'] = mode.lower()
-
-        scales_tensor_name = scope.get_unique_variable_name(name + '_scales')
-        container.add_initializer(scales_tensor_name, onnx_proto.TensorProto.FLOAT, [len(scales)], scales)
-        inputs = [input_name, scales_tensor_name]
-        op_version = 10
-
-        container.add_node('Resize', inputs, output_name, op_version=op_version, **attrs)
+        apply_resize(scope, input_name, output_name, container, operator_name, mode, scales)
