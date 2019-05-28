@@ -10,6 +10,7 @@ from . import Classifier
 from . import DictVectorizer
 from . import FeatureVectorizer
 from . import Identity
+from . import NonMaxSuppression
 from . import OneHotEncoder
 from . import Regressor
 from . import TensorToLabel

@@ -1,0 +1,19 @@
+# -------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+
+from ...common._registration import register_shape_calculator
+from ...common.data_types import FloatTensorType, Int64TensorType
+from ...common.utils import check_input_and_output_numbers
+
+
+def calculate_non_max_suppression_output_shapes(operator):
+    '''
+    Allowed input/output patterns are
+        1.
+    '''
+    check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType])
+
+register_shape_calculator('nonMaxSuppression', calculate_non_max_suppression_output_shapes)

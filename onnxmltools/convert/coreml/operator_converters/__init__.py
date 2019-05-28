@@ -12,6 +12,7 @@ from . import GLMClassifier
 from . import GLMRegressor
 from . import Identity
 from . import Imputer
+from . import NonMaxSuppression
 from . import Normalizer
 from . import OneHotEncoder
 from . import Scaler
