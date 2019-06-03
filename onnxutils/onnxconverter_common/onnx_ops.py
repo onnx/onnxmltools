@@ -580,6 +580,18 @@ def apply_sum(scope, input_names, output_name, container, operator_name=None):
 def apply_tanh(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Tanh', input_name, output_name, container, operator_name)
 
+def apply_thresholded_relu(scope, input_name, output_name, container, operator_name=None, alpha=None):
+    if alpha == None:
+        alpha = [1.0]
+
+    name = _create_name_or_use_existing_one(scope, 'ThresholdedRelu', operator_name)
+    if container.target_opset < 10:
+        raise RuntimeError("ThresholdedRelu is only supported in Opset 10.")
+    else:
+        attrs = {'name': name, 'alpha': alpha[0]}
+        container.add_node('ThresholdedRelu', input_name, output_name, op_version=10, **attrs)
+
+
 def apply_tile(scope, input_name, output_name, container, operator_name=None, repeats=None):
     name = _create_name_or_use_existing_one(scope, 'Tile', operator_name)
 

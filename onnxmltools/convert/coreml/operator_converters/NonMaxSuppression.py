@@ -8,15 +8,27 @@ from ...common._registration import register_converter
 import numpy as np
 
 def convert_non_max_suppression(scope, operator, container):
+    if container.target_opset < 10:
+        raise RuntimeError('NonMaxSuppression is only support in Opset 10 or higher')
+
     op_type = 'NonMaxSuppression'
     attrs = {'name': operator.full_name}
 
-    raw_model = operator.raw_operator.nonMaxSuppression
+    raw_model = operator.raw_operator.nonMaximumSuppression
 
+    # We index into scope.variable_name_mapping with key of raw_model.inputFeatureName to extract list of values.
+    # Assuming there's only one NMS node in this graph, the last node will be the input we're looking for.
+    # If there's more than one NMS coreml model, then return error.
     if raw_model.HasField('coordinatesInputFeatureName'):
-        attrs['boxes'] = np.array(raw_model.coordinatesInputFeatureName).astype(np.float32)
+        coordinates_input = scope.variable_name_mapping[raw_model.coordinatesInputFeatureName]
+        if len(coordinates_input) > 1:
+            raise RuntimeError('NMS conversion does not currently support more than one NMS node in an ONNX graph')
+        attrs['boxes'] = np.array(coordinates_input[0]).astype(np.float32)
     if raw_model.HasField('confidenceInputFeatureName'):
-        attrs['scores'] = np.array(raw_model.confidenceInputFeatureName).astype(np.float32)
+        confidence_input = scope.variable_name_mapping[raw_model.confidenceInputFeatureName]
+        if len(coordinates_input) > 1:
+            raise RuntimeError('NMS conversion does not currently support more than one NMS node in an ONNX graph')
+        attrs['scores'] = np.array(confidence_input[0]).astype(np.float32)
 
     if raw_model.HasField('iouThreshold'):
         attrs['iou_threshold'] = np.array(raw_model.iouThreshold).astype(np.float32)

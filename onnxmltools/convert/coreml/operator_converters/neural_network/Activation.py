@@ -43,12 +43,11 @@ def convert_activation(scope, operator, container):
     elif activation_type =='scaledTanh':
         apply_scaled_tanh(scope, inputs[0], outputs[0], container, operator_name=attrs['name'],
                           alpha=params.scaledTanh.alpha, beta=params.scaledTanh.beta)
+    elif activation_type == 'thresholdedReLU':
+        apply_thresholded_relu(scope, inputs, outputs, container, operator_name=attrs['name'],
+                               alpha=params.thresholdedReLU.alpha)
     else:
-        if activation_type == 'thresholdedReLU':
-            op_type = 'ThresholdedRelu'
-            attrs['op_version'] = 10
-            attrs['alpha'] = params.thresholdedReLU.alpha
-        elif activation_type == 'softsign':
+        if activation_type == 'softsign':
             op_type = 'Softsign'
         elif activation_type == 'softplus':
             op_type = 'Softplus'
