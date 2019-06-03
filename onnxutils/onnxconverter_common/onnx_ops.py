@@ -585,12 +585,15 @@ def apply_thresholded_relu(scope, input_name, output_name, container, operator_n
         alpha = [1.0]
 
     name = _create_name_or_use_existing_one(scope, 'ThresholdedRelu', operator_name)
+    attrs = {'name': name, 'alpha': alpha[0]}
     if container.target_opset < 10:
-        raise RuntimeError("ThresholdedRelu is only supported in Opset 10.")
+    # ThresholdedRelu graduated from an experimental op to a full op in opset 10
+    # onnxruntime maintains support in the ONNX domain for ThresholdedRelu as a contrib op
+        attrs['op_domain'] = "ai.onnx"
+        op_version = 1
     else:
-        attrs = {'name': name, 'alpha': alpha[0]}
-        container.add_node('ThresholdedRelu', input_name, output_name, op_version=10, **attrs)
-
+        op_version = 10
+    container.add_node('ThresholdedRelu', input_name, output_name, op_version=op_version, **attrs)
 
 def apply_tile(scope, input_name, output_name, container, operator_name=None, repeats=None):
     name = _create_name_or_use_existing_one(scope, 'Tile', operator_name)
