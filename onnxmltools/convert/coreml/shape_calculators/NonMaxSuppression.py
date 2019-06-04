@@ -10,10 +10,8 @@ from ...common.utils import check_input_and_output_numbers
 
 
 def calculate_non_max_suppression_output_shapes(operator):
-    '''
-    Allowed input/output patterns are
-        1.
-    '''
     check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType])
+    if operator.target_opset < 10:
+        raise RuntimeError("nonMaxSuppression not supported before Opset 10.")
 
 register_shape_calculator('nonMaxSuppression', calculate_non_max_suppression_output_shapes)
