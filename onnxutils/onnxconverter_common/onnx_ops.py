@@ -580,6 +580,21 @@ def apply_sum(scope, input_names, output_name, container, operator_name=None):
 def apply_tanh(scope, input_name, output_name, container, operator_name=None):
     _apply_unary_operation(scope, 'Tanh', input_name, output_name, container, operator_name)
 
+def apply_thresholded_relu(scope, input_name, output_name, container, operator_name=None, alpha=None):
+    if alpha == None:
+        alpha = [1.0]
+
+    name = _create_name_or_use_existing_one(scope, 'ThresholdedRelu', operator_name)
+    attrs = {'name': name, 'alpha': alpha[0]}
+    if container.target_opset < 10:
+    # ThresholdedRelu graduated from an experimental op to a full op in opset 10
+    # onnxruntime maintains support in the ONNX domain for ThresholdedRelu as a contrib op
+        attrs['op_domain'] = "ai.onnx"
+        op_version = 1
+    else:
+        op_version = 10
+    container.add_node('ThresholdedRelu', input_name, output_name, op_version=op_version, **attrs)
+
 def apply_tile(scope, input_name, output_name, container, operator_name=None, repeats=None):
     name = _create_name_or_use_existing_one(scope, 'Tile', operator_name)
 
