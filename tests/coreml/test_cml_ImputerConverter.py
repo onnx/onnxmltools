@@ -1,10 +1,15 @@
 """
 Tests CoreML Imputer converter.
 """
-import coremltools
-import numpy as np
 import unittest
-from sklearn.preprocessing import Imputer
+import numpy as np
+try:
+    # scikit-learn >= 0.21
+    from sklearn.impute import SimpleImputer as Imputer
+except ImportError:
+    # scikit-learn < 0.21
+    from sklearn.preprocessing import Imputer
+import coremltools
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
 
