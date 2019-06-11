@@ -121,7 +121,7 @@ class TestSvmLibSVM(unittest.TestCase):
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
                             basename="LibSvmSvmcLinear-Dec3",
-                            allow_failure="StrictVersion(onnxruntime.__version__) <= StrictVersion('0.3.0')")
+                            allow_failure="StrictVersion(onnxruntime.__version__) < StrictVersion('0.5.0')")
 
     def test_convert_svmc(self):
         iris = load_iris()
