@@ -22,6 +22,7 @@ from .convert import convert_keras
 from .convert import convert_lightgbm
 from .convert import convert_sklearn
 from .convert import convert_sparkml
+from .convert import convert_xgboost
 
 from .utils import load_model
 from .utils import save_model
