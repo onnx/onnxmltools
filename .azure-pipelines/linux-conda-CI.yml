@@ -44,9 +44,6 @@ jobs:
       conda install -c conda-forge cmake
       pip install $(ONNX_PATH)
       pip install -r requirements.txt
-      cd onnxutils
-      pip install -e .
-      cd ..
       pip install -r requirements-dev.txt
       test '$(python.version)' != '2.7' && pip install onnxruntime==0.4.0
       pip install pytest
@@ -62,12 +59,6 @@ jobs:
       test '$(python.version)' != '2.7' && python -c "import onnxruntime"
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
-
-  - script: |
-      export PYTHONPATH=$PYTHONPATH:libsvm/python
-      python -c "import onnxconverter_common"
-      pytest onnxutils/tests --doctest-modules --junitxml=junit/test-results-onnxutils.xml
-    displayName: 'pytest - onnxutils'
 
   - script: |
       export PYTHONPATH=$PYTHONPATH:libsvm/python

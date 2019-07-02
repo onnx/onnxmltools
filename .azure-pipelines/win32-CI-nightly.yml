@@ -37,10 +37,8 @@ jobs:
       python -m pip install --upgrade pip numpy
       echo Test numpy installation... && python -c "import numpy"
       pip install %COREML_PATH% %ONNX_PATH%
-      cd onnxutils
-      pip install -e .
+      pip install -r requirements.txt
       echo Test onnxconverter-common installation... && python -c "import onnxconverter_common"
-      cd ..
       pip install -r requirements-dev.txt
       pip install %ONNXRT_PATH%
       echo Test onnxruntime installation... && python -c "import onnxruntime"
