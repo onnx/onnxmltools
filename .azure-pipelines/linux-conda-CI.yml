@@ -44,6 +44,10 @@ jobs:
       conda install -c conda-forge cmake
       pip install $(ONNX_PATH)
       pip install -r requirements.txt
+      git clone https://github.com/microsoft/onnxconverter-common
+      cd onnxconverter-common/onnxconverter_common
+      pip install -e .
+      cd ../..
       pip install -r requirements-dev.txt
       test '$(python.version)' != '2.7' && pip install onnxruntime==0.4.0
       pip install pytest
