@@ -39,9 +39,9 @@ jobs:
       pip install %COREML_PATH% %ONNX_PATH%
       pip install -r requirements.txt
       git clone https://github.com/microsoft/onnxconverter-common
-      cd onnxconverter-common/onnxconverter_common
+      cd onnxconverter-common
       pip install -e .
-      cd ../..
+      cd ..
       echo Test onnxconverter-common installation... && python -c "import onnxconverter_common"
       pip install -r requirements-dev.txt
       pip install %ONNXRT_PATH%
