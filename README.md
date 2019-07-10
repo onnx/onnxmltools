@@ -10,12 +10,11 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * Apple Core ML
 * scikit-learn (subset of models convertible to ONNX)
 * Keras
+* Tensorflow
 * Spark ML (experimental)
 * LightGBM
 * libsvm
 * XGBoost
-
-To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
 
 ## Install
 You can install latest release of ONNXMLTools from [PyPi](https://pypi.org/project/onnxmltools/):
