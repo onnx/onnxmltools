@@ -17,7 +17,7 @@ from onnxmltools.utils import dump_data_and_model
 class TestCoreMLImputerConverter(unittest.TestCase):
 
     def test_imputer(self):
-        model = Imputer(missing_values='NaN', strategy='mean', axis=0)
+        model = Imputer(missing_values='NaN', strategy='mean')
         data = [[1, 2], [np.nan, 3], [7, 6]]
         model.fit(data)
         model_coreml = coremltools.converters.sklearn.convert(model)
