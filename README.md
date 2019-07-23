@@ -7,15 +7,14 @@
 
 # Introduction 
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
+* Keras (a wrapper of [keras2onnx converter](https://github.com/onnx/keras-onnx/))
+* Tensorflow (a wrapper of [tf2onnx converter](https://github.com/onnx/tensorflow-onnx/))
+* scikit-learn (a wrapper of [skl2onnx converter](https://github.com/onnx/sklearn-onnx/))
 * Apple Core ML
-* scikit-learn (subset of models convertible to ONNX)
-* Keras
 * Spark ML (experimental)
 * LightGBM
 * libsvm
 * XGBoost
-
-To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
 
 ## Install
 You can install latest release of ONNXMLTools from [PyPi](https://pypi.org/project/onnxmltools/):

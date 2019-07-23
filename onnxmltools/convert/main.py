@@ -74,6 +74,19 @@ def convert_sparkml(model, name=None, initial_types=None, doc_string='', target_
     return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
                    custom_conversion_functions, custom_shape_calculators, spark_session)
 
+def convert_tensorflow(frozen_graph_def,
+                       name=None, input_names=None, output_names=None,
+                       doc_string='',
+                       target_opset=None,
+                       channel_first_inputs=None,
+                       debug_mode=False, custom_op_conversions=None):
+    if not utils.keras2onnx_installed():
+        raise RuntimeError('keras2onnx is not installed. Please install it to use this feature.')
+
+    from keras2onnx import convert_tensorflow as convert
+    return convert(frozen_graph_def, name, input_names, output_names, doc_string,
+                   target_opset, channel_first_inputs, debug_mode, custom_op_conversions)
+
 def convert_xgboost(*args, **kwargs):
     if not utils.xgboost_installed():
         raise RuntimeError('xgboost is not installed. Please install xgboost to use this feature.')

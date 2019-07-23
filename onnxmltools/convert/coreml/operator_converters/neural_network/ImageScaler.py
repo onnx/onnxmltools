@@ -37,7 +37,7 @@ def convert_preprocessing_scaler(scope, operator, container):
 
         # Store the bias vector. It will be added into the input tensor.
         bName = scope.get_unique_variable_name(operator.full_name + '_bias')
-        container.add_initializer(bName, onnx_proto.TensorProto.FLOAT, [len(bias), 3, 1], bias)
+        container.add_initializer(bName, onnx_proto.TensorProto.FLOAT, [len(bias), 1, 1], bias)
 
         # Compute Z = a * X.
         zName = scope.get_unique_variable_name(operator.full_name + '_scaled')
