@@ -222,7 +222,9 @@ def convert_lightgbm(scope, operator, container):
             apply_reshape(scope, final_label_name, operator.outputs[0].full_name, container, desired_shape=[-1,])
             prob_tensor = merged_prob_name
         else:
-            container.add_node('Identity', label_tensor_name, operator.outputs[0].full_name)
+            container.add_node('Identity', label_tensor_name,
+                               operator.outputs[0].full_name,
+                               name='Identity')
 
         # Convert probability tensor to probability map (keys are labels while values are the associated probabilities)
         container.add_node('ZipMap', prob_tensor, operator.outputs[1].full_name,
