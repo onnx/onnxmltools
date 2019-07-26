@@ -47,7 +47,6 @@ def run_tests(library=None, folder=None):
                  'LibSvm': ['svmlib'],
                  'Cml': ['coreml'],
                  'Sparkml': ['sparkml'],
-                 'onnxconverter_common': ['../onnxutils/tests'],
                  }
 
     if library is None:
