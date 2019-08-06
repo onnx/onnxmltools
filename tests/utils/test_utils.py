@@ -71,7 +71,9 @@ class TestUtils(unittest.TestCase):
     def test_evaluate_condition(self):
         if not is_backend_enabled("onnxruntime"):
             return
-        value = [evaluate_condition("onnxruntime", "StrictVersion(onnxruntime.__version__) <= StrictVersion('0.%d.3')" % i) for i in range(0, 5)]
+        value = [
+            evaluate_condition("onnxruntime", "StrictVersion(onnxruntime.__version__) <= StrictVersion('0.%d.3')" % i)
+            for i in (1, 9999)]
         self.assertNotEqual(min(value), max(value))
 
     def test_optimizer(self):
