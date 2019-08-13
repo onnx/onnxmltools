@@ -75,7 +75,19 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         os.makedirs(folder)
 
     if hasattr(model, "predict"):
-        if hasattr(model, "predict_proba"):
+        import lightgbm
+        if isinstance(model, lightgbm.Booster):
+            # LightGBM Booster
+            model_dict = model.dump_model()
+            if model_dict['objective'].startswith('binary'):
+                score = model.predict(data)
+                prediction = [score > 0.5, numpy.vstack([1-score, score]).T]
+            elif model_dict['objective'].startswith('multiclass'):
+                score = model.predict(data)
+                prediction = [score.argmax(axis=1), score]
+            else:
+                prediction = [model.predict(data)]
+        elif hasattr(model, "predict_proba"):
             # Classifier
             prediction = [model.predict(data), model.predict_proba(data)]
         elif hasattr(model, "decision_function"):
@@ -172,6 +184,13 @@ def convert_model(model, name, input_types):
     elif model.__class__.__name__.startswith("XGB"):
         from onnxmltools.convert import convert_xgboost
         model, prefix = convert_xgboost(model, name, input_types), "XGB"
+    elif model.__class__.__name__ == 'Booster':
+        import lightgbm
+        if isinstance(model, lightgbm.Booster):
+            from onnxmltools.convert import convert_lightgbm
+            model, prefix = convert_lightgbm(model, name, input_types), "LightGbm"
+        else:
+            raise RuntimeError("Unable to convert model of type '{0}'.".format(type(model)))
     elif isinstance(model, BaseEstimator):
         from onnxmltools.convert import convert_sklearn
         model, prefix = convert_sklearn(model, name, input_types), "Sklearn"

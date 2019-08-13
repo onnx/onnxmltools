@@ -3,9 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+import numpy
 
 from ..common._container import LightGbmModelContainer
 from ..common._topology import *
+from ..common.data_types import FloatTensorType
 
 from lightgbm import LGBMClassifier, LGBMRegressor
 
@@ -16,14 +18,44 @@ lightgbm_classifier_list = [LGBMClassifier]
 lightgbm_operator_name_map = {LGBMClassifier: 'LgbmClassifier',
                               LGBMRegressor: 'LgbmRegressor'}
 
+class WrappedBooster:
 
-def _get_lightgbm_operator_name(model_type):
+    def __init__(self, booster):
+        self.booster_ = booster
+        _model_dict = self.booster_.dump_model()
+        self.classes_ = self._generate_classes(_model_dict)
+        self.n_features_ = len(_model_dict['feature_names'])
+        if _model_dict['objective'].startswith('binary'):
+            self.operator_name = 'LgbmClassifier'
+        elif _model_dict['objective'].startswith('regression'):
+            self.operator_name = 'LgbmRegressor'
+        else:
+            # Multiclass classifier is not supported at the moment. The exported ONNX model
+            # has an issue in ZipMap node.
+            raise ValueError('unsupported LightGbm objective: {}'.format(_model_dict['objective']))
+        if _model_dict.get('average_output', False):
+            self.boosting_type = 'rf'
+        else:
+            # Other than random forest, other boosting types do not affect later conversion.
+            # Here `gbdt` is chosen for no reason.
+            self.boosting_type = 'gbdt'
+
+    def _generate_classes(self, model_dict):
+        if model_dict['num_class'] == 1:
+            return numpy.asarray([0, 1])
+        return numpy.arange(model_dict['num_class'])
+
+
+def _get_lightgbm_operator_name(model):
     '''
     Get operator name of the input argument
 
-    :param model_type:  A lightgbm object.
+    :param model:  A lightgbm object.
     :return: A string which stands for the type of the input model in our conversion framework
     '''
+    if isinstance(model, WrappedBooster):
+        return model.operator_name
+    model_type = type(model)
     if model_type not in lightgbm_operator_name_map:
         raise ValueError("No proper operator name found for '%s'" % model_type)
     return lightgbm_operator_name_map[model_type]
@@ -38,10 +70,11 @@ def _parse_lightgbm_simple_model(scope, model, inputs):
     :param inputs: A list of variables
     :return: A list of output variables which will be passed to next stage
     '''
-    this_operator = scope.declare_local_operator(_get_lightgbm_operator_name(type(model)), model)
+    operator_name = _get_lightgbm_operator_name(model)
+    this_operator = scope.declare_local_operator(operator_name, model)
     this_operator.inputs = inputs
 
-    if type(model) in lightgbm_classifier_list:
+    if operator_name == 'LgbmClassifier':
         # For classifiers, we may have two outputs, one for label and the other one for probabilities of all classes.
         # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
         label_variable = scope.declare_local_variable('label', FloatTensorType())
