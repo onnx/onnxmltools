@@ -25,6 +25,10 @@ def _translate_split_criterion(criterion):
         return 'BRANCH_GTE'
     elif criterion == '>':
         return 'BRANCH_GT'
+    elif criterion == '==':
+        return 'BRANCH_EQ'
+    elif criterion == '!=':
+        return 'BRANCH_NEQ'
     else:
         raise ValueError('Unsupported splitting criterion: %s. Only <=, <, >=, and > are allowed.')
 
