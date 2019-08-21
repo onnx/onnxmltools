@@ -7,15 +7,14 @@
 
 # Introduction 
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
+* Keras (a wrapper of [keras2onnx converter](https://github.com/onnx/keras-onnx/))
+* Tensorflow (a wrapper of [tf2onnx converter](https://github.com/onnx/tensorflow-onnx/))
+* scikit-learn (a wrapper of [skl2onnx converter](https://github.com/onnx/sklearn-onnx/))
 * Apple Core ML
-* scikit-learn (subset of models convertible to ONNX)
-* Keras
 * Spark ML (experimental)
 * LightGBM
 * libsvm
 * XGBoost
-
-To convert Tensorflow models to ONNX, see [tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
 
 ## Install
 You can install latest release of ONNXMLTools from [PyPi](https://pypi.org/project/onnxmltools/):
@@ -38,7 +37,8 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 6. XGBoost (scikit-learn interface)
 7. libsvm
 
-`onnxmltools` has been tested with Python **2.7**, **3.5**, **3.6**, and **3.7**.
+ONNXMLTools has been tested with Python **2.7**, **3.5**, **3.6**, and **3.7**.  
+  `Note: some wrapped converters may not support python 2.x anymore.`
 
 # Examples
 If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
