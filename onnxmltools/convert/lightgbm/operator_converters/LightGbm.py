@@ -70,8 +70,10 @@ def _parse_tree_structure(tree_id, class_id, learning_rate, tree_structure, attr
     else:
         attrs['nodes_missing_value_tracks_true'].append(0)
     attrs['nodes_hitrates'].append(1.)
-    _parse_node(tree_id, class_id, left_id, node_id_pool, learning_rate, tree_structure['left_child'], attrs)
-    _parse_node(tree_id, class_id, right_id, node_id_pool, learning_rate, tree_structure['right_child'], attrs)
+    _parse_node(tree_id, class_id, left_id, node_id_pool, learning_rate,
+                tree_structure['left_child'], attrs)
+    _parse_node(tree_id, class_id, right_id, node_id_pool, learning_rate,
+                tree_structure['right_child'], attrs)
 
 
 def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, attrs):
@@ -97,8 +99,10 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, learning_rate, node, a
         attrs['nodes_hitrates'].append(1.)
 
         # Recursively dive into the child nodes
-        _parse_node(tree_id, class_id, left_id, node_id_pool, learning_rate, node['left_child'], attrs)
-        _parse_node(tree_id, class_id, right_id, node_id_pool, learning_rate, node['right_child'], attrs)
+        _parse_node(tree_id, class_id, left_id, node_id_pool, learning_rate, node['left_child'],
+                    attrs)
+        _parse_node(tree_id, class_id, right_id, node_id_pool, learning_rate, node['right_child'],
+                    attrs)
     elif hasattr(node, 'left_child') or hasattr(node, 'right_child'):
         raise ValueError('Need two branches')
     else:
@@ -130,19 +134,20 @@ def convert_lightgbm(scope, operator, container):
 
     attrs = get_default_tree_classifier_attribute_pairs()
     attrs['name'] = operator.full_name
-    
+
     # Create different attributes for classifier and regressor, respectively
-    if isinstance(gbm_model, LGBMClassifier):
+    if gbm_text['objective'].startswith('binary'):
+        n_classes = 1
+        attrs['post_transform'] = 'LOGISTIC'
+    elif gbm_text['objective'].startswith('multiclass'):
         n_classes = gbm_text['num_class']
-        if gbm_model.objective_ == 'multiclass':
-            attrs['post_transform'] = 'SOFTMAX'
-        else:
-            attrs['post_transform'] = 'LOGISTIC'
-    else:
+        attrs['post_transform'] = 'SOFTMAX'
+    elif gbm_text['objective'].startswith('regression'):
         n_classes = 1  # Regressor has only one output variable
         attrs['post_transform'] = 'NONE'
         attrs['n_targets'] = n_classes
-
+    else:
+        assert False, 'LightGBM objective should be cleaned already'
     # Use the same algorithm to parse the tree
     for i, tree in enumerate(gbm_text['tree_info']):
         tree_id = i
@@ -156,7 +161,8 @@ def convert_lightgbm(scope, operator, container):
     tree_number = len(node_numbers_per_tree.keys())
     accumulated_node_numbers = [0] * tree_number
     for i in range(1, tree_number):
-        accumulated_node_numbers[i] = accumulated_node_numbers[i - 1] + node_numbers_per_tree[i - 1]
+        accumulated_node_numbers[i] = (accumulated_node_numbers[i - 1]
+                                       + node_numbers_per_tree[i - 1])
     global_node_indexes = []
     for i in range(len(attrs['nodes_nodeids'])):
         tree_id = attrs['nodes_treeids'][i]
@@ -169,7 +175,8 @@ def convert_lightgbm(scope, operator, container):
             attrs[k] = sorted_list
 
     # Create ONNX object
-    if isinstance(gbm_model, LGBMClassifier):
+    if (gbm_text['objective'].startswith('binary')
+            or gbm_text['objective'].startswith('multiclass')):
         # Prepare label information for both of TreeEnsembleClassifier and ZipMap
         class_type = onnx_proto.TensorProto.STRING
         zipmap_attrs = {'name': scope.get_unique_variable_name('ZipMap')}

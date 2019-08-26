@@ -5,6 +5,10 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
+
+import lightgbm
+
+from onnxmltools.convert.lightgbm._parse import WrappedBooster
 from ...proto import onnx, get_opset_number_from_onnx
 from ..common._topology import convert_topology
 from ._parse import parse_lightgbm
@@ -21,10 +25,11 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     This function produces an equivalent ONNX model of the given lightgbm model.
     The supported lightgbm modules are listed below.
     
-    * `LGBMClassifiers <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMClassifier>`_
-    * `LGBMRegressor <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMRegressor>`_
+    * `LGBMClassifiers <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html>`_
+    * `LGBMRegressor <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html>`_
+    * `Booster <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html>`_
 
-    :param model: A lightgbm model
+    :param model: A LightGBM model
     :param initial_types: a python list. Each element is a tuple of a variable name and a type defined in data_types.py
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
@@ -36,8 +41,10 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     :return: An ONNX model (type: ModelProto) which is equivalent to the input lightgbm model
     '''
     if initial_types is None:
-        raise ValueError('Initial types are required. See usage of convert(...) in \
-                           onnxmltools.convert.lightgbm.convert for details')
+        raise ValueError('Initial types are required. See usage of convert(...) in '
+                         'onnxmltools.convert.lightgbm.convert for details')
+    if isinstance(model, lightgbm.Booster):
+        model = WrappedBooster(model)
     if name is None:
         name = str(uuid4().hex)
 
