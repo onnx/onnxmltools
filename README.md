@@ -43,23 +43,6 @@ ONNXMLTools has been tested with Python **2.7**, **3.5**, **3.6**, and **3.7**.
 # Examples
 If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
 
-## CoreML to ONNX Conversion
-Here is a simple code snippet to convert a Core ML model into an ONNX model.
-
-```python
-import onnxmltools
-import coremltools
-
-# Load a Core ML model
-coreml_model = coremltools.utils.load_spec('example.mlmodel')
-
-# Convert the Core ML model into ONNX
-onnx_model = onnxmltools.convert_coreml(coreml_model, 'Example Model')
-
-# Save as protobuf
-onnxmltools.utils.save_model(onnx_model, 'example.onnx')
-```
-
 ## Keras to ONNX Conversion
 Next, we show an example of converting a Keras model into an ONNX model with `target_opset=7`, which corresponds to ONNX release version 1.2.
 
@@ -93,7 +76,24 @@ keras_model = Model(inputs=[input1, input2], output=sub_sum)
 onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7) 
 ```
 
-## Spark ML to ONNX Conversion
+## CoreML to ONNX Conversion
+Here is a simple code snippet to convert a Core ML model into an ONNX model.
+
+```python
+import onnxmltools
+import coremltools
+
+# Load a Core ML model
+coreml_model = coremltools.utils.load_spec('example.mlmodel')
+
+# Convert the Core ML model into ONNX
+onnx_model = onnxmltools.convert_coreml(coreml_model, 'Example Model')
+
+# Save as protobuf
+onnxmltools.utils.save_model(onnx_model, 'example.onnx')
+```
+
+## Spark ML to ONNX Conversion (experimental)
 Please refer to the following documents:
  * [Conversion Framework](onnxmltools/convert/README.md)
  * [Spark ML to ONNX Model Conversion](onnxmltools/convert/sparkml/README.md)
