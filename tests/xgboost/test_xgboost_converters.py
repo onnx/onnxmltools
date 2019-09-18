@@ -76,7 +76,7 @@ class TestXGBoostModels(unittest.TestCase):
         dump_binary_classification(xgb, suffix="RegLog")
 
     @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converter not tested on python 2")
-    def test_xgb_classifier_multi_str)labels(self):
+    def test_xgb_classifier_multi_str_labels(self):
         iris = load_iris()
         X = iris.data[:, :2]
         y = iris.target.astype('str')
