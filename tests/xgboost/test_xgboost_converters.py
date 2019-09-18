@@ -75,6 +75,18 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_binary_classification(xgb, suffix="RegLog")
 
+    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converter not tested on python 2")
+    def test_xgb_classifier_multi_str)labels(self):
+        iris = load_iris()
+        X = iris.data[:, :2]
+        y = iris.target.astype('str')
+
+        xgb = XGBClassifier()
+        xgb.fit(X, y)
+        conv_model = convert_xgboost(xgb, initial_types=[('input', FloatTensorType(shape=[1, 'None']))])
+        self.assertTrue(conv_model is not None)
+        dump_multiple_classification(xgb, allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
+
 
 if __name__ == "__main__":
     unittest.main()
