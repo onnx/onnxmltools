@@ -7,10 +7,8 @@
 import json
 import numpy as np
 from xgboost import XGBClassifier
-#from ..common._apply_operation import apply_cast, apply_reshape
 from ...common._registration import register_converter
 from ..common import get_xgb_params
-#from ..proto import onnx_proto
 
 
 class XGBConverter:
