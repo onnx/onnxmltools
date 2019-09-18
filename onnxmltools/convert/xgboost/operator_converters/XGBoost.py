@@ -4,15 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
-import ctypes
-import numbers
-import numpy
 import json
-from xgboost import XGBRegressor, XGBClassifier
-from xgboost.core import _LIB, _check_call, from_cstr_to_pystr
-from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
+import numpy as np
+from xgboost import XGBClassifier
 from ...common._registration import register_converter
-from ...common import utils
 from ..common import get_xgb_params
 
 
@@ -29,7 +24,7 @@ class XGBConverter:
     def validate(xgb_node):
         params = XGBConverter.get_xgb_params(xgb_node)
         try:
-            if not "objective" in params:
+            if "objective" not in params:
                 raise AttributeError('ojective')
         except AttributeError as e:
             raise RuntimeError('Missing attribute in XGBoost model ' + str(e))
@@ -238,7 +233,13 @@ class XGBClassifierConverter(XGBConverter):
             attr_pairs['class_ids'] = [v % ncl for v in attr_pairs['class_treeids']]
         class_labels = list(range(ncl))
 
-        attr_pairs['classlabels_int64s'] = class_labels 
+        classes = xgb_node.classes_
+        if (np.issubdtype(classes.dtype, np.floating) or
+                np.issubdtype(classes.dtype, np.signedinteger)):
+            attr_pairs['classlabels_int64s'] = classes.astype('int')
+        else:
+            classes = np.array([s.encode('utf-8') for s in classes])
+            attr_pairs['classlabels_strings'] = classes
 
         # add nodes
         if objective == "binary:logistic":
@@ -260,7 +261,6 @@ class XGBClassifierConverter(XGBConverter):
                                op_domain='ai.onnx.ml', **attr_pairs)
         else:
             raise RuntimeError("Unexpected objective: {0}".format(objective))            
-
 
 
 def convert_xgboost(scope, operator, container):
