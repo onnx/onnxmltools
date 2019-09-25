@@ -169,7 +169,7 @@ class XGBRegressorConverter(XGBConverter):
         return attrs
 
     @staticmethod
-    def convert(cscope, operator, container):
+    def convert(scope, operator, container):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
@@ -185,7 +185,8 @@ class XGBRegressorConverter(XGBConverter):
         
         # add nodes
         container.add_node('TreeEnsembleRegressor', operator.input_full_names,
-                           operator.output_full_names, op_domain='ai.onnx.ml', **attr_pairs)
+                           operator.output_full_names, op_domain='ai.onnx.ml',
+                           name=scope.get_unique_operator_name('TreeEnsembleRegressor'), **attr_pairs)
         #try:
         #    if len(inputs[0].type.tensor_type.shape.dim) > 0:
         #        output_dim = [inputs[0].type.tensor_type.shape.dim[0].dim_value, 1]
@@ -246,19 +247,25 @@ class XGBClassifierConverter(XGBConverter):
             ncl = 2
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
-                               op_domain='ai.onnx.ml', **attr_pairs)
+                               op_domain='ai.onnx.ml',
+                               name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
+                               **attr_pairs)
         elif objective == "multi:softprob":
             ncl = len(js_trees) // params['n_estimators']
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
-                               op_domain='ai.onnx.ml', **attr_pairs)
+                               op_domain='ai.onnx.ml',
+                               name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
+                               **attr_pairs)
         elif objective == "reg:logistic":
             ncl = len(js_trees) // params['n_estimators']
             if ncl == 1:
                 ncl = 2
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
-                               op_domain='ai.onnx.ml', **attr_pairs)
+                               op_domain='ai.onnx.ml',
+                               name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
+                               **attr_pairs)
         else:
             raise RuntimeError("Unexpected objective: {0}".format(objective))            
 
