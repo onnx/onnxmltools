@@ -88,7 +88,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective='reg:logistic'), 4)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=['None', 2]))])
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -106,7 +106,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective='reg:logistic'), 2)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=['None', 2]))])
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
