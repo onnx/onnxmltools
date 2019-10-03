@@ -18,7 +18,7 @@ class TestXGBoostUnpickle06(unittest.TestCase):
         with open(os.path.join(this, "xgboost10day.pickle.dat"), "rb") as f:
             xgb = pickle.load(f)
 
-        conv_model = convert_xgboost(xgb, initial_types=[('features', FloatTensorType([1, 10000]))])
+        conv_model = convert_xgboost(xgb, initial_types=[('features', FloatTensorType(['None', 10000]))])
         assert conv_model is not None
 
 
