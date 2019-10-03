@@ -36,7 +36,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb = XGBRegressor()
         xgb.fit(x_train, y_train)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=[1, 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test.astype("float32"),
@@ -53,7 +53,7 @@ class TestXGBoostModels(unittest.TestCase):
     def test_xgb_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=[1, 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -70,7 +70,7 @@ class TestXGBoostModels(unittest.TestCase):
     def test_xgb_classifier_multi(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 3)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=[1, 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -88,7 +88,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective='reg:logistic'), 4)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=[1, 2]))])
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -106,7 +106,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective='reg:logistic'), 2)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=[1, 2]))])
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -124,7 +124,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(n_estimators=4), 5, is_str=True)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=[1, 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -152,7 +152,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb = XGBClassifier(n_estimators=3)
         xgb.fit(x_train, y_train)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=[1, 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test.astype("float32"),

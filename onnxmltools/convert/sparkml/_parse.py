@@ -96,7 +96,7 @@ def parse_sparkml(spark, model, initial_types=None, target_opset=None,
     raw_model_container = SparkmlModelContainer(model)
 
     # Declare a computational graph. It will become a representation of the input spark-ml model after parsing.
-    topology = Topology(raw_model_container,
+    topology = Topology(raw_model_container, default_batch_size='None',
                         initial_types=initial_types,
                         target_opset=target_opset,
                         custom_conversion_functions=custom_conversion_functions,
