@@ -448,8 +448,7 @@ def parse_coreml(model, initial_types=None, target_opset=None, custom_conversion
 
     # Determine the batch size for parsing CoreML model's input and output features. Note that batch size is always
     # missing in all CoreML models.
-    default_batch_size = 1 if model.WhichOneof('Type') not in \
-                              ['neuralNetworkClassifier', 'neuralNetworkRegressor', 'neuralNetwork'] else 'None'
+    default_batch_size = 'None'
 
     # Topology is shared by both of CoreML and scikit-learn conversion frameworks, so we have a wrapper class,
     # CoremlModelContainer, to make sure our topology-related functions can seamlessly handle both of CoreML and
