@@ -61,7 +61,7 @@ jobs:
       python -c "import svmutil"
       python -c "import onnxconverter_common"
       test '$(python.version)' != '2.7' && python -c "import onnxruntime"
-      pytest tests --doctest-modules --junitxml=junit/test-results.xml
+      pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
 
   - script: |

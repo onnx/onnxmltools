@@ -144,7 +144,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
             else:
                 raise OnnxRuntimeAssertionError("onnxruntime cannot compute the prediction for '{0}' due to {1}".format(onx, e))
         except Exception as e:
-            raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e))
+            raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onx, e))
 
     output0 = output.copy()
 

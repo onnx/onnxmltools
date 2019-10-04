@@ -70,7 +70,7 @@ def parse_xgboost(model, initial_types=None, target_opset=None,
                    custom_conversion_functions=None, custom_shape_calculators=None):
 
     raw_model_container = XGBoostModelContainer(model)
-    topology = Topology(raw_model_container,
+    topology = Topology(raw_model_container, default_batch_size='None',
                         initial_types=initial_types, target_opset=target_opset,
                         custom_conversion_functions=custom_conversion_functions,
                         custom_shape_calculators=custom_shape_calculators)
