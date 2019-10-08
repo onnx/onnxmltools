@@ -52,8 +52,10 @@ def convert_inner_product(scope, operator, container):
         op_version = 6
     elif container.target_opset < 9:
         op_version = 7
-    else:
+    elif container.target_opset < 11:
         op_version = 9
+    else:
+        op_version = 11
         
     # Create the major ONNX operator, Gemm, to do CoreML inner product and possibly add shape adjustment
     if len(operator.inputs[0].type.shape) == 4:

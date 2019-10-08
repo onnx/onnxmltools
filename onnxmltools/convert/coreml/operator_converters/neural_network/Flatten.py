@@ -24,8 +24,10 @@ def convert_flatten(scope, operator, container):
 
     if container.target_opset < 9:
         target_opset = 1
-    else:
+    elif container.target_opset < 11:
         target_opset = 9
+    else:
+        target_opset = 11
 
     container.add_node(op_type, [variable_to_be_flattened_name], [flattened_variable_name], op_version=target_opset, **flatten_attrs)
 
