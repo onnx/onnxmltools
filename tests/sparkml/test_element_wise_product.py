@@ -19,7 +19,7 @@ class TestSparkmlElementwiseProduct(SparkMlTestCase):
                                    inputCol="features", outputCol="eprod")
         feature_count = data.first()[0].size
         model_onnx = convert_sparkml(model, 'Sparkml ElementwiseProduct',
-                                     [('features', FloatTensorType([1, feature_count]))])
+                                     [('features', FloatTensorType([None, feature_count]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model

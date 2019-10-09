@@ -14,7 +14,7 @@ class TestSparkmlOneHotEncoder(SparkMlTestCase):
         encoder = OneHotEncoderEstimator(inputCols=['index'], outputCols=['indexVec'])
         data = self.spark.createDataFrame([(0.0,), (1.0,), (2.0,), (2.0,), (0.0,), (2.0,)], ['index'])
         model = encoder.fit(data)
-        model_onnx = convert_sparkml(model, 'Sparkml OneHotEncoder', [('index', FloatTensorType([1, 1]))])
+        model_onnx = convert_sparkml(model, 'Sparkml OneHotEncoder', [('index', FloatTensorType([None, 1]))])
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
         # run the model

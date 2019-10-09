@@ -39,7 +39,7 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         pipeline = Pipeline(stages=[featureIndexer, dt])
         model = pipeline.fit(trainingData)
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Regressor Pipeline', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         self.assertTrue(model_onnx is not None)
         # run the model
@@ -65,7 +65,7 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         model = dt.fit(data)
         feature_count = data.select('features').first()[0].size
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Regressor', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         self.assertTrue(model_onnx is not None)
         # run the model

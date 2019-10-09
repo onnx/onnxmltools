@@ -14,7 +14,7 @@ class TestSparkmlStringIndexer(SparkMlTestCase):
         data = self.spark.createDataFrame([("a",), ("b",), ("c",), ("a",), ("a",), ("c",)], ['cat1'])
         model = indexer.fit(data)
         # the input name should match that of what StringIndexer.inputCol
-        model_onnx = convert_sparkml(model, 'Sparkml StringIndexer', [('cat1', StringTensorType([1, 1]))])
+        model_onnx = convert_sparkml(model, 'Sparkml StringIndexer', [('cat1', StringTensorType([None, 1]))])
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
         # run the model

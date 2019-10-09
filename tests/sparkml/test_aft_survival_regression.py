@@ -23,7 +23,7 @@ class TestSparkmAFTSurvivalRegression(SparkMlTestCase):
         model = gbt.fit(data)
         feature_count = data.first()[1].size
         model_onnx = convert_sparkml(model, 'Sparkml AFTSurvivalRegression', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         self.assertTrue(model_onnx is not None)
         # run the model

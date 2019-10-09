@@ -20,7 +20,7 @@ class TestSparkmlStopWordsRemover(SparkMlTestCase):
 
         feature_count = len(data.columns)
         model_onnx = convert_sparkml(model, 'Sparkml StopWordsRemover',
-                                     [('text', StringTensorType([1, feature_count]))])
+                                     [('text', StringTensorType([None, feature_count]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model

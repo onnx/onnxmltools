@@ -23,7 +23,7 @@ class TestSparkmlLinearRegression(SparkMlTestCase):
         model = lr.fit(data)
         # the name of the input is 'features'
         C = model.numFeatures
-        model_onnx = convert_sparkml(model, 'sparkml LinearRegressorBasic', [('features', FloatTensorType([1, C]))])
+        model_onnx = convert_sparkml(model, 'sparkml LinearRegressorBasic', [('features', FloatTensorType([None, C]))])
         self.assertTrue(model_onnx is not None)
         # run the model
         import pandas
@@ -46,7 +46,7 @@ class TestSparkmlLinearRegression(SparkMlTestCase):
         model = lr.fit(data)
         # the name of the input is 'features'
         C = model.numFeatures
-        model_onnx = convert_sparkml(model, 'sparkml LinearRegressor', [('features', FloatTensorType([1, C]))])
+        model_onnx = convert_sparkml(model, 'sparkml LinearRegressor', [('features', FloatTensorType([None, C]))])
         self.assertTrue(model_onnx is not None)
         # run the model
         import pandas
@@ -69,7 +69,7 @@ class TestSparkmlLinearRegression(SparkMlTestCase):
         model = lr.fit(data)
         # the name of the input is 'features'
         C = model.numFeatures
-        model_onnx = convert_sparkml(model, 'sparkml GeneralizedLinearRegression', [('features', FloatTensorType([1, C]))])
+        model_onnx = convert_sparkml(model, 'sparkml GeneralizedLinearRegression', [('features', FloatTensorType([None, C]))])
         self.assertTrue(model_onnx is not None)
         # run the model
         import pandas

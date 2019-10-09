@@ -42,7 +42,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = pipeline.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Pipeline', [
             ('label', StringTensorType([1, 1])),
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         self.assertTrue(model_onnx is not None)
         # run the model
@@ -73,7 +73,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = dt.fit(data)
         feature_count = 1
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree One Class', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
@@ -98,7 +98,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = dt.fit(data)
         feature_count = 2
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Binary Class', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
@@ -123,7 +123,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = dt.fit(data)
         feature_count = 2
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Multi Class', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)

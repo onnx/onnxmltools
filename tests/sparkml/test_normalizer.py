@@ -21,7 +21,7 @@ class TestSparkmlNormalizer(SparkMlTestCase):
         ]).toDF("id", "features")
         model = Normalizer(inputCol='features', outputCol='norm_feature', p=1.0)
 
-        model_onnx = convert_sparkml(model, 'Sparkml Normalizer', [('features', FloatTensorType([1, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml Normalizer', [('features', FloatTensorType([None, 3]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model
@@ -42,7 +42,7 @@ class TestSparkmlNormalizer(SparkMlTestCase):
         ]).toDF("id", "features")
         model = Normalizer(inputCol='features', outputCol='norm_feature', p=2.0)
 
-        model_onnx = convert_sparkml(model, 'Sparkml Normalizer', [('features', FloatTensorType([1, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml Normalizer', [('features', FloatTensorType([None, 3]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model

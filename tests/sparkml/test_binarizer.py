@@ -17,7 +17,7 @@ class TestSparkmlBinarizer(SparkMlTestCase):
         model = Binarizer(inputCol='feature', outputCol='binarized')
 
         # the input name should match that of what StringIndexer.inputCol
-        model_onnx = convert_sparkml(model, 'Sparkml Binarizer', [('feature', FloatTensorType([1, 1]))])
+        model_onnx = convert_sparkml(model, 'Sparkml Binarizer', [('feature', FloatTensorType([None, 1]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model

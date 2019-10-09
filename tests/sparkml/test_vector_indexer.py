@@ -26,7 +26,7 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
         )
         model = vi.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml VectorIndexer Multi',  [
-            ('a', FloatTensorType([1, model.numFeatures]))
+            ('a', FloatTensorType([None, model.numFeatures]))
         ], target_opset=9)
         self.assertTrue(model_onnx is not None)
         # run the model
@@ -51,7 +51,7 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
         )
         model = vi.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml VectorIndexer Single',  [
-            ('a', FloatTensorType([1, model.numFeatures]))
+            ('a', FloatTensorType([None, model.numFeatures]))
         ], target_opset=9)
         self.assertTrue(model_onnx is not None)
         # run the model

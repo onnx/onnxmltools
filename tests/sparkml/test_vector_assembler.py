@@ -16,9 +16,9 @@ class TestSparkmlVectorAssembler(SparkMlTestCase):
         model = VectorAssembler(inputCols=col_names, outputCol='features')
         data = self.spark.createDataFrame([(1., 0., 3.)], col_names)
         model_onnx = convert_sparkml(model, 'Sparkml VectorAssembler',  [
-            ('a', FloatTensorType([1, 1])),
-            ('b', FloatTensorType([1, 1])),
-            ('c', FloatTensorType([1, 1]))
+            ('a', FloatTensorType([None, 1])),
+            ('b', FloatTensorType([None, 1])),
+            ('c', FloatTensorType([None, 1]))
         ])
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)

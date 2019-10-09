@@ -27,7 +27,7 @@ class TestSparkmlChiSqSelector(SparkMlTestCase):
         # the input name should match that of what StringIndexer.inputCol
         feature_count = data.first()[0].size
         N = data.count()
-        model_onnx = convert_sparkml(model, 'Sparkml ChiSqSelector', [('features', FloatTensorType([N, feature_count]))])
+        model_onnx = convert_sparkml(model, 'Sparkml ChiSqSelector', [('features', FloatTensorType([None, feature_count]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model

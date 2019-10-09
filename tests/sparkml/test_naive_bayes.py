@@ -24,7 +24,7 @@ class TestSparkmlNaiveBayes(SparkMlTestCase):
         model = nb.fit(data)
         feature_count = data.select('features').first()[0].size
         model_onnx = convert_sparkml(model, 'Sparkml NaiveBayes Bernoulli',
-                                     [('features', FloatTensorType([1, feature_count]))])
+                                     [('features', FloatTensorType([None, feature_count]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model
@@ -49,7 +49,7 @@ class TestSparkmlNaiveBayes(SparkMlTestCase):
         model = nb.fit(data)
         feature_count = data.select('features').first()[0].size
         model_onnx = convert_sparkml(model, 'Sparkml NaiveBayes Multinomial',
-                                     [('features', FloatTensorType([1, feature_count]))])
+                                     [('features', FloatTensorType([None, feature_count]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model

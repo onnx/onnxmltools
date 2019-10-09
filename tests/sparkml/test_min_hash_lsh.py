@@ -25,7 +25,7 @@ class TestSparkmMinHashLSH(SparkMlTestCase):
 
         feature_count = data.first()[1].size
         model_onnx = convert_sparkml(model, 'Sparkml MinHashLSH', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         self.assertTrue(model_onnx is not None)
 
