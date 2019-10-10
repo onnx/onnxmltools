@@ -26,7 +26,7 @@ class TestSparkmlIndexToString(SparkMlTestCase):
         # the input name should match that of what IndexToString.inputCol
         model_onnx = None
         with pytest.raises(SparkMlConversionError):
-            model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([1, 1]))])
+            model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([None, 1]))])
 
     @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_index_to_string(self):
@@ -40,7 +40,7 @@ class TestSparkmlIndexToString(SparkMlTestCase):
         model = IndexToString(inputCol="categoryIndex", outputCol="originalCategory",
                               labels=['A', 'B', 'C'])
         # the input name should match that of what IndexToString.inputCol
-        model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([1, 1]))])
+        model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([None, 1]))])
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)

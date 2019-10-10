@@ -28,10 +28,14 @@ class TestSparkmlElementwiseProduct(SparkMlTestCase):
             predicted.toPandas().eprod.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
             ]
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
+        data_np = numpy.vstack([data_np, data_np])
         paths = save_data_models(data_np, expected, model, model_onnx, basename="SparkmlElementwiseProduct")
         onnx_model_path = paths[3]
         output, output_shapes = run_onnx_model(['eprod'], data_np, onnx_model_path)
-        compare_results(expected, output, decimal=5)
+        print(output[0])
+        print(expected[0])
+        expected = numpy.vstack([expected[0], expected[0]])
+        compare_results(expected, output[0], decimal=5)
 
 if __name__ == "__main__":
     unittest.main()

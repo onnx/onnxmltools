@@ -23,7 +23,7 @@ class TestSparkmlScaler(SparkMlTestCase):
         model = scaler.fit(data)
 
         # the input names must match the inputCol(s) above
-        model_onnx = convert_sparkml(model, 'Sparkml MaxAbsScaler', [('features', FloatTensorType([1, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml MaxAbsScaler', [('features', FloatTensorType([None, 3]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model
@@ -46,7 +46,7 @@ class TestSparkmlScaler(SparkMlTestCase):
         model = scaler.fit(data)
 
         # the input names must match the inputCol(s) above
-        model_onnx = convert_sparkml(model, 'Sparkml MinMaxScaler', [('features', FloatTensorType([1, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml MinMaxScaler', [('features', FloatTensorType([None, 3]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model
@@ -69,7 +69,7 @@ class TestSparkmlScaler(SparkMlTestCase):
         model = scaler.fit(data)
 
         # the input names must match the inputCol(s) above
-        model_onnx = convert_sparkml(model, 'Sparkml StandardScaler', [('features', FloatTensorType([1, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml StandardScaler', [('features', FloatTensorType([None, 3]))])
         self.assertTrue(model_onnx is not None)
 
         # run the model
