@@ -4,4 +4,12 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxconverter_common.container import *
+from onnxconverter_common.container import CommonSklearnModelContainer
+
+
+class LightGbmModelContainer(CommonSklearnModelContainer):
+    pass
+
+
+class XGBoostModelContainer(CommonSklearnModelContainer):
+    pass

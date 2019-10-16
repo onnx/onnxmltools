@@ -270,7 +270,7 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
         if not isinstance(output, numpy.ndarray):
             raise OnnxRuntimeAssertionError("output must be an array for onnx '{0}' not {1}".format(onnx, type(output)))
         if onnx_shape is not None:
-            if len(onnx_shape) == 2:
+            if len(onnx_shape) == 2 and onnx_shape[0] is not None:
                 cols = onnx_shape[1]
                 ecols = output.shape[1] if len(output.shape) == 2 else 1
                 if cols != ecols:

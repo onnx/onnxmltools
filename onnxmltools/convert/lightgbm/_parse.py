@@ -30,8 +30,7 @@ class WrappedBooster:
         elif _model_dict['objective'].startswith('regression'):
             self.operator_name = 'LgbmRegressor'
         else:
-            # Multiclass classifier is not supported at the moment. The exported ONNX model
-            # has an issue in ZipMap node.
+            # Multiclass classifier is not supported at the moment.
             raise ValueError('unsupported LightGbm objective: {}'.format(_model_dict['objective']))
         if _model_dict.get('average_output', False):
             self.boosting_type = 'rf'
