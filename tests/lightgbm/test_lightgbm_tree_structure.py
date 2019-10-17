@@ -5,18 +5,10 @@
 # --------------------------------------------------------------------------
 
 import unittest
-from logging import getLogger
 import copy
-import numpy
-from pandas import DataFrame
-from skl2onnx.common.data_types import FloatTensorType
-from sklearn.datasets import load_iris
 from onnxmltools.convert.lightgbm.operator_converters.LightGbm import (
     modify_tree_for_rule_in_set
 )
-from skl2onnx.third_party_skl import register_converters
-from skl2onnx import to_onnx
-from onnxruntime import InferenceSession
 
 
 def count_nodes(tree, done=None):
@@ -165,11 +157,6 @@ tree2 = {'average_output': False,
 
 
 class TestLightGbmTreeStructur(unittest.TestCase):
-
-    def setUp(self):
-        logger = getLogger('skl2onnx')
-        logger.disabled = True
-        register_converters()
 
     def test_onnxrt_python_lightgbm_categorical(self):
         val = {'decision_type': '==',
