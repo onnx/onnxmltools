@@ -241,7 +241,7 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
                 onnx_shapes = [_.shape for _ in sess.get_outputs()]
             except TypeError:
                 # Unable to convert function return value to a Python type!
-                onnx_shape = [None for o in output]
+                onnx_shapes = [None for o in output]
             for exp, out, osh in zip(expected, output, onnx_shapes):
                 _compare_expected(exp, out, sess, onnx, decimal=decimal, onnx_shape=osh, **kwargs)
                 tested += 1
