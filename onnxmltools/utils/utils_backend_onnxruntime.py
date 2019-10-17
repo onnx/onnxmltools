@@ -226,7 +226,6 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
     tested = 0
     if isinstance(expected, list):
         if isinstance(output, list):
-            onnx_shapes = [_.shape for _ in sess.get_outputs()]
             if 'Out0' in kwargs:
                 expected = expected[:1]
                 output = output[:1]
@@ -238,6 +237,11 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
                                          len(output.ravel()) // len(expected)))
             if len(expected) != len(output):
                 raise OnnxRuntimeAssertionError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
+            try:
+                onnx_shapes = [_.shape for _ in sess.get_outputs()]
+            except TypeError:
+                # Unable to convert function return value to a Python type!
+                onnx_shape = [None for o in output]
             for exp, out, osh in zip(expected, output, onnx_shapes):
                 _compare_expected(exp, out, sess, onnx, decimal=decimal, onnx_shape=osh, **kwargs)
                 tested += 1
