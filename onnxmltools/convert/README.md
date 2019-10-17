@@ -13,7 +13,6 @@ In ONNXMLTools, the conversion framework consists of several essential component
         * CoremlModelContainer
         * SklearnModelContainer
         * KerasModelContainer
-    * ModelComponentContainer
 * Parsers (defined in coreml/sklearn/keras subdirectory's _parse.py)
     * Core ML parser
     * scikit-learn parser
@@ -54,12 +53,10 @@ Our framework relies on two different types of containers.
 
 The first one is `RawModelContainer` and its derived classes. These objects are used to store the raw model (the one you want to convert into ONNX) and its input and output names. Let's provide an example explaining what are those names. If a CoreML model has input `feature_vector` and output `class_probabilities`, calling the property `input_names`/`output_names` of `RawModelContainer` should yield `['feature_vector']`/`['class_probabilities']`. These names basically defines the roots and leaves of your original computational graph. If we forget assigning an input name, it may cause some unreachable sub-graph which will be pruned in our compiling phase.
 
-The second container is `ModelComponentContainer` class, which we use to store the ONNX objects created during the conversion phase. Those saved objects will be put into an ONNX `ModelProto` finally.
-
 ## Parsers
 
 A parser is used to translate the considered raw model (e.g., a Core ML model) into a `Topology` object. For Core ML, its parsing algorithm is defined in
-`onnxmltools.convert.coreml._parse`. For scikit-learn's, please see `onnxmltools.convert.sklearn._parse`. Keras parse is implemented in `onnxmltools.convert.keras._parse`.
+`onnxmltools.convert.coreml._parse`. Keras parse is implemented in `onnxmltools.convert.keras._parse`.
 
 ## Compiler
 

@@ -44,7 +44,6 @@ derby.log
 metastore_db/
 tests/*/tests/*.pkl
 tests/*/tests/*.onnx
-tests/*/tests/*.keras
 docs/auto_examples/*
 docs/examples/dense121.onnx
 docs/examples/graph.dot
