@@ -15,7 +15,7 @@ jobs:
     matrix:
       Python36-nightly:
         python.version: '3.6'
-        ONNX_PATH: onnx==1.4.1
+        ONNX_PATH: onnx==1.6.0
         ONNXRT_PATH: -i https://test.pypi.org/simple/ ort-nightly
         COREML_PATH: git+https://github.com/apple/coremltools
     maxParallel: 3
