@@ -68,14 +68,6 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(onnx_model.graph.input[0].type.denotation, "IMAGE")
         self.assertEqual(onnx_model.graph.input[0].type.tensor_type.shape.dim[0].denotation, "DATA_FEATURE")
 
-    def test_evaluate_condition(self):
-        if not is_backend_enabled("onnxruntime"):
-            return
-        value = [
-            evaluate_condition("onnxruntime", "StrictVersion(onnxruntime.__version__) <= StrictVersion('0.%d.3')" % i)
-            for i in (1, 9999)]
-        self.assertNotEqual(min(value), max(value))
-
     def test_optimizer(self):
         val = np.asarray([[[[1.0, 2.0, 3.0], [1.1, 2.1, 3.1]]]], np.float32)
 
