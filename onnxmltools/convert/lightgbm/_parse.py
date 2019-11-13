@@ -25,13 +25,14 @@ class WrappedBooster:
         _model_dict = self.booster_.dump_model()
         self.classes_ = self._generate_classes(_model_dict)
         self.n_features_ = len(_model_dict['feature_names'])
-        if _model_dict['objective'].startswith('binary'):
+        if (_model_dict['objective'].startswith('binary') or
+                _model_dict['objective'].startswith('multiclass')):
             self.operator_name = 'LgbmClassifier'
         elif _model_dict['objective'].startswith('regression'):
             self.operator_name = 'LgbmRegressor'
         else:
-            # Multiclass classifier is not supported at the moment.
-            raise ValueError('unsupported LightGbm objective: {}'.format(_model_dict['objective']))
+            # Other objectives are not supported.
+            raise ValueError("Unsupported LightGbm objective: '{}'.".format(_model_dict['objective']))
         if _model_dict.get('average_output', False):
             self.boosting_type = 'rf'
         else:
