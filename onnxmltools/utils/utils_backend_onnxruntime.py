@@ -226,7 +226,6 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
     tested = 0
     if isinstance(expected, list):
         if isinstance(output, list):
-            onnx_shapes = [_.shape for _ in sess.get_outputs()]
             if 'Out0' in kwargs:
                 expected = expected[:1]
                 output = output[:1]
@@ -238,6 +237,11 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
                                          len(output.ravel()) // len(expected)))
             if len(expected) != len(output):
                 raise OnnxRuntimeAssertionError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
+            try:
+                onnx_shapes = [_.shape for _ in sess.get_outputs()]
+            except TypeError:
+                # Unable to convert function return value to a Python type!
+                onnx_shapes = [None for o in output]
             for exp, out, osh in zip(expected, output, onnx_shapes):
                 _compare_expected(exp, out, sess, onnx, decimal=decimal, onnx_shape=osh, **kwargs)
                 tested += 1
@@ -270,7 +274,7 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
         if not isinstance(output, numpy.ndarray):
             raise OnnxRuntimeAssertionError("output must be an array for onnx '{0}' not {1}".format(onnx, type(output)))
         if onnx_shape is not None:
-            if len(onnx_shape) == 2:
+            if len(onnx_shape) == 2 and onnx_shape[0] is not None:
                 cols = onnx_shape[1]
                 ecols = output.shape[1] if len(output.shape) == 2 else 1
                 if cols != ecols:

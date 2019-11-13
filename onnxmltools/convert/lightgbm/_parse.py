@@ -25,14 +25,14 @@ class WrappedBooster:
         _model_dict = self.booster_.dump_model()
         self.classes_ = self._generate_classes(_model_dict)
         self.n_features_ = len(_model_dict['feature_names'])
-        if _model_dict['objective'].startswith('binary'):
+        if (_model_dict['objective'].startswith('binary') or
+                _model_dict['objective'].startswith('multiclass')):
             self.operator_name = 'LgbmClassifier'
         elif _model_dict['objective'].startswith('regression'):
             self.operator_name = 'LgbmRegressor'
         else:
-            # Multiclass classifier is not supported at the moment. The exported ONNX model
-            # has an issue in ZipMap node.
-            raise ValueError('unsupported LightGbm objective: {}'.format(_model_dict['objective']))
+            # Other objectives are not supported.
+            raise ValueError("Unsupported LightGbm objective: '{}'.".format(_model_dict['objective']))
         if _model_dict.get('average_output', False):
             self.boosting_type = 'rf'
         else:
@@ -88,6 +88,43 @@ def _parse_lightgbm_simple_model(scope, model, inputs):
     return this_operator.outputs
 
 
+def _parse_sklearn_classifier(scope, model, inputs):
+    probability_tensor = _parse_lightgbm_simple_model(
+            scope, model, inputs)
+    this_operator = scope.declare_local_operator('LgbmZipMap')
+    this_operator.inputs = probability_tensor
+    classes = model.classes_
+    label_type = Int64Type()
+
+    if (isinstance(model.classes_, list) and
+            isinstance(model.classes_[0], numpy.ndarray)):
+        # multi-label problem
+        # this_operator.classlabels_int64s = list(range(0, len(classes)))
+        raise NotImplementedError("multi-label is not supported")
+    elif numpy.issubdtype(model.classes_.dtype, numpy.floating):
+        classes = numpy.array(list(map(lambda x: int(x), classes)))
+        if set(map(lambda x: float(x), classes)) != set(model.classes_):
+            raise RuntimeError("skl2onnx implicitly converts float class "
+                               "labels into integers but at least one label "
+                               "is not an integer. Class labels should "
+                               "be integers or strings.")
+        this_operator.classlabels_int64s = classes
+    elif numpy.issubdtype(model.classes_.dtype, numpy.signedinteger):
+        this_operator.classlabels_int64s = classes
+    else:
+        classes = numpy.array([s.encode('utf-8') for s in classes])
+        this_operator.classlabels_strings = classes
+        label_type = StringType()
+
+    output_label = scope.declare_local_variable('output_label', label_type)
+    output_probability = scope.declare_local_variable(
+        'output_probability',
+        SequenceType(DictionaryType(label_type, FloatTensorType())))
+    this_operator.outputs.append(output_label)
+    this_operator.outputs.append(output_probability)
+    return this_operator.outputs
+
+
 def _parse_lightgbm(scope, model, inputs):
     '''
     This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
@@ -97,6 +134,8 @@ def _parse_lightgbm(scope, model, inputs):
     :param inputs: A list of variables
     :return: The output variables produced by the input model
     '''
+    if isinstance(model, LGBMClassifier):
+        return _parse_sklearn_classifier(scope, model, inputs)
     return _parse_lightgbm_simple_model(scope, model, inputs)
 
 
