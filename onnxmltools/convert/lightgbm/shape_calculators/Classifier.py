@@ -43,4 +43,9 @@ def calculate_lightgbm_classifier_output_shapes(operator):
         operator.outputs[1].type = FloatTensorType(shape=[N, 1])
 
 
+def calculate_lgbm_zipmap(operator):
+    check_input_and_output_numbers(operator, output_count_range=2)
+
+
 register_shape_calculator('LgbmClassifier', calculate_lightgbm_classifier_output_shapes)
+register_shape_calculator('LgbmZipMap', calculate_lgbm_zipmap)

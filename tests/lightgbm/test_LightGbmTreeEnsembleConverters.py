@@ -9,6 +9,7 @@ import unittest
 import lightgbm
 import numpy
 from lightgbm import LGBMClassifier, LGBMRegressor
+from skl2onnx import to_onnx
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 from onnxmltools.utils import dump_binary_classification, dump_multiple_classification
@@ -22,6 +23,16 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1)
         dump_binary_classification(model, allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
         dump_multiple_classification(model, allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
+
+    def test_lightgbm_classifier_zipmap(self):
+        X = [[0, 1], [1, 1], [2, 0], [1, 2]]
+        X = numpy.array(X, dtype=numpy.float32)
+        y = [0, 1, 0, 1]
+        model = LGBMClassifier(n_estimators=3, min_child_samples=1)
+        model.fit(X, y)
+        onx = convert_model(
+            model, 'dummy', input_types=[('X', FloatTensorType([None, X.shape[1]]))])
+        assert "zipmap" in str(onx).lower()
 
     def test_lightgbm_regressor(self):
         model = LGBMRegressor(n_estimators=3, min_child_samples=1)
