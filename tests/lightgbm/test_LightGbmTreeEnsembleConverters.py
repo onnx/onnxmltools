@@ -9,7 +9,6 @@ import unittest
 import lightgbm
 import numpy
 from lightgbm import LGBMClassifier, LGBMRegressor
-from skl2onnx import to_onnx
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 from onnxmltools.utils import dump_binary_classification, dump_multiple_classification
