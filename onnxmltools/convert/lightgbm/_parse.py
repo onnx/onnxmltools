@@ -43,7 +43,7 @@ class WrappedBooster:
     def _generate_classes(self, model_dict):
         if model_dict['num_class'] == 1:
             return numpy.asarray([0, 1])
-        return numpy.arange(model_dict['num_class'])
+        return numpy.arange(model_dict['num_class'])        
 
 
 def _get_lightgbm_operator_name(model):
@@ -135,6 +135,9 @@ def _parse_lightgbm(scope, model, inputs):
     :return: The output variables produced by the input model
     '''
     if isinstance(model, LGBMClassifier):
+        return _parse_sklearn_classifier(scope, model, inputs)
+    if (isinstance(model, WrappedBooster) and
+            model.operator_name == 'LgbmClassifier'):
         return _parse_sklearn_classifier(scope, model, inputs)
     return _parse_lightgbm_simple_model(scope, model, inputs)
 
