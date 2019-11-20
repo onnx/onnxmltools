@@ -9,6 +9,7 @@ import unittest
 import lightgbm
 import numpy
 from lightgbm import LGBMClassifier, LGBMRegressor
+from onnxruntime import InferenceSession
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 from onnxmltools.utils import dump_binary_classification, dump_multiple_classification
@@ -87,6 +88,10 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
+        sess = InferenceSession(model_onnx.SerializeToString())
+        out = sess.get_outputs()
+        names = [o.name for o in out]
+        assert names == ['label', 'probabilities']
 
     def test_lightgbm_booster_regressor(self):
         X = [[0, 1], [1, 1], [2, 0]]

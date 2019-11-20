@@ -77,8 +77,8 @@ def _parse_lightgbm_simple_model(scope, model, inputs):
     if operator_name == 'LgbmClassifier':
         # For classifiers, we may have two outputs, one for label and the other one for probabilities of all classes.
         # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
-        label_variable = scope.declare_local_variable('label', FloatTensorType())
-        probability_map_variable = scope.declare_local_variable('probabilities', FloatTensorType())
+        label_variable = scope.declare_local_variable('lgbmlabel', FloatTensorType())
+        probability_map_variable = scope.declare_local_variable('lgbmprobabilities', FloatTensorType())
         this_operator.outputs.append(label_variable)
         this_operator.outputs.append(probability_map_variable)
     else:
@@ -116,9 +116,9 @@ def _parse_sklearn_classifier(scope, model, inputs):
         this_operator.classlabels_strings = classes
         label_type = StringType()
 
-    output_label = scope.declare_local_variable('output_label', label_type)
+    output_label = scope.declare_local_variable('label', label_type)
     output_probability = scope.declare_local_variable(
-        'output_probability',
+        'probabilities',
         SequenceType(DictionaryType(label_type, FloatTensorType())))
     this_operator.outputs.append(output_label)
     this_operator.outputs.append(output_probability)
