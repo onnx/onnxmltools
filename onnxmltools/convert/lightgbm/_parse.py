@@ -43,7 +43,7 @@ class WrappedBooster:
     def _generate_classes(self, model_dict):
         if model_dict['num_class'] == 1:
             return numpy.asarray([0, 1])
-        return numpy.arange(model_dict['num_class'])
+        return numpy.arange(model_dict['num_class'])        
 
 
 def _get_lightgbm_operator_name(model):
@@ -77,8 +77,8 @@ def _parse_lightgbm_simple_model(scope, model, inputs):
     if operator_name == 'LgbmClassifier':
         # For classifiers, we may have two outputs, one for label and the other one for probabilities of all classes.
         # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
-        label_variable = scope.declare_local_variable('label', FloatTensorType())
-        probability_map_variable = scope.declare_local_variable('probabilities', FloatTensorType())
+        label_variable = scope.declare_local_variable('lgbmlabel', FloatTensorType())
+        probability_map_variable = scope.declare_local_variable('lgbmprobabilities', FloatTensorType())
         this_operator.outputs.append(label_variable)
         this_operator.outputs.append(probability_map_variable)
     else:
@@ -116,9 +116,9 @@ def _parse_sklearn_classifier(scope, model, inputs):
         this_operator.classlabels_strings = classes
         label_type = StringType()
 
-    output_label = scope.declare_local_variable('output_label', label_type)
+    output_label = scope.declare_local_variable('label', label_type)
     output_probability = scope.declare_local_variable(
-        'output_probability',
+        'probabilities',
         SequenceType(DictionaryType(label_type, FloatTensorType())))
     this_operator.outputs.append(output_label)
     this_operator.outputs.append(output_probability)
@@ -135,6 +135,9 @@ def _parse_lightgbm(scope, model, inputs):
     :return: The output variables produced by the input model
     '''
     if isinstance(model, LGBMClassifier):
+        return _parse_sklearn_classifier(scope, model, inputs)
+    if (isinstance(model, WrappedBooster) and
+            model.operator_name == 'LgbmClassifier'):
         return _parse_sklearn_classifier(scope, model, inputs)
     return _parse_lightgbm_simple_model(scope, model, inputs)
 
