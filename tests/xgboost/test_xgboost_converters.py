@@ -225,7 +225,4 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestXGBoostModels().test_xgboost_booster_classifier_bin()
-    TestXGBoostModels().test_xgboost_booster_classifier_reg()
-    TestXGBoostModels().test_xgboost_booster_classifier_multiclass()
     unittest.main()
