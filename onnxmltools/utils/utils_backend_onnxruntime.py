@@ -65,7 +65,9 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
                 smodel = "\nJSON ONNX\n" + str(model)
             else:
                 smodel = ""
-            raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'\nONNX\n{1}".format(onx, smodel))
+            raise OnnxRuntimeAssertionError(
+                "Unable to load onnx '{0}' due to {1}\nONNX\n{2}".format(
+                    onx, e, smodel))
 
     input = load["data"]
     if isinstance(input, dict):
