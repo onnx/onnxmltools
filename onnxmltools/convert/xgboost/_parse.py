@@ -3,11 +3,12 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
+import json
+import numpy as np
+from xgboost import XGBRegressor, XGBClassifier
 from ..common._container import XGBoostModelContainer
 from ..common._topology import *
-
-from xgboost import XGBRegressor, XGBClassifier
+from .common import get_xgb_params
 
 xgboost_classifier_list = [XGBClassifier]
 
@@ -16,16 +17,91 @@ xgboost_operator_name_map = {XGBClassifier: 'XGBClassifier',
                               XGBRegressor: 'XGBRegressor'}
 
 
-def _get_xgboost_operator_name(model_type):
+def _append_covers(node):
+    res = []
+    if 'cover' in node:
+        res.append(node['cover'])
+    if 'children' in node:
+        for ch in node['children']:
+            res.extend(_append_covers(ch))
+    return res
+
+
+def _get_attributes(booster):
+    atts = booster.attributes()
+    ntrees = booster.best_ntree_limit
+    dp = booster.get_dump(dump_format='json', with_stats=True)        
+    res = [json.loads(d) for d in dp]
+    trees = len(res)
+    kwargs = atts.copy()
+    kwargs['feature_names'] = booster.feature_names
+    kwargs['n_estimators'] = ntrees
+    
+    # covers
+    covs = []
+    for tr in res:
+        covs.extend(_append_covers(tr))
+
+    if all(map(lambda x: int(x) == x, set(covs))):
+        # regression
+        kwargs['num_class'] = 0
+        if trees > ntrees > 0:
+            kwargs['num_target'] = trees // ntrees
+            kwargs["objective"] = "reg:squarederror"
+        else:
+            kwargs['num_target'] = 1
+            kwargs["objective"] = "reg:squarederror"
+    else:
+        # classification
+        kwargs['num_target'] = 0
+        if trees > ntrees > 0:
+            kwargs['num_class'] = trees // ntrees
+            kwargs["objective"] = "multi:softprob"
+        else:
+            kwargs['num_class'] = 1
+            kwargs["objective"] = "binary:logistic"
+
+    if 'base_score' not in kwargs:
+        kwargs['base_score'] = 0.5
+    return kwargs
+
+
+class WrappedBooster:
+
+    def __init__(self, booster):
+        self.booster_ = booster
+        self.kwargs = _get_attributes(booster)
+
+        if self.kwargs['num_class'] > 0:
+            self.classes_ = self._generate_classes(self.kwargs)
+            self.operator_name = 'XGBClassifier'
+        else:
+            self.operator_name = 'XGBRegressor'
+
+    def get_xgb_params(self):
+        return self.kwargs
+
+    def get_booster(self):
+        return self.booster_
+
+    def _generate_classes(self, model_dict):
+        if model_dict['num_class'] == 1:
+            return np.asarray([0, 1])
+        return np.arange(model_dict['num_class'])        
+
+
+def _get_xgboost_operator_name(model):
     '''
     Get operator name of the input argument
 
     :param model_type:  A xgboost object.
     :return: A string which stands for the type of the input model in our conversion framework
     '''
-    if model_type not in xgboost_operator_name_map:
-        raise ValueError("No proper operator name found for '%s'" % model_type)
-    return xgboost_operator_name_map[model_type]
+    if isinstance(model, WrappedBooster):
+        return model.operator_name
+    if type(model) not in xgboost_operator_name_map:
+        raise ValueError("No proper operator name found for '%s'" % type(model))
+    return xgboost_operator_name_map[type(model)]
 
 
 def _parse_xgboost_simple_model(scope, model, inputs):
@@ -37,10 +113,11 @@ def _parse_xgboost_simple_model(scope, model, inputs):
     :param inputs: A list of variables
     :return: A list of output variables which will be passed to next stage
     '''
-    this_operator = scope.declare_local_operator(_get_xgboost_operator_name(type(model)), model)
+    this_operator = scope.declare_local_operator(_get_xgboost_operator_name(model), model)
     this_operator.inputs = inputs
 
-    if type(model) in xgboost_classifier_list:
+    if (type(model) in xgboost_classifier_list or
+            getattr(model, 'operator_name', None) == 'XGBClassifier'):
         # For classifiers, we may have two outputs, one for label and the other one for probabilities of all classes.
         # Notice that their types here are not necessarily correct and they will be fixed in shape inference phase
         label_variable = scope.declare_local_variable('label', FloatTensorType())

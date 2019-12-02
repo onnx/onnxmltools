@@ -76,17 +76,35 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
 
     if hasattr(model, "predict"):
         import lightgbm
+        import xgboost
         if isinstance(model, lightgbm.Booster):
             # LightGBM Booster
             model_dict = model.dump_model()
             if model_dict['objective'].startswith('binary'):
                 score = model.predict(data)
-                prediction = [score > 0.5, numpy.vstack([1-score, score]).T]
+                if len(score.shape) < 2 or score.shape[1] == 1:
+                    score = score.ravel()
+                    score = numpy.vstack([1-score, score]).T
+                prediction = [score[:, 1] > 0.5, score]
             elif model_dict['objective'].startswith('multiclass'):
                 score = model.predict(data)
                 prediction = [score.argmax(axis=1), score]
             else:
                 prediction = [model.predict(data)]
+        elif isinstance(model, xgboost.Booster):
+            # XGBoost Booster            
+            from ..convert.xgboost._parse import _get_attributes
+            from xgboost import DMatrix
+            datax = DMatrix(data)
+            model_dict = _get_attributes(model)
+            if model_dict['objective'].startswith('binary'):
+                score = model.predict(datax)
+                prediction = [score > 0.5, numpy.vstack([1-score, score]).T]
+            elif model_dict['objective'].startswith('multi'):
+                score = model.predict(datax)
+                prediction = [score.argmax(axis=1), score]
+            else:
+                prediction = [model.predict(datax)]
         elif hasattr(model, "predict_proba"):
             # Classifier
             prediction = [model.predict(data), model.predict_proba(data)]
