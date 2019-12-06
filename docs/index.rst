@@ -21,6 +21,7 @@ Currently the following toolkits are supported:
 * `Keras <https://keras.io/>`_ 
 * `LightGBM <https://lightgbm.readthedocs.io/en/latest/>`_ 
 * `libsvm <https://www.csie.ntu.edu.tw/~cjlin/libsvm/>`_
+* `SparkML <https://spark.apache.org/docs/latest/ml-guide.html>`_
 
 For other frameworks, see:
 

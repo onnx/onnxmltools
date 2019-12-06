@@ -272,7 +272,8 @@ class XGBClassifierConverter(XGBConverter):
 
 def convert_xgboost(scope, operator, container):
     xgb_node = operator.raw_operator
-    if isinstance(xgb_node, XGBClassifier):
+    if (isinstance(xgb_node, XGBClassifier) or
+            getattr(xgb_node, 'operator_name', None) == 'XGBClassifier'):
         cls = XGBClassifierConverter
     else:
         cls = XGBRegressorConverter
