@@ -1,10 +1,13 @@
 """
 Tests CoreML Imputer converter.
 """
-import coremltools
 import numpy as np
 import unittest
-from sklearn.preprocessing import Imputer
+try:
+    from sklearn.impute import SimpleImputer as Imputer
+except ImportError:
+    from sklearn.preprocessing import Imputer
+import coremltools
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
 
