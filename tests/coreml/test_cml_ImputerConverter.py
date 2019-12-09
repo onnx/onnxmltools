@@ -19,7 +19,10 @@ class TestCoreMLImputerConverter(unittest.TestCase):
             # coremltools 3.1 does not work with scikit-learn 0.22
             setattr(sklearn.preprocessing, 'Imputer', Imputer)
         
-        model = Imputer(missing_values='NaN', strategy='mean', axis=0)
+        try:
+            model = Imputer(missing_values='NaN', strategy='mean', axis=0)
+        except TypeError:
+            model = Imputer(missing_values='NaN', strategy='mean')
         data = [[1, 2], [np.nan, 3], [7, 6]]
         model.fit(data)
         import coremltools  # noqa
