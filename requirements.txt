@@ -3,6 +3,5 @@ numpy
 onnx
 onnxconverter-common>=1.5.0
 protobuf
-scikit-learn<0.22
 six
 skl2onnx
