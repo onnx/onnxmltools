@@ -42,7 +42,7 @@ class TestScikitLearnModels(unittest.TestCase):
             x_test.astype("float32"),
             xgb,
             conv_model,
-            basename="SklearnRFRegressor-Dec4",
+            basename="SklearnRFRegressor-Dec3",
             allow_failure="StrictVersion("
             "onnx.__version__)"
             "< StrictVersion('1.3.0')",
