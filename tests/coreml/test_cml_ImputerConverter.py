@@ -22,6 +22,7 @@ class TestCoreMLImputerConverter(unittest.TestCase):
             model = Imputer(missing_values='NaN', strategy='mean', axis=0)
         except TypeError:
             model = Imputer(missing_values=np.nan, strategy='mean')
+            model.axis = 0
         data = [[1, 2], [np.nan, 3], [7, 6]]
         model.fit(data)
         from onnxmltools.convert.coreml.convert import convert

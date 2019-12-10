@@ -26,7 +26,8 @@ class TestCoreMLTreeEnsembleRegressorConverter(unittest.TestCase):
         model_coreml = coremltools.converters.sklearn.convert(model)
         model_onnx = convert(model_coreml.get_spec())
         self.assertTrue(model_onnx is not None)
-        dump_data_and_model(X.astype(numpy.float32), model, model_onnx, basename="CmlRegRandomForestRegressor-Dec4")
+        dump_data_and_model(X.astype(numpy.float32), model, model_onnx,
+                            basename="CmlRegRandomForestRegressor-Dec3")
 
 
 if __name__ == "__main__":
