@@ -3,6 +3,13 @@ Tests CoreML TreeEnsembleRegressor converter.
 """
 import unittest
 import numpy
+try:
+    from sklearn.impute import SimpleImputer as Imputer
+    if not hasattr(sklearn.preprocessing, 'Imputer'):
+        # coremltools 3.1 does not work with scikit-learn 0.22
+        setattr(sklearn.preprocessing, 'Imputer', Imputer)
+except ImportError:
+    from sklearn.preprocessing import Imputer
 import coremltools
 from sklearn.datasets import make_regression
 from sklearn.ensemble import RandomForestRegressor

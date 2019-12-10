@@ -1,6 +1,13 @@
 """
 Tests CoreML SupportVectorClassifier converter.
 """
+try:
+    from sklearn.impute import SimpleImputer as Imputer
+    if not hasattr(sklearn.preprocessing, 'Imputer'):
+        # coremltools 3.1 does not work with scikit-learn 0.22
+        setattr(sklearn.preprocessing, 'Imputer', Imputer)
+except ImportError:
+    from sklearn.preprocessing import Imputer
 import coremltools
 import unittest
 import numpy

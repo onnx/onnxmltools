@@ -5,6 +5,9 @@ import numpy as np
 import unittest
 try:
     from sklearn.impute import SimpleImputer as Imputer
+    if not hasattr(sklearn.preprocessing, 'Imputer'):
+        # coremltools 3.1 does not work with scikit-learn 0.22
+        setattr(sklearn.preprocessing, 'Imputer', Imputer)
 except ImportError:
     from sklearn.preprocessing import Imputer
 import sklearn.preprocessing
@@ -15,10 +18,6 @@ from onnxmltools.utils import dump_data_and_model
 class TestCoreMLImputerConverter(unittest.TestCase):
 
     def test_imputer(self):
-        if not hasattr(sklearn.preprocessing, 'Imputer'):
-            # coremltools 3.1 does not work with scikit-learn 0.22
-            setattr(sklearn.preprocessing, 'Imputer', Imputer)
-        
         try:
             model = Imputer(missing_values='NaN', strategy='mean', axis=0)
         except TypeError:
