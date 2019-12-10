@@ -5,6 +5,7 @@ import unittest
 import numpy
 try:
     from sklearn.impute import SimpleImputer as Imputer
+    import sklearn.preprocessing
     if not hasattr(sklearn.preprocessing, 'Imputer'):
         # coremltools 3.1 does not work with scikit-learn 0.22
         setattr(sklearn.preprocessing, 'Imputer', Imputer)
