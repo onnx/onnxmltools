@@ -94,3 +94,9 @@ def convert_xgboost(*args, **kwargs):
     from .xgboost.convert import convert
     return convert(*args, **kwargs)
 
+def convert_h2o(*args, **kwargs):
+    if not utils.h2o_installed():
+        raise RuntimeError('h2o is not installed. Please install h2o to use this feature.')
+
+    from .h2o.convert import convert
+    return convert(*args, **kwargs)
