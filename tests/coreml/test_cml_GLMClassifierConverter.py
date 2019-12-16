@@ -1,12 +1,20 @@
 """
 Tests CoreML GLMClassifier converter.
 """
-import coremltools
 import unittest
 import numpy
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
+try:
+    from sklearn.impute import SimpleImputer as Imputer
+    import sklearn.preprocessing
+    if not hasattr(sklearn.preprocessing, 'Imputer'):
+        # coremltools 3.1 does not work with scikit-learn 0.22
+        setattr(sklearn.preprocessing, 'Imputer', Imputer)
+except ImportError:
+    from sklearn.preprocessing import Imputer
+import coremltools
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
 

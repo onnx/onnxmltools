@@ -31,6 +31,12 @@ jobs:
         ONNXRT_PATH: onnxruntime==0.4.0
         COREML_PATH: git+https://github.com/apple/coremltools
 
+      Python37-RT100:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.6.0
+        ONNXRT_PATH: onnxruntime==1.0.0
+        COREML_PATH: git+https://github.com/apple/coremltools
+
     maxParallel: 3
 
   steps:

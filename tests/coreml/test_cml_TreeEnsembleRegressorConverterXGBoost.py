@@ -6,6 +6,14 @@ import sys
 import unittest
 import numpy
 import pandas
+try:
+    from sklearn.impute import SimpleImputer as Imputer
+    import sklearn.preprocessing
+    if not hasattr(sklearn.preprocessing, 'Imputer'):
+        # coremltools 3.1 does not work with scikit-learn 0.22
+        setattr(sklearn.preprocessing, 'Imputer', Imputer)
+except ImportError:
+    from sklearn.preprocessing import Imputer
 from coremltools.converters.xgboost import convert as convert_xgb_to_coreml
 from onnxmltools.convert.coreml import convert as convert_cml
 from xgboost import XGBRegressor
