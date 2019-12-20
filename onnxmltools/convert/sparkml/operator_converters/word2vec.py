@@ -5,10 +5,9 @@
 # --------------------------------------------------------------------------
 import pandas
 import numpy
-
-from onnxmltools.convert.common._apply_operation import apply_add, apply_mul, apply_sum
-from ..utils import SparkMlConversionError
 from onnx import onnx_pb as onnx_proto
+from ..utils import SparkMlConversionError
+from ...common._apply_operation import apply_add, apply_mul, apply_sum
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import StringTensorType, FloatTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types

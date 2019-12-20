@@ -5,13 +5,10 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
-
 import lightgbm
-
-from onnxmltools.convert.lightgbm._parse import WrappedBooster
 from ...proto import onnx, get_opset_number_from_onnx
 from ..common._topology import convert_topology
-from ._parse import parse_lightgbm
+from ._parse import parse_lightgbm, WrappedBooster
 
 # Invoke the registration of all our converters and shape calculators
 # from . import shape_calculators

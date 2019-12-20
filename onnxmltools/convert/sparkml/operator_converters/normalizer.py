@@ -5,9 +5,9 @@
 # --------------------------------------------------------------------------
 import copy
 
-from onnxmltools.convert.common.data_types import Int64TensorType, FloatTensorType
-from onnxmltools.convert.common.utils import check_input_and_output_numbers, check_input_and_output_types
-#from onnxmltools.convert.sparkml import SparkMLConversionError
+from ...common.data_types import Int64TensorType, FloatTensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+#from ..convert.sparkml import SparkMLConversionError
 from ...common._registration import register_converter, register_shape_calculator
 
 
