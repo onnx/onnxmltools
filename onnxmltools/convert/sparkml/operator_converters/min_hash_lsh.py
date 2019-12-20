@@ -3,14 +3,14 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from onnxmltools.convert.common._apply_operation import apply_add, apply_mul, apply_sum, apply_div, apply_sub, \
-    apply_concat, apply_cast
-from onnxmltools.convert.sparkml.operator_converters.tree_ensemble_common import save_read_sparkml_model_data
-from ..utils import SparkMlConversionError
 from onnx import onnx_pb as onnx_proto
+from ...common._apply_operation import apply_add, apply_mul, apply_sum, apply_div, apply_sub, \
+    apply_concat, apply_cast
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import FloatTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ..utils import SparkMlConversionError
+from .tree_ensemble_common import save_read_sparkml_model_data
 
 MinHashLSH_HASH_PRIME = 2038074743
 g_rand_coefficients = None
