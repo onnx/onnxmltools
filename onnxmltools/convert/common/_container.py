@@ -17,6 +17,8 @@ class LightGbmModelContainer(CommonSklearnModelContainer):
 class XGBoostModelContainer(CommonSklearnModelContainer):
     pass
 
+class H2OModelContainer(CommonSklearnModelContainer):
+    pass
 
 class SparkmlModelContainer(RawModelContainer):
 
