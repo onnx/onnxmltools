@@ -24,6 +24,7 @@ pip install onnxmltools
 ```
 or install from source:
 ```
+pip install git+https://github.com/microsoft/onnxconverter-common
 pip install git+https://github.com/onnx/onnxmltools
 ```
 If you choose to install `onnxmltools` from its source code, you must set the environment variable `ONNX_ML=1` before installing the `onnx` package. 
