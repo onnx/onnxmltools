@@ -120,7 +120,7 @@ class TestSvmLibSVM(unittest.TestCase):
         node = convert(libsvm_model, "LibSvmSvmcLinear", [('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmSvmcLinear-Dec3",
+                            basename="LibSvmSvmcLinear-Dec2",
                             allow_failure="StrictVersion(onnxruntime.__version__) < StrictVersion('0.5.0')")
 
     def test_convert_svmc(self):

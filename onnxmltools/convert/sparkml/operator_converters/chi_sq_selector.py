@@ -6,7 +6,7 @@
 import copy
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
-from onnxmltools.convert.common.data_types import *
+from ...common.data_types import *
 
 
 def convert_chi_sq_selector(scope, operator, container):

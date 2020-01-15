@@ -23,19 +23,19 @@ jobs:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1
         ONNXRT_PATH: onnxruntime==0.3.0
-        COREML_PATH: git+https://github.com/apple/coremltools
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
 
       Python37:
         python.version: '3.7'
         ONNX_PATH: onnx==1.5.0
         ONNXRT_PATH: onnxruntime==0.4.0
-        COREML_PATH: git+https://github.com/apple/coremltools
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
 
       Python37-RT100:
         python.version: '3.7'
         ONNX_PATH: onnx==1.6.0
         ONNXRT_PATH: onnxruntime==1.0.0
-        COREML_PATH: git+https://github.com/apple/coremltools
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
 
     maxParallel: 3
 
@@ -56,12 +56,12 @@ jobs:
       python -m pip install --upgrade pip numpy
       echo Test numpy installation... && python -c "import numpy"
       pip install %COREML_PATH% %ONNX_PATH%
-      pip install -r requirements.txt
       git clone https://github.com/microsoft/onnxconverter-common
       cd onnxconverter-common
       pip install -e .
       cd ..
       echo Test onnxconverter-common installation... && python -c "import onnxconverter_common"
+      pip install -r requirements.txt
       pip install -r requirements-dev.txt
       pip install %ONNXRT_PATH%
       echo Test onnxruntime installation... && python -c "import onnxruntime"

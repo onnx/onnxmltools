@@ -6,8 +6,8 @@
 import numpy
 
 from ....proto import onnx_proto
-from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.convert.common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.data_types import FloatTensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 from ...common._registration import register_converter, register_shape_calculator
 
 

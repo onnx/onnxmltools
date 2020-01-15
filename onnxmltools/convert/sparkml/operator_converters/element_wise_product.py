@@ -4,9 +4,9 @@
 # license information.
 # --------------------------------------------------------------------------
 from onnx import onnx_pb as onnx_proto
-from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.convert.common.utils import check_input_and_output_numbers, check_input_and_output_types
-from onnxmltools.convert.common._apply_operation import apply_mul
+from ...common.data_types import FloatTensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common._apply_operation import apply_mul
 from ...common._registration import register_converter, register_shape_calculator
 
 

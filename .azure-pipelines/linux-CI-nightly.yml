@@ -36,11 +36,11 @@ jobs:
       conda install -c conda-forge numpy
       conda install -c conda-forge cmake
       pip install $(ONNX_PATH)
-      pip install -r requirements.txt
       git clone https://github.com/microsoft/onnxconverter-common
       cd onnxconverter-common
       pip install -e .
       cd ..
+      pip install -r requirements.txt
       pip install -r requirements-dev.txt
       pip install $(ORT_PATH)
       pip install pytest
