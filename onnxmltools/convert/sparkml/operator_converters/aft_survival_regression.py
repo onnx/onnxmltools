@@ -6,9 +6,9 @@
 import collections
 
 from onnx import onnx_pb as onnx_proto
-from onnxmltools.convert.common._apply_operation import apply_matmul, apply_exp, apply_add
+from ...common._apply_operation import apply_matmul, apply_exp, apply_add
 from ...common._registration import register_converter, register_shape_calculator
-from onnxmltools.convert.common.data_types import FloatTensorType
+from ...common.data_types import FloatTensorType
 from ...common.utils import check_input_and_output_numbers
 
 

@@ -4,10 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 from onnx import onnx_pb as onnx_proto
-from onnxmltools.convert.common._apply_operation import apply_concat, apply_argmax
-from onnxmltools.convert.common.data_types import Int64TensorType, FloatTensorType
-from onnxmltools.convert.common.utils import check_input_and_output_numbers, check_input_and_output_types
-from onnxmltools.convert.sparkml.operator_converters.linear_classifier import convert_sparkml_linear_classifier
+from ...common._apply_operation import apply_concat, apply_argmax
+from ...common.data_types import Int64TensorType, FloatTensorType
+from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from .linear_classifier import convert_sparkml_linear_classifier
 from ..ops_names import get_sparkml_operator_name
 from ...common._registration import register_converter, register_shape_calculator
 

@@ -108,6 +108,9 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
         elif hasattr(model, "predict_proba"):
             # Classifier
             prediction = [model.predict(data), model.predict_proba(data)]
+        elif hasattr(model, "predict_with_probabilities"):
+            # Classifier that returns all in one go
+            prediction = model.predict_with_probabilities(data)
         elif hasattr(model, "decision_function"):
             # Classifier without probabilities
             prediction = [model.predict(data), model.decision_function(data)]

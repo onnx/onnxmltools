@@ -3,12 +3,12 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.convert.common.tree_ensemble import add_tree_to_attribute_pairs, \
+from ...common.data_types import FloatTensorType
+from ...common.tree_ensemble import add_tree_to_attribute_pairs, \
     get_default_tree_regressor_attribute_pairs
-from onnxmltools.convert.common.utils import check_input_and_output_numbers
-from onnxmltools.convert.sparkml.operator_converters.decision_tree_classifier import save_read_sparkml_model_data
-from onnxmltools.convert.sparkml.operator_converters.tree_ensemble_common import sparkml_tree_dataset_to_sklearn
+from ...common.utils import check_input_and_output_numbers
+from ...sparkml.operator_converters.decision_tree_classifier import save_read_sparkml_model_data
+from ...sparkml.operator_converters.tree_ensemble_common import sparkml_tree_dataset_to_sklearn
 from ...common._registration import register_converter, register_shape_calculator
 
 

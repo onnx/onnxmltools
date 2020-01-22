@@ -15,6 +15,7 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * LightGBM
 * libsvm
 * XGBoost
+* H2O
 
 ## Install
 You can install latest release of ONNXMLTools from [PyPi](https://pypi.org/project/onnxmltools/):
@@ -23,12 +24,13 @@ pip install onnxmltools
 ```
 or install from source:
 ```
+pip install git+https://github.com/microsoft/onnxconverter-common
 pip install git+https://github.com/onnx/onnxmltools
 ```
 If you choose to install `onnxmltools` from its source code, you must set the environment variable `ONNX_ML=1` before installing the `onnx` package. 
 
 ## Dependencies
-This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, LightGBM, SparkML, XGBoost, or LibSVM, you will need an environment with the respective package installed from the list below:
+This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, LightGBM, SparkML, XGBoost, H2O or LibSVM, you will need an environment with the respective package installed from the list below:
 1. scikit-learn
 2. CoreMLTools
 3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
@@ -36,6 +38,7 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 5. SparkML
 6. XGBoost (scikit-learn interface)
 7. libsvm
+8. H2O
 
 ONNXMLTools has been tested with Python **2.7**, **3.5**, **3.6**, and **3.7**.  
   `Note: some wrapped converters may not support python 2.x anymore.`
@@ -97,6 +100,19 @@ onnxmltools.utils.save_model(onnx_model, 'example.onnx')
 Please refer to the following documents:
  * [Conversion Framework](onnxmltools/convert/README.md)
  * [Spark ML to ONNX Model Conversion](onnxmltools/convert/sparkml/README.md)
+
+## H2O to ONNX Conversion
+Below is a code snippet to convert a H2O MOJO model into an ONNX model. The only pre-requisity is to have a MOJO model saved on the local file-system.
+
+```python
+import onnxmltools
+
+# Convert the Core ML model into ONNX
+onnx_model = onnxmltools.convert_h2o('/path/to/h2o/gbm_mojo.zip')
+
+# Save as protobuf
+onnxmltools.utils.save_model(onnx_model, 'h2o_gbm.onnx')
+```
 
 # Testing model converters
 
