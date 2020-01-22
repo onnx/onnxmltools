@@ -58,7 +58,7 @@ jobs:
       call activate py$(python.version)
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       pip install -e .
-      pytest tests  --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
+      python -m pytest tests  --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
 
   - task: PublishTestResults@2
