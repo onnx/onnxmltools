@@ -71,6 +71,7 @@ jobs:
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       dir libsvm\python
       echo Test libsvm installation... && python -c "import svmutil"
+      pip show pytest
     displayName: 'Install dependencies'
 
   - script: |
