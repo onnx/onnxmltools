@@ -71,15 +71,6 @@ jobs:
       pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
 
-  - script: |
-      export PYTHONPATH=$PYTHONPATH:libsvm/python
-      python -c "import onnxconverter_common"
-      python -c "import onnxmltools"
-      coverage run --include=onnxmltools/** tests/main.py
-      coverage report -m
-      coverage html
-    displayName: 'coverage'
-
   - task: PublishTestResults@2
     inputs:
       testResultsFiles: '**/test-results.xml'
