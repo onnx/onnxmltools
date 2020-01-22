@@ -16,6 +16,7 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * libsvm
 * XGBoost
 * H2O
+<p>Pytorch has its builtin ONNX exporter check <a href="https://pytorch.org/docs/stable/onnx.html">here</a>  for details</p>
 
 ## Install
 You can install latest release of ONNXMLTools from [PyPi](https://pypi.org/project/onnxmltools/):
@@ -96,11 +97,6 @@ onnx_model = onnxmltools.convert_coreml(coreml_model, 'Example Model')
 onnxmltools.utils.save_model(onnx_model, 'example.onnx')
 ```
 
-## Spark ML to ONNX Conversion (experimental)
-Please refer to the following documents:
- * [Conversion Framework](onnxmltools/convert/README.md)
- * [Spark ML to ONNX Model Conversion](onnxmltools/convert/sparkml/README.md)
-
 ## H2O to ONNX Conversion
 Below is a code snippet to convert a H2O MOJO model into an ONNX model. The only pre-requisity is to have a MOJO model saved on the local file-system.
 
@@ -136,17 +132,12 @@ Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more
 
 ## Test all existing converters
 
-There exists a way
-to automatically check every converter with
+All converter unit test can generate the original model and converted model to automatically be checked with
 [onnxruntime](https://pypi.org/project/onnxruntime/) or
 [onnxruntime-gpu](https://pypi.org/project/onnxruntime-gpu/).
-This process requires the user to clone the *onnxmltools* repository.
-The following command runs all unit tests and generates
-dumps of models, inputs, expected outputs and converted models
-in folder ``TESTDUMP``.
-
+The unit test cases are all the normal python unit test cases, you can run it with pytest command line, for example:
 ```
-python tests/main.py DUMP
+python -m pytest --ignore .\tests\
 ```
 
 It requires *onnxruntime*, *numpy* for most models,

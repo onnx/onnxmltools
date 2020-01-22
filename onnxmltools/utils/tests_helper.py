@@ -70,7 +70,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     runtime_test = dict(model=model, data=data)
 
     if folder is None:
-        folder = os.environ.get('ONNXTESTDUMP', 'tests')
+        folder = os.environ.get('ONNXTESTDUMP', 'tests/temp')
     if not os.path.exists(folder):
         os.makedirs(folder)
 
