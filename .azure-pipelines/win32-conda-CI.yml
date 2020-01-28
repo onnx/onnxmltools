@@ -56,6 +56,7 @@ jobs:
       python -m pip install --upgrade pip numpy
       echo Test numpy installation... && python -c "import numpy"
       python -m pip install %COREML_PATH% %ONNX_PATH%
+      python -m pip install tensorflow-cpu==1.15.0
       python -m pip install git+https://github.com/microsoft/onnxconverter-common
       python -m pip install git+https://github.com/onnx/keras-onnx
       echo Test onnxconverter-common installation... && python -c "import onnxconverter_common"

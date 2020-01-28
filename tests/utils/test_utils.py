@@ -2,6 +2,7 @@
 Tests utilities.
 """
 import os
+import six
 import unittest
 import onnxmltools
 from onnxmltools.utils import load_model, save_model
@@ -54,6 +55,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(onnx_model.doc_string, "")
 
 
+@unittest.skipIf(six.PY2, "Keras and Tensorflow converter not support python 2.x")
 class TestWrapper(unittest.TestCase):
 
     def test_keras_with_tf2onnx(self):
