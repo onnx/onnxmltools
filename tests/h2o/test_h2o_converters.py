@@ -19,13 +19,15 @@ from onnxmltools.utils import dump_data_and_model
 
 def _make_mojo(model, train, y=-1, force_y_numeric=False):
     if y < 0:
-        y = train.ncol+y
+        y = train.ncol + y
     if force_y_numeric:
         train[y] = train[y].asnumeric()
     x = list(range(0, train.ncol))
     x.remove(y)
     model.train(x=x, y=y, training_frame=train)
-    folder = os.environ.get('ONNXTESTDUMP', 'tests')
+    folder = os.environ.get('ONNXTESTDUMP', 'tests/temp')
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     return model.download_mojo(path=folder)
 
 
@@ -87,7 +89,7 @@ def _train_test_split_as_frames(x, y, is_str=False, is_classifier=False):
     f_train_y = H2OFrame(y_train)
     f_train = f_train_x.cbind(f_train_y)
     if is_classifier:
-        f_train[f_train.ncol-1] = f_train[f_train.ncol-1].asfactor()
+        f_train[f_train.ncol - 1] = f_train[f_train.ncol - 1].asfactor()
     return f_train, x_test.astype(np.float32)
 
 
@@ -177,8 +179,8 @@ class TestH2OModels(unittest.TestCase):
                 onnx_model,
                 basename="H2OReg-Dec4",
                 allow_failure="StrictVersion("
-                "onnx.__version__)"
-                "< StrictVersion('1.3.0')",
+                              "onnx.__version__)"
+                              "< StrictVersion('1.3.0')",
             )
 
     def test_h2o_regressor_cat(self):
@@ -194,8 +196,8 @@ class TestH2OModels(unittest.TestCase):
             onnx_model,
             basename="H2ORegCat-Dec4",
             allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
+                          "onnx.__version__)"
+                          "< StrictVersion('1.3.0')",
         )
 
     def test_h2o_classifier_multi_2class(self):
@@ -218,8 +220,8 @@ class TestH2OModels(unittest.TestCase):
             onnx_model,
             basename="H2OClassBinCat",
             allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
+                          "onnx.__version__)"
+                          "< StrictVersion('1.3.0')",
         )
 
     def test_h2o_classifier_multi_cat(self):
@@ -235,8 +237,8 @@ class TestH2OModels(unittest.TestCase):
             onnx_model,
             basename="H2OClassMultiCat",
             allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
+                          "onnx.__version__)"
+                          "< StrictVersion('1.3.0')",
         )
 
     def test_h2o_classifier_bin_str(self):
@@ -250,8 +252,8 @@ class TestH2OModels(unittest.TestCase):
             onnx_model,
             basename="H2OClassBinStr",
             allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
+                          "onnx.__version__)"
+                          "< StrictVersion('1.3.0')",
         )
 
     def test_h2o_classifier_bin_int(self):
@@ -265,8 +267,8 @@ class TestH2OModels(unittest.TestCase):
             onnx_model,
             basename="H2OClassBinInt",
             allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
+                          "onnx.__version__)"
+                          "< StrictVersion('1.3.0')",
         )
 
     def test_h2o_classifier_multi_str(self):
@@ -280,8 +282,8 @@ class TestH2OModels(unittest.TestCase):
             onnx_model,
             basename="H2OClassMultiStr",
             allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
+                          "onnx.__version__)"
+                          "< StrictVersion('1.3.0')",
         )
 
     def test_h2o_classifier_multi_int(self):
@@ -295,8 +297,8 @@ class TestH2OModels(unittest.TestCase):
             onnx_model,
             basename="H2OClassMultiBin",
             allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
+                          "onnx.__version__)"
+                          "< StrictVersion('1.3.0')",
         )
 
     def test_h2o_classifier_multi_discrete_int_labels(self):

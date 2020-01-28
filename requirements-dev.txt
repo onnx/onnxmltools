@@ -7,9 +7,7 @@ numpy
 openpyxl
 pandas
 protobuf
-pyspark==2.3.2; sys_platform == 'win32'
-pyspark; sys_platform == 'linux'
-pyspark; python_version <= '2.7'
+pytest
 pytest-cov
 scikit-learn
 scipy

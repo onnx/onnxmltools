@@ -55,15 +55,12 @@ jobs:
       call activate py$(python.version)
       python -m pip install --upgrade pip numpy
       echo Test numpy installation... && python -c "import numpy"
-      pip install %COREML_PATH% %ONNX_PATH%
-      git clone https://github.com/microsoft/onnxconverter-common
-      cd onnxconverter-common
-      pip install -e .
-      cd ..
+      python -m pip install %COREML_PATH% %ONNX_PATH%
+      python -m pip install git+https://github.com/microsoft/onnxconverter-common
       echo Test onnxconverter-common installation... && python -c "import onnxconverter_common"
-      pip install -r requirements.txt
-      pip install -r requirements-dev.txt
-      pip install %ONNXRT_PATH%
+      python -m pip install -r requirements.txt
+      python -m pip install -r requirements-dev.txt
+      python -m pip install %ONNXRT_PATH%
       echo Test onnxruntime installation... && python -c "import onnxruntime"
       REM install libsvm from github
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
@@ -71,13 +68,15 @@ jobs:
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       dir libsvm\python
       echo Test libsvm installation... && python -c "import svmutil"
+      echo "debug environment" && path
+      python -m pip show pytest
     displayName: 'Install dependencies'
 
   - script: |
       call activate py$(python.version)
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
-      pip install -e .
-      pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
+      python -m pip install -e .
+      python -m pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
 
   - task: PublishTestResults@2
