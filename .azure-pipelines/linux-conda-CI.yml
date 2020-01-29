@@ -50,10 +50,10 @@ jobs:
       conda install -c conda-forge numpy
       conda install -c conda-forge cmake
       pip install $(ONNX_PATH)
-      git clone https://github.com/microsoft/onnxconverter-common
-      cd onnxconverter-common
-      pip install -e .
-      cd ..
+      test '$(python.version)' != '2.7' && python -m pip install tensorflow-cpu==1.15.0
+      python -m pip install tf2onnx
+      python -m pip install git+https://github.com/microsoft/onnxconverter-common
+      python -m pip install git+https://github.com/onnx/keras-onnx
       pip install -r requirements.txt
       pip install -r requirements-dev.txt
       test '$(python.version)' != '2.7' && pip install $(ONNXRT_PATH)

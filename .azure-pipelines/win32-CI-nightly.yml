@@ -37,10 +37,10 @@ jobs:
       python -m pip install --upgrade pip numpy
       echo Test numpy installation... && python -c "import numpy"
       pip install %COREML_PATH% %ONNX_PATH%
-      git clone https://github.com/microsoft/onnxconverter-common
-      cd onnxconverter-common
-      pip install -e .
-      cd ..
+      python -m pip install tensorflow-cpu==1.15.0
+      python -m pip install tf2onnx
+      python -m pip install git+https://github.com/microsoft/onnxconverter-common
+      python -m pip install git+https://github.com/onnx/keras-onnx
       echo Test onnxconverter-common installation... && python -c "import onnxconverter_common"
       pip install -r requirements.txt
       pip install -r requirements-dev.txt
