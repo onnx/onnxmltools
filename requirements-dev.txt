@@ -1,5 +1,6 @@
 codecov
 coremltools
+cython
 lightgbm
 h2o
 mleap
