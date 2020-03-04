@@ -28,6 +28,9 @@ class XGBConverter:
                 raise AttributeError('ojective')
         except AttributeError as e:
             raise RuntimeError('Missing attribute in XGBoost model ' + str(e))
+        if hasattr(xgb_node, 'missing') and not np.isnan(xgb_node.missing):
+            raise RuntimeError("Cannot convert a XGBoost model where missing values are not "
+                               "nan but {}.".format(xgb_node.missing))
 
     @staticmethod
     def common_members(xgb_node, inputs):
@@ -277,6 +280,7 @@ def convert_xgboost(scope, operator, container):
         cls = XGBClassifierConverter
     else:
         cls = XGBRegressorConverter
+    cls.validate(xgb_node)
     cls.convert(scope, operator, container)
 
 

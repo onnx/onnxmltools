@@ -65,21 +65,24 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
     @unittest.skipIf(not can_test,
                      reason="sklearn-onnx not recent enough")
     def test_xgboost_10_skl_missing(self):
-        self.common_test_xgboost_10_skl(1e10)
+        self.common_test_xgboost_10_skl(np.nan)
 
     @unittest.skipIf(sys.version_info[0] == 2,
                      reason="xgboost converter not tested on python 2")
     @unittest.skipIf(not can_test,
                      reason="sklearn-onnx not recent enough")
     def test_xgboost_10_skl_zero(self):
-        self.common_test_xgboost_10_skl(0.)
+        try:
+            self.common_test_xgboost_10_skl(0., True)
+        except RuntimeError as e:
+            assert "Cannot convert a XGBoost model where missing values" in str(e)
 
     @unittest.skipIf(sys.version_info[0] == 2,
                      reason="xgboost converter not tested on python 2")
     @unittest.skipIf(not can_test,
                      reason="sklearn-onnx not recent enough")
     def test_xgboost_10_skl_zero_replace(self):
-        self.common_test_xgboost_10_skl(0., True)
+        self.common_test_xgboost_10_skl(np.nan, True)
                      
     def common_test_xgboost_10_skl(self, missing, replace=False):
         this = os.path.abspath(os.path.dirname(__file__))
@@ -133,8 +136,6 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         session = rt.InferenceSession(onnx_last.SerializeToString())
         pred_skl = model.steps[1][-1].predict(input_xgb).ravel()
         pred_onx = session.run(None, {'X': input_xgb})[0].ravel()
-        print(pred_skl)
-        print(pred_onx)
         assert_almost_equal(pred_skl, pred_onx)
 
 
