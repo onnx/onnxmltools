@@ -7,20 +7,25 @@ import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
-import onnxruntime as rt
-from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
-from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from onnxmltools.convert import convert_xgboost
-from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.utils import dump_data_and_model
-from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost as convert_xgb
+try:
+    import onnxruntime as rt
+    from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
+    from sklearn.model_selection import train_test_split
+    from sklearn.compose import ColumnTransformer
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+    from onnxmltools.convert import convert_xgboost
+    from onnxmltools.convert.common.data_types import FloatTensorType
+    from onnxmltools.utils import dump_data_and_model
+    from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost as convert_xgb
+    can_test = True
+except ImportError:
+    # python 2.7
+    can_test = False
 try:
     from skl2onnx import update_registered_converter, to_onnx
     from skl2onnx.common.shape_calculator import calculate_linear_regressor_output_shapes
-    can_test = True
+    can_test |= True
 except ImportError:
     # sklearn-onnx not recent enough
     can_test = False
