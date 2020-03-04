@@ -44,7 +44,7 @@ class TestXGBoostModels(unittest.TestCase):
             x_test.astype("float32"),
             xgb,
             conv_model,
-            basename="SklearnXGBRegressor-Dec4",
+            basename="SklearnXGBRegressor-Dec3",
             allow_failure="StrictVersion("
             "onnx.__version__)"
             "< StrictVersion('1.3.0')",
