@@ -3,6 +3,7 @@ Tests h2o's tree-based methods' converters.
 """
 import unittest
 import os
+import sys
 import numpy as np
 import pandas as pd
 from sklearn.datasets import load_diabetes, load_iris, make_classification
@@ -183,6 +184,7 @@ class TestH2OModels(unittest.TestCase):
                               "< StrictVersion('1.3.0')",
             )
 
+    @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
     def test_h2o_regressor_cat(self):
         y = "IsDepDelayed"
         train, test = _prepare_one_hot("airlines.csv", y, exclude_cols=["IsDepDelayed_REC"])
@@ -207,6 +209,8 @@ class TestH2OModels(unittest.TestCase):
             _convert_mojo(mojo_path)
         self.assertRegexpMatches(err.exception.args[0], "not supported")
 
+
+    @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
     def test_h2o_classifier_bin_cat(self):
         y = "IsDepDelayed_REC"
         train, test = _prepare_one_hot("airlines.csv", y, exclude_cols=["IsDepDelayed"])
@@ -224,6 +228,8 @@ class TestH2OModels(unittest.TestCase):
                           "< StrictVersion('1.3.0')",
         )
 
+
+    @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
     def test_h2o_classifier_multi_cat(self):
         y = "fYear"
         train, test = _prepare_one_hot("airlines.csv", y)

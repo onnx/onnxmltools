@@ -65,6 +65,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         res = [(col, type_for_column(data[col])) for col in data.columns]
         return res    
 
+    @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
     @unittest.skipIf(sys.version_info[0] == 2,
                      reason="xgboost converter not tested on python 2")
     @unittest.skipIf(not can_test,
@@ -72,6 +73,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
     def test_xgboost_10_skl_missing(self):
         self.common_test_xgboost_10_skl(np.nan)
 
+    @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
     @unittest.skipIf(sys.version_info[0] == 2,
                      reason="xgboost converter not tested on python 2")
     @unittest.skipIf(not can_test,
@@ -82,6 +84,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         except RuntimeError as e:
             assert "Cannot convert a XGBoost model where missing values" in str(e)
 
+    @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
     @unittest.skipIf(sys.version_info[0] == 2,
                      reason="xgboost converter not tested on python 2")
     @unittest.skipIf(not can_test,
