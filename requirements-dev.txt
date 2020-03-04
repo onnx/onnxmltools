@@ -13,4 +13,4 @@ scikit-learn
 scipy
 svm
 wheel
-xgboost<=0.90
+xgboost

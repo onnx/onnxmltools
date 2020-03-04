@@ -1,7 +1,7 @@
 keras2onnx
 numpy
 onnx
-onnxconverter-common>=1.6.5, <1.7.0
+onnxconverter-common>=1.6.5
 protobuf
 six
 skl2onnx
