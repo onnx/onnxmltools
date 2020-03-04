@@ -239,7 +239,7 @@ class TestXGBoostModels(unittest.TestCase):
             'max_depth': 2,
             'min_child_weight': 1.,
             'n_estimators': 1,
-            'missing': 0.,
+            'missing': np.nan,
         }
         
         train_df = pandas.read_csv(train)
