@@ -36,7 +36,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
                 return 'passthrough'
             if column.dtype in ['O']:
                 return OneHotEncoder(sparse=False)
-            raise ValueError(f'Unexpected column dtype for {column.name}:{column.dtype}')
+            raise ValueError()
 
         return ColumnTransformer(
             [(col, transformer_for_column(data[col]), [col]) for col in data.columns],
@@ -55,7 +55,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
                 return onnxtypes.BooleanTensorType([None, 1])
             if column.dtype in ['O']:
                 return onnxtypes.StringTensorType([None, 1])
-            raise ValueError(f'Unexpected column dtype for {column.name}:{column.dtype}')
+            raise ValueError()
 
         res = [(col, type_for_column(data[col])) for col in data.columns]
         return res    
