@@ -13,29 +13,33 @@ jobs:
     vmImage: 'vs2017-win2016'
   strategy:
     matrix:
-      Python35:
+      Python35-141-RT030:
         python.version: '3.5'
         ONNX_PATH: onnx==1.4.1
         ONNXRT_PATH: onnxruntime==0.3.0
         COREML_PATH: https://github.com/apple/coremltools/archive/v2.0.zip
+        sklearn.version: '==0.19.1'
 
-      Python36:
+      Python36-141-RT030:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1
         ONNXRT_PATH: onnxruntime==0.3.0
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        sklearn.version: ''
 
-      Python37:
+      Python37-150-RT040:
         python.version: '3.7'
         ONNX_PATH: onnx==1.5.0
         ONNXRT_PATH: onnxruntime==0.4.0
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        sklearn.version: ''
 
-      Python37-RT100:
+      Python37-160-RT111:
         python.version: '3.7'
         ONNX_PATH: onnx==1.6.0
-        ONNXRT_PATH: onnxruntime==1.0.0
+        ONNXRT_PATH: onnxruntime==1.1.1
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        sklearn.version: ''
 
     maxParallel: 3
 
@@ -64,6 +68,7 @@ jobs:
       python -m pip install -r requirements.txt
       python -m pip install -r requirements-dev.txt
       python -m pip install %ONNXRT_PATH%
+      python -m pip install scikit-learn$(sklearn.version)
       echo Test onnxruntime installation... && python -c "import onnxruntime"
       REM install libsvm from github
       git clone --recursive https://github.com/cjlin1/libsvm libsvm

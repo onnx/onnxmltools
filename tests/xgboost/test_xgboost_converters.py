@@ -1,9 +1,11 @@
 """
 Tests scilit-learn's tree-based methods' converters.
 """
+import os
 import sys
 import unittest
 import numpy as np
+import pandas
 from sklearn.datasets import load_diabetes, load_iris, make_classification
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
@@ -42,7 +44,7 @@ class TestXGBoostModels(unittest.TestCase):
             x_test.astype("float32"),
             xgb,
             conv_model,
-            basename="SklearnXGBRegressor-Dec4",
+            basename="SklearnXGBRegressor-Dec3",
             allow_failure="StrictVersion("
             "onnx.__version__)"
             "< StrictVersion('1.3.0')",
@@ -222,6 +224,41 @@ class TestXGBoostModels(unittest.TestCase):
                             model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename="XGBBoosterReg")
+
+    @unittest.skipIf(sys.version_info[0] == 2,
+                     reason="xgboost converter not tested on python 2")
+    def test_xgboost_10(self):
+        this = os.path.abspath(os.path.dirname(__file__))
+        train = os.path.join(this, "input_fail_train.csv")
+        test = os.path.join(this, "input_fail_test.csv")
+        
+        param_distributions = {
+            "colsample_bytree": 0.5,
+            "gamma": 0.2,
+            'learning_rate': 0.3,
+            'max_depth': 2,
+            'min_child_weight': 1.,
+            'n_estimators': 1,
+            'missing': np.nan,
+        }
+        
+        train_df = pandas.read_csv(train)
+        X_train, y_train = train_df.drop('label', axis=1).values, train_df['label'].values
+        test_df = pandas.read_csv(test)
+        X_test, y_test = test_df.drop('label', axis=1).values, test_df['label'].values
+        
+        regressor = XGBRegressor(verbose=0, objective='reg:squarederror', **param_distributions)
+        regressor.fit(X_train, y_train)
+        
+        model_onnx = convert_xgboost(
+            regressor, 'bug',
+            [('input', FloatTensorType([None, X_train.shape[1]]))])
+
+        dump_data_and_model(
+            X_test.astype(np.float32),
+            regressor, model_onnx,
+            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+            basename="XGBBoosterRegBug")
 
 
 if __name__ == "__main__":
