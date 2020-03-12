@@ -15,29 +15,29 @@ jobs:
     matrix:
       Python27-123-RT040:
         python.version: '2.7'
-        ONNX_PATH: onnx==1.2.3
+        ONNX_PATH: -i https://test.pypi.org/simple/ onnx
         ONNXRT_PATH: onnxruntime==0.4.0
         xgboost.version: ''
       # Python35:
       #   python.version: '3.5'
       Python36-141-RT050:
         python.version: '3.6'
-        ONNX_PATH: onnx==1.4.1
+        ONNX_PATH: -i https://test.pypi.org/simple/ onnx
         ONNXRT_PATH: onnxruntime==0.5.0
         xgboost.version: ''
       Python37-150-RT100:
         python.version: '3.7'
-        ONNX_PATH: onnx==1.5.0
+        ONNX_PATH: -i https://test.pypi.org/simple/ onnx
         ONNXRT_PATH: onnxruntime==1.0.0
         xgboost.version: ''
       Python37-160-RT111-XGB0:
         python.version: '3.7'
-        ONNX_PATH: onnx==1.6.0
+        ONNX_PATH: -i https://test.pypi.org/simple/ onnx
         ONNXRT_PATH: onnxruntime==1.1.1
         xgboost.version: '<1.0'
       Python37-160-RT111:
         python.version: '3.7'
-        ONNX_PATH: onnx==1.6.0
+        ONNX_PATH: -i https://test.pypi.org/simple/ onnx
         ONNXRT_PATH: onnxruntime==1.1.1
         xgboost.version: '>=1.0'
     maxParallel: 3

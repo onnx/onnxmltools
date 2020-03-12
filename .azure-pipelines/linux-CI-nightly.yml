@@ -15,7 +15,7 @@ jobs:
     matrix:
       Python36-nightly:
         python.version: '3.6'
-        ONNX_PATH: onnx==1.6.0
+        ONNX_PATH: pip install -i https://test.pypi.org/simple/ onnx
         ORT_PATH: -i https://test.pypi.org/simple/ ort-nightly
     maxParallel: 3
 
@@ -35,7 +35,7 @@ jobs:
       conda install -c conda-forge protobuf
       conda install -c conda-forge numpy
       conda install -c conda-forge cmake
-      python -m pip install $(ONNX_PATH)
+      $(ONNX_PATH)
       test '$(python.version)' != '2.7' && python -m pip install tensorflow-cpu==1.15.0
       python -m pip install tf2onnx
       python -m pip install git+https://github.com/microsoft/onnxconverter-common
