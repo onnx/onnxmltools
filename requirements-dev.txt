@@ -2,7 +2,7 @@ codecov
 coremltools
 cython
 lightgbm
-h2o
+h2o==3.28.0.3
 mleap
 numpy
 openpyxl
