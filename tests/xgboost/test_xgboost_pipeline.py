@@ -14,16 +14,17 @@ try:
     from sklearn.compose import ColumnTransformer
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-    from onnxmltools.convert import convert_xgboost
+    from onnxmltools.convert import convert_xgboost, convert_sklearn
     from onnxmltools.convert.common.data_types import FloatTensorType
     from onnxmltools.utils import dump_data_and_model
     from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost as convert_xgb
+    from onnxmltools.proto import get_opset_number_from_onnx
     can_test = True
 except ImportError:
     # python 2.7
     can_test = False
 try:
-    from skl2onnx import update_registered_converter, to_onnx
+    from skl2onnx import update_registered_converter
     from skl2onnx.common.shape_calculator import calculate_linear_regressor_output_shapes
     can_test |= True
 except ImportError:
@@ -140,7 +141,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         input_xgb = model.steps[0][-1].transform(test_df[:5]).astype(np.float32)
         if replace:
             input_xgb[input_xgb[:, :] == missing] = np.nan
-        onnx_last = to_onnx(model.steps[1][-1], input_xgb)
+        onnx_last = convert_sklearn(model.steps[1][-1], input_xgb, target_opset=get_opset_number_from_onnx())
         session = rt.InferenceSession(onnx_last.SerializeToString())
         pred_skl = model.steps[1][-1].predict(input_xgb).ravel()
         pred_onx = session.run(None, {'X': input_xgb})[0].ravel()
