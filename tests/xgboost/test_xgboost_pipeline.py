@@ -133,7 +133,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         input_xgb = model.steps[0][-1].transform(test_df[:5]).astype(np.float32)
         if replace:
             input_xgb[input_xgb[:, :] == missing] = np.nan
-        onnx_last = convert_sklearn(model.steps[1][-1], input_xgb,
+        onnx_last = convert_sklearn(model.steps[1][-1],
                                     initial_types=[('input', FloatTensorType(shape=[None, input_xgb.shape[1]]))],
                                     target_opset=get_opset_number_from_onnx())
         session = rt.InferenceSession(onnx_last.SerializeToString())
