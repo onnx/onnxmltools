@@ -47,6 +47,7 @@ jobs:
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
       make lib
+      pip install --index-url https://test.pypi.org/simple/ onnx -U
     displayName: 'Install dependencies'
 
   - script: |
