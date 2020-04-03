@@ -7,6 +7,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
+
 try:
     import onnxruntime as rt
     from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
@@ -14,25 +15,33 @@ try:
     from sklearn.compose import ColumnTransformer
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-    from onnxmltools.convert import convert_xgboost
+    from onnxmltools.convert import convert_xgboost, convert_sklearn
     from onnxmltools.convert.common.data_types import FloatTensorType
     from onnxmltools.utils import dump_data_and_model
     from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost as convert_xgb
+    from onnxmltools.proto import get_opset_number_from_onnx
+
     can_test = True
 except ImportError:
     # python 2.7
     can_test = False
 try:
-    from skl2onnx import update_registered_converter, to_onnx
+    from skl2onnx import update_registered_converter
     from skl2onnx.common.shape_calculator import calculate_linear_regressor_output_shapes
+
     can_test |= True
 except ImportError:
     # sklearn-onnx not recent enough
     can_test = False
 
 
+@unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
+@unittest.skipIf(sys.version_info[0] == 2,
+                 reason="xgboost converter not tested on python 2")
+@unittest.skipIf(not can_test,
+                 reason="sklearn-onnx not recent enough")
 class TestXGBoostModelsPipeline(unittest.TestCase):
-    
+
     def _column_tranformer_fitted_from_df(self, data):
         def transformer_for_column(column):
             if column.dtype in ['float64', 'float32']:
@@ -48,7 +57,6 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
             remainder='drop'
         ).fit(data)
 
-
     def _convert_dataframe_schema(self, data):
         def type_for_column(column):
             if column.dtype in ['float64', 'float32']:
@@ -63,40 +71,25 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
             raise ValueError()
 
         res = [(col, type_for_column(data[col])) for col in data.columns]
-        return res    
+        return res
 
-    @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
-    @unittest.skipIf(not can_test,
-                     reason="sklearn-onnx not recent enough")
     def test_xgboost_10_skl_missing(self):
         self.common_test_xgboost_10_skl(np.nan)
 
-    @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
-    @unittest.skipIf(not can_test,
-                     reason="sklearn-onnx not recent enough")
     def test_xgboost_10_skl_zero(self):
         try:
             self.common_test_xgboost_10_skl(0., True)
         except RuntimeError as e:
             assert "Cannot convert a XGBoost model where missing values" in str(e)
 
-    @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
-    @unittest.skipIf(not can_test,
-                     reason="sklearn-onnx not recent enough")
     def test_xgboost_10_skl_zero_replace(self):
         self.common_test_xgboost_10_skl(np.nan, True)
-                     
+
     def common_test_xgboost_10_skl(self, missing, replace=False):
         this = os.path.abspath(os.path.dirname(__file__))
         data = os.path.join(this, "data_fail.csv")
         data = pandas.read_csv(data)
-        
+
         for col in data:
             dtype = data[col].dtype
             if dtype in ['float64', 'float32']:
@@ -112,9 +105,9 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
 
         train_df, test_df, train_labels, test_labels = train_test_split(
             full_df, full_labels, test_size=.2, random_state=11)
-        
+
         col_transformer = self._column_tranformer_fitted_from_df(full_df)
-        
+
         param_distributions = {
             "colsample_bytree": 0.5,
             "gamma": 0.2,
@@ -130,7 +123,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         regressor.fit(col_transformer.transform(train_df), train_labels)
         model = Pipeline(steps=[('preprocessor', col_transformer),
                                 ('regressor', regressor)])
-        
+
         update_registered_converter(
             XGBRegressor, 'XGBRegressor',
             calculate_linear_regressor_output_shapes,
@@ -140,7 +133,9 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         input_xgb = model.steps[0][-1].transform(test_df[:5]).astype(np.float32)
         if replace:
             input_xgb[input_xgb[:, :] == missing] = np.nan
-        onnx_last = to_onnx(model.steps[1][-1], input_xgb)
+        onnx_last = convert_sklearn(model.steps[1][-1],
+                                    initial_types=[('X', FloatTensorType(shape=[None, input_xgb.shape[1]]))],
+                                    target_opset=get_opset_number_from_onnx())
         session = rt.InferenceSession(onnx_last.SerializeToString())
         pred_skl = model.steps[1][-1].predict(input_xgb).ravel()
         pred_onx = session.run(None, {'X': input_xgb})[0].ravel()
