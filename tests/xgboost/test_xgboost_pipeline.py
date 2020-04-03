@@ -134,7 +134,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         if replace:
             input_xgb[input_xgb[:, :] == missing] = np.nan
         onnx_last = convert_sklearn(model.steps[1][-1],
-                                    initial_types=[('input', FloatTensorType(shape=[None, input_xgb.shape[1]]))],
+                                    initial_types=[('X', FloatTensorType(shape=[None, input_xgb.shape[1]]))],
                                     target_opset=get_opset_number_from_onnx())
         session = rt.InferenceSession(onnx_last.SerializeToString())
         pred_skl = model.steps[1][-1].predict(input_xgb).ravel()
