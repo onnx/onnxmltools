@@ -7,11 +7,11 @@ pytest-cov
 scipy
 svm
 wheel
-xgboost
+xgboost==0.90
 lightgbm
 pyspark==2.3.2; sys_platform == 'win32'
 pyspark; sys_platform == 'linux'
 pyspark; python_version <= '2.7'
 openpyxl
 mleap
-
+scikit-learn==0.21.3
