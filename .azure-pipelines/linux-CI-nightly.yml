@@ -37,7 +37,7 @@ jobs:
       conda install -c conda-forge cmake
       pip install $(ONNX_PATH)
       pip install -r requirements.txt
-      git clone https://github.com/microsoft/onnxconverter-common
+      git clone -b r1.6 https://github.com/microsoft/onnxconverter-common
       cd onnxconverter-common
       pip install -e .
       cd ..
