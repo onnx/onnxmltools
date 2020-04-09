@@ -6,8 +6,9 @@
 import numpy
 
 from ..common._container import LightGbmModelContainer
-from ..common._topology import *
-from ..common.data_types import FloatTensorType
+from ..common._topology import Topology
+from ..common.data_types import (FloatTensorType,
+    SequenceType, DictionaryType, StringType, Int64Type)
 
 from lightgbm import LGBMClassifier, LGBMRegressor
 

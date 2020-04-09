@@ -13,13 +13,6 @@ jobs:
     vmImage: 'Ubuntu-16.04'
   strategy:
     matrix:
-      Python27-123-RT040:
-        python.version: '2.7'
-        ONNX_PATH: onnx==1.2.3
-        ONNXRT_PATH: onnxruntime==0.4.0
-        xgboost.version: ''
-      # Python35:
-      #   python.version: '3.5'
       Python36-141-RT050:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1

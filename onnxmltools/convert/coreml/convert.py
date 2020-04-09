@@ -6,8 +6,9 @@
 
 import coremltools
 from uuid import uuid4
+from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 from ...proto import onnx
-from ...proto import onnx_proto, get_opset_number_from_onnx
+from ...proto import onnx_proto
 from ..common._topology import convert_topology
 from ._parse import parse_coreml
 
@@ -55,7 +56,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     if name is None:
         name = str(uuid4().hex)
 
-    target_opset = target_opset if target_opset else get_opset_number_from_onnx()
+    target_opset = target_opset if target_opset else get_maximum_opset_supported()
     # Parse CoreML model as our internal data structure (i.e., Topology)
     topology = parse_coreml(spec, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
 
