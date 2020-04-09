@@ -19,7 +19,8 @@ try:
     from onnxmltools.convert.common.data_types import FloatTensorType
     from onnxmltools.utils import dump_data_and_model
     from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost as convert_xgb
-    from onnxmltools.proto import get_opset_number_from_onnx
+    from onnxconverter_common.onnx_ex import get_maximum_opset_supported
+
 
     can_test = True
 except ImportError:
@@ -135,7 +136,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
             input_xgb[input_xgb[:, :] == missing] = np.nan
         onnx_last = convert_sklearn(model.steps[1][-1],
                                     initial_types=[('X', FloatTensorType(shape=[None, input_xgb.shape[1]]))],
-                                    target_opset=get_opset_number_from_onnx())
+                                    target_opset=get_maximum_opset_supported())
         session = rt.InferenceSession(onnx_last.SerializeToString())
         pred_skl = model.steps[1][-1].predict(input_xgb).ravel()
         pred_onx = session.run(None, {'X': input_xgb})[0].ravel()
