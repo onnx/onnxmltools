@@ -13,13 +13,6 @@ jobs:
     vmImage: 'Ubuntu-16.04'
   strategy:
     matrix:
-      Python27-123-RT040:
-        python.version: '2.7'
-        ONNX_PATH: onnx==1.2.3
-        ONNXRT_PATH: onnxruntime==0.4.0
-        xgboost.version: ''
-      # Python35:
-      #   python.version: '3.5'
       Python36-141-RT050:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1
@@ -59,14 +52,14 @@ jobs:
       conda install -c conda-forge numpy
       conda install -c conda-forge cmake
       pip install $(ONNX_PATH)
-      test '$(python.version)' != '2.7' && python -m pip install tensorflow-cpu==1.15.0
+      python -m pip install tensorflow-cpu==1.15.0
       python -m pip install tf2onnx
       python -m pip install git+https://github.com/microsoft/onnxconverter-common
       python -m pip install git+https://github.com/onnx/keras-onnx
       pip install -r requirements.txt
       pip install -r requirements-dev.txt
       pip install xgboost$(xgboost.version)
-      test '$(python.version)' != '2.7' && pip install $(ONNXRT_PATH)
+      pip install $(ONNXRT_PATH)
       pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
@@ -77,7 +70,7 @@ jobs:
       export PYTHONPATH=$PYTHONPATH:libsvm/python
       python -c "import svmutil"
       python -c "import onnxconverter_common"
-      test '$(python.version)' != '2.7' && python -c "import onnxruntime"
+      python -c "import onnxruntime"
       pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
 

@@ -3,7 +3,6 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-import six
 import numpy as np
 from ...common._registration import register_shape_calculator
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
@@ -33,7 +32,7 @@ def calculate_lightgbm_classifier_output_shapes(operator):
     class_labels = operator.raw_operator.classes_
     if all(isinstance(i, np.ndarray) for i in class_labels):
         class_labels = np.concatenate(class_labels)
-    if all(isinstance(i, (six.string_types, six.text_type)) for i in class_labels):
+    if all(isinstance(i, str) for i in class_labels):
         operator.outputs[0].type = StringTensorType(shape=[N])
     else:
         operator.outputs[0].type = Int64TensorType(shape=[N])
