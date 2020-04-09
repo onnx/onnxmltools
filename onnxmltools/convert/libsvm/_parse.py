@@ -3,9 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
-
+from onnxconverter_common.data_types import FloatTensorType
 from ..common._container import LibSvmModelContainer
-from ..common._topology import Topology, FloatTensorType
+from ..common._topology import Topology
 
 
 def _parse_libsvm_simple_model(scope, model, inputs):
