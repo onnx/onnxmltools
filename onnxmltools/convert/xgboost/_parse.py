@@ -6,9 +6,10 @@
 import json
 import numpy as np
 from xgboost import XGBRegressor, XGBClassifier
+from onnxconverter_common.data_types import FloatTensorType
 from ..common._container import XGBoostModelContainer
-from ..common._topology import *
-from .common import get_xgb_params
+from ..common._topology import Topology
+
 
 xgboost_classifier_list = [XGBClassifier]
 

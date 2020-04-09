@@ -3,11 +3,12 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+from onnxconverter_common.data_types import FloatTensorType
 from .ops_names import get_sparkml_operator_name
 from .ops_input_output import get_input_names, get_output_names
 
 from ..common._container import SparkmlModelContainer
-from ..common._topology import *
+from ..common._topology import Topology
 
 from pyspark.ml import PipelineModel
 
