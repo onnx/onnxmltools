@@ -52,16 +52,3 @@ def _make_tensor_fixed(name, data_type, dims, vals, raw=False):
 
 
 helper.make_tensor = _make_tensor_fixed
-
-
-def get_opset_number_from_onnx():
-    # since the method was widely used among while it is buggy to get the opset number...
-    # ... blindly, so change it to be safer without the name change.
-
-    default_max_opset = 11
-    try:
-        from onnxconverter_common.topology import DEFAULT_OPSET_NUMBER
-        default_max_opset = DEFAULT_OPSET_NUMBER
-    except:  # noqa
-        pass
-    return min(default_max_opset, onnx.defs.onnx_opset_version())

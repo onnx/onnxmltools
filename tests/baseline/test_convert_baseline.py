@@ -50,3 +50,7 @@ class TestBaseLine(unittest.TestCase):
         """
         self.assertFalse(self.check_baseline(
             "keras2coreml_Dense_ImageNet_small.mlmodel", "keras2coreml_Dense_ImageNet_small.json"))
+
+
+if __name__ == "__main__":
+    unittest.main()
