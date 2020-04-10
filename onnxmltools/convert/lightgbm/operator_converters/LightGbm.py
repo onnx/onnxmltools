@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 import copy
-import numbers, six
+import numbers
 import numpy as np
 from collections import Counter
 from lightgbm import LGBMClassifier, LGBMRegressor

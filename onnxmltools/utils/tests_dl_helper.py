@@ -6,7 +6,6 @@
 """
 Helpers to help testing deep learning converted models.
 """
-import six
 import numpy as np
 from .main import save_model
 
@@ -62,7 +61,7 @@ def _evaluate_onnxruntime(onnx_model, inputs):
     runtime = onnxruntime.InferenceSession(onnx_model.SerializeToString())
     result = None
     inputs = inputs if isinstance(inputs, list) else [inputs]
-    for i_ in six.moves.range(inputs[0].shape[0]):  # TODO: onnxruntime can't support batch_size > 1
+    for i_ in range(inputs[0].shape[0]):  # TODO: onnxruntime can't support batch_size > 1
         out = runtime.run([], {x.name: inputs[n_][i_:i_ + 1] for n_, x in enumerate(runtime.get_inputs())})[0]
         result = out if result is None else np.concatenate((result, out))
 
