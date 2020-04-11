@@ -69,20 +69,26 @@ class XGBConverter:
                 try:
                     feature_id = int(feature_id[1:])
                 except ValueError:
-                    raise RuntimeError("Unable to interpret '{0}'".format(feature_id))
+                    raise RuntimeError(
+                        "Unable to interpret '{0}', feature "
+                        "names should follow pattern 'f%d'.".format(
+                            feature_id))
             else:
                 try:
                     feature_id = int(feature_id)
                 except ValueError:
-                    raise RuntimeError("Unable to interpret '{0}'".format(feature_id))
-                    
+                    raise RuntimeError(
+                        "Unable to interpret '{0}', feature "
+                        "names should follow pattern 'f%d'.".format(
+                            feature_id))
+
         # Split condition for sklearn
         # * if X_ptr[X_sample_stride * i + X_fx_stride * node.feature] <= node.threshold: 
         # * https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/tree/_tree.pyx#L946 
         # Split condition for xgboost 
         # * if (fvalue < split_value) 
         # * https://github.com/dmlc/xgboost/blob/master/include/xgboost/tree_model.h#L804             
-    
+
         attr_pairs['nodes_treeids'].append(tree_id)
         attr_pairs['nodes_nodeids'].append(node_id)
         attr_pairs['nodes_featureids'].append(feature_id)

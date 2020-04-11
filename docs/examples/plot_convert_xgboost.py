@@ -2,25 +2,15 @@
 # Licensed under the MIT License.
 
 """
-.. _l-example-scikit-learn:
+.. _l-example-xgboost:
 
-Converts a scikit-learn model
-=============================
+Converts a XGBoost model
+========================
 
-The gallery of `sklearn-onnx
-<http://onnx.ai/sklearn-onnx/auto_examples/index.html>`_
-provides many examples with `scikit-learn
-<https://scikit-learn.org/stable/>`_. The following
-takes the same `example
-<http://onnx.ai/sklearn-onnx/auto_examples/plot_convert_model.html>`_
-and rewrites it with *onnxmltools*.
-
-Train and deploy a model usually involves the
-three following steps:
-
-* train a pipeline with *scikit-learn*,
-* convert it into *ONNX* with *sklearn-onnx*,
-* predict with *onnxruntime*.
+This example trains a `xgboost
+<https://xgboost.readthedocs.io/en/latest/index.html>`_
+model on the Iris datasets and converts it
+into ONNX.
 
 .. contents::
     :local:
@@ -28,8 +18,6 @@ three following steps:
 Train a model
 +++++++++++++
 
-A very basic example using random forest and
-the iris dataset.
 """
 
 import numpy
@@ -38,18 +26,19 @@ import sklearn
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+import xgboost
+from xgboost import XGBClassifier, DMatrix, train as train_xgb
 import onnxruntime as rt
 
 import skl2onnx
 import onnxmltools
 from onnxconverter_common.data_types import FloatTensorType
-from onnxmltools.convert import convert_sklearn
+from onnxmltools.convert import convert_xgboost
 
 iris = load_iris()
 X, y = iris.data, iris.target
 X_train, X_test, y_train, y_test = train_test_split(X, y)
-clr = RandomForestClassifier()
+clr = XGBClassifier()
 clr.fit(X_train, y_train)
 print(clr)
 
@@ -58,36 +47,40 @@ print(clr)
 # +++++++++++++++++++++++++
 
 initial_type = [('float_input', FloatTensorType([None, 4]))]
-onx = convert_sklearn(clr, initial_types=initial_type)
-
-with open("rf_iris.onnx", "wb") as f:
-    f.write(onx.SerializeToString())
+onx = convert_xgboost(clr, initial_types=initial_type)
 
 ###################################
-# Compute the prediction with onnxruntime
-# +++++++++++++++++++++++++++++++++++++++
-sess = rt.InferenceSession("rf_iris.onnx")
+# Compute the predictions with onnxruntime
+# ++++++++++++++++++++++++++++++++++++++++
+
+sess = rt.InferenceSession(onx.SerializeToString())
 input_name = sess.get_inputs()[0].name
 label_name = sess.get_outputs()[0].name
 pred_onx = sess.run(
     [label_name], {input_name: X_test.astype(numpy.float32)})[0]
 print(pred_onx)
 
-#######################################
-# Full example with a logistic regression
+###############################################
+# With DMatrix
+# ++++++++++++
+#
+# Huge datasets cannot be handled with the scikit-learn API.
+# DMatrix must be used. Let's see how to convert the trained
+# model.
 
-clr = LogisticRegression()
-clr.fit(X_train, y_train)
-initial_type = [('float_input', FloatTensorType([None, X_train.shape[1]]))]
-onx = convert_sklearn(clr, initial_types=initial_type)
-with open("logreg_iris.onnx", "wb") as f:
-    f.write(onx.SerializeToString())
+dtrain = DMatrix(X_train, label=y_train)
 
-sess = rt.InferenceSession("logreg_iris.onnx")
+param = {'objective': 'multi:softmax', 'num_class': 3}
+bst = train_xgb(param, dtrain, 10)
+
+initial_type = [('float_input', FloatTensorType([None, 4]))]
+onx = convert_xgboost(bst, initial_types=initial_type)
+
+sess = rt.InferenceSession(onx.SerializeToString())
 input_name = sess.get_inputs()[0].name
 label_name = sess.get_outputs()[0].name
-pred_onx = sess.run([label_name],
-                    {input_name: X_test.astype(numpy.float32)})[0]
+pred_onx = sess.run(
+    [label_name], {input_name: X_test.astype(numpy.float32)})[0]
 print(pred_onx)
 
 
@@ -122,4 +115,4 @@ print("scikit-learn:", sklearn.__version__)
 print("onnx: ", onnx.__version__)
 print("onnxruntime: ", rt.__version__)
 print("onnxmltools: ", onnxmltools.__version__)
-print("skl2onnx: ", skl2onnx.__version__)
+print("xgboost: ", xgboost.__version__)

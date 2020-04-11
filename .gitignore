@@ -53,3 +53,5 @@ docs/examples/graph.dot.png
 CMakeCache.txt
 CMakeFiles/
 docs/examples/*.onnx
+docs/examples/*.dot
+docs/examples/*.png
