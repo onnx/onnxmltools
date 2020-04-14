@@ -56,10 +56,13 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     if initial_types is None:
         initial_types = [('input', FloatTensorType(shape=['None', 'None']))]
 
-    _, model_path = tempfile.mkstemp()
-    f = open(model_path, "wb")
-    f.write(model)
-    f.close()
+    if isinstance(model, str):
+        model_path = model
+    else:
+        _, model_path = tempfile.mkstemp()
+        f = open(model_path, "wb")
+        f.write(model)
+        f.close()
     mojo_str = h2o.print_mojo(model_path, format="json")
     mojo_model = json.loads(mojo_str)
     if mojo_model["params"]["algo"] != "gbm":

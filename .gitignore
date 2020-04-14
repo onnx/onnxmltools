@@ -55,3 +55,4 @@ CMakeFiles/
 docs/examples/*.onnx
 docs/examples/*.dot
 docs/examples/*.png
+docs/examples/model
