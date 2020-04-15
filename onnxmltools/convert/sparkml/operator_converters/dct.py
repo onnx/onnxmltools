@@ -16,7 +16,7 @@ from ...common._registration import register_converter, register_shape_calculato
 
 
 def convert_sparkml_dct(scope, operator, container):
-    op = operator.raw_operator
+    # op = operator.raw_operator
     # inverse = op.getInverse()
     K = operator.inputs[0].type.shape[1]
     two_sqrt_n = math.sqrt(2. / K)
