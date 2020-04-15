@@ -182,16 +182,14 @@ class XGBRegressorConverter(XGBConverter):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
-        
+
         if objective in ["reg:gamma", "reg:tweedie"]:
             raise RuntimeError("Objective '{}' not supported.".format(objective))
-        
-        booster = xgb_node.get_booster()
-        
+
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
         attr_pairs['base_values'] = [base_score]
         XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], False)
-        
+
         # add nodes
         container.add_node('TreeEnsembleRegressor', operator.input_full_names,
                            operator.output_full_names, op_domain='ai.onnx.ml',
@@ -220,9 +218,9 @@ class XGBClassifierConverter(XGBConverter):
     def convert(scope, operator, container):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
-        
+
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
-        
+
         params = XGBConverter.get_xgb_params(xgb_node)
 
         attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
@@ -241,7 +239,6 @@ class XGBClassifierConverter(XGBConverter):
             attr_pairs['post_transform'] = "SOFTMAX"
             # attr_pairs['base_values'] = [base_score for n in range(ncl)]
             attr_pairs['class_ids'] = [v % ncl for v in attr_pairs['class_treeids']]
-        class_labels = list(range(ncl))
 
         classes = xgb_node.classes_
         if (np.issubdtype(classes.dtype, np.floating) or

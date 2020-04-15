@@ -152,14 +152,8 @@ class SVCConverter(SVMConverter):
         nb["attrs"]['support_vectors'] = SVCConverter.get_sv(svm_node)
 
         # Add a vec dictionizer to handle the map output
-        prob_input = scope.get_unique_variable_name('Probability')
-
-        proba_tensor_name = scope.get_unique_variable_name("scores")
-        outputs = [nb['outputs'][0], proba_tensor_name]
-        outputs = nb['outputs']
-
         container.add_node('SVMClassifier', nb['inputs'],
-                           outputs, op_domain='ai.onnx.ml',
+                           nb['outputs'], op_domain='ai.onnx.ml',
                            name=scope.get_unique_operator_name('SVMClassifier'),
                            **nb['attrs'])
 

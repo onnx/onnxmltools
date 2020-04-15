@@ -40,8 +40,6 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
             options = extract_options(onx)
         else:
             options = {}
-    elif options is None:
-        options = {}
     elif not isinstance(options, dict):
         raise TypeError("options must be a dictionary.")
 
