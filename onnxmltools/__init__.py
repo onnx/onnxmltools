@@ -9,7 +9,7 @@ Main entry point to onnxmltools.
 This framework converts any machine learned model into onnx format
 which is a common language to describe any machine learned model.
 """
-__version__ = "1.5.0"
+__version__ = "1.7.0"
 __author__ = "Microsoft"
 __producer__ = "OnnxMLTools"
 __producer_version__ = __version__
@@ -24,6 +24,7 @@ from .convert import convert_sklearn
 from .convert import convert_sparkml
 from .convert import convert_tensorflow
 from .convert import convert_xgboost
+from .convert import convert_h2o
 
 from .utils import load_model
 from .utils import save_model

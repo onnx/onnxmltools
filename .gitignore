@@ -25,6 +25,7 @@ build/
 # test generated files
 .pytest_cache
 .cache
+tests/temp
 tests/utils/models/coreml_OneHotEncoder_BikeSharing_new.json
 tests/utils/models/coreml_OneHotEncoder_BikeSharing2.onnx
 tests/baseline/outmodels
@@ -44,7 +45,6 @@ derby.log
 metastore_db/
 tests/*/tests/*.pkl
 tests/*/tests/*.onnx
-tests/*/tests/*.keras
 docs/auto_examples/*
 docs/examples/dense121.onnx
 docs/examples/graph.dot

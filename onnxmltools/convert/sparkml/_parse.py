@@ -3,11 +3,12 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # --------------------------------------------------------------------------
+from onnxconverter_common.data_types import FloatTensorType
 from .ops_names import get_sparkml_operator_name
 from .ops_input_output import get_input_names, get_output_names
 
 from ..common._container import SparkmlModelContainer
-from ..common._topology import *
+from ..common._topology import Topology
 
 from pyspark.ml import PipelineModel
 
@@ -96,7 +97,7 @@ def parse_sparkml(spark, model, initial_types=None, target_opset=None,
     raw_model_container = SparkmlModelContainer(model)
 
     # Declare a computational graph. It will become a representation of the input spark-ml model after parsing.
-    topology = Topology(raw_model_container,
+    topology = Topology(raw_model_container, default_batch_size='None',
                         initial_types=initial_types,
                         target_opset=target_opset,
                         custom_conversion_functions=custom_conversion_functions,

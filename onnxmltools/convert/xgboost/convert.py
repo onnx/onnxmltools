@@ -5,9 +5,11 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
-from ...proto import onnx, get_opset_number_from_onnx
+import xgboost
+from onnxconverter_common.onnx_ex import get_maximum_opset_supported
+from ...proto import onnx
 from ..common._topology import convert_topology
-from ._parse import parse_xgboost
+from ._parse import parse_xgboost, WrappedBooster
 
 # Invoke the registration of all our converters and shape calculators
 # from . import shape_calculators
@@ -37,7 +39,9 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     if name is None:
         name = str(uuid4().hex)
 
-    target_opset = target_opset if target_opset else get_opset_number_from_onnx()
+    if isinstance(model, xgboost.Booster):
+        model = WrappedBooster(model)
+    target_opset = target_opset if target_opset else get_maximum_opset_supported()
     topology = parse_xgboost(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
     onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)

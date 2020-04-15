@@ -197,7 +197,7 @@ def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="mod
         Two options are currently supported: None for no test,
         `'onnxruntime'` to use module *onnxruntime*.
     :param context: used if the model contains a custom operator such
-        as a custom Keras function...
+        as a custom function...
     :param allow_failure: None to raise an exception if comparison fails
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:

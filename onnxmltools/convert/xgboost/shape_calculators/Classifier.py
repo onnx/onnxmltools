@@ -4,9 +4,13 @@
 # license information.
 # --------------------------------------------------------------------------
 
+import numpy as np
 from ...common._registration import register_shape_calculator
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
-from ...common.data_types import Int64TensorType, FloatTensorType, DictionaryType, SequenceType
+from ...common.data_types import (
+    DictionaryType, FloatTensorType, Int64TensorType,
+    SequenceType, StringTensorType,
+)
 from ..common import get_xgb_params
 
 
@@ -28,7 +32,12 @@ def calculate_xgboost_classifier_output_shapes(operator):
         ncl = ntrees // params['n_estimators']
         if objective == "reg:logistic" and ncl == 1:
             ncl = 2
-    operator.outputs[0].type = Int64TensorType(shape=[N])
+    classes = xgb_node.classes_
+    if (np.issubdtype(classes.dtype, np.floating) or
+            np.issubdtype(classes.dtype, np.signedinteger)):
+        operator.outputs[0].type = Int64TensorType(shape=[N])
+    else:
+        operator.outputs[0].type = StringTensorType(shape=[N])
     operator.outputs[1].type = operator.outputs[1].type = FloatTensorType([N, ncl])
 
 

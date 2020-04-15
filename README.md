@@ -15,6 +15,8 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * LightGBM
 * libsvm
 * XGBoost
+* H2O
+<p>Pytorch has its builtin ONNX exporter check <a href="https://pytorch.org/docs/stable/onnx.html">here</a>  for details</p>
 
 ## Install
 You can install latest release of ONNXMLTools from [PyPi](https://pypi.org/project/onnxmltools/):
@@ -23,12 +25,13 @@ pip install onnxmltools
 ```
 or install from source:
 ```
+pip install git+https://github.com/microsoft/onnxconverter-common
 pip install git+https://github.com/onnx/onnxmltools
 ```
 If you choose to install `onnxmltools` from its source code, you must set the environment variable `ONNX_ML=1` before installing the `onnx` package. 
 
 ## Dependencies
-This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, LightGBM, SparkML, XGBoost, or LibSVM, you will need an environment with the respective package installed from the list below:
+This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, LightGBM, SparkML, XGBoost, H2O or LibSVM, you will need an environment with the respective package installed from the list below:
 1. scikit-learn
 2. CoreMLTools
 3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
@@ -36,29 +39,13 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 5. SparkML
 6. XGBoost (scikit-learn interface)
 7. libsvm
+8. H2O
 
-ONNXMLTools has been tested with Python **2.7**, **3.5**, **3.6**, and **3.7**.  
-  `Note: some wrapped converters may not support python 2.x anymore.`
+ONNXMLTools has been tested with Python **3.5**, **3.6**, and **3.7**.
+Version 1.6.1 is the latest version supporting Python 2.7.
 
 # Examples
 If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions). 
-
-## CoreML to ONNX Conversion
-Here is a simple code snippet to convert a Core ML model into an ONNX model.
-
-```python
-import onnxmltools
-import coremltools
-
-# Load a Core ML model
-coreml_model = coremltools.utils.load_spec('example.mlmodel')
-
-# Convert the Core ML model into ONNX
-onnx_model = onnxmltools.convert_coreml(coreml_model, 'Example Model')
-
-# Save as protobuf
-onnxmltools.utils.save_model(onnx_model, 'example.onnx')
-```
 
 ## Keras to ONNX Conversion
 Next, we show an example of converting a Keras model into an ONNX model with `target_opset=7`, which corresponds to ONNX release version 1.2.
@@ -93,10 +80,35 @@ keras_model = Model(inputs=[input1, input2], output=sub_sum)
 onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7) 
 ```
 
-## Spark ML to ONNX Conversion
-Please refer to the following documents:
- * [Conversion Framework](onnxmltools/convert/README.md)
- * [Spark ML to ONNX Model Conversion](onnxmltools/convert/sparkml/README.md)
+## CoreML to ONNX Conversion
+Here is a simple code snippet to convert a Core ML model into an ONNX model.
+
+```python
+import onnxmltools
+import coremltools
+
+# Load a Core ML model
+coreml_model = coremltools.utils.load_spec('example.mlmodel')
+
+# Convert the Core ML model into ONNX
+onnx_model = onnxmltools.convert_coreml(coreml_model, 'Example Model')
+
+# Save as protobuf
+onnxmltools.utils.save_model(onnx_model, 'example.onnx')
+```
+
+## H2O to ONNX Conversion
+Below is a code snippet to convert a H2O MOJO model into an ONNX model. The only pre-requisity is to have a MOJO model saved on the local file-system.
+
+```python
+import onnxmltools
+
+# Convert the Core ML model into ONNX
+onnx_model = onnxmltools.convert_h2o('/path/to/h2o/gbm_mojo.zip')
+
+# Save as protobuf
+onnxmltools.utils.save_model(onnx_model, 'h2o_gbm.onnx')
+```
 
 # Testing model converters
 
@@ -120,17 +132,12 @@ Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more
 
 ## Test all existing converters
 
-There exists a way
-to automatically check every converter with
+All converter unit test can generate the original model and converted model to automatically be checked with
 [onnxruntime](https://pypi.org/project/onnxruntime/) or
 [onnxruntime-gpu](https://pypi.org/project/onnxruntime-gpu/).
-This process requires the user to clone the *onnxmltools* repository.
-The following command runs all unit tests and generates
-dumps of models, inputs, expected outputs and converted models
-in folder ``TESTDUMP``.
-
+The unit test cases are all the normal python unit test cases, you can run it with pytest command line, for example:
 ```
-python tests/main.py DUMP
+python -m pytest --ignore .\tests\
 ```
 
 It requires *onnxruntime*, *numpy* for most models,

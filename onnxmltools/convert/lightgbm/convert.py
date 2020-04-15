@@ -5,9 +5,11 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
-from ...proto import onnx, get_opset_number_from_onnx
+import lightgbm
+from onnxconverter_common.onnx_ex import get_maximum_opset_supported
+from ...proto import onnx
 from ..common._topology import convert_topology
-from ._parse import parse_lightgbm
+from ._parse import parse_lightgbm, WrappedBooster
 
 # Invoke the registration of all our converters and shape calculators
 # from . import shape_calculators
@@ -21,10 +23,11 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     This function produces an equivalent ONNX model of the given lightgbm model.
     The supported lightgbm modules are listed below.
     
-    * `LGBMClassifiers <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMClassifier>`_
-    * `LGBMRegressor <http://lightgbm.readthedocs.io/en/latest/Python-API.html#lightgbm.LGBMRegressor>`_
+    * `LGBMClassifiers <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html>`_
+    * `LGBMRegressor <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html>`_
+    * `Booster <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html>`_
 
-    :param model: A lightgbm model
+    :param model: A LightGBM model
     :param initial_types: a python list. Each element is a tuple of a variable name and a type defined in data_types.py
     :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
@@ -36,12 +39,14 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     :return: An ONNX model (type: ModelProto) which is equivalent to the input lightgbm model
     '''
     if initial_types is None:
-        raise ValueError('Initial types are required. See usage of convert(...) in \
-                           onnxmltools.convert.lightgbm.convert for details')
+        raise ValueError('Initial types are required. See usage of convert(...) in '
+                         'onnxmltools.convert.lightgbm.convert for details')
+    if isinstance(model, lightgbm.Booster):
+        model = WrappedBooster(model)
     if name is None:
         name = str(uuid4().hex)
 
-    target_opset = target_opset if target_opset else get_opset_number_from_onnx()
+    target_opset = target_opset if target_opset else get_maximum_opset_supported()
     topology = parse_lightgbm(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
     onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)

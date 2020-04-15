@@ -34,9 +34,14 @@ def save_read_sparkml_model_data(spark, model):
     import tempfile
     import os
     import time
-    path = os.path.join(tempfile.tempdir, type(model).__name__ + "_" + str(time.time()))
-    #print(path)
+    tdir = tempfile.tempdir
+    if tdir is None:
+        tdir = spark.util.Utils.createTempDir().getAbsolutePath()
+    if tdir is None:
+        raise FileNotFoundError(
+            "Unable to create a temporary directory for model '{}'"
+            ".".format(type(model).__name__))
+    path = os.path.join(tdir, type(model).__name__ + "_" + str(time.time()))
     model.write().overwrite().save(path)
     df = spark.read.parquet(os.path.join(path, 'data'))
-    #df.show(100)
     return df

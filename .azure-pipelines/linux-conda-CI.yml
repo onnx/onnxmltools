@@ -13,17 +13,26 @@ jobs:
     vmImage: 'Ubuntu-16.04'
   strategy:
     matrix:
-      Python27:
-        python.version: '2.7'
-        ONNX_PATH: onnx==1.2.3
-      # Python35:
-      #   python.version: '3.5'
-      Python36:
+      Python36-141-RT050:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1
-      Python37:
+        ONNXRT_PATH: onnxruntime==0.5.0
+        xgboost.version: ''
+      Python37-150-RT100:
         python.version: '3.7'
         ONNX_PATH: onnx==1.5.0
+        ONNXRT_PATH: onnxruntime==1.0.0
+        xgboost.version: ''
+      Python37-160-RT111-XGB0:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.6.0
+        ONNXRT_PATH: onnxruntime==1.1.1
+        xgboost.version: '<1.0'
+      Python37-160-RT111:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.6.0
+        ONNXRT_PATH: onnxruntime==1.1.1
+        xgboost.version: '>=1.0'
     maxParallel: 3
 
   steps:
@@ -43,13 +52,14 @@ jobs:
       conda install -c conda-forge numpy
       conda install -c conda-forge cmake
       pip install $(ONNX_PATH)
+      python -m pip install tensorflow-cpu==1.15.0
+      python -m pip install tf2onnx
+      python -m pip install git+https://github.com/microsoft/onnxconverter-common
+      python -m pip install git+https://github.com/onnx/keras-onnx
       pip install -r requirements.txt
-      git clone https://github.com/microsoft/onnxconverter-common
-      cd onnxconverter-common
-      pip install -e .
-      cd ..
       pip install -r requirements-dev.txt
-      test '$(python.version)' != '2.7' && pip install onnxruntime==0.4.0
+      pip install xgboost$(xgboost.version)
+      pip install $(ONNXRT_PATH)
       pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
@@ -60,18 +70,9 @@ jobs:
       export PYTHONPATH=$PYTHONPATH:libsvm/python
       python -c "import svmutil"
       python -c "import onnxconverter_common"
-      test '$(python.version)' != '2.7' && python -c "import onnxruntime"
-      pytest tests --doctest-modules --junitxml=junit/test-results.xml
+      python -c "import onnxruntime"
+      pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
-
-  - script: |
-      export PYTHONPATH=$PYTHONPATH:libsvm/python
-      python -c "import onnxconverter_common"
-      python -c "import onnxmltools"
-      coverage run --include=onnxmltools/** tests/main.py
-      coverage report -m
-      coverage html
-    displayName: 'coverage'
 
   - task: PublishTestResults@2
     inputs:

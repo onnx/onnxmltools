@@ -4,15 +4,10 @@
 # license information.
 # --------------------------------------------------------------------------
 
-import ctypes
-import numbers
-import numpy
 import json
-from xgboost import XGBRegressor, XGBClassifier
-from xgboost.core import _LIB, _check_call, from_cstr_to_pystr
-from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
+import numpy as np
+from xgboost import XGBClassifier
 from ...common._registration import register_converter
-from ...common import utils
 from ..common import get_xgb_params
 
 
@@ -29,10 +24,13 @@ class XGBConverter:
     def validate(xgb_node):
         params = XGBConverter.get_xgb_params(xgb_node)
         try:
-            if not "objective" in params:
+            if "objective" not in params:
                 raise AttributeError('ojective')
         except AttributeError as e:
             raise RuntimeError('Missing attribute in XGBoost model ' + str(e))
+        if hasattr(xgb_node, 'missing') and not np.isnan(xgb_node.missing):
+            raise RuntimeError("Cannot convert a XGBoost model where missing values are not "
+                               "nan but {}.".format(xgb_node.missing))
 
     @staticmethod
     def common_members(xgb_node, inputs):
@@ -174,7 +172,7 @@ class XGBRegressorConverter(XGBConverter):
         return attrs
 
     @staticmethod
-    def convert(cscope, operator, container):
+    def convert(scope, operator, container):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
@@ -190,7 +188,8 @@ class XGBRegressorConverter(XGBConverter):
         
         # add nodes
         container.add_node('TreeEnsembleRegressor', operator.input_full_names,
-                           operator.output_full_names, op_domain='ai.onnx.ml', **attr_pairs)
+                           operator.output_full_names, op_domain='ai.onnx.ml',
+                           name=scope.get_unique_operator_name('TreeEnsembleRegressor'), **attr_pairs)
         #try:
         #    if len(inputs[0].type.tensor_type.shape.dim) > 0:
         #        output_dim = [inputs[0].type.tensor_type.shape.dim[0].dim_value, 1]
@@ -238,37 +237,50 @@ class XGBClassifierConverter(XGBConverter):
             attr_pairs['class_ids'] = [v % ncl for v in attr_pairs['class_treeids']]
         class_labels = list(range(ncl))
 
-        attr_pairs['classlabels_int64s'] = class_labels 
+        classes = xgb_node.classes_
+        if (np.issubdtype(classes.dtype, np.floating) or
+                np.issubdtype(classes.dtype, np.signedinteger)):
+            attr_pairs['classlabels_int64s'] = classes.astype('int')
+        else:
+            classes = np.array([s.encode('utf-8') for s in classes])
+            attr_pairs['classlabels_strings'] = classes
 
         # add nodes
         if objective == "binary:logistic":
             ncl = 2
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
-                               op_domain='ai.onnx.ml', **attr_pairs)
+                               op_domain='ai.onnx.ml',
+                               name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
+                               **attr_pairs)
         elif objective == "multi:softprob":
             ncl = len(js_trees) // params['n_estimators']
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
-                               op_domain='ai.onnx.ml', **attr_pairs)
+                               op_domain='ai.onnx.ml',
+                               name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
+                               **attr_pairs)
         elif objective == "reg:logistic":
             ncl = len(js_trees) // params['n_estimators']
             if ncl == 1:
                 ncl = 2
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
-                               op_domain='ai.onnx.ml', **attr_pairs)
+                               op_domain='ai.onnx.ml',
+                               name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
+                               **attr_pairs)
         else:
             raise RuntimeError("Unexpected objective: {0}".format(objective))            
 
 
-
 def convert_xgboost(scope, operator, container):
     xgb_node = operator.raw_operator
-    if isinstance(xgb_node, XGBClassifier):
+    if (isinstance(xgb_node, XGBClassifier) or
+            getattr(xgb_node, 'operator_name', None) == 'XGBClassifier'):
         cls = XGBClassifierConverter
     else:
         cls = XGBRegressorConverter
+    cls.validate(xgb_node)
     cls.convert(scope, operator, container)
 
 

@@ -1,17 +1,17 @@
-numpy
-protobuf
 codecov
 coremltools
+cython
+lightgbm
+h2o==3.28.0.3
+mleap
+numpy
+openpyxl
 pandas
+protobuf
+pytest
 pytest-cov
+scikit-learn
 scipy
 svm
 wheel
 xgboost
-lightgbm
-pyspark==2.3.2; sys_platform == 'win32'
-pyspark; sys_platform == 'linux'
-pyspark; python_version <= '2.7'
-openpyxl
-mleap
-

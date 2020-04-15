@@ -6,7 +6,7 @@
 from onnx import onnx_pb as onnx_proto
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.utils import check_input_and_output_numbers
-from onnxmltools.convert.common.data_types import *
+from ...common.data_types import *
 
 
 def convert_sparkml_vector_indexer(scope, operator, container):

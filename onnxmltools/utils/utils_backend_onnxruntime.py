@@ -4,6 +4,8 @@ Helpers to test runtimes.
 import os
 import glob
 import pickle
+import warnings
+
 import numpy
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from .utils_backend import load_data_and_model, extract_options, ExpectedAssertionError, OnnxRuntimeAssertionError, compare_outputs
@@ -63,7 +65,9 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
                 smodel = "\nJSON ONNX\n" + str(model)
             else:
                 smodel = ""
-            raise OnnxRuntimeAssertionError("Unable to load onnx '{0}'\nONNX\n{1}".format(onx, smodel))
+            raise OnnxRuntimeAssertionError(
+                "Unable to load onnx '{0}' due to {1}\nONNX\n{2}".format(
+                    onx, e, smodel))
 
     input = load["data"]
     if isinstance(input, dict):
@@ -142,7 +146,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
             else:
                 raise OnnxRuntimeAssertionError("onnxruntime cannot compute the prediction for '{0}' due to {1}".format(onx, e))
         except Exception as e:
-            raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onnx, e))
+            raise OnnxRuntimeAssertionError("Unable to run onnx '{0}' due to {1}".format(onx, e))
 
     output0 = output.copy()
 
@@ -224,7 +228,6 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
     tested = 0
     if isinstance(expected, list):
         if isinstance(output, list):
-            onnx_shapes = [_.shape for _ in sess.get_outputs()]
             if 'Out0' in kwargs:
                 expected = expected[:1]
                 output = output[:1]
@@ -236,6 +239,11 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
                                          len(output.ravel()) // len(expected)))
             if len(expected) != len(output):
                 raise OnnxRuntimeAssertionError("Unexpected number of outputs '{0}', expected={1}, got={2}".format(onnx, len(expected), len(output)))
+            try:
+                onnx_shapes = [_.shape for _ in sess.get_outputs()]
+            except TypeError:
+                # Unable to convert function return value to a Python type!
+                onnx_shapes = [None for o in output]
             for exp, out, osh in zip(expected, output, onnx_shapes):
                 _compare_expected(exp, out, sess, onnx, decimal=decimal, onnx_shape=osh, **kwargs)
                 tested += 1
@@ -268,7 +276,7 @@ def _compare_expected(expected, output, sess, onnx, decimal=5, onnx_shape=None, 
         if not isinstance(output, numpy.ndarray):
             raise OnnxRuntimeAssertionError("output must be an array for onnx '{0}' not {1}".format(onnx, type(output)))
         if onnx_shape is not None:
-            if len(onnx_shape) == 2:
+            if len(onnx_shape) == 2 and onnx_shape[0] is not None:
                 cols = onnx_shape[1]
                 ecols = output.shape[1] if len(output.shape) == 2 else 1
                 if cols != ecols:
