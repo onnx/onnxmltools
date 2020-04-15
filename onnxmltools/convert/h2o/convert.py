@@ -10,7 +10,7 @@ import tempfile
 import h2o
 
 from onnxconverter_common.onnx_ex import get_maximum_opset_supported
-from ...proto import onnx
+import onnx
 from ..common._topology import convert_topology
 from ..common.data_types import FloatTensorType
 from ._parse import parse_h2o
