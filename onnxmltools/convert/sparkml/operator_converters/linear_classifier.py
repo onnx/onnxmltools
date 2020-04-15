@@ -15,17 +15,19 @@ def convert_sparkml_linear_classifier(scope, operator, container):
     op_type = 'LinearClassifier'
     attrs = {'name': scope.get_unique_operator_name(op_type)}
 
-    coefficients = op.coefficients.toArray().tolist()
-    intercepts = [op.intercept]
-
     if op.numClasses == 2:
+        coefficients = op.coefficients.toArray().tolist()
+        intercepts = [op.intercept]
         coefficients = list(map(lambda x: -1 * x, coefficients)) + coefficients
         intercepts = list(map(lambda x: -1 * x, intercepts)) + intercepts
+    else:        
+        coefficients = op.coefficientMatrix.toArray().ravel().tolist()
+        intercepts = op.interceptVector.toArray().ravel().tolist()
 
     if isinstance(op, LogisticRegressionModel):
         if op.numClasses > 2:
-            coefficients = op.coefficientMatrix.toArray().tolist()
-            intercepts = op.interceptVector.toArray().tolist()
+            coefficients = op.coefficientMatrix.toArray().ravel().tolist()
+            intercepts = op.interceptVector.toArray().ravel().tolist()
         attrs['post_transform'] = 'LOGISTIC'
     elif isinstance(op, LinearSVCModel):
         attrs['post_transform'] = 'NONE'
@@ -38,7 +40,9 @@ def convert_sparkml_linear_classifier(scope, operator, container):
     attrs['coefficients'] = coefficients
     attrs['intercepts'] = intercepts
     attrs['multi_class'] = 1 if op.numClasses >= 2 else 0
-    attrs["classlabels_ints"] = range(0, op.numClasses)
+    attrs["classlabels_ints"] = list(range(0, op.numClasses))
+    import pprint
+    pprint.pprint(attrs)
 
     label_name = operator.outputs[0].full_name
     if not isinstance(operator.raw_operator, LinearSVCModel):

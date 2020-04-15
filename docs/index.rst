@@ -16,28 +16,40 @@ ONNXMLTools enables you to convert models from different machine learning
 toolkits into `ONNX <https://onnx.ai>`_. 
 Currently the following toolkits are supported:
 
-* `Apple Core ML <https://developer.apple.com/documentation/coreml>`_
-* `scikit-learn <https://scikit-learn.org/stable/>`_ (subset of models convertible to ONNX)
+* `Apple Core ML <https://developer.apple.com/documentation/coreml>`_,
+  (`onnx-coreml <https://github.com/onnx/onnx-coreml>`_ does the reverse
+  conversion from *onnx* to *Apple Core ML*),
+* `h2o <http://docs.h2o.ai/h2o/latest-stable/h2o-py/docs/intro.html>`_
+  (a subset only)
 * `Keras <https://keras.io/>`_ 
 * `LightGBM <https://lightgbm.readthedocs.io/en/latest/>`_ 
 * `libsvm <https://www.csie.ntu.edu.tw/~cjlin/libsvm/>`_
+* `scikit-learn <https://scikit-learn.org/stable/>`_
+  (subset of models convertible to ONNX)
 * `SparkML <https://spark.apache.org/docs/latest/ml-guide.html>`_
+* `XGBoost <https://xgboost.readthedocs.io/en/latest/>`_
 
-For other frameworks, see:
+*onnxmltools* leverages existing converting library,
+`keras-onnx <https://github.com/onnx/keras-onnx>`_,
+`sklearn-onnx <https://github.com/onnx/sklearn-onnx>`_,
+`tensorflow-onnx <https://github.com/onnx/tensorflow-onnx>`_
+and implements converters for the other libraries.
 
-* `tensorflow-onnx <https://github.com/onnx/tensorflow-onnx>`_
-* `onnx-coreml <https://github.com/onnx/onnx-coreml>`_
-
-If you want the converted model is compatible with certain ONNX version,
-please specify the target_opset parameter on invoking convert function,
-and the following Keras converter example code shows how it works.
+.. toctree::
+    :maxdepth: 2
+    
+    tutorial
+    api_summary
+    auto_examples/index
 
 *onnxmltools* converts models in ONNX format which
 can be then used to compute predictions with the
-backend of your choice. However, there exists a way
-to automatically check every converter with
-`onnxruntime <https://pypi.org/project/onnxruntime/>`_,
-`onnxruntime-gpu <https://pypi.org/project/onnxruntime-gpu>`_.
+backend of your choice. Every converter is tested with:
+`onnxruntime <https://pypi.org/project/onnxruntime/>`_
+(does also exist with GPU:
+`onnxruntime-gpu <https://pypi.org/project/onnxruntime-gpu>`_).
+Here is a typical example which trains a model, converts into
+ONNX and finally uses *onnxruntime* to predict.
 
 ::
 
@@ -66,20 +78,3 @@ to automatically check every converter with
     input_name = sess.get_inputs()[0].name
     label_name = sess.get_outputs()[0].name
     pred_onx = sess.run([label_name], {input_name: X_test.astype(numpy.float32)})[0]
-
-.. toctree::
-    :maxdepth: 2
-    
-    tutorial
-    api_summary
-    auto_examples/index
-    tests
-
-The package was developed by the following engineers and data scientists at 
-Microsoft starting from winter 2017: Zeeshan Ahmed, Wei-Sheng Chin, Aidan Crook, 
-Xavier Dupré, Costin Eseanu, Tom Finley, Lixin Gong, Scott Inglis, 
-Pei Jiang, Ivan Matantsev, Prabhat Roy, M. Zeeshan Siddiqui, 
-Shouheng Yi, Shauheen Zahirazami, Yiwen Zhu, Du Li, Xuan Li, Wenbing Li.
-It is licensed with `MIT License <../LICENSE>`_.
-
-
