@@ -10,7 +10,7 @@ import tempfile
 import h2o
 
 from onnxconverter_common.onnx_ex import get_maximum_opset_supported
-from ...proto import onnx
+import onnx
 from ..common._topology import convert_topology
 from ..common.data_types import FloatTensorType
 from ._parse import parse_h2o
@@ -56,10 +56,13 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     if initial_types is None:
         initial_types = [('input', FloatTensorType(shape=['None', 'None']))]
 
-    _, model_path = tempfile.mkstemp()
-    f = open(model_path, "wb")
-    f.write(model)
-    f.close()
+    if isinstance(model, str):
+        model_path = model
+    else:
+        _, model_path = tempfile.mkstemp()
+        f = open(model_path, "wb")
+        f.write(model)
+        f.close()
     mojo_str = h2o.print_mojo(model_path, format="json")
     mojo_model = json.loads(mojo_str)
     if mojo_model["params"]["algo"] != "gbm":

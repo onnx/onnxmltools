@@ -4,7 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from ..proto import onnx
+import onnx
 from .common import utils
 import warnings
 import importlib

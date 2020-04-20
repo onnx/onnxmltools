@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 from uuid import uuid4
+import onnx
 from onnxconverter_common.onnx_ex import get_maximum_opset_supported
-from ...proto import onnx
 from ..common._topology import convert_topology
 from ._parse import parse_sparkml
 from . import operator_converters

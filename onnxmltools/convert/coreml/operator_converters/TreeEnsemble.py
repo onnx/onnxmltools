@@ -64,8 +64,8 @@ def convert_tree_ensemble_model(scope, operator, container):
     else:
         raise ValueError('Unknown tree model type')
 
-    leaf_treeids = [node.treeId for node in nodes if 6 == node.nodeBehavior for weight in node.evaluationInfo]
-    leaf_nodeids = [node.nodeId for node in nodes if 6 == node.nodeBehavior for weight in node.evaluationInfo]
+    leaf_treeids = [node.treeId for node in nodes if 6 == node.nodeBehavior for _ in node.evaluationInfo]
+    leaf_nodeids = [node.nodeId for node in nodes if 6 == node.nodeBehavior for _ in node.evaluationInfo]
     leaf_ids = [weight.evaluationIndex for node in nodes if 6 == node.nodeBehavior for weight in node.evaluationInfo]
 
     leaf_weights = [weight.evaluationValue for node in nodes if 6 == node.nodeBehavior for weight in
