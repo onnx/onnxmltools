@@ -1,5 +1,5 @@
 """
-Tests CatBoost CatBoostRegressor converter.
+Tests for CatBoostRegressor and CatBoostClassifier converter.
 """
 import unittest
 import numpy
@@ -27,7 +27,7 @@ class TestCatBoost(unittest.TestCase):
 
     def test_catboost_bin_classifier(self):
         X, y = make_classification(n_samples=100, n_features=4, random_state=0)
-        catboost_model = catboost.CatBoostClassifier(task_type='CPU', loss_function='MultiClass',
+        catboost_model = catboost.CatBoostClassifier(task_type='CPU', loss_function='CrossEntropy',
                                                      n_estimators=10, verbose=0)
 
         catboost_model.fit(X.astype(numpy.float32), y)
