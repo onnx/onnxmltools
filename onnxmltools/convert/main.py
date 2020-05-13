@@ -69,7 +69,6 @@ def convert_catboost(model, name=None, initial_types=None, doc_string='', target
     return onnx_model
 
 
-
 def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target_opset=None,
                      targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
     if not utils.lightgbm_installed():
