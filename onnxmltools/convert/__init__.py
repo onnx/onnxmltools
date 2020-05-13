@@ -13,3 +13,4 @@ from .main import convert_sparkml
 from .main import convert_tensorflow
 from .main import convert_xgboost
 from .main import convert_h2o
+from .main import convert_catboost
