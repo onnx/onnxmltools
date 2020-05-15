@@ -4,12 +4,9 @@ Tests for CatBoostRegressor and CatBoostClassifier converter.
 import unittest
 import numpy
 import catboost
-import onnxruntime as rt
-from catboost.utils import convert_to_onnx_object
 from sklearn.datasets import make_regression, make_classification
 from onnxmltools.convert import convert_catboost
 from onnxmltools.utils import dump_data_and_model, dump_single_regression, dump_multiple_classification
-from onnxmltools.utils.tests_helper import convert_model
 
 
 class TestCatBoost(unittest.TestCase):
