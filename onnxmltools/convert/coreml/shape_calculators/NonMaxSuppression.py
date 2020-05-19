@@ -6,7 +6,7 @@
 
 from ...common._registration import register_shape_calculator
 from ...common.data_types import FloatTensorType, Int64TensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.utils import check_input_and_output_types
 
 
 def calculate_non_max_suppression_output_shapes(operator):
