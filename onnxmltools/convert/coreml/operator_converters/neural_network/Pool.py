@@ -186,7 +186,7 @@ def convert_pooling(scope, operator, container):
             op_version = 8
         else:
             op_version = 10
-            attrs['ceil_mode'] = 1
+            attrs['ceil_mode'] = 0
     elif params.type == Params.AVERAGE:
         op_type = 'AveragePool'
         if container.target_opset < 7:
@@ -195,7 +195,7 @@ def convert_pooling(scope, operator, container):
             op_version = 7
         else:
             op_version = 10
-            attrs['ceil_mode'] = 1
+            attrs['ceil_mode'] = 0
     elif params.type == Params.L2:
         op_type = 'LpPool'
         attrs['p'] = 2

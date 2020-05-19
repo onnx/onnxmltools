@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 import warnings
-from ...proto import onnx
+import onnx
 from ..common._container import CoremlModelContainer
 from ..common._topology import Topology
 from ..common.data_types import *

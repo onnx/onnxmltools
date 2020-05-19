@@ -71,3 +71,12 @@ for this machine learning model.
     input_name = sess.get_inputs()[0].name
 
     pred_onx = sess.run([label_name], {input_name: X_test.astype(numpy.float32)})[0]
+
+
+Target opset
+++++++++++++
+
+By default, the converters uses the latest version of operators
+defined in the installed *onnx* package but that can be changed
+by specifying *target_opset* to a lower version when calling
+the conversion function.

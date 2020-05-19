@@ -52,4 +52,7 @@ docs/examples/graph.dot.png
 # CMake
 CMakeCache.txt
 CMakeFiles/
-
+docs/examples/*.onnx
+docs/examples/*.dot
+docs/examples/*.png
+docs/examples/model

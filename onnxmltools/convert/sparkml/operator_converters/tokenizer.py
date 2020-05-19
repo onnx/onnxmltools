@@ -10,6 +10,8 @@ from ...common._registration import register_converter, register_shape_calculato
 
 def convert_sparkml_tokenizer(scope, operator, container):
     op = operator.raw_operator
+    if op is None:
+        raise RuntimeError("op cannot be None.")
     # the SPARK version converts text to lowercase and applies "\\s" regexp to it
     # Here we'll tokenize and then normalize (to convert to lowercase)
     lowercase_output = scope.get_unique_variable_name('lowercase_tensor')

@@ -8,16 +8,18 @@
 import os
 import sys
 import shutil
-import sphinx_gallery.gen_gallery
 import onnxmltools
-import onnxruntime
-import sphinx_modern_theme_modified
+import sphinx_readable_theme
+import tabulate
+import sphinx_gallery.gen_gallery
+
+
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'onnxmltools'
-copyright = '2018, Microsoft'
+copyright = '2018-2020, Microsoft'
 author = 'Microsoft'
 version = onnxmltools.__version__
 release = version
@@ -45,11 +47,14 @@ pygments_style = 'default'
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = "sphinx_mo"
 html_static_path = ['_static']
-html_theme = "sphinx_modern_theme_modified"
-html_theme_path = [sphinx_modern_theme_modified.get_html_theme_path()]
+html_theme = "readable"
+html_theme_path = [sphinx_readable_theme.get_html_theme_path()]
 html_logo = "ONNXMLTools_logo_main.png"
+
+# -- Options for graphviz ----------------------------------------------------
+
+graphviz_output_format = "svg"
 
 # -- Options for intersphinx extension ---------------------------------------
 

@@ -7,7 +7,7 @@
 from uuid import uuid4
 import lightgbm
 from onnxconverter_common.onnx_ex import get_maximum_opset_supported
-from ...proto import onnx
+import onnx
 from ..common._topology import convert_topology
 from ._parse import parse_lightgbm, WrappedBooster
 
