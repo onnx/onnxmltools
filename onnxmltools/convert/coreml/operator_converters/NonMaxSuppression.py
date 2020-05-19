@@ -16,6 +16,10 @@ def convert_non_max_suppression(scope, operator, container):
 
     raw_model = operator.raw_operator.nonMaximumSuppression
 
+    # Attribute: center_point_box
+    # The box data is supplied as [x_center, y_center, width, height], similar to TF models.
+    attrs['center_point_box'] = 1
+
     # We index into scope.variable_name_mapping with key of raw_model.inputFeatureName to extract list of values.
     # Assuming there's only one NMS node in this graph, the last node will be the input we're looking for.
     # If there's more than one NMS coreml model, then return error.
