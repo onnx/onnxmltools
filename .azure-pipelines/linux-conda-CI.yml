@@ -33,6 +33,11 @@ jobs:
         ONNX_PATH: onnx==1.6.0
         ONNXRT_PATH: onnxruntime==1.1.1
         xgboost.version: '>=1.0'
+      Python37-170-RT130:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.7.0
+        ONNXRT_PATH: onnxruntime==1.3.0
+        xgboost.version: '>=1.0'
     maxParallel: 3
 
   steps:
