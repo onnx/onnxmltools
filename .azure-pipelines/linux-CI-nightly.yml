@@ -15,7 +15,7 @@ jobs:
     matrix:
       Python36-nightly:
         python.version: '3.6'
-        ONNX_PATH: onnx==1.6.0
+        ONNX_PATH: onnx==1.7.0
         ORT_PATH: -i https://test.pypi.org/simple/ ort-nightly
     maxParallel: 3
 
