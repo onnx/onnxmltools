@@ -44,27 +44,15 @@ def convert_libsvm(model, name=None, initial_types=None, doc_string='', target_o
                    custom_conversion_functions, custom_shape_calculators)
 
 
-def convert_catboost(model, name=None, initial_types=None, doc_string='', target_opset=None,
-                   targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+def convert_catboost(model, name=None, initial_types=None, doc_string='', target_opset=None):
     try:
         from catboost.utils import convert_to_onnx_object
     except ImportError:
-        raise RuntimeError('CatBoost is not installed or need to be updated. '
+        raise RuntimeError('CatBoost is not installed or needs to be updated. '
                            'Please install/upgrade CatBoost to use this feature.')
 
-    if custom_conversion_functions:
-        warnings.warn('custom_conversion_functions is not supported. Please set it to None.')
-    if custom_shape_calculators:
-        warnings.warn('custom_shape_calculators is not supported. Please set it to None.')
-
-    export_parameters = {
-        'onnx_domain': 'ai.catboost',
-        'onnx_model_version': 0,
-        'onnx_doc_string': doc_string,
-        'onnx_graph_name': name
-    }
-
-    return convert_to_onnx_object(model, export_parameters=export_parameters)
+    return convert_to_onnx_object(model, export_parameters={'onnx_doc_string': doc_string, 'onnx_graph_name': name},
+                                  initial_types=initial_types, target_opset=target_opset)
 
 
 def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target_opset=None,
