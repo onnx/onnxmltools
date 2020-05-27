@@ -6,8 +6,7 @@ import numpy
 import catboost
 from sklearn.datasets import make_regression, make_classification
 from onnxmltools.convert import convert_catboost
-from onnxmltools.utils import dump_data_and_model, dump_single_regression, \
-    dump_multiple_classification, dump_binary_classification
+from onnxmltools.utils import dump_data_and_model, dump_single_regression, dump_multiple_classification
 
 
 class TestCatBoost(unittest.TestCase):
@@ -27,7 +26,6 @@ class TestCatBoost(unittest.TestCase):
         X, y = make_classification(n_samples=100, n_features=4, random_state=0)
         catboost_model = catboost.CatBoostClassifier(task_type='CPU', loss_function='CrossEntropy',
                                                      n_estimators=10, verbose=0)
-        dump_binary_classification(catboost_model)
         catboost_model.fit(X.astype(numpy.float32), y)
 
         catboost_onnx = convert_catboost(catboost_model, name='CatBoostBinClassification',
