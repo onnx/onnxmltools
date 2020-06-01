@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxconverter_common.onnx_ops import *
+from onnxconverter_common.onnx_ops import *  # noqa

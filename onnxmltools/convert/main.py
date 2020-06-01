@@ -168,7 +168,7 @@ def convert_tensorflow(frozen_graph_def,
                        debug_mode=False, custom_op_conversions=None):
     try:
         importlib.import_module('tf2onnx')
-    except (ImportError, ModuleNotFoundError) as e:
+    except (ImportError, ModuleNotFoundError):
         raise RuntimeError('tf2onnx is not installed, please install it before calling this function.')
 
     return _convert_tf_wrapper(frozen_graph_def, name, input_names, output_names, doc_string,

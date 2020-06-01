@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxconverter_common.shape_calculator import *
+from onnxconverter_common.shape_calculator import *  # noqa

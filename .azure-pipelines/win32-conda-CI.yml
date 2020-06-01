@@ -88,6 +88,10 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
+      python -m flake8 ./onnxmltools
+    displayName: 'run flake8 check'
+
+  - script: |
       call activate py$(python.version)
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       python -m pip install -e .

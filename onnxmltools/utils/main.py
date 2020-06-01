@@ -1,8 +1,8 @@
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 
 import os
 from ..proto import onnx_proto
@@ -116,5 +116,6 @@ def set_model_doc_string(model, doc, override=False):
     if not convert_utils.is_string_type(doc):
         raise ValueError("Doc must be a string type.")
     if model.doc_string and not doc and override is False:
-        raise ValueError("Failing to overwrite the doc string with a blank string, set override to True if intentional.")
+        raise ValueError(
+            "Failing to overwrite the doc string with a blank string, set override to True if intentional.")
     model.doc_string = doc
