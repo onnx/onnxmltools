@@ -166,9 +166,8 @@ def convert_tensorflow(frozen_graph_def,
                        target_opset=None,
                        channel_first_inputs=None,
                        debug_mode=False, custom_op_conversions=None):
-    try:
-        importlib.import_module('tf2onnx')
-    except (ImportError, ModuleNotFoundError):
+    import pkgutil
+    if not pkgutil.find_loader('tf2onnx'):
         raise RuntimeError('tf2onnx is not installed, please install it before calling this function.')
 
     return _convert_tf_wrapper(frozen_graph_def, name, input_names, output_names, doc_string,
