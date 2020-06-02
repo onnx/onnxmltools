@@ -7,7 +7,6 @@
 import onnx
 from .common import utils
 import warnings
-import importlib
 
 
 def convert_coreml(model, name=None, initial_types=None, doc_string='', target_opset=None,
