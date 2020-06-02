@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxconverter_common.case_insensitive_dict import *
+from onnxconverter_common.case_insensitive_dict import *  # noqa

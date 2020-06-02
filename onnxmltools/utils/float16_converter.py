@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxconverter_common.float16 import *
+from onnxconverter_common.float16 import *  # noqa

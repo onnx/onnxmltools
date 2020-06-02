@@ -16,7 +16,7 @@ from ..common.data_types import FloatTensorType
 from ._parse import parse_h2o
 
 # Invoke the registration of all our converters and shape calculators
-from . import operator_converters, shape_calculators
+from . import operator_converters, shape_calculators  # noqa
 
 
 def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
@@ -66,7 +66,8 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     mojo_str = h2o.print_mojo(model_path, format="json")
     mojo_model = json.loads(mojo_str)
     if mojo_model["params"]["algo"] != "gbm":
-        raise ValueError("Model type not supported (algo=%s). Only GBM Mojo supported for now." % mojo_model["params"]["algo"])
+        raise ValueError(
+            "Model type not supported (algo=%s). Only GBM Mojo supported for now." % mojo_model["params"]["algo"])
 
     target_opset = target_opset if target_opset else get_maximum_opset_supported()
     topology = parse_h2o(mojo_model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)

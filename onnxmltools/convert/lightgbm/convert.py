@@ -12,8 +12,7 @@ from ..common._topology import convert_topology
 from ._parse import parse_lightgbm, WrappedBooster
 
 # Invoke the registration of all our converters and shape calculators
-# from . import shape_calculators
-from . import operator_converters, shape_calculators
+from . import operator_converters, shape_calculators  # noqa
 
 
 def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
@@ -22,7 +21,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     '''
     This function produces an equivalent ONNX model of the given lightgbm model.
     The supported lightgbm modules are listed below.
-    
+
     * `LGBMClassifiers <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html>`_
     * `LGBMRegressor <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html>`_
     * `Booster <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html>`_

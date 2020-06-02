@@ -89,6 +89,11 @@ jobs:
 
   - script: |
       call activate py$(python.version)
+      python -m flake8 ./onnxmltools
+    displayName: 'run flake8 check'
+
+  - script: |
+      call activate py$(python.version)
       set PYTHONPATH=libsvm\python;%PYTHONPATH%
       python -m pip install -e .
       python -m pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml

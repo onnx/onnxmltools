@@ -8,7 +8,7 @@ import copy
 import numbers
 import numpy as np
 from collections import Counter
-from ...common._apply_operation import apply_div, apply_reshape, apply_sub, apply_cast
+from ...common._apply_operation import apply_div, apply_reshape, apply_sub, apply_cast, apply_identity
 from ...common._registration import register_converter
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
 from ....proto import onnx_proto
