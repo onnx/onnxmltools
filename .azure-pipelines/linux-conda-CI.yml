@@ -72,6 +72,10 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
+      python -m flake8 ./onnxmltools
+    displayName: 'run flake8 check'
+
+  - script: |
       export PYTHONPATH=$PYTHONPATH:libsvm/python
       python -c "import svmutil"
       python -c "import onnxconverter_common"

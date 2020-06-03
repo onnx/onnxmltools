@@ -4,4 +4,4 @@
 # license information.
 # --------------------------------------------------------------------------
 
-from onnxconverter_common.tree_ensemble import *
+from onnxconverter_common.tree_ensemble import *  # noqa
