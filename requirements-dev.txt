@@ -15,4 +15,5 @@ scipy
 svm
 wheel
 xgboost
+catboost
 flake8

@@ -212,6 +212,9 @@ def convert_model(model, name, input_types):
             model, prefix = convert_lightgbm(model, name, input_types), "LightGbm"
         else:
             raise RuntimeError("Unable to convert model of type '{0}'.".format(type(model)))
+    elif model.__class__.__name__.startswith("CatBoost"):
+        from onnxmltools.convert import convert_catboost
+        model, prefix = convert_catboost(model, name, input_types), "CatBoost"
     elif isinstance(model, BaseEstimator):
         from onnxmltools.convert import convert_sklearn
         model, prefix = convert_sklearn(model, name, input_types), "Sklearn"

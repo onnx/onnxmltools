@@ -25,6 +25,7 @@ from .convert import convert_sparkml
 from .convert import convert_tensorflow
 from .convert import convert_xgboost
 from .convert import convert_h2o
+from .convert import convert_catboost
 
 from .utils import load_model
 from .utils import save_model

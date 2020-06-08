@@ -16,6 +16,7 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * libsvm
 * XGBoost
 * H2O
+* CatBoost
 <p>Pytorch has its builtin ONNX exporter check <a href="https://pytorch.org/docs/stable/onnx.html">here</a>  for details</p>
 
 ## Install
@@ -31,7 +32,7 @@ pip install git+https://github.com/onnx/onnxmltools
 If you choose to install `onnxmltools` from its source code, you must set the environment variable `ONNX_ML=1` before installing the `onnx` package. 
 
 ## Dependencies
-This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, LightGBM, SparkML, XGBoost, H2O or LibSVM, you will need an environment with the respective package installed from the list below:
+This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, LightGBM, SparkML, XGBoost, H2O, CatBoost or LibSVM, you will need an environment with the respective package installed from the list below:
 1. scikit-learn
 2. CoreMLTools
 3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
@@ -40,6 +41,7 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 6. XGBoost (scikit-learn interface)
 7. libsvm
 8. H2O
+9. CatBoost
 
 ONNXMLTools has been tested with Python **3.5**, **3.6**, and **3.7**.
 Version 1.6.1 is the latest version supporting Python 2.7.
