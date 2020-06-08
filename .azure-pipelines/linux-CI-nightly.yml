@@ -38,8 +38,8 @@ jobs:
       python -m pip install $(ONNX_PATH)
       python -m pip install tensorflow-cpu==1.15.0
       python -m pip install tf2onnx
-      python -m pip install git+https://github.com/microsoft/onnxconverter-common
-      python -m pip install git+https://github.com/onnx/keras-onnx
+      python -m pip install git+https://github.com/microsoft/onnxconverter-common@r1.7
+      python -m pip install git+https://github.com/onnx/keras-onnx@r1.7
       python -m pip install -r requirements.txt
       python -m pip install -r requirements-dev.txt
       python -m pip install $(ORT_PATH)
