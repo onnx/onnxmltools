@@ -17,3 +17,4 @@ wheel
 xgboost
 catboost
 flake8
+hummingbird-ml

@@ -5,3 +5,14 @@
 # --------------------------------------------------------------------------
 
 from onnxconverter_common.utils import *  # noqa
+
+def hummingbird_installed():
+    """
+    Checks that *Hummingbird* is available.
+    """
+    try:
+        import hummingbird.ml
+
+        return True
+    except ImportError:
+        return False
