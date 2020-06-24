@@ -37,14 +37,16 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
     :param onnx_operators_only: whether to generate a model composed by ONNX operators only, or allow the converter
-    to use ONNX-ML operators as well. 
+    to use ONNX-ML operators as well.
     :return: An ONNX model (type: ModelProto) which is equivalent to the input lightgbm model
     '''
     if initial_types is None:
         raise ValueError('Initial types are required. See usage of convert(...) in '
                          'onnxmltools.convert.lightgbm.convert for details')
     if onnx_operators_only and not hummingbird_installed():
-        raise RuntimeError('Hummingbird is not installed. Please install hummingbird to use this feature: pip install hummingbird-ml')
+        raise RuntimeError(
+            'Hummingbird is not installed. Please install hummingbird to use this feature: pip install hummingbird-ml'
+        )
     if isinstance(model, lightgbm.Booster):
         model = WrappedBooster(model)
     if name is None:
@@ -54,7 +56,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     topology = parse_lightgbm(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
     onnx_ml_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
-    
+
     if onnx_operators_only:
         from hummingbird.ml import convert
         from hummingbird.ml import constants
@@ -64,7 +66,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
         extra_config[constants.ONNX_OUTPUT_MODEL_NAME] = name
         extra_config[constants.ONNX_TARGET_OPSET] = target_opset
         onnx_model = convert(onnx_ml_model, "onnx", extra_config=extra_config)
-    
+
         return onnx_model
-        
+
     return onnx_ml_model
