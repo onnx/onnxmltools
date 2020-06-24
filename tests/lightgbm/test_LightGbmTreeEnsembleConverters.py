@@ -10,7 +10,7 @@ from distutils.version import StrictVersion
 import lightgbm
 import numpy
 from lightgbm import LGBMClassifier, LGBMRegressor
-import onnx
+import onnxruntime
 from onnxmltools.convert.common.utils import hummingbird_installed
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
@@ -115,7 +115,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
     
     # Tests with ONNX operators only
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_booster_classifier(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
         X = numpy.array(X, dtype=numpy.float32)
@@ -131,7 +133,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_booster_classifier_zipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
         X = numpy.array(X, dtype=numpy.float32)
@@ -148,7 +152,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_booster_multi_classifier(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2], [-1, 2], [1, -2]]
         X = numpy.array(X, dtype=numpy.float32)
@@ -173,7 +179,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         assert names == ['label', 'probabilities']
 
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_booster_regressor(self):
         X = [[0, 1], [1, 1], [2, 0]]
         X = numpy.array(X, dtype=numpy.float32)
@@ -248,7 +256,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Regression test with 3 estimators.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_regressor(self):
         X = [[0, 1], [1, 1], [2, 0]]
         X = numpy.array(X, dtype=numpy.float32)
@@ -259,7 +269,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Regression test with 1 estimator.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_regressor1(self):
         model = LGBMRegressor(n_estimators=1, min_child_samples=1)
         X = [[0, 1], [1, 1], [2, 0]]
@@ -270,7 +282,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Regression test with 2 estimators.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_regressor2(self):
         model = LGBMRegressor(n_estimators=2, max_depth=1, min_child_samples=1)
         X = [[0, 1], [1, 1], [2, 0]]
@@ -281,7 +295,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Regression test with gbdt boosting type.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_booster_regressor(self):
         X = [[0, 1], [1, 1], [2, 0]]
         X = numpy.array(X, dtype=numpy.float32)
@@ -295,7 +311,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Binary classification test with 3 estimators.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_classifier(self):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1)
         X = [[0, 1], [1, 1], [2, 0]]
@@ -306,7 +324,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Binary classification test with 3 estimators zipmap.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_classifier_zipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
         X = numpy.array(X, dtype=numpy.float32)
@@ -317,7 +337,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Binary classification test with 3 estimators and selecting boosting type.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_booster_classifier(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
         X = numpy.array(X, dtype=numpy.float32)
@@ -328,7 +350,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Binary classification test with 3 estimators and selecting boosting type zipmap.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_booster_classifier_zipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
         X = numpy.array(X, dtype=numpy.float32)
@@ -339,7 +363,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Multiclass classification test with 3 estimators.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_classifier_multi(self):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1)
         X = [[0, 1], [1, 1], [2, 0], [0.5, 0.5], [1.1, 1.1], [2.1, 0.1]]
@@ -350,7 +376,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     # Multiclass classification test with 3 estimators and selecting boosting type.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    @unittest.skipIf(StrictVersion(onnx.__version__) < StrictVersion('1.0.0'))
+    @unittest.skipIf(
+        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+    )
     def test_lightgbm_booster_multi_classifier(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2], [-1, 2], [1, -2]]
         X = numpy.array(X, dtype=numpy.float32)
