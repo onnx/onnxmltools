@@ -18,7 +18,7 @@ from . import operator_converters, shape_calculators  # noqa
 
 def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
             targeted_onnx=onnx.__version__, custom_conversion_functions=None,
-            custom_shape_calculators=None, onnx_operators_only=False):
+            custom_shape_calculators=None, without_onnx_ml=False):
     '''
     This function produces an equivalent ONNX model of the given lightgbm model.
     The supported lightgbm modules are listed below.
@@ -36,14 +36,14 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
         produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
-    :param onnx_operators_only: whether to generate a model composed by ONNX operators only, or allow the converter
+    :param without_onnx_ml: whether to generate a model composed by ONNX operators only, or allow the converter
     to use ONNX-ML operators as well.
     :return: An ONNX model (type: ModelProto) which is equivalent to the input lightgbm model
     '''
     if initial_types is None:
         raise ValueError('Initial types are required. See usage of convert(...) in '
                          'onnxmltools.convert.lightgbm.convert for details')
-    if onnx_operators_only and not hummingbird_installed():
+    if without_onnx_ml and not hummingbird_installed():
         raise RuntimeError(
             'Hummingbird is not installed. Please install hummingbird to use this feature: pip install hummingbird-ml'
         )
@@ -57,7 +57,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     topology.compile()
     onnx_ml_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
 
-    if onnx_operators_only:
+    if without_onnx_ml:
         from hummingbird.ml import convert
         from hummingbird.ml import constants
 

@@ -46,7 +46,7 @@ class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
                 model = pickle.load(f)
             X = [[0., 1.], [1., 1.], [2., 0.]]
             X = numpy.array(X, dtype=numpy.float32)
-            model_onnx = convert_lightgbm(model.steps[1][1], 'pkl1', [('input', FloatTensorType([1, X.shape[1]]))], onnx_operators_only=True)
+            model_onnx = convert_lightgbm(model.steps[1][1], 'pkl1', [('input', FloatTensorType([1, X.shape[1]]))], without_onnx_ml=True)
             dump_data_and_model(X, model.steps[1][1], model_onnx, basename="LightGbmPkl1")
 
 

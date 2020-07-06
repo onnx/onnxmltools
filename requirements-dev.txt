@@ -17,4 +17,4 @@ wheel
 xgboost
 catboost
 flake8
-hummingbird-ml
+-e https://github.com/microsoft/hummingbird.git@v0.0.3#egg=hummingbird-ml

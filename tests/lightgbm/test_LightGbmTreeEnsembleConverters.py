@@ -127,7 +127,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))], onnx_operators_only=True)
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -145,7 +145,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))], onnx_operators_only=True)
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True)
         assert "zipmap" in str(model_onnx).lower()
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
@@ -164,7 +164,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1, 'num_class': 3},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))], onnx_operators_only=True)
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -191,7 +191,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1, 'max_depth': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based binary classifier',
-                                           [('input', FloatTensorType([None, 2]))], onnx_operators_only=True)
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.0.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -205,7 +205,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
         # Create ONNX model
         onnx_model = convert_model(
-            model, 'lgbm-onnx', [("input", FloatTensorType([X.shape[0], X.shape[1]]))], onnx_operators_only=True
+            model, 'lgbm-onnx', [("input", FloatTensorType([X.shape[0], X.shape[1]]))], without_onnx_ml=True
         )[0]
 
         try:
