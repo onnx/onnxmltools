@@ -17,4 +17,4 @@ wheel
 xgboost
 catboost
 flake8
--e git://github.com/microsoft/hummingbird.git@v0.0.3#egg=hummingbird-ml
+hummingbird-ml -f https://download.pytorch.org/whl/torch_stable.html
