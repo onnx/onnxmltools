@@ -191,7 +191,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     return names
 
 
-def convert_model(model, name, input_types):
+def convert_model(model, name, input_types, without_onnx_ml=False):
     """
     Runs the appropriate conversion method.
 
@@ -201,7 +201,7 @@ def convert_model(model, name, input_types):
     from sklearn.base import BaseEstimator
     if model.__class__.__name__.startswith("LGBM"):
         from onnxmltools.convert import convert_lightgbm
-        model, prefix = convert_lightgbm(model, name, input_types), "LightGbm"
+        model, prefix = convert_lightgbm(model, name, input_types, without_onnx_ml=without_onnx_ml), "LightGbm"
     elif model.__class__.__name__.startswith("XGB"):
         from onnxmltools.convert import convert_xgboost
         model, prefix = convert_xgboost(model, name, input_types), "XGB"
@@ -209,7 +209,7 @@ def convert_model(model, name, input_types):
         import lightgbm
         if isinstance(model, lightgbm.Booster):
             from onnxmltools.convert import convert_lightgbm
-            model, prefix = convert_lightgbm(model, name, input_types), "LightGbm"
+            model, prefix = convert_lightgbm(model, name, input_types, without_onnx_ml=without_onnx_ml), "LightGbm"
         else:
             raise RuntimeError("Unable to convert model of type '{0}'.".format(type(model)))
     elif model.__class__.__name__.startswith("CatBoost"):
