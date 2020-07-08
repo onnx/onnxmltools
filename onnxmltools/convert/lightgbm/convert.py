@@ -36,7 +36,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
         produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
-    :param without_onnx_ml: whether to generate a model composed by ONNX operators only, or allow the converter
+    :param without_onnx_ml: whether to generate a model composed by ONNX operators only, or to allow the converter
     to use ONNX-ML operators as well.
     :return: An ONNX model (type: ModelProto) which is equivalent to the input lightgbm model
     '''
