@@ -3,10 +3,11 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 #--------------------------------------------------------------------------
-import numpy
 import pickle
 import os
 import warnings
+import numpy
+from scipy.special import expit
 from ..convert.common.data_types import FloatTensorType
 from .utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
 
@@ -100,8 +101,13 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
             if model_dict['objective'].startswith('binary'):
                 score = model.predict(datax)
                 prediction = [score > 0.5, numpy.vstack([1-score, score]).T]
-            elif model_dict['objective'].startswith('multi'):
+            elif model_dict['objective'].startswith('multi:softprob'):
                 score = model.predict(datax)
+                prediction = [score.argmax(axis=1), score]
+            elif model_dict['objective'].startswith('multi:softmax'):
+                score = model.predict(datax, output_margin=True)
+                score = expit(score)
+                score = score / numpy.sum(score, axis=1, keepdims=1)
                 prediction = [score.argmax(axis=1), score]
             else:
                 prediction = [model.predict(datax)]

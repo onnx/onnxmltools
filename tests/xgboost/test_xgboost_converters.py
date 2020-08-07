@@ -2,7 +2,6 @@
 Tests scilit-learn's tree-based methods' converters.
 """
 import os
-import sys
 import unittest
 import numpy as np
 import pandas
@@ -27,8 +26,6 @@ def _fit_classification_model(model, n_classes, is_str=False):
 
 class TestXGBoostModels(unittest.TestCase):
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_regressor(self):
         iris = load_diabetes()
         x = iris.data
@@ -50,8 +47,6 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
         conv_model = convert_xgboost(
@@ -67,8 +62,6 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 3)
         conv_model = convert_xgboost(
@@ -84,8 +77,6 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi_reglog(self):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective='reg:logistic'), 4)
@@ -102,8 +93,6 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_reglog(self):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective='reg:logistic'), 2)
@@ -120,8 +109,6 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi_str_labels(self):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(n_estimators=4), 5, is_str=True)
@@ -138,8 +125,6 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi_discrete_int_labels(self):
         iris = load_iris()
         x = iris.data[:, :2]
@@ -166,8 +151,6 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgboost_booster_classifier_bin(self):
         x, y = make_classification(n_classes=2, n_features=5,
                                    n_samples=100,
@@ -185,9 +168,7 @@ class TestXGBoostModels(unittest.TestCase):
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename="XGBBoosterMCl")
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
-    def test_xgboost_booster_classifier_multiclass(self):
+    def test_xgboost_booster_classifier_multiclass_softprob(self):
         x, y = make_classification(n_classes=3, n_features=5,
                                    n_samples=100,
                                    random_state=42, n_informative=3)
@@ -203,10 +184,26 @@ class TestXGBoostModels(unittest.TestCase):
         dump_data_and_model(x_test.astype(np.float32),
                             model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-                            basename="XGBBoosterMCl")
+                            basename="XGBBoosterMClSoftProb")
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
+    def test_xgboost_booster_classifier_multiclass_softmax(self):
+        x, y = make_classification(n_classes=3, n_features=5,
+                                   n_samples=100,
+                                   random_state=42, n_informative=3)
+        x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
+                                                       random_state=42)
+        
+        data = DMatrix(x_train, label=y_train)
+        model = train({'objective': 'multi:softmax',
+                       'n_estimators': 3, 'min_child_samples': 1,
+                       'num_class': 3}, data)
+        model_onnx = convert_xgboost(model, 'tree-based classifier',
+                                     [('input', FloatTensorType([None, x.shape[1]]))])
+        dump_data_and_model(x_test.astype(np.float32),
+                            model, model_onnx,
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            basename="XGBBoosterMClSoftMax")
+
     def test_xgboost_booster_classifier_reg(self):
         x, y = make_classification(n_classes=2, n_features=5,
                                    n_samples=100,
@@ -225,8 +222,6 @@ class TestXGBoostModels(unittest.TestCase):
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename="XGBBoosterReg")
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgboost_10(self):
         this = os.path.abspath(os.path.dirname(__file__))
         train = os.path.join(this, "input_fail_train.csv")

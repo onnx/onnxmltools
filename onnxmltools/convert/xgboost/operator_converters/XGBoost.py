@@ -256,8 +256,10 @@ class XGBClassifierConverter(XGBConverter):
                                op_domain='ai.onnx.ml',
                                name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
                                **attr_pairs)
-        elif objective == "multi:softprob":
+        elif objective in ("multi:softprob", "multi:softmax"):
             ncl = len(js_trees) // params['n_estimators']
+            # if objective == 'multi:softmax':
+            #     attr_pairs['post_transform'] = 'NONE'
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
                                op_domain='ai.onnx.ml',
