@@ -48,7 +48,7 @@ jobs:
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
       cd libsvm
       make lib
-    displayName: 'Install  dependencies'
+    displayName: 'Install dependencies'
 
   - script: |
       export PYTHONPATH=$PYTHONPATH:libsvm/python
