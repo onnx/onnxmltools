@@ -42,7 +42,7 @@ jobs:
       python -m pip install git+https://github.com/onnx/keras-onnx
       python -m pip install -r requirements.txt
       python -m pip install -r requirements-dev.txt
-      python -m pip install cerberus
+      python -m pip install -r https://github.com/microsoft/onnxruntime/blob/master/requirements.txt
       python -m pip install $(ORT_PATH)
       python -m pip install pytest
       git clone --recursive https://github.com/cjlin1/libsvm libsvm
