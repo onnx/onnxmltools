@@ -17,6 +17,7 @@ jobs:
         python.version: '3.6'
         ONNX_PATH: onnx==1.7.0
         ORT_PATH: -i https://test.pypi.org/simple/ ort-nightly
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
     maxParallel: 3
 
   steps:
@@ -35,6 +36,7 @@ jobs:
       conda install -c conda-forge protobuf
       conda install -c conda-forge numpy
       conda install -c conda-forge cmake
+      python -m pip install $(COREML_PATH)
       python -m pip install $(ONNX_PATH)
       python -m pip install tensorflow-cpu==1.15.0
       python -m pip install tf2onnx==1.5.6
