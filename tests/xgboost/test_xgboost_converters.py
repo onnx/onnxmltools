@@ -6,9 +6,11 @@ import sys
 import unittest
 import numpy as np
 import pandas
-from sklearn.datasets import load_diabetes, load_iris, make_classification
+from sklearn.datasets import (
+    load_diabetes, load_iris, make_classification, load_digits)
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
+from sklearn.preprocessing import StandardScaler
 from onnxmltools.convert import convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
@@ -259,6 +261,30 @@ class TestXGBoostModels(unittest.TestCase):
             regressor, model_onnx,
             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
             basename="XGBBoosterRegBug")
+
+    def test_xgboost_example_mnist(self):
+        """
+        Train a simple xgboost model and store associated artefacts.
+        """
+        X, y = load_digits(return_X_y=True)
+        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        X_train = X_train.reshape((X_train.shape[0], -1))
+        X_test = X_test.reshape((X_test.shape[0], -1))
+
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+        clf = XGBClassifier(objective="multi:softprob", n_jobs=-1)
+        clf.fit(X_train, y_train)
+
+        sh = [None, X_train.shape[1]]
+        onnx_model = convert_xgboost(
+            clf, initial_types=[('input', FloatTensorType(sh))])
+        
+        dump_data_and_model(
+            X_test.astype(np.float32), clf, onnx_model,
+            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+            basename="XGBoostExample")
 
 
 if __name__ == "__main__":
