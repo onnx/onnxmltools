@@ -19,4 +19,4 @@ xgboost
 catboost
 flake8
 torch==1.5.1+cpu
-hummingbird-ml
+-e git://github.com/microsoft/hummingbird#egg=hummingbird-ml
