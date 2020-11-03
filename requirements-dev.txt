@@ -19,4 +19,4 @@ xgboost
 catboost
 flake8
 torch==1.5.1+cpu
-hummingbird-ml
+hummingbird-ml==0.0.6
