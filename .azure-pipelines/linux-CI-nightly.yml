@@ -38,7 +38,7 @@ jobs:
       conda install -c conda-forge cmake
       python -m pip install $(COREML_PATH)
       python -m pip install $(ONNX_PATH)
-      python -m pip install -i -U https://test.pypi.org/simple/ onnx==1.8.0rc0
+      python -m pip install -U -i https://test.pypi.org/simple/ onnx==1.8.0rc0
       python -m pip install tensorflow-cpu==1.15.0
       python -m pip install tf2onnx==1.5.6
       python -m pip install git+https://github.com/microsoft/onnxconverter-common
