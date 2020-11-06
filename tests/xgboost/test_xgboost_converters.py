@@ -12,6 +12,7 @@ from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
 from onnxmltools.convert import convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
+from onnxruntime import InferenceSession
 
 
 def _fit_classification_model(model, n_classes, is_str=False):
@@ -27,8 +28,6 @@ def _fit_classification_model(model, n_classes, is_str=False):
 
 class TestXGBoostModels(unittest.TestCase):
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_regressor(self):
         iris = load_diabetes()
         x = iris.data
@@ -38,7 +37,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb = XGBRegressor()
         xgb.fit(x_train, y_train)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test.astype("float32"),
@@ -50,12 +49,10 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -67,12 +64,10 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 3)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -84,13 +79,11 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi_reglog(self):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective='reg:logistic'), 4)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -102,13 +95,11 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_reglog(self):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective='reg:logistic'), 2)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -120,13 +111,11 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi_str_labels(self):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(n_estimators=4), 5, is_str=True)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -138,8 +127,6 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgb_classifier_multi_discrete_int_labels(self):
         iris = load_iris()
         x = iris.data[:, :2]
@@ -154,7 +141,7 @@ class TestXGBoostModels(unittest.TestCase):
         xgb = XGBClassifier(n_estimators=3)
         xgb.fit(x_train, y_train)
         conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))])
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test.astype("float32"),
@@ -166,8 +153,6 @@ class TestXGBoostModels(unittest.TestCase):
             "< StrictVersion('1.3.0')",
         )
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgboost_booster_classifier_bin(self):
         x, y = make_classification(n_classes=2, n_features=5,
                                    n_samples=100,
@@ -185,8 +170,6 @@ class TestXGBoostModels(unittest.TestCase):
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename="XGBBoosterMCl")
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgboost_booster_classifier_multiclass(self):
         x, y = make_classification(n_classes=3, n_features=5,
                                    n_samples=100,
@@ -205,8 +188,6 @@ class TestXGBoostModels(unittest.TestCase):
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename="XGBBoosterMCl")
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgboost_booster_classifier_reg(self):
         x, y = make_classification(n_classes=2, n_features=5,
                                    n_samples=100,
@@ -225,8 +206,6 @@ class TestXGBoostModels(unittest.TestCase):
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename="XGBBoosterReg")
 
-    @unittest.skipIf(sys.version_info[0] == 2,
-                     reason="xgboost converter not tested on python 2")
     def test_xgboost_10(self):
         this = os.path.abspath(os.path.dirname(__file__))
         train = os.path.join(this, "input_fail_train.csv")
@@ -260,6 +239,29 @@ class TestXGBoostModels(unittest.TestCase):
             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
             basename="XGBBoosterRegBug")
 
+    def test_xgboost_classifier_i5450(self):
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=10)
+        clr = XGBClassifier(objective="multi:softmax", max_depth=1, n_estimators=2)
+        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
+        initial_type = [('float_input', FloatTensorType([None, 4]))]
+        onx = convert_xgboost(clr, initial_types=initial_type)
+        sess = InferenceSession(onx.SerializeToString())
+        input_name = sess.get_inputs()[0].name
+        label_name = sess.get_outputs()[1].name
+        predict_list = [1.,  20., 466.,   0.]
+        predict_array = np.array(predict_list).reshape((1,-1)).astype(np.float32)
+        pred_onx = sess.run([label_name], {input_name: predict_array})[0]
+        pred_xgboost = sessresults=clr.predict_proba(predict_array)
+        bst = clr.get_booster()
+        bst.dump_model('dump.raw.txt')
+        dump_data_and_model(
+            X_test.astype(np.float32) + 1e-5,
+            clr, onx,
+            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+            basename="XGBClassifierIris")
+        
 
 if __name__ == "__main__":
     unittest.main()
