@@ -18,6 +18,11 @@ jobs:
         ONNX_PATH: onnx==1.7.0
         ORT_PATH: -i https://test.pypi.org/simple/ ort-nightly
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
+      Python38-nightly:
+        python.version: '3.8'
+        ONNX_PATH: onnx==1.8.0
+        ORT_PATH: -i https://test.pypi.org/simple/ ort-nightly
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
     maxParallel: 3
 
   steps:
@@ -40,7 +45,11 @@ jobs:
       python -m pip install $(ONNX_PATH)
       python -m pip install tensorflow-cpu==1.15.0
       python -m pip install tf2onnx==1.5.6
-      python -m pip install git+https://github.com/microsoft/onnxconverter-common
+      git clone https://github.com/microsoft/onnxconverter-common
+      cd onnxconverter-common
+      git checkout 73b40dbb799f8a4c08180e06915a517201c631e6
+      pip install -e .
+      cd ..
       python -m pip install git+https://github.com/onnx/keras-onnx
       python -m pip install -r requirements.txt
       python -m pip install -r requirements-dev.txt
