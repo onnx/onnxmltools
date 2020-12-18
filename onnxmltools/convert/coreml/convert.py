@@ -56,7 +56,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     if name is None:
         name = str(uuid4().hex)
 
-    target_opset = target_opset if target_opset else get_maximum_opset_supported()
+    target_opset = target_opset if target_opset else get_maximum_opset_supported() + 1
     # Parse CoreML model as our internal data structure (i.e., Topology)
     topology = parse_coreml(spec, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
 

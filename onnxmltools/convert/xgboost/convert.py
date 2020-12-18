@@ -41,7 +41,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
 
     if isinstance(model, xgboost.Booster):
         model = WrappedBooster(model)
-    target_opset = target_opset if target_opset else get_maximum_opset_supported()
+    target_opset = target_opset if target_opset else get_maximum_opset_supported() + 1
     topology = parse_xgboost(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
     onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
