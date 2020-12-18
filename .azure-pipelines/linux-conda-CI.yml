@@ -69,7 +69,6 @@ jobs:
       conda install -c conda-forge cmake
       pip install $(COREML_PATH)
       pip install $(ONNX_PATH)
-      # tensorflow 1.15.0 requires python 3.7
       python -m pip install tensorflow-cpu==1.15.0
       python -m pip install tf2onnx==1.5.6
       python -m pip install git+https://github.com/microsoft/onnxconverter-common
