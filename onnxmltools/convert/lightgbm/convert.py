@@ -61,11 +61,20 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
         from hummingbird.ml import convert
         from hummingbird.ml import constants
 
-        extra_config = {}
-        extra_config[constants.ONNX_INITIAL_TYPES] = initial_types
-        extra_config[constants.ONNX_OUTPUT_MODEL_NAME] = name
-        extra_config[constants.ONNX_TARGET_OPSET] = target_opset
-        onnx_model = convert(onnx_ml_model, "onnx", extra_config=extra_config).model
+        try:
+            extra_config = {}
+            extra_config[constants.ONNX_INITIAL_TYPES] = initial_types
+            extra_config[constants.ONNX_OUTPUT_MODEL_NAME] = name
+            extra_config[constants.ONNX_TARGET_OPSET] = target_opset
+            onnx_model = convert(onnx_ml_model, "onnx", extra_config=extra_config).model
+        except Exception as e:
+            warnings.warn('Pytorch-onnx does not support opset = ' + str(target_opset) + 'yet.')
+            target_opset -= 1
+            extra_config = {}
+            extra_config[constants.ONNX_INITIAL_TYPES] = initial_types
+            extra_config[constants.ONNX_OUTPUT_MODEL_NAME] = name
+            extra_config[constants.ONNX_TARGET_OPSET] = target_opset
+            onnx_model = convert(onnx_ml_model, "onnx", extra_config=extra_config).model
 
         return onnx_model
 
