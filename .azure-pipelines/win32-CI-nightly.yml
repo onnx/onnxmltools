@@ -18,6 +18,11 @@ jobs:
         ONNX_PATH: onnx==1.7.0
         ONNXRT_PATH: -i https://test.pypi.org/simple/ ort-nightly
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
+      Python37-nightly:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.8.0
+        ONNXRT_PATH: -i https://test.pypi.org/simple/ ort-nightly
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
     maxParallel: 3
 
   steps:
