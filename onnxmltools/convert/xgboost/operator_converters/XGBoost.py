@@ -75,7 +75,7 @@ class XGBConverter:
                             feature_id))
             else:
                 try:
-                    feature_id = int(feature_id)
+                    feature_id = int(float(feature_id))
                 except ValueError:
                     raise RuntimeError(
                         "Unable to interpret '{0}', feature "
