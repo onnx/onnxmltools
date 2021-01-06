@@ -6,6 +6,7 @@
 
 from uuid import uuid4
 import lightgbm
+import warnings
 from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 import onnx
 from ..common._topology import convert_topology
@@ -60,6 +61,10 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     if without_onnx_ml:
         from hummingbird.ml import convert
         from hummingbird.ml import constants
+
+        if target_opset == 13:
+            warnings.warn('Pytorch-onnx does not support opset 13 yet, use opset 12 instead.')
+            target_opset = 12
 
         extra_config = {}
         extra_config[constants.ONNX_INITIAL_TYPES] = initial_types
