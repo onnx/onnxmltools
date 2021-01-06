@@ -14,13 +14,15 @@ from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
 
-def _fit_classification_model(model, n_classes, is_str=False):
+def _fit_classification_model(model, n_classes, is_str=False, dtype=None):
     x, y = make_classification(n_classes=n_classes, n_features=100,
                                n_samples=1000,
                                random_state=42, n_informative=7)
     y = y.astype(np.str) if is_str else y.astype(np.int64)
     x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
                                                    random_state=42)
+    if dtype is not None:
+        y_train = y_train.astype(dtype)
     model.fit(x_train, y_train)
     return model, x_test.astype(np.float32)
 
@@ -54,6 +56,24 @@ class TestXGBoostModels(unittest.TestCase):
                      reason="xgboost converter not tested on python 2")
     def test_xgb_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
+        conv_model = convert_xgboost(
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
+        self.assertTrue(conv_model is not None)
+        dump_data_and_model(
+            x_test,
+            xgb,
+            conv_model,
+            basename="SklearnXGBClassifier",
+            allow_failure="StrictVersion("
+            "onnx.__version__)"
+            "< StrictVersion('1.3.0')",
+        )
+
+    @unittest.skipIf(sys.version_info[0] == 2,
+                     reason="xgboost converter not tested on python 2")
+    def test_xgb_classifier_uint8(self):
+        xgb, x_test = _fit_classification_model(
+            XGBClassifier(), 2, dtype=np.uint8)
         conv_model = convert_xgboost(
             xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))])
         self.assertTrue(conv_model is not None)
