@@ -22,6 +22,7 @@ from . import ImageScaler
 from . import InnerProduct
 from . import L2Normalize
 from . import LoadConstant
+from . import LoadConstantND
 from . import LRN
 from . import LSTM
 from . import Max
@@ -35,6 +36,7 @@ from . import Pool
 from . import Reduce
 from . import ReorganizeData
 from . import Reshape
+from . import ReshapeStatic
 from . import Scale
 from . import SequenceRepeat
 from . import SimpleRNN
