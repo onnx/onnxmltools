@@ -75,7 +75,7 @@ class XGBConverter:
                             feature_id))
             else:
                 try:
-                    feature_id = int(feature_id)
+                    feature_id = int(float(feature_id))
                 except ValueError:
                     raise RuntimeError(
                         "Unable to interpret '{0}', feature "
@@ -188,6 +188,12 @@ class XGBRegressorConverter(XGBConverter):
 
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
         attr_pairs['base_values'] = [base_score]
+
+        bst = xgb_node.get_booster()
+        best_ntree_limit = getattr(bst, 'best_ntree_limit', len(js_trees))
+        if best_ntree_limit < len(js_trees):
+            js_trees = js_trees[:best_ntree_limit]
+
         XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], False)
 
         # add nodes
@@ -222,13 +228,19 @@ class XGBClassifierConverter(XGBConverter):
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
 
         params = XGBConverter.get_xgb_params(xgb_node)
-
         attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], True)
+        ncl = (max(attr_pairs['class_treeids']) + 1) // params['n_estimators']
+
+        bst = xgb_node.get_booster()
+        best_ntree_limit = getattr(bst, 'best_ntree_limit', len(js_trees)) * ncl
+        if best_ntree_limit < len(js_trees):
+            js_trees = js_trees[:best_ntree_limit]
+            attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
+            XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], True)
 
         if len(attr_pairs['class_treeids']) == 0:
             raise RuntimeError("XGBoost model is empty.")
-        ncl = (max(attr_pairs['class_treeids']) + 1) // params['n_estimators']
         if ncl <= 1:
             ncl = 2
             # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L23.
@@ -242,7 +254,7 @@ class XGBClassifierConverter(XGBConverter):
 
         classes = xgb_node.classes_
         if (np.issubdtype(classes.dtype, np.floating) or
-                np.issubdtype(classes.dtype, np.signedinteger)):
+                np.issubdtype(classes.dtype, np.integer)):
             attr_pairs['classlabels_int64s'] = classes.astype('int')
         else:
             classes = np.array([s.encode('utf-8') for s in classes])
