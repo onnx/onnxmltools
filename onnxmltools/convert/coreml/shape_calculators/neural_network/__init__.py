@@ -17,6 +17,7 @@ from . import GRU
 from . import IdentityFloat
 from . import InnerProduct
 from . import LoadConstant
+from . import LoadConstantND
 from . import LSTM
 from . import Merge
 from . import Pad
@@ -25,6 +26,7 @@ from . import Pool
 from . import Reduce
 from . import ReorganizeData
 from . import Reshape
+from . import ReshapeStatic
 from . import SequenceRepeat
 from . import Slice
 from . import Split

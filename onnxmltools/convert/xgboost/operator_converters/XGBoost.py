@@ -75,7 +75,7 @@ class XGBConverter:
                             feature_id))
             else:
                 try:
-                    feature_id = int(feature_id)
+                    feature_id = int(float(feature_id))
                 except ValueError:
                     raise RuntimeError(
                         "Unable to interpret '{0}', feature "
@@ -254,7 +254,7 @@ class XGBClassifierConverter(XGBConverter):
 
         classes = xgb_node.classes_
         if (np.issubdtype(classes.dtype, np.floating) or
-                np.issubdtype(classes.dtype, np.signedinteger)):
+                np.issubdtype(classes.dtype, np.integer)):
             attr_pairs['classlabels_int64s'] = classes.astype('int')
         else:
             classes = np.array([s.encode('utf-8') for s in classes])
