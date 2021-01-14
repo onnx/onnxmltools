@@ -1,8 +1,4 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 from ...common._registration import register_shape_calculator
 from ...common.data_types import FloatTensorType, Int64TensorType
@@ -17,14 +13,14 @@ def calculate_classifier_output_shapes(operator):
          if len(operator.inputs[0].type.shape) > 0 else None)
     if len(operator.outputs) != 2:
         raise RuntimeError("Expect only two outputs not {0}".format(len(operator.outputs)))
-    svm_node =  operator.raw_operator    
+    svm_node =  operator.raw_operator
     if svm_node.is_probability_model():
         nc = svm_node.nr_class
     else:
         # libsvm produces n(n-1) raw scores.
         # onnxruntime aggregates the scores
         # but this behavior could be revisited.
-        nc = svm_node.nr_class        
+        nc = svm_node.nr_class
         st = svm_node.param.svm_type
         if (st == C_SVC or st == NU_SVC) and nc > 2:
             nc = (nc * (nc-1)) // 2

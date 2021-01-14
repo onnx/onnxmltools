@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Helpers to test runtimes.
 """
@@ -22,7 +24,7 @@ class OnnxRuntimeAssertionError(AssertionError):
     Expected failure.
     """
     pass
-    
+
 
 def evaluate_condition(backend, condition):
     """
@@ -56,7 +58,7 @@ def compare_backend(backend, test, decimal=5, options=None, verbose=False, conte
     The function compares the expected output (computed with
     the model before being converted to ONNX) and the ONNX output
     produced with module *onnxruntime*.
-    
+
     :param backend: backend to use to run the comparison,
         only *onnxruntime* is currently supported
     :param test: dictionary with the following keys:
@@ -68,14 +70,14 @@ def compare_backend(backend, test, decimal=5, options=None, verbose=False, conte
     :param context: specifies custom operators
     :param verbose: in case of error, the function may print
         more information on the standard output
-    
+
     The function does not return anything but raises an error
     if the comparison failed.
     """
     if backend == "onnxruntime":
         if sys.version_info[0] == 2:
             # onnxruntime is not available on Python 2.
-            return            
+            return
         from .utils_backend_onnxruntime import compare_runtime
         return compare_runtime(test, decimal, options, verbose)
     else:
@@ -93,7 +95,7 @@ def search_converted_models(root=None):
         root = os.path.normpath(root)
     if not os.path.exists(root):
         raise FileNotFoundError("Unable to find '{0}'.".format(root))
-    
+
     founds = glob.iglob("{0}/**/*.model.onnx".format(root), recursive=True)
     keep = []
     for found in founds:
@@ -116,7 +118,7 @@ def search_converted_models(root=None):
                 keep.append((basename, res))
     keep.sort()
     return [_[1] for _ in keep]
-    
+
 
 def load_data_and_model(items_as_dict, **context):
     """
@@ -152,7 +154,7 @@ def extract_options(name):
     """
     Extracts comparison option from filename.
     As example, ``Binarizer-SkipDim1`` means
-    options *SkipDim1* is enabled. 
+    options *SkipDim1* is enabled.
     ``(1, 2)`` and ``(2,)`` are considered equal.
     Available options:
 
@@ -198,7 +200,7 @@ def compare_outputs(expected, output, **kwargs):
         kwargs["decimal"] = min(kwargs["decimal"], 3)
     if Dec2:
         kwargs["decimal"] = min(kwargs["decimal"], 2)
-        
+
     if isinstance(expected, numpy.ndarray) and isinstance(output, numpy.ndarray):
         if SkipDim1:
             # Arrays like (2, 1, 2, 3) becomes (2, 2, 3) as one dimension is useless.
@@ -209,7 +211,7 @@ def compare_outputs(expected, output, **kwargs):
             # positive for class 1
             # The other vector is (N, 2) score in two columns.
             if len(output.shape) == 2 and output.shape[1] == 2 and len(expected.shape) == 1:
-                output = output[:, 1]                
+                output = output[:, 1]
             elif len(output.shape) == 1 and len(expected.shape) == 1:
                 pass
             elif len(expected.shape) == 1 and len(output.shape) == 2 and \

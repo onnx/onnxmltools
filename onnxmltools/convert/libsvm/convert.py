@@ -1,8 +1,4 @@
-#-------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-#--------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 from uuid import uuid4
 from onnxconverter_common.onnx_ex import get_maximum_opset_supported
@@ -27,7 +23,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
-    :return: An ONNX model (type: ModelProto) which is equivalent to the input scikit-learn model    
+    :return: An ONNX model (type: ModelProto) which is equivalent to the input scikit-learn model
     """
     if initial_types is None:
         raise ValueError('Initial types are required. See usage of convert(...) in \
@@ -38,7 +34,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     target_opset = target_opset if target_opset else get_maximum_opset_supported()
 
     # Parse scikit-learn model as our internal data structure (i.e., Topology)
-    topology = parse_libsvm(model, initial_types, custom_conversion_functions, 
+    topology = parse_libsvm(model, initial_types, custom_conversion_functions,
                             custom_shape_calculators)
 
     # Infer variable shapes

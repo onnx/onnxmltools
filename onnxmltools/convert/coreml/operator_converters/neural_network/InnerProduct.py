@@ -1,8 +1,4 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 from .....proto import onnx_proto
 from ....common._apply_operation import apply_reshape
@@ -56,7 +52,7 @@ def convert_inner_product(scope, operator, container):
         op_version = 9
     else:
         op_version = 11
-        
+
     # Create the major ONNX operator, Gemm, to do CoreML inner product and possibly add shape adjustment
     if len(operator.inputs[0].type.shape) == 4:
         # Input shape is [N, C, 1, 1] so we expect output is also 4-D, [N, C', 1, 1].

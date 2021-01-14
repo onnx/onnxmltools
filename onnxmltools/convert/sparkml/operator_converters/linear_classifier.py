@@ -1,8 +1,5 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
+
 from pyspark.ml.classification import LogisticRegressionModel, LinearSVCModel
 
 from ...common._registration import register_converter, register_shape_calculator
@@ -20,7 +17,7 @@ def convert_sparkml_linear_classifier(scope, operator, container):
         intercepts = [op.intercept]
         coefficients = list(map(lambda x: -1 * x, coefficients)) + coefficients
         intercepts = list(map(lambda x: -1 * x, intercepts)) + intercepts
-    else:        
+    else:
         coefficients = op.coefficientMatrix.toArray().ravel().tolist()
         intercepts = op.interceptVector.toArray().ravel().tolist()
 

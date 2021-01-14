@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Main functions to convert machine learned model from *Core ML* model to *ONNX*.
 """
@@ -46,10 +48,10 @@ class TestCoremlOneHotEncoderConverter(unittest.TestCase):
         except Exception as e:
             warnings.warn("Unable to run convert OneHotEncoder with coreml.")
             return
-        model_onnx = convert(model_coreml)                                     
+        model_onnx = convert(model_coreml)
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(scikit_data, scikit_model, model_onnx, basename="CmlOneHotEncoder-SkipDim1")
-            
+
 
 
 if __name__ == "__main__":
