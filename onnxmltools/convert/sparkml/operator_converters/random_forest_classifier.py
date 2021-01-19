@@ -1,8 +1,5 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
+
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs, \
     add_tree_to_attribute_pairs
 from ...common._registration import register_converter, register_shape_calculator

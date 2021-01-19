@@ -1,8 +1,4 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 import unittest
 from distutils.version import StrictVersion
@@ -112,7 +108,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                            [('input', FloatTensorType([None, 2]))])
         dump_data_and_model(X, model, model_onnx,
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
-    
+
     # Tests with ONNX operators only
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
     @unittest.skipIf(
@@ -195,7 +191,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.0.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
-    
+
     # Base test implementation comparing ONNXML and ONNX models.
     def _test_lgbm(self, X, model, extra_config={}):
         # Create ONNX-ML model
@@ -213,7 +209,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         except ImportError:
             # onnxruntime not installed (python 2.7)
             return
-            
+
         # Get the predictions for the ONNX-ML model
         session = InferenceSession(onnx_ml_model.SerializeToString())
         output_names = [session.get_outputs()[i].name for i in range(len(session.get_outputs()))]

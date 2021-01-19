@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Tests scilit-learn's tree-based methods' converters.
 """
@@ -179,7 +181,7 @@ class TestXGBoostModels(unittest.TestCase):
                                    random_state=42, n_informative=3)
         x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
                                                        random_state=42)
-        
+
         data = DMatrix(x_train, label=y_train)
         model = train({'objective': 'binary:logistic',
                        'n_estimators': 3, 'min_child_samples': 1}, data)
@@ -196,7 +198,7 @@ class TestXGBoostModels(unittest.TestCase):
                                    random_state=42, n_informative=3)
         x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
                                                        random_state=42)
-        
+
         data = DMatrix(x_train, label=y_train)
         model = train({'objective': 'multi:softprob',
                        'n_estimators': 3, 'min_child_samples': 1,
@@ -211,11 +213,11 @@ class TestXGBoostModels(unittest.TestCase):
     def test_xgboost_booster_classifier_reg(self):
         x, y = make_classification(n_classes=2, n_features=5,
                                    n_samples=100,
-                                   random_state=42, n_informative=3)        
+                                   random_state=42, n_informative=3)
         y = y.astype(np.float32) + 0.567
         x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
                                                        random_state=42)
-        
+
         data = DMatrix(x_train, label=y_train)
         model = train({'objective': 'reg:squarederror',
                        'n_estimators': 3, 'min_child_samples': 1}, data)
@@ -230,7 +232,7 @@ class TestXGBoostModels(unittest.TestCase):
         this = os.path.abspath(os.path.dirname(__file__))
         train = os.path.join(this, "input_fail_train.csv")
         test = os.path.join(this, "input_fail_test.csv")
-        
+
         param_distributions = {
             "colsample_bytree": 0.5,
             "gamma": 0.2,
@@ -240,15 +242,15 @@ class TestXGBoostModels(unittest.TestCase):
             'n_estimators': 1,
             'missing': np.nan,
         }
-        
+
         train_df = pandas.read_csv(train)
         X_train, y_train = train_df.drop('label', axis=1).values, train_df['label'].values
         test_df = pandas.read_csv(test)
         X_test, y_test = test_df.drop('label', axis=1).values, test_df['label'].values
-        
+
         regressor = XGBRegressor(verbose=0, objective='reg:squarederror', **param_distributions)
         regressor.fit(X_train, y_train)
-        
+
         model_onnx = convert_xgboost(
             regressor, 'bug',
             [('input', FloatTensorType([None, X_train.shape[1]]))])
@@ -281,7 +283,7 @@ class TestXGBoostModels(unittest.TestCase):
             clr, onx,
             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
             basename="XGBClassifierIris")
-        
+
     def test_xgboost_example_mnist(self):
         """
         Train a simple xgboost model and store associated artefacts.
@@ -300,7 +302,7 @@ class TestXGBoostModels(unittest.TestCase):
         sh = [None, X_train.shape[1]]
         onnx_model = convert_xgboost(
             clf, initial_types=[('input', FloatTensorType(sh))])
-        
+
         dump_data_and_model(
             X_test.astype(np.float32), clf, onnx_model,
             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",

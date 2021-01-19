@@ -1,3 +1,5 @@
+<!--- SPDX-License-Identifier: Apache-2.0 -->
+
 # Conversion Framework
 
 In ONNXMLTools, the conversion framework consists of several essential components listed below.

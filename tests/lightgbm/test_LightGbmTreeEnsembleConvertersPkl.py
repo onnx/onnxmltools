@@ -1,8 +1,5 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
+
 import sys
 from distutils.version import StrictVersion
 import unittest
@@ -30,7 +27,7 @@ class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
             X = numpy.array(X, dtype=numpy.float32)
             model_onnx = convert_lightgbm(model.steps[1][1], 'pkl1', [('input', FloatTensorType([1, X.shape[1]]))])
             dump_data_and_model(X, model.steps[1][1], model_onnx, basename="LightGbmPkl1")
-    
+
 
     @unittest.skipIf(sys.version_info[0] == 2, reason="pickled with Python 3, cannot unpickle with 2")
     @unittest.skipIf(sys.platform.startswith('win'), reason="pickled on linux, may not work on windows")

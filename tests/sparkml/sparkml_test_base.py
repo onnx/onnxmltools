@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 '''
 Testcase Base class for SparkML tests
 '''
