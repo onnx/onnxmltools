@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 import sys
 import unittest
 from distutils.version import StrictVersion

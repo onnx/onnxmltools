@@ -1,8 +1,5 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
+
 import json
 import re
 import numpy as np
@@ -32,13 +29,13 @@ def _append_covers(node):
 def _get_attributes(booster):
     atts = booster.attributes()
     ntrees = booster.best_ntree_limit
-    dp = booster.get_dump(dump_format='json', with_stats=True)        
+    dp = booster.get_dump(dump_format='json', with_stats=True)
     res = [json.loads(d) for d in dp]
     trees = len(res)
     kwargs = atts.copy()
     kwargs['feature_names'] = booster.feature_names
     kwargs['n_estimators'] = ntrees
-    
+
     # covers
     covs = []
     for tr in res:
@@ -97,7 +94,7 @@ class WrappedBooster:
     def _generate_classes(self, model_dict):
         if model_dict['num_class'] == 1:
             return np.asarray([0, 1])
-        return np.arange(model_dict['num_class'])        
+        return np.arange(model_dict['num_class'])
 
 
 def _get_xgboost_operator_name(model):

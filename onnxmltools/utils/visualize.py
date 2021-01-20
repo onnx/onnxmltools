@@ -1,8 +1,4 @@
-#-------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-#--------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 import shutil
@@ -68,7 +64,7 @@ def visualize_model(onnx_model, open_browser=True, dest="index.html"):
     Creates a graph visualization of an ONNX protobuf model.
     It creates a SVG graph with *d3.js* and stores it into a file.
 
-    :param model: ONNX model (protobuf object)    
+    :param model: ONNX model (protobuf object)
     :param open_browser: opens the browser
     :param dest: destination file
 

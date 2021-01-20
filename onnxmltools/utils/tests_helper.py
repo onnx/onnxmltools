@@ -1,8 +1,6 @@
-#-------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-#--------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
+
+import numpy
 import pickle
 import os
 import warnings
@@ -93,7 +91,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
             else:
                 prediction = [model.predict(data)]
         elif isinstance(model, xgboost.Booster):
-            # XGBoost Booster            
+            # XGBoost Booster
             from ..convert.xgboost._parse import _get_attributes
             from xgboost import DMatrix
             datax = DMatrix(data)

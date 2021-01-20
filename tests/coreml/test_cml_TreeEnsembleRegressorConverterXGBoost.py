@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Tests CoreML TreeEnsembleRegressor converter.
 """
@@ -23,7 +25,7 @@ from onnxmltools.utils import dump_data_and_model
 class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
 
     def test_tree_ensemble_regressor_xgboost(self):
-        
+
         this = os.path.dirname(__file__)
         data_train = pandas.read_csv(os.path.join(this, "xgboost.model.xgb.n4.d3.train.txt"), header=None)
 

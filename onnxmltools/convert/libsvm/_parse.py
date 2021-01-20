@@ -1,8 +1,5 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
+
 from onnxconverter_common.data_types import FloatTensorType
 from ..common._container import LibSvmModelContainer
 from ..common._topology import Topology
@@ -25,7 +22,7 @@ def _parse_libsvm_simple_model(scope, model, inputs):
         this_operator.inputs = inputs
         this_operator.outputs.append(label_variable)
         this_operator.outputs.append(probability_map_variable)
-    elif model.get_svm_type() in (4, 3): 
+    elif model.get_svm_type() in (4, 3):
         # We assume that all scikit-learn operator can only produce a single float tensor.
         variable = scope.declare_local_variable('variable', FloatTensorType())
         this_operator = scope.declare_local_operator("LibSvmSVR", model)
@@ -51,12 +48,12 @@ def _parse_libsvm(scope, model, inputs):
 def parse_libsvm(model, initial_types=None, target_opset=None,
                  custom_conversion_functions=None,
                  custom_shape_calculators=None):
-    # Put svmlib object into an abstract container so that our framework 
+    # Put svmlib object into an abstract container so that our framework
     # can work seamlessly on models created
     # with different machine learning tools.
     raw_model_container = LibSvmModelContainer(model)
 
-    # Declare a computational graph. It will become a representation of 
+    # Declare a computational graph. It will become a representation of
     # the input scikit-learn model after parsing.
     topology = Topology(raw_model_container, default_batch_size='None',
                         initial_types=initial_types,
@@ -69,7 +66,7 @@ def parse_libsvm(model, initial_types=None, target_opset=None,
     # is enough for parsing scikit-learn models.
     scope = topology.declare_scope('__root__')
 
-    # Declare input variables. They should be the inputs of the scikit-learn model 
+    # Declare input variables. They should be the inputs of the scikit-learn model
     # you want to convert into ONNX.
     inputs = []
     for var_name, initial_type in initial_types:

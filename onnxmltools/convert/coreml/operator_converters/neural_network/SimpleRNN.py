@@ -1,8 +1,4 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
 from .....proto import onnx_proto
@@ -75,11 +71,11 @@ def convert_simple_rnn(scope, operator, container):
     # (h_init), where N is the batch size. To simulate CoreML RNN under ONNX, we need to introduce some extra
     # operators. Note that N=1 and D=1 always hold in ONNX if we are considering RNN from CoreML because there
     # is no batch size in CoreML and CoreML RNN is always uni-directional.
-    # 
+    #
     # Below we provide a visualization of our conversion for CoreML RNN.
     #
     # Symbols:
-    #  
+    #
     #  X: input features of CoreML RNN
     #  h_init: initial RNN state of CoreML
     #  Y: CoreML RNN's output. It can be [S, C_out] (if sequence_output is on ) or [1, C_out] (if sequence_output is off)

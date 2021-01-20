@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Tests CoreML GLMRegressor converter.
 """
@@ -37,7 +39,7 @@ class TestCoreMLGLMRegressorConverter(unittest.TestCase):
         svr_onnx = convert(svr_coreml.get_spec())
         self.assertTrue(svr_onnx is not None)
         dump_data_and_model(X.astype(numpy.float32), svr, svr_onnx, basename="CmlLinearSvr-Dec4")
-        
+
 
 if __name__ == "__main__":
     unittest.main()
