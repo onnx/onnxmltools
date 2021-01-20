@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Tests CoreML Scaler converter.
 """
@@ -28,6 +30,6 @@ class TestCoreMLScalerConverter(unittest.TestCase):
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(data, model, model_onnx, basename="CmlStandardScalerFloat32")
 
-        
+
 if __name__ == "__main__":
     unittest.main()

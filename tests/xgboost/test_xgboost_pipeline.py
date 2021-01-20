@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Tests scilit-learn's tree-based methods' converters.
 """
@@ -130,7 +132,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
             calculate_linear_regressor_output_shapes,
             convert_xgb)
 
-        # last step    
+        # last step
         input_xgb = model.steps[0][-1].transform(test_df[:5]).astype(np.float32)
         if replace:
             input_xgb[input_xgb[:, :] == missing] = np.nan

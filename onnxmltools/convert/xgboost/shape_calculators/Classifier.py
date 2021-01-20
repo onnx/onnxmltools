@@ -1,8 +1,4 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
 from ...common._registration import register_shape_calculator
@@ -25,7 +21,7 @@ def calculate_xgboost_classifier_output_shapes(operator):
     atts = booster.attributes()
     ntrees = len(booster.get_dump(with_stats=True, dump_format = 'json'))
     objective = params["objective"]
-            
+
     if objective == "binary:logistic":
         ncl = 2
     else:
@@ -34,7 +30,7 @@ def calculate_xgboost_classifier_output_shapes(operator):
             ncl = 2
     classes = xgb_node.classes_
     if (np.issubdtype(classes.dtype, np.floating) or
-            np.issubdtype(classes.dtype, np.signedinteger)):
+            np.issubdtype(classes.dtype, np.integer)):
         operator.outputs[0].type = Int64TensorType(shape=[N])
     else:
         operator.outputs[0].type = StringTensorType(shape=[N])

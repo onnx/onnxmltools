@@ -1,8 +1,4 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 import json
 import numpy as np
@@ -12,14 +8,14 @@ from ..common import get_xgb_params
 
 
 class XGBConverter:
-    
+
     @staticmethod
     def get_xgb_params(xgb_node):
         """
         Retrieves parameters of a model.
         """
         return get_xgb_params(xgb_node)
-    
+
     @staticmethod
     def validate(xgb_node):
         params = XGBConverter.get_xgb_params(xgb_node)
@@ -43,9 +39,9 @@ class XGBConverter:
         js_tree_list = booster.get_dump(with_stats=True, dump_format = 'json')
         js_trees = [json.loads(s) for s in js_tree_list]
         return objective, base_score, js_trees
-        
+
     @staticmethod
-    def _get_default_tree_attribute_pairs(is_classifier):        
+    def _get_default_tree_attribute_pairs(is_classifier):
         attrs = {}
         for k in {'nodes_treeids',  'nodes_nodeids',
                   'nodes_featureids', 'nodes_modes', 'nodes_values',
@@ -60,7 +56,7 @@ class XGBConverter:
         return attrs
 
     @staticmethod
-    def _add_node(attr_pairs, is_classifier, tree_id, tree_weight, node_id, 
+    def _add_node(attr_pairs, is_classifier, tree_id, tree_weight, node_id,
                   feature_id, mode, value, true_child_id, false_child_id, weights, weight_id_bias,
                   missing, hitrate):
         if isinstance(feature_id, str):
@@ -75,7 +71,7 @@ class XGBConverter:
                             feature_id))
             else:
                 try:
-                    feature_id = int(feature_id)
+                    feature_id = int(float(feature_id))
                 except ValueError:
                     raise RuntimeError(
                         "Unable to interpret '{0}', feature "
@@ -83,11 +79,11 @@ class XGBConverter:
                             feature_id))
 
         # Split condition for sklearn
-        # * if X_ptr[X_sample_stride * i + X_fx_stride * node.feature] <= node.threshold: 
-        # * https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/tree/_tree.pyx#L946 
-        # Split condition for xgboost 
-        # * if (fvalue < split_value) 
-        # * https://github.com/dmlc/xgboost/blob/master/include/xgboost/tree_model.h#L804             
+        # * if X_ptr[X_sample_stride * i + X_fx_stride * node.feature] <= node.threshold:
+        # * https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/tree/_tree.pyx#L946
+        # Split condition for xgboost
+        # * if (fvalue < split_value)
+        # * https://github.com/dmlc/xgboost/blob/master/include/xgboost/tree_model.h#L804
 
         attr_pairs['nodes_treeids'].append(tree_id)
         attr_pairs['nodes_nodeids'].append(node_id)
@@ -112,17 +108,17 @@ class XGBConverter:
                     attr_pairs['target_nodeids'].append(node_id)
                     attr_pairs['target_ids'].append(i + weight_id_bias)
                     attr_pairs['target_weights'].append(float(tree_weight * w))
-        
+
     @staticmethod
     def _fill_node_attributes(treeid, tree_weight, jsnode, attr_pairs, is_classifier, remap):
         if 'children' in jsnode:
-            XGBConverter._add_node(attr_pairs=attr_pairs, is_classifier=is_classifier, 
-                        tree_id=treeid, tree_weight=tree_weight, 
-                        value=jsnode['split_condition'], node_id=remap[jsnode['nodeid']], 
-                        feature_id=jsnode['split'], 
+            XGBConverter._add_node(attr_pairs=attr_pairs, is_classifier=is_classifier,
+                        tree_id=treeid, tree_weight=tree_weight,
+                        value=jsnode['split_condition'], node_id=remap[jsnode['nodeid']],
+                        feature_id=jsnode['split'],
                         mode='BRANCH_LT', # 'BRANCH_LEQ' --> is for sklearn
-                        true_child_id=remap[jsnode['yes']], # ['children'][0]['nodeid'], 
-                        false_child_id=remap[jsnode['no']], # ['children'][1]['nodeid'], 
+                        true_child_id=remap[jsnode['yes']], # ['children'][0]['nodeid'],
+                        false_child_id=remap[jsnode['no']], # ['children'][1]['nodeid'],
                         weights=None, weight_id_bias=None,
                         missing=jsnode.get('missing', -1) == jsnode['yes'], # ['children'][0]['nodeid'],
                         hitrate=jsnode.get('cover', 0))
@@ -131,16 +127,16 @@ class XGBConverter:
                 if 'children' in ch or 'leaf' in ch:
                     XGBConverter._fill_node_attributes(treeid, tree_weight, ch, attr_pairs, is_classifier, remap)
                 else:
-                    raise RuntimeError("Unable to convert this node {0}".format(ch))                        
-                
+                    raise RuntimeError("Unable to convert this node {0}".format(ch))
+
         else:
             weights = [jsnode['leaf']]
             weights_id_bias = 0
-            XGBConverter._add_node(attr_pairs=attr_pairs, is_classifier=is_classifier, 
-                        tree_id=treeid, tree_weight=tree_weight, 
-                        value=0., node_id=remap[jsnode['nodeid']], 
+            XGBConverter._add_node(attr_pairs=attr_pairs, is_classifier=is_classifier,
+                        tree_id=treeid, tree_weight=tree_weight,
+                        value=0., node_id=remap[jsnode['nodeid']],
                         feature_id=0, mode='LEAF',
-                        true_child_id=0, false_child_id=0, 
+                        true_child_id=0, false_child_id=0,
                         weights=weights, weight_id_bias=weights_id_bias,
                         missing=False, hitrate=jsnode.get('cover', 0))
 
@@ -154,7 +150,7 @@ class XGBConverter:
             for ch in jsnode['children']:
                 XGBConverter._remap_nodeid(ch, remap)
         return remap
-            
+
     @staticmethod
     def fill_tree_attributes(js_xgb_node, attr_pairs, tree_weights, is_classifier):
         if not isinstance(js_xgb_node, list):
@@ -188,6 +184,12 @@ class XGBRegressorConverter(XGBConverter):
 
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
         attr_pairs['base_values'] = [base_score]
+
+        bst = xgb_node.get_booster()
+        best_ntree_limit = getattr(bst, 'best_ntree_limit', len(js_trees))
+        if best_ntree_limit < len(js_trees):
+            js_trees = js_trees[:best_ntree_limit]
+
         XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], False)
 
         # add nodes
@@ -222,13 +224,19 @@ class XGBClassifierConverter(XGBConverter):
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
 
         params = XGBConverter.get_xgb_params(xgb_node)
-
         attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], True)
+        ncl = (max(attr_pairs['class_treeids']) + 1) // params['n_estimators']
+
+        bst = xgb_node.get_booster()
+        best_ntree_limit = getattr(bst, 'best_ntree_limit', len(js_trees)) * ncl
+        if best_ntree_limit < len(js_trees):
+            js_trees = js_trees[:best_ntree_limit]
+            attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
+            XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], True)
 
         if len(attr_pairs['class_treeids']) == 0:
             raise RuntimeError("XGBoost model is empty.")
-        ncl = (max(attr_pairs['class_treeids']) + 1) // params['n_estimators']
         if ncl <= 1:
             ncl = 2
             # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L23.
@@ -242,7 +250,7 @@ class XGBClassifierConverter(XGBConverter):
 
         classes = xgb_node.classes_
         if (np.issubdtype(classes.dtype, np.floating) or
-                np.issubdtype(classes.dtype, np.signedinteger)):
+                np.issubdtype(classes.dtype, np.integer)):
             attr_pairs['classlabels_int64s'] = classes.astype('int')
         else:
             classes = np.array([s.encode('utf-8') for s in classes])
@@ -273,7 +281,7 @@ class XGBClassifierConverter(XGBConverter):
                                name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
                                **attr_pairs)
         else:
-            raise RuntimeError("Unexpected objective: {0}".format(objective))            
+            raise RuntimeError("Unexpected objective: {0}".format(objective))
 
 
 def convert_xgboost(scope, operator, container):

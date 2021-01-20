@@ -1,8 +1,4 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
 
 # To register converters for Core ML neural network operators, import associated modules here.
 from . import Activation
@@ -22,6 +18,7 @@ from . import ImageScaler
 from . import InnerProduct
 from . import L2Normalize
 from . import LoadConstant
+from . import LoadConstantND
 from . import LRN
 from . import LSTM
 from . import Max
@@ -35,6 +32,7 @@ from . import Pool
 from . import Reduce
 from . import ReorganizeData
 from . import Reshape
+from . import ReshapeStatic
 from . import Scale
 from . import SequenceRepeat
 from . import SimpleRNN

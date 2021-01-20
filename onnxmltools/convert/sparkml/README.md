@@ -1,3 +1,5 @@
+<!--- SPDX-License-Identifier: Apache-2.0 -->
+
 # Spark ML to Onnx Model Conversion
 
 There is prep work needed above and beyond calling the API. In short these steps are:
@@ -15,7 +17,7 @@ To use this function just pass your test DataFrame.
 
 Otherwise, the conversion code requires a list of tuples with input names and their corresponding Tensor types, as shown below:
 ```python
-initial_types = [ 
+initial_types = [
     ("label", StringTensorType([1, 1])),
     # (repeat for the required inputs)
 ]
@@ -30,7 +32,7 @@ pipeline_model = pipeline.fit(training_data)
 onnx_model = convert_sparkml(pipeline_model, 'My Sparkml Pipeline', initial_types)
 ```
 
-3- (optional) You could save the ONNX model for future use or further examination by using the `SerializeToString()` 
+3- (optional) You could save the ONNX model for future use or further examination by using the `SerializeToString()`
 method of ONNX model
 
 ```python
@@ -60,13 +62,13 @@ with open("input_data", "wb") as f:
 sess = onnxruntime.InferenceSession(onnx_model)
 output = sess.run(None, input_data)
 
-``` 
+```
  This output may need further conversion back to a DataFrame.
 
 
 ## Known Issues
 
-1. Overall invalid data handling is problematic and not implemented in most cases. 
+1. Overall invalid data handling is problematic and not implemented in most cases.
 Make sure your data is clean.
 
 2. OneHotEncoderEstimator must not drop the last bit: OneHotEncoderEstimator has an option

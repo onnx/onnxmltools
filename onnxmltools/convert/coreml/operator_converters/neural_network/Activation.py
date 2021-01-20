@@ -1,11 +1,9 @@
-# -------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# SPDX-License-Identifier: Apache-2.0
+
+import numpy as np
 
 from ....common._apply_operation import apply_elu, apply_hard_sigmoid, apply_leaky_relu, apply_prelu, apply_relu, \
-    apply_sigmoid, apply_tanh, apply_affine, apply_parametric_softplus, apply_scaled_tanh
+    apply_sigmoid, apply_tanh, apply_affine, apply_parametric_softplus, apply_scaled_tanh, apply_thresholded_relu
 from ....common._registration import register_converter
 
 
@@ -24,7 +22,7 @@ def convert_activation(scope, operator, container):
     elif activation_type == 'ReLU':
         apply_relu(scope, inputs, outputs, container, operator_name=attrs['name'])
     elif activation_type == 'PReLU':
-        apply_prelu(scope, inputs, outputs, container, operator_name=attrs['name'], slope=[params.PReLU.alpha])
+        apply_prelu(scope, inputs[0], outputs, container, operator_name=attrs['name'], slope=np.asarray([params.PReLU.alpha.floatValue]))
     elif activation_type == 'ELU':
         apply_elu(scope, inputs, outputs, container, operator_name=attrs['name'], alpha=params.ELU.alpha)
     elif activation_type == 'tanh':

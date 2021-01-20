@@ -1,3 +1,5 @@
+..  SPDX-License-Identifier: Apache-2.0
+
 
 onnxmltools: Convert your model into ONNX
 =========================================
@@ -12,8 +14,8 @@ onnxmltools: Convert your model into ONNX
       - .. image:: https://ci.appveyor.com/api/projects/status/d1xav3amubypje4n?svg=true
             :target: https://ci.appveyor.com/project/xadupre/onnxmltools
 
-ONNXMLTools enables you to convert models from different machine learning 
-toolkits into `ONNX <https://onnx.ai>`_. 
+ONNXMLTools enables you to convert models from different machine learning
+toolkits into `ONNX <https://onnx.ai>`_.
 Currently the following toolkits are supported:
 
 * `Apple Core ML <https://developer.apple.com/documentation/coreml>`_,
@@ -21,8 +23,8 @@ Currently the following toolkits are supported:
   conversion from *onnx* to *Apple Core ML*),
 * `h2o <http://docs.h2o.ai/h2o/latest-stable/h2o-py/docs/intro.html>`_
   (a subset only)
-* `Keras <https://keras.io/>`_ 
-* `LightGBM <https://lightgbm.readthedocs.io/en/latest/>`_ 
+* `Keras <https://keras.io/>`_
+* `LightGBM <https://lightgbm.readthedocs.io/en/latest/>`_
 * `libsvm <https://www.csie.ntu.edu.tw/~cjlin/libsvm/>`_
 * `scikit-learn <https://scikit-learn.org/stable/>`_
   (subset of models convertible to ONNX)
@@ -37,7 +39,7 @@ and implements converters for the other libraries.
 
 .. toctree::
     :maxdepth: 2
-    
+
     tutorial
     api_summary
     auto_examples/index
