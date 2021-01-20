@@ -222,6 +222,14 @@ class TestXGBoostModels(unittest.TestCase):
                        'num_class': 3}, data)
         model_onnx = convert_xgboost(model, 'tree-based classifier',
                                      [('input', FloatTensorType([None, x.shape[1]]))])
+        """
+        predt = model.predict(DMatrix(x_test[:5]), output_margin=True)
+        sess = InferenceSession(model_onnx.SerializeToString())
+        got = sess.run(None, {'input': x_test[:5].astype(np.float32)})
+        print(predt)
+        print(got[0])
+        print(got[1])
+        """
         dump_data_and_model(x_test.astype(np.float32),
                             model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",

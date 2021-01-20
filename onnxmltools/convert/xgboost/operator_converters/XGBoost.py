@@ -245,7 +245,7 @@ class XGBClassifierConverter(XGBConverter):
         else:
             # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L35.
             attr_pairs['post_transform'] = "SOFTMAX"
-            # attr_pairs['base_values'] = [base_score for n in range(ncl)]
+            attr_pairs['base_values'] = [base_score for n in range(ncl)]
             attr_pairs['class_ids'] = [v % ncl for v in attr_pairs['class_treeids']]
 
         classes = xgb_node.classes_
@@ -258,7 +258,7 @@ class XGBClassifierConverter(XGBConverter):
 
         # add nodes
         if objective == "binary:logistic":
-            ncl = 2
+            ncl = 2            
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
                                op_domain='ai.onnx.ml',
@@ -266,8 +266,8 @@ class XGBClassifierConverter(XGBConverter):
                                **attr_pairs)
         elif objective in ("multi:softprob", "multi:softmax"):
             ncl = len(js_trees) // params['n_estimators']
-            # if objective == 'multi:softmax':
-            #     attr_pairs['post_transform'] = 'NONE'
+            if objective == 'multi:softmax':
+                attr_pairs['post_transform'] = 'NONE'
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
                                op_domain='ai.onnx.ml',

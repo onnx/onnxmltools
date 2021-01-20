@@ -61,7 +61,6 @@ def _get_attributes(booster):
             if len(objs) != 1:
                 raise RuntimeError(
                     "Unable to guess objective in {}.".format(objs))
-
             kwargs['num_class'] = trees // ntrees
             kwargs["objective"] = objs[0].decode('ascii')
         else:

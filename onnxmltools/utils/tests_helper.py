@@ -104,8 +104,6 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                 prediction = [score.argmax(axis=1), score]
             elif model_dict['objective'].startswith('multi:softmax'):
                 score = model.predict(datax, output_margin=True)
-                score = expit(score)
-                score = score / numpy.sum(score, axis=1, keepdims=1)
                 prediction = [score.argmax(axis=1), score]
             else:
                 prediction = [model.predict(datax)]
