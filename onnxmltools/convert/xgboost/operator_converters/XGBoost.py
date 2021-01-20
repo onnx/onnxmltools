@@ -258,7 +258,7 @@ class XGBClassifierConverter(XGBConverter):
 
         # add nodes
         if objective == "binary:logistic":
-            ncl = 2            
+            ncl = 2
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
                                op_domain='ai.onnx.ml',

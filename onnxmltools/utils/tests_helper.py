@@ -4,8 +4,6 @@ import numpy
 import pickle
 import os
 import warnings
-import numpy
-from scipy.special import expit
 from ..convert.common.data_types import FloatTensorType
 from .utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
 
