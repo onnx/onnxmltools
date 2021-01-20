@@ -13,6 +13,14 @@ jobs:
     vmImage: 'vs2017-win2016'
   strategy:
     matrix:
+
+      Python37-nightly:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.8.0
+        ONNXRT_PATH: -i https://test.pypi.org/simple/ ort-nightly
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        sklearn.version: '==0.23.2'
+
       Python35-141-RT030:
         python.version: '3.5'
         ONNX_PATH: onnx==1.4.1
