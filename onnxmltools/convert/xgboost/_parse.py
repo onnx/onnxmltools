@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+import re
 import numpy as np
 from xgboost import XGBRegressor, XGBClassifier
 from onnxconverter_common.data_types import FloatTensorType
@@ -53,8 +54,16 @@ def _get_attributes(booster):
         # classification
         kwargs['num_target'] = 0
         if trees > ntrees > 0:
+            state = booster.__getstate__()
+            bstate = bytes(state['handle'])
+            reg = re.compile(b'(multi:[a-z]{1,15})')
+            objs = list(set(reg.findall(bstate)))
+            if len(objs) != 1:
+                raise RuntimeError(
+                    "Unable to guess objective in {}.".format(objs))
+
             kwargs['num_class'] = trees // ntrees
-            kwargs["objective"] = "multi:softprob"
+            kwargs["objective"] = objs[0].decode('ascii')
         else:
             kwargs['num_class'] = 1
             kwargs["objective"] = "binary:logistic"

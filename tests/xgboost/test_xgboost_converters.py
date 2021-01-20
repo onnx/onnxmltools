@@ -4,7 +4,6 @@
 Tests scilit-learn's tree-based methods' converters.
 """
 import os
-import sys
 import unittest
 import numpy as np
 import pandas
@@ -192,7 +191,7 @@ class TestXGBoostModels(unittest.TestCase):
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename="XGBBoosterMCl")
 
-    def test_xgboost_booster_classifier_multiclass(self):
+    def test_xgboost_booster_classifier_multiclass_softprob(self):
         x, y = make_classification(n_classes=3, n_features=5,
                                    n_samples=100,
                                    random_state=42, n_informative=3)
@@ -208,7 +207,25 @@ class TestXGBoostModels(unittest.TestCase):
         dump_data_and_model(x_test.astype(np.float32),
                             model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-                            basename="XGBBoosterMCl")
+                            basename="XGBBoosterMClSoftProb")
+
+    def test_xgboost_booster_classifier_multiclass_softmax(self):
+        x, y = make_classification(n_classes=3, n_features=5,
+                                   n_samples=100,
+                                   random_state=42, n_informative=3)
+        x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
+                                                       random_state=42)
+        
+        data = DMatrix(x_train, label=y_train)
+        model = train({'objective': 'multi:softmax',
+                       'n_estimators': 3, 'min_child_samples': 1,
+                       'num_class': 3}, data)
+        model_onnx = convert_xgboost(model, 'tree-based classifier',
+                                     [('input', FloatTensorType([None, x.shape[1]]))])
+        dump_data_and_model(x_test.astype(np.float32),
+                            model, model_onnx,
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            basename="XGBBoosterMClSoftMax")
 
     def test_xgboost_booster_classifier_reg(self):
         x, y = make_classification(n_classes=2, n_features=5,
