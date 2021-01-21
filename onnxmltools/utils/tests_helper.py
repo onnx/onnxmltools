@@ -97,8 +97,11 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
             if model_dict['objective'].startswith('binary'):
                 score = model.predict(datax)
                 prediction = [score > 0.5, numpy.vstack([1-score, score]).T]
-            elif model_dict['objective'].startswith('multi'):
+            elif model_dict['objective'].startswith('multi:softprob'):
                 score = model.predict(datax)
+                prediction = [score.argmax(axis=1), score]
+            elif model_dict['objective'].startswith('multi:softmax'):
+                score = model.predict(datax, output_margin=True)
                 prediction = [score.argmax(axis=1), score]
             else:
                 prediction = [model.predict(datax)]

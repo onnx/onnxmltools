@@ -49,6 +49,12 @@ jobs:
         ONNXRT_PATH: onnxruntime==1.6.0
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
         xgboost.version: '>=1.0'
+      Python37-180-RT160-xgb11:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.8.0
+        ONNXRT_PATH: onnxruntime==1.6.0
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        xgboost.version: '<1.2'
     maxParallel: 3
 
   steps:

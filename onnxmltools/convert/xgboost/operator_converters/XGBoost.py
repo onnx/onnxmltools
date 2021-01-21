@@ -245,7 +245,7 @@ class XGBClassifierConverter(XGBConverter):
         else:
             # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L35.
             attr_pairs['post_transform'] = "SOFTMAX"
-            # attr_pairs['base_values'] = [base_score for n in range(ncl)]
+            attr_pairs['base_values'] = [base_score for n in range(ncl)]
             attr_pairs['class_ids'] = [v % ncl for v in attr_pairs['class_treeids']]
 
         classes = xgb_node.classes_
@@ -264,8 +264,10 @@ class XGBClassifierConverter(XGBConverter):
                                op_domain='ai.onnx.ml',
                                name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
                                **attr_pairs)
-        elif objective == "multi:softprob":
+        elif objective in ("multi:softprob", "multi:softmax"):
             ncl = len(js_trees) // params['n_estimators']
+            if objective == 'multi:softmax':
+                attr_pairs['post_transform'] = 'NONE'
             container.add_node('TreeEnsembleClassifier', operator.input_full_names,
                                operator.output_full_names,
                                op_domain='ai.onnx.ml',
