@@ -242,6 +242,8 @@ class XGBClassifierConverter(XGBConverter):
             # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L23.
             attr_pairs['post_transform'] = "LOGISTIC"
             attr_pairs['class_ids'] = [0 for v in attr_pairs['class_treeids']]
+            if js_trees[0].get('leaf', None) == 0:
+                attr_pairs['base_values'] = [0.5]
         else:
             # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L35.
             attr_pairs['post_transform'] = "SOFTMAX"
