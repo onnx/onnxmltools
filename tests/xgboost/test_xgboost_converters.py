@@ -6,6 +6,7 @@ Tests scilit-learn's tree-based methods' converters.
 import os
 import unittest
 import numpy as np
+from numpy.testing import assert_almost_equal
 import pandas
 from sklearn.datasets import (
     load_diabetes, load_iris, make_classification, load_digits)
@@ -324,6 +325,22 @@ class TestXGBoostModels(unittest.TestCase):
             X_test.astype(np.float32), clf, onnx_model,
             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
             basename="XGBoostExample")
+
+    def test_xgb_empty_tree(self):
+        xgb = XGBClassifier(n_estimators=2, max_depth=2)
+
+        # simple dataset
+        X = [[0, 1], [1, 1], [2, 0]]
+        X = np.array(X, dtype=np.float32)
+        y = [0, 1, 0]
+        xgb.fit(X, y)
+        conv_model = convert_xgboost(
+            xgb, initial_types=[
+                ('input', FloatTensorType(shape=[None, X.shape[1]]))])
+        sess = InferenceSession(conv_model.SerializeToString())
+        res = sess.run(None, {'input': X.astype(np.float32)})
+        assert_almost_equal(xgb.predict_proba(X), res[1])
+        assert_almost_equal(xgb.predict(X), res[0])
 
 
 if __name__ == "__main__":
