@@ -453,23 +453,23 @@ def modify_tree_for_rule_in_set(gbm, use_float=False):
 
 
 def convert_lgbm_zipmap(scope, operator, container):
-    if operator.zipmap:
-        zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-        if hasattr(operator, 'classlabels_int64s'):
-            zipmap_attrs['classlabels_int64s'] = operator.classlabels_int64s
-            to_type = onnx_proto.TensorProto.INT64
-        elif hasattr(operator, 'classlabels_strings'):
-            zipmap_attrs['classlabels_strings'] = operator.classlabels_strings
-            to_type = onnx_proto.TensorProto.STRING
-        else:
-            raise RuntimeError("Unknown class type.")
-        if to_type == onnx_proto.TensorProto.STRING:
-            apply_identity(scope, operator.inputs[0].full_name,
-                           operator.outputs[0].full_name, container)
-        else:
-            apply_cast(scope, operator.inputs[0].full_name,
-                       operator.outputs[0].full_name, container, to=to_type)
+    zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
+    if hasattr(operator, 'classlabels_int64s'):
+        zipmap_attrs['classlabels_int64s'] = operator.classlabels_int64s
+        to_type = onnx_proto.TensorProto.INT64
+    elif hasattr(operator, 'classlabels_strings'):
+        zipmap_attrs['classlabels_strings'] = operator.classlabels_strings
+        to_type = onnx_proto.TensorProto.STRING
+    else:
+        raise RuntimeError("Unknown class type.")
+    if to_type == onnx_proto.TensorProto.STRING:
+        apply_identity(scope, operator.inputs[0].full_name,
+                       operator.outputs[0].full_name, container)
+    else:
+        apply_cast(scope, operator.inputs[0].full_name,
+                   operator.outputs[0].full_name, container, to=to_type)
 
+    if operator.zipmap:
         container.add_node('ZipMap', operator.inputs[1].full_name,
                            operator.outputs[1].full_name,
                            op_domain='ai.onnx.ml', **zipmap_attrs)

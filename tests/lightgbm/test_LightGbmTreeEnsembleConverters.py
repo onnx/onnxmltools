@@ -5,6 +5,7 @@ from distutils.version import StrictVersion
 
 import lightgbm
 import numpy
+from numpy.testing import assert_almost_equal
 from lightgbm import LGBMClassifier, LGBMRegressor
 import onnxruntime
 from onnxmltools.convert.common.utils import hummingbird_installed
