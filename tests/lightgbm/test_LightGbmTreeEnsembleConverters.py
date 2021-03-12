@@ -33,16 +33,17 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         assert "zipmap" in str(onx).lower()
 
     def test_lightgbm_classifier_nozipmap(self):
-        X = [[0, 1], [1, 1], [2, 0], [1, 2]]
+        X = [[0, 1], [1, 1], [2, 0], [1, 2], [1, 5], [6, 2]]
         X = numpy.array(X, dtype=numpy.float32)
-        y = [0, 1, 0, 1]
-        model = LGBMClassifier(n_estimators=3, min_child_samples=1)
+        y = [0, 1, 0, 1, 1, 0]
+        model = LGBMClassifier(n_estimators=3, min_child_samples=1, max_depth=2)
         model.fit(X, y)
         onx = convert_model(
             model, 'dummy', input_types=[('X', FloatTensorType([None, X.shape[1]]))],
             zipmap=False)
         assert "zipmap" not in str(onx).lower()
-        sess = InferenceSession(onx.SerializeToString())
+        onxs = onx[0].SerializeToString()
+        sess = onnxruntime.InferenceSession(onxs)
         exp = model.predict(X), model.predict_proba(X)
         got = sess.run(None, {'X': X})
         assert_almost_equal(exp[0], got[0])
