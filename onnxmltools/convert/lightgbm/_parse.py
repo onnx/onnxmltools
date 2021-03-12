@@ -87,11 +87,13 @@ def _parse_lightgbm_simple_model(scope, model, inputs):
     return this_operator.outputs
 
 
-def _parse_sklearn_classifier(scope, model, inputs):
+def _parse_sklearn_classifier(scope, model, inputs, zipmap=True):
     probability_tensor = _parse_lightgbm_simple_model(
         scope, model, inputs)
     this_operator = scope.declare_local_operator('LgbmZipMap')
     this_operator.inputs = probability_tensor
+    this_operator.zipmap = zipmap
+        
     classes = model.classes_
     label_type = Int64Type()
 
@@ -124,17 +126,18 @@ def _parse_sklearn_classifier(scope, model, inputs):
     return this_operator.outputs
 
 
-def _parse_lightgbm(scope, model, inputs):
+def _parse_lightgbm(scope, model, inputs, zipmap=True):
     '''
     This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
     model's type.
     :param scope: Scope object
     :param model: A lightgbm object
     :param inputs: A list of variables
+    :param zipmap: add operator ZipMap after operator TreeEnsembleClassifier
     :return: The output variables produced by the input model
     '''
     if isinstance(model, LGBMClassifier):
-        return _parse_sklearn_classifier(scope, model, inputs)
+        return _parse_sklearn_classifier(scope, model, inputs, zipmap=zipmap)
     if (isinstance(model, WrappedBooster) and
             model.operator_name == 'LgbmClassifier'):
         return _parse_sklearn_classifier(scope, model, inputs)
@@ -142,7 +145,8 @@ def _parse_lightgbm(scope, model, inputs):
 
 
 def parse_lightgbm(model, initial_types=None, target_opset=None,
-                   custom_conversion_functions=None, custom_shape_calculators=None):
+                   custom_conversion_functions=None, custom_shape_calculators=None,
+                   zipmap=True):
     raw_model_container = LightGbmModelContainer(model)
     topology = Topology(raw_model_container, default_batch_size='None',
                         initial_types=initial_types, target_opset=target_opset,
@@ -157,7 +161,7 @@ def parse_lightgbm(model, initial_types=None, target_opset=None,
     for variable in inputs:
         raw_model_container.add_input(variable)
 
-    outputs = _parse_lightgbm(scope, model, inputs)
+    outputs = _parse_lightgbm(scope, model, inputs, zipmap=zipmap)
 
     for variable in outputs:
         raw_model_container.add_output(variable)

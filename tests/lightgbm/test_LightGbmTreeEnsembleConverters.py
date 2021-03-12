@@ -32,6 +32,22 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
             model, 'dummy', input_types=[('X', FloatTensorType([None, X.shape[1]]))])
         assert "zipmap" in str(onx).lower()
 
+    def test_lightgbm_classifier_nozipmap(self):
+        X = [[0, 1], [1, 1], [2, 0], [1, 2]]
+        X = numpy.array(X, dtype=numpy.float32)
+        y = [0, 1, 0, 1]
+        model = LGBMClassifier(n_estimators=3, min_child_samples=1)
+        model.fit(X, y)
+        onx = convert_model(
+            model, 'dummy', input_types=[('X', FloatTensorType([None, X.shape[1]]))],
+            zipmap=False)
+        assert "zipmap" not in str(onx).lower()
+        sess = InferenceSession(onx.SerializeToString())
+        exp = model.predict(X), model.predict_proba(X)
+        got = sess.run(None, {'X': X})
+        assert_almost_equal(exp[0], got[0])
+        assert_almost_equal(exp[1], got[1])
+
     def test_lightgbm_regressor(self):
         model = LGBMRegressor(n_estimators=3, min_child_samples=1)
         dump_single_regression(model)

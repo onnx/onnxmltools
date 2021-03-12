@@ -191,7 +191,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     return names
 
 
-def convert_model(model, name, input_types, without_onnx_ml=False):
+def convert_model(model, name, input_types, without_onnx_ml=False, **kwargs):
     """
     Runs the appropriate conversion method.
 
@@ -201,26 +201,26 @@ def convert_model(model, name, input_types, without_onnx_ml=False):
     from sklearn.base import BaseEstimator
     if model.__class__.__name__.startswith("LGBM"):
         from onnxmltools.convert import convert_lightgbm
-        model, prefix = convert_lightgbm(model, name, input_types, without_onnx_ml=without_onnx_ml), "LightGbm"
+        model, prefix = convert_lightgbm(model, name, input_types, without_onnx_ml=without_onnx_ml, **kwargs), "LightGbm"
     elif model.__class__.__name__.startswith("XGB"):
         from onnxmltools.convert import convert_xgboost
-        model, prefix = convert_xgboost(model, name, input_types), "XGB"
+        model, prefix = convert_xgboost(model, name, input_types, **kwargs), "XGB"
     elif model.__class__.__name__ == 'Booster':
         import lightgbm
         if isinstance(model, lightgbm.Booster):
             from onnxmltools.convert import convert_lightgbm
-            model, prefix = convert_lightgbm(model, name, input_types, without_onnx_ml=without_onnx_ml), "LightGbm"
+            model, prefix = convert_lightgbm(model, name, input_types, without_onnx_ml=without_onnx_ml, **kwargs), "LightGbm"
         else:
             raise RuntimeError("Unable to convert model of type '{0}'.".format(type(model)))
     elif model.__class__.__name__.startswith("CatBoost"):
         from onnxmltools.convert import convert_catboost
-        model, prefix = convert_catboost(model, name, input_types), "CatBoost"
+        model, prefix = convert_catboost(model, name, input_types, **kwargs), "CatBoost"
     elif isinstance(model, BaseEstimator):
         from onnxmltools.convert import convert_sklearn
-        model, prefix = convert_sklearn(model, name, input_types), "Sklearn"
+        model, prefix = convert_sklearn(model, name, input_types, **kwargs), "Sklearn"
     else:
         from onnxmltools.convert import convert_coreml
-        model, prefix = convert_coreml(model, name, input_types), "Cml"
+        model, prefix = convert_coreml(model, name, input_types, **kwargs), "Cml"
     if model is None:
         raise RuntimeError("Unable to convert model of type '{0}'.".format(type(model)))
     return model, prefix

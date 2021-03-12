@@ -467,9 +467,13 @@ def convert_lgbm_zipmap(scope, operator, container):
     else:
         apply_cast(scope, operator.inputs[0].full_name,
                    operator.outputs[0].full_name, container, to=to_type)
-    container.add_node('ZipMap', operator.inputs[1].full_name,
-                       operator.outputs[1].full_name,
-                       op_domain='ai.onnx.ml', **zipmap_attrs)
+    if operator.zipmap:
+        container.add_node('ZipMap', operator.inputs[1].full_name,
+                           operator.outputs[1].full_name,
+                           op_domain='ai.onnx.ml', **zipmap_attrs)
+    else:
+        container.add_node('Identity', operator.inputs[1].full_name,
+                           operator.outputs[1].full_name)
 
 
 register_converter('LgbmClassifier', convert_lightgbm)
