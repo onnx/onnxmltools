@@ -93,7 +93,7 @@ def _parse_sklearn_classifier(scope, model, inputs, zipmap=True):
     this_operator = scope.declare_local_operator('LgbmZipMap')
     this_operator.inputs = probability_tensor
     this_operator.zipmap = zipmap
-        
+
     classes = model.classes_
     label_type = Int64Type()
 
