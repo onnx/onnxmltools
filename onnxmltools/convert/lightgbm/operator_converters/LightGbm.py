@@ -472,9 +472,12 @@ def convert_lgbm_zipmap(scope, operator, container):
                            operator.outputs[1].full_name,
                            op_domain='ai.onnx.ml', **zipmap_attrs)
     else:
+        # This should be apply_identity but optimization fails in
+        # onnxconverter-common when trying to remove identity nodes.
         apply_clip(scope, operator.inputs[1].full_name,
                    operator.outputs[1].full_name, container,
-                   min=0.0, max=1.0)
+                   min=np.array([0], dtype=np.float32),
+                   max=np.array([1], dtype=np.float32))
 
 
 register_converter('LgbmClassifier', convert_lightgbm)
