@@ -118,9 +118,13 @@ def _parse_sklearn_classifier(scope, model, inputs, zipmap=True):
         label_type = StringType()
 
     output_label = scope.declare_local_variable('label', label_type)
-    output_probability = scope.declare_local_variable(
-        'probabilities',
-        SequenceType(DictionaryType(label_type, FloatTensorType())))
+    if zipmap:
+        output_probability = scope.declare_local_variable(
+            'probabilities',
+            SequenceType(DictionaryType(label_type, FloatTensorType())))
+    else:
+        output_probability = scope.declare_local_variable(
+            'probabilities', FloatTensorType())
     this_operator.outputs.append(output_label)
     this_operator.outputs.append(output_probability)
     return this_operator.outputs
