@@ -43,7 +43,12 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
             zipmap=False)
         assert "zipmap" not in str(onx).lower()
         onxs = onx[0].SerializeToString()
-        sess = onnxruntime.InferenceSession(onxs)
+        try:
+            sess = onnxruntime.InferenceSession(onxs)
+        except Exception as e:
+            raise AssertionError(
+                "Model cannot be loaded by onnxruntime due to %r\n%s." % (
+                    e, onx[0]))
         exp = model.predict(X), model.predict_proba(X)
         got = sess.run(None, {'X': X})
         assert_almost_equal(exp[0], got[0])
