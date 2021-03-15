@@ -52,13 +52,14 @@ def convert_catboost(model, name=None, initial_types=None, doc_string='', target
 
 def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target_opset=None,
                      targeted_onnx=onnx.__version__, custom_conversion_functions=None,
-                     custom_shape_calculators=None, without_onnx_ml=False):
+                     custom_shape_calculators=None, without_onnx_ml=False, zipmap=True):
     if not utils.lightgbm_installed():
         raise RuntimeError('lightgbm is not installed. Please install lightgbm to use this feature.')
 
     from .lightgbm.convert import convert
     return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
-                   custom_conversion_functions, custom_shape_calculators, without_onnx_ml)
+                   custom_conversion_functions, custom_shape_calculators, without_onnx_ml,
+                   zipmap=zipmap)
 
 
 def convert_sklearn(model, name=None, initial_types=None, doc_string='', target_opset=None,

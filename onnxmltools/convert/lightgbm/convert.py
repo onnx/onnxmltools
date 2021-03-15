@@ -15,7 +15,7 @@ from . import operator_converters, shape_calculators  # noqa
 
 def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
             targeted_onnx=onnx.__version__, custom_conversion_functions=None,
-            custom_shape_calculators=None, without_onnx_ml=False):
+            custom_shape_calculators=None, without_onnx_ml=False, zipmap=True):
     '''
     This function produces an equivalent ONNX model of the given lightgbm model.
     The supported lightgbm modules are listed below.
@@ -34,6 +34,7 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
     :param without_onnx_ml: whether to generate a model composed by ONNX operators only, or to allow the converter
+    :param zipmap: remove operator ZipMap from the ONNX graph
     to use ONNX-ML operators as well.
     :return: An ONNX model (type: ModelProto) which is equivalent to the input lightgbm model
     '''
@@ -50,7 +51,8 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
         name = str(uuid4().hex)
 
     target_opset = target_opset if target_opset else get_maximum_opset_supported()
-    topology = parse_lightgbm(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_lightgbm(model, initial_types, target_opset, custom_conversion_functions,
+                              custom_shape_calculators, zipmap=zipmap)
     topology.compile()
     onnx_ml_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
 

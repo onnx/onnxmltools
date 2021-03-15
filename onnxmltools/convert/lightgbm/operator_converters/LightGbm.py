@@ -4,7 +4,8 @@ import copy
 import numbers
 import numpy as np
 from collections import Counter
-from ...common._apply_operation import apply_div, apply_reshape, apply_sub, apply_cast, apply_identity
+from ...common._apply_operation import (
+    apply_div, apply_reshape, apply_sub, apply_cast, apply_identity, apply_clip)
 from ...common._registration import register_converter
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
 from ....proto import onnx_proto
@@ -453,23 +454,32 @@ def modify_tree_for_rule_in_set(gbm, use_float=False):
 
 def convert_lgbm_zipmap(scope, operator, container):
     zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-    to_type = onnx_proto.TensorProto.INT64
-
     if hasattr(operator, 'classlabels_int64s'):
         zipmap_attrs['classlabels_int64s'] = operator.classlabels_int64s
+        to_type = onnx_proto.TensorProto.INT64
     elif hasattr(operator, 'classlabels_strings'):
         zipmap_attrs['classlabels_strings'] = operator.classlabels_strings
         to_type = onnx_proto.TensorProto.STRING
-
+    else:
+        raise RuntimeError("Unknown class type.")
     if to_type == onnx_proto.TensorProto.STRING:
         apply_identity(scope, operator.inputs[0].full_name,
                        operator.outputs[0].full_name, container)
     else:
         apply_cast(scope, operator.inputs[0].full_name,
                    operator.outputs[0].full_name, container, to=to_type)
-    container.add_node('ZipMap', operator.inputs[1].full_name,
-                       operator.outputs[1].full_name,
-                       op_domain='ai.onnx.ml', **zipmap_attrs)
+
+    if operator.zipmap:
+        container.add_node('ZipMap', operator.inputs[1].full_name,
+                           operator.outputs[1].full_name,
+                           op_domain='ai.onnx.ml', **zipmap_attrs)
+    else:
+        # This should be apply_identity but optimization fails in
+        # onnxconverter-common when trying to remove identity nodes.
+        apply_clip(scope, operator.inputs[1].full_name,
+                   operator.outputs[1].full_name, container,
+                   min=np.array([0], dtype=np.float32),
+                   max=np.array([1], dtype=np.float32))
 
 
 register_converter('LgbmClassifier', convert_lightgbm)
