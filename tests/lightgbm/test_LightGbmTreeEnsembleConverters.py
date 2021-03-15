@@ -104,6 +104,22 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
+    def test_lightgbm_booster_classifier_nozipmap(self):
+        X = [[0, 1], [1, 1], [2, 0], [1, 2]]
+        X = numpy.array(X, dtype=numpy.float32)
+        y = [0, 1, 0, 1]
+        data = lightgbm.Dataset(X, label=y)
+        model = lightgbm.train({'boosting_type': 'gbdt', 'objective': 'binary',
+                                'n_estimators': 3, 'min_child_samples': 1},
+                               data)
+        model_onnx, prefix = convert_model(model, 'tree-based classifier',
+                                           [('input', FloatTensorType([None, 2]))],
+                                           zipmap=False)
+        assert "zipmap" not in str(model_onnx).lower()
+        dump_data_and_model(X, model, model_onnx,
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            basename=prefix + "BoosterBin" + model.__class__.__name__)
+
     def test_lightgbm_booster_classifier_zipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
         X = numpy.array(X, dtype=numpy.float32)

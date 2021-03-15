@@ -144,7 +144,7 @@ def _parse_lightgbm(scope, model, inputs, zipmap=True):
         return _parse_sklearn_classifier(scope, model, inputs, zipmap=zipmap)
     if (isinstance(model, WrappedBooster) and
             model.operator_name == 'LgbmClassifier'):
-        return _parse_sklearn_classifier(scope, model, inputs)
+        return _parse_sklearn_classifier(scope, model, inputs, zipmap=zipmap)
     return _parse_lightgbm_simple_model(scope, model, inputs)
 
 
