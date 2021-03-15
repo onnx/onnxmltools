@@ -10,6 +10,7 @@ from lightgbm import LGBMClassifier, LGBMRegressor
 import onnxruntime
 from onnxmltools.convert.common.utils import hummingbird_installed
 from onnxmltools.convert.common.data_types import FloatTensorType
+from onnxmltools.convert import convert_lightgbm
 from onnxmltools.utils import dump_data_and_model
 from onnxmltools.utils import dump_binary_classification, dump_multiple_classification
 from onnxmltools.utils import dump_single_regression
@@ -44,6 +45,28 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
             zipmap=False)
         assert "zipmap" not in str(onx).lower()
         onxs = onx[0].SerializeToString()
+        try:
+            sess = onnxruntime.InferenceSession(onxs)
+        except Exception as e:
+            raise AssertionError(
+                "Model cannot be loaded by onnxruntime due to %r\n%s." % (
+                    e, onx[0]))
+        exp = model.predict(X), model.predict_proba(X)
+        got = sess.run(None, {'X': X})
+        assert_almost_equal(exp[0], got[0])
+        assert_almost_equal(exp[1], got[1])
+
+    def test_lightgbm_classifier_nozipmap2(self):
+        X = [[0, 1], [1, 1], [2, 0], [1, 2], [1, 5], [6, 2]]
+        X = numpy.array(X, dtype=numpy.float32)
+        y = [0, 1, 0, 1, 1, 0]
+        model = LGBMClassifier(n_estimators=3, min_child_samples=1, max_depth=2)
+        model.fit(X, y)
+        onx = convert_lightgbm(
+            model, 'dummy', initial_types=[('X', FloatTensorType([None, X.shape[1]]))],
+            zipmap=False)
+        assert "zipmap" not in str(onx).lower()
+        onxs = onx.SerializeToString()
         try:
             sess = onnxruntime.InferenceSession(onxs)
         except Exception as e:

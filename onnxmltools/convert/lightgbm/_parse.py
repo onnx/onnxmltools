@@ -170,5 +170,4 @@ def parse_lightgbm(model, initial_types=None, target_opset=None,
     for variable in outputs:
         raw_model_container.add_output(variable)
 
-    return topology
-
+    return topology
