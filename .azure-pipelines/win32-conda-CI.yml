@@ -91,12 +91,6 @@ jobs:
       python -m pip install %ONNXRT_PATH%
       python -m pip install scikit-learn$(sklearn.version)
       echo Test onnxruntime installation... && python -c "import onnxruntime"
-      REM install libsvm from github
-      git clone --recursive https://github.com/cjlin1/libsvm libsvm
-      copy libsvm\windows\*.dll libsvm\python
-      set PYTHONPATH=libsvm\python;%PYTHONPATH%
-      dir libsvm\python
-      echo Test libsvm installation... && python -c "import svmutil"
       echo "debug environment" && path
       python -m pip show pytest
     displayName: 'Install dependencies'
@@ -108,7 +102,6 @@ jobs:
 
   - script: |
       call activate py$(python.version)
-      set PYTHONPATH=libsvm\python;%PYTHONPATH%
       python -m pip install -e .
       python -m pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'

@@ -51,17 +51,10 @@ jobs:
       pip install -r requirements-dev.txt
       pip install %ONNXRT_PATH%
       echo Test onnxruntime installation... && python -c "import onnxruntime"
-      REM install libsvm from github
-      git clone --recursive https://github.com/cjlin1/libsvm libsvm
-      copy libsvm\windows\*.dll libsvm\python
-      set PYTHONPATH=libsvm\python;%PYTHONPATH%
-      dir libsvm\python
-      echo Test libsvm installation... && python -c "import svmutil"
     displayName: 'Install dependencies'
 
   - script: |
       call activate py$(python.version)
-      set PYTHONPATH=libsvm\python;%PYTHONPATH%
       pip install -e .
       python -m pytest tests  --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
