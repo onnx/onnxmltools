@@ -97,6 +97,10 @@ jobs:
     displayName: 'run flake8 check'
 
   - script: |
+      pip install -e .
+    displayName: 'local installation'
+
+  - script: |
       python -c "import onnxconverter_common"
       python -c "import onnxruntime"
       pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
