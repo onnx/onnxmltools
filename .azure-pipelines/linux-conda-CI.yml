@@ -90,9 +90,6 @@ jobs:
       pip install xgboost$(xgboost.version)
       pip install $(ONNXRT_PATH)
       pip install pytest
-      git clone --recursive https://github.com/cjlin1/libsvm libsvm
-      cd libsvm
-      make lib
     displayName: 'Install dependencies'
 
   - script: |
@@ -100,8 +97,10 @@ jobs:
     displayName: 'run flake8 check'
 
   - script: |
-      export PYTHONPATH=$PYTHONPATH:libsvm/python
-      python -c "import svmutil"
+      pip install -e .
+    displayName: 'local installation'
+
+  - script: |
       python -c "import onnxconverter_common"
       python -c "import onnxruntime"
       pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml

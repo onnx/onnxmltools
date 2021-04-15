@@ -3,7 +3,8 @@ codecov
 coremltools
 cython
 flatbuffers
-lightgbm
+libsvm
+lightgbm!=3.2.1
 h2o==3.28.0.3
 mleap
 numpy
@@ -14,7 +15,6 @@ pytest
 pytest-cov
 scikit-learn
 scipy
-svm
 wheel
 xgboost
 catboost

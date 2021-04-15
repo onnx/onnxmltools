@@ -5,11 +5,10 @@ from ...common._registration import register_converter
 from ...common.utils import cast_list
 import numpy
 try:
-    from libsvm import svm, svmutil
+    from libsvm import svm
 except ImportError:
     # Older version of libsvm.
     import svm
-    import svmutil
 
 
 class SVMConverter:
