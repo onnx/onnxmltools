@@ -3,6 +3,7 @@ codecov
 coremltools
 cython
 flatbuffers
+libsvm
 lightgbm
 h2o==3.28.0.3
 mleap
