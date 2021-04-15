@@ -5,7 +5,10 @@ Tests scikit-linear converter.
 """
 import tempfile
 import numpy
-import svm
+try:
+    import svm
+except ImportError:
+    import libsvm.svm as svm
 import numpy as np
 import unittest
 from sklearn.datasets import load_iris
