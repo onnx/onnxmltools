@@ -13,13 +13,6 @@ jobs:
     vmImage: 'vs2017-win2016'
   strategy:
     matrix:
-      Python35-141-RT030:
-        python.version: '3.5'
-        ONNX_PATH: onnx==1.4.1
-        ONNXRT_PATH: onnxruntime==0.3.0
-        COREML_PATH: https://github.com/apple/coremltools/archive/v2.0.zip
-        sklearn.version: '==0.19.1'
-
       Python36-141-RT030:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1
