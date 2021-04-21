@@ -5,18 +5,24 @@ Tests scikit-linear converter.
 """
 import tempfile
 import numpy
-import svm
+try:
+    from libsvm.svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
+    import libsvm.svm as svm    
+    import libsvm.svmutil as svmutil
+except ImportError:
+    import svm
+    from svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
+    import svmutil
+
 import numpy as np
 import unittest
 from sklearn.datasets import load_iris
 from onnxmltools.convert.libsvm import convert
-from svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
-import svmutil
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
 try:
-    from svm import PRINT_STRING_FUN, print_null
+    from libsvm.svm import PRINT_STRING_FUN, print_null
     noprint = PRINT_STRING_FUN(print_null)
 except ImportError:
     # This was recently added.

@@ -5,6 +5,7 @@ Tests utilities.
 """
 import os
 import unittest
+import warnings
 import onnxmltools
 from onnxmltools.utils import load_model, save_model
 from onnxmltools.utils import set_model_version, set_model_domain, set_model_doc_string
@@ -59,7 +60,11 @@ class TestUtils(unittest.TestCase):
 class TestWrapper(unittest.TestCase):
 
     def test_keras_with_tf2onnx(self):
-        import keras2onnx
+        try:
+            import keras2onnx
+        except (ImportError, AssertionError):
+            warnings.warn("keras2onnx or one of its dependencies is missing.")
+            return
         from keras2onnx.proto import keras
         from keras2onnx.proto.tfcompat import is_tf2
         if not is_tf2:  # tf2onnx is not available for tensorflow 2.0 yet.

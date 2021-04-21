@@ -13,13 +13,6 @@ jobs:
     vmImage: 'vs2017-win2016'
   strategy:
     matrix:
-      Python35-141-RT030:
-        python.version: '3.5'
-        ONNX_PATH: onnx==1.4.1
-        ONNXRT_PATH: onnxruntime==0.3.0
-        COREML_PATH: https://github.com/apple/coremltools/archive/v2.0.zip
-        sklearn.version: '==0.19.1'
-
       Python36-141-RT030:
         python.version: '3.6'
         ONNX_PATH: onnx==1.4.1
@@ -55,6 +48,13 @@ jobs:
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
         sklearn.version: ''
 
+      Python38-181-RT170:
+        python.version: '3.8'
+        ONNX_PATH: onnx==1.8.1
+        ONNXRT_PATH: onnxruntime==1.7.0
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        sklearn.version: ''
+
     maxParallel: 3
 
   steps:
@@ -84,12 +84,6 @@ jobs:
       python -m pip install %ONNXRT_PATH%
       python -m pip install scikit-learn$(sklearn.version)
       echo Test onnxruntime installation... && python -c "import onnxruntime"
-      REM install libsvm from github
-      git clone --recursive https://github.com/cjlin1/libsvm libsvm
-      copy libsvm\windows\*.dll libsvm\python
-      set PYTHONPATH=libsvm\python;%PYTHONPATH%
-      dir libsvm\python
-      echo Test libsvm installation... && python -c "import svmutil"
       echo "debug environment" && path
       python -m pip show pytest
     displayName: 'Install dependencies'
@@ -101,7 +95,6 @@ jobs:
 
   - script: |
       call activate py$(python.version)
-      set PYTHONPATH=libsvm\python;%PYTHONPATH%
       python -m pip install -e .
       python -m pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'

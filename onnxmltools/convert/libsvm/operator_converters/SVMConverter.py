@@ -3,10 +3,12 @@
 from ....proto import onnx_proto
 from ...common._registration import register_converter
 from ...common.utils import cast_list
-
-import svm
-import svmutil
 import numpy
+try:
+    from libsvm import svm
+except ImportError:
+    # Older version of libsvm.
+    import svm
 
 
 class SVMConverter:

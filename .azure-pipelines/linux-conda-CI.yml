@@ -54,7 +54,13 @@ jobs:
         ONNX_PATH: onnx==1.8.0
         ONNXRT_PATH: onnxruntime==1.6.0
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        xgboost.version: '<1.2'
+        xgboost.version: '>=1.2'
+      Python38-181-RT170-xgb11:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.8.1
+        ONNXRT_PATH: onnxruntime==1.7.0
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        xgboost.version: '>=1.2'
     maxParallel: 3
 
   steps:
@@ -84,9 +90,6 @@ jobs:
       pip install xgboost$(xgboost.version)
       pip install $(ONNXRT_PATH)
       pip install pytest
-      git clone --recursive https://github.com/cjlin1/libsvm libsvm
-      cd libsvm
-      make lib
     displayName: 'Install dependencies'
 
   - script: |
@@ -94,8 +97,10 @@ jobs:
     displayName: 'run flake8 check'
 
   - script: |
-      export PYTHONPATH=$PYTHONPATH:libsvm/python
-      python -c "import svmutil"
+      pip install -e .
+    displayName: 'local installation'
+
+  - script: |
       python -c "import onnxconverter_common"
       python -c "import onnxruntime"
       pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
