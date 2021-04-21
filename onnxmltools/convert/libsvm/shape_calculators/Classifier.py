@@ -3,11 +3,7 @@
 from ...common._registration import register_shape_calculator
 from ...common.data_types import FloatTensorType, Int64TensorType
 from ...common.utils import check_input_and_output_numbers
-try:
-    from libsvm.svm import C_SVC, NU_SVC
-except ImportError:
-    # Older version of libsvm.
-    from svm import C_SVC, NU_SVC
+from svm import C_SVC, NU_SVC
 
 
 def calculate_classifier_output_shapes(operator):

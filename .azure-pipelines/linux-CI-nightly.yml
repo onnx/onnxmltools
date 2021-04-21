@@ -51,9 +51,14 @@ jobs:
       python -m pip install -r requirements-dev.txt
       python -m pip install $(ORT_PATH)
       python -m pip install pytest
+      git clone --recursive https://github.com/cjlin1/libsvm libsvm
+      cd libsvm
+      make lib
     displayName: 'Install dependencies'
 
   - script: |
+      export PYTHONPATH=$PYTHONPATH:libsvm/python
+      python -c "import svmutil"
       python -c "import onnxconverter_common"
       python -c "import onnxruntime"
       pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
