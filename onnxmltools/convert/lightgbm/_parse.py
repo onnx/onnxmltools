@@ -27,7 +27,8 @@ class WrappedBooster:
         if (_model_dict['objective'].startswith('binary') or
                 _model_dict['objective'].startswith('multiclass')):
             self.operator_name = 'LgbmClassifier'
-        elif _model_dict['objective'].startswith('regression'):
+        elif (_model_dict['objective'].startswith('regression') or
+                _model_dict['objective'].startswith('poisson')):
             self.operator_name = 'LgbmRegressor'
         else:
             # Other objectives are not supported.
@@ -170,4 +171,4 @@ def parse_lightgbm(model, initial_types=None, target_opset=None,
     for variable in outputs:
         raw_model_container.add_output(variable)
 
-    return topology
+    return topology
