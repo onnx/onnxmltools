@@ -230,7 +230,7 @@ class XGBClassifierConverter(XGBConverter):
 
         bst = xgb_node.get_booster()
         best_ntree_limit = getattr(bst, 'best_ntree_limit', len(js_trees)) * ncl
-        if best_ntree_limit < len(js_trees):
+        if 0 < best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
             attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
             XGBConverter.fill_tree_attributes(js_trees, attr_pairs, [1 for _ in js_trees], True)
