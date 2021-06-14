@@ -34,11 +34,11 @@ class TestSparkmMinHashLSH(SparkMlTestCase):
         data_np = data.limit(1).toPandas().features.apply(
             lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         expected = [
-            predicted.toPandas().hashes.apply(lambda x: pandas.Series(x)
-                                              .map(lambda y: y.values[0])).values.astype(numpy.float32),
-        ]
+            predicted.toPandas().hashes.apply(
+                lambda x: pandas.Series(x).map(
+                    lambda y: y.values[0])).values.astype(numpy.float32)]
         paths = save_data_models(data_np, expected, model, model_onnx,
-                                    basename="SparkmlMinHashLSH")
+                                 basename="SparkmlMinHashLSH")
         onnx_model_path = paths[-1]
         output, output_shapes = run_onnx_model(['hashes'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)

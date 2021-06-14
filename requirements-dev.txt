@@ -3,6 +3,7 @@ catboost
 codecov
 coremltools
 cython
+dill
 flake8
 flatbuffers
 h2o
@@ -14,6 +15,7 @@ numpy
 openpyxl
 pandas
 protobuf
+psutil
 pyspark
 pytest
 pytest-cov

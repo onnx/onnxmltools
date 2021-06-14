@@ -25,8 +25,6 @@ def get_rand_coefficients(operator):
 def convert_min_hash_lsh(scope, operator, container):
     spark = operator.raw_params['SparkSession']
     int_type = onnx_proto.TensorProto.INT64
-    if spark.version < '2.4.0':
-        int_type = onnx_proto.TensorProto.INT32
     rand_coefficients = get_rand_coefficients(operator)
     coeffs = []
     for i in range(0, len(rand_coefficients), 2):
@@ -78,8 +76,6 @@ def calculate_min_hash_lsh_output_shapes(operator):
     check_input_and_output_types(operator, good_input_types=[FloatTensorType])
 
     N = operator.inputs[0].type.shape[0]
-    if N != 1:
-        raise SparkMlConversionError('MinHashLSHModel converter cannot handle batch size of more than 1')
     C = len(get_rand_coefficients(operator)) // 2
     operator.outputs[0].type = FloatTensorType([N, C])
 

@@ -43,7 +43,8 @@ class TestSparkmlWord2Vec(SparkMlTestCase):
         paths = save_data_models(data_np, expected, model, model_onnx,
                                     basename="SparkmlWord2Vec")
         onnx_model_path = paths[-1]
-        output, output_shapes = run_onnx_model(['label', 'prediction', 'probability'], data_np, onnx_model_path)
+        data_np = numpy.array(data_np[0]).reshape((1, -1))
+        output, output_shapes = run_onnx_model(['result'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
 

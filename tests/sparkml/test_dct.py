@@ -28,6 +28,7 @@ class TestSparkmlDCT(SparkMlTestCase):
         predicted = model.transform(data)
         expected = predicted.toPandas().resultVec.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         data_np = data.toPandas().vec.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
+
         paths = save_data_models(data_np, expected, model, model_onnx, basename="SparkmlDCT")
         onnx_model_path = paths[-1]
         output, output_shapes = run_onnx_model(['resultVec'], data_np, onnx_model_path)

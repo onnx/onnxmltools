@@ -1,11 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import tempfile
+import os
+import time
+import numpy
+
+
 class SparkMLTree(dict):
     pass
 
 
 def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
-    import numpy
     feature = []
     threshold = []
     tree_pandas = tree_df.toPandas()
@@ -27,9 +32,6 @@ def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
 
 
 def save_read_sparkml_model_data(spark, model):
-    import tempfile
-    import os
-    import time
     tdir = tempfile.tempdir
     if tdir is None:
         tdir = spark.util.Utils.createTempDir().getAbsolutePath()

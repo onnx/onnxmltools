@@ -60,11 +60,6 @@ class TestUtils(unittest.TestCase):
 class TestWrapper(unittest.TestCase):
 
     def test_keras_with_tf2onnx(self):
-        try:
-            import keras2onnx
-        except (ImportError, AssertionError):
-            warnings.warn("keras2onnx or one of its dependencies is missing.")
-            return
         import tensorflow.keras as keras
         model = keras.Sequential()
         model.add(keras.layers.Dense(units=4, input_shape=(10,), activation='relu'))
