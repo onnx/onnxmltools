@@ -11,6 +11,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlStringIndexer(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_string_indexer(self):
         indexer = StringIndexer(inputCol='cat1', outputCol='cat1_index', handleInvalid='skip')
         data = self.spark.createDataFrame([("a",), ("b",), ("c",), ("a",), ("a",), ("c",)], ['cat1'])

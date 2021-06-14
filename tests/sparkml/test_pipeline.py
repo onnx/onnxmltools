@@ -17,6 +17,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlPipeline(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_pipeline_4_stage(self):
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")
@@ -63,6 +65,8 @@ class TestSparkmlPipeline(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['label', 'prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_pipeline_3_stage(self):
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")
@@ -103,6 +107,8 @@ class TestSparkmlPipeline(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['features'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_pipeline_2_stage(self):
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")

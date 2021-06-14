@@ -16,6 +16,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlLogisticRegression(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_logistic_regression_binary_class(self):
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "sample_libsvm_data.txt")
@@ -46,6 +48,8 @@ class TestSparkmlLogisticRegression(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_linear_svc(self):
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "sample_libsvm_data.txt")

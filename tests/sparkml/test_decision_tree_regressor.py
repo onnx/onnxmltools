@@ -19,6 +19,8 @@ from pyspark.ml.feature import VectorIndexer
 
 class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_decision_tree_regressor_pipeline(self):
         import os
@@ -54,6 +56,8 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['prediction'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_decision_tree_regressor(self):
         features = [[0, 1], [1, 1], [2, 0]]
         features = numpy.array(features, dtype=numpy.float32)

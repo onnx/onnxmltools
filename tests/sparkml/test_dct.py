@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlDCT(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_dct(self):
         data = self.spark.createDataFrame(
             [(Vectors.dense([5.0, 8.0, 6.0]),)],

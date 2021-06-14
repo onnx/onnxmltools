@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlNormalizer(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_normalizer_1(self):
         data = self.spark.createDataFrame([
           (0, Vectors.dense(1.0, 0.5, -1.0)),
@@ -34,6 +36,8 @@ class TestSparkmlNormalizer(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['norm_feature'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_normalizer_2(self):
         data = self.spark.createDataFrame([
           (0, Vectors.dense(1.0, 0.5, -1.0)),

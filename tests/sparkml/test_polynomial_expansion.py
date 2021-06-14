@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlPolynomialExpansion(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_polynomial_expansion(self):
         data = self.spark.createDataFrame([
             (Vectors.dense([1.2, 3.2, 1.3, -5.6]),),

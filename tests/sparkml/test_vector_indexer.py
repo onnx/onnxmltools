@@ -20,6 +20,8 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
         True, reason=(
             "discrepency, unfound values are replaced by -1 by ONNX and 0 "
             "by spark."))
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),
                      'Need Greater Opset 9')
     def test_model_vector_indexer_multi(self):
@@ -45,6 +47,8 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['indexed'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),
                      'Need Greater Opset 9')
     def test_model_vector_indexer_single(self):

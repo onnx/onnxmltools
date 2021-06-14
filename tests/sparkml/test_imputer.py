@@ -16,11 +16,14 @@ from tests.sparkml import SparkMlTestCase
 ##  Therefore we leave these tests out for now until a newere version of pyspark is availabe that address this issue
 class TestSparkmlImputer(SparkMlTestCase):
 
-    # @unittest.skipIf(True, reason="Failing.")
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_imputer_single(self):
         self._imputer_test_single()
 
     @unittest.skipIf(True, reason="Name:'Split' Status Message: Cannot split using values in 'split")
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_imputer_multi(self):
         self._imputer_test_multi()
 

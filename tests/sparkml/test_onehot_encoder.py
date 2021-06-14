@@ -12,6 +12,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlOneHotEncoder(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_onehot_encoder(self):
         encoder = OneHotEncoder(inputCols=['index'], outputCols=['indexVec'])
         data = self.spark.createDataFrame(

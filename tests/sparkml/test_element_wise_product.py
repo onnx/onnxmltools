@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlElementwiseProduct(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_element_wise_product(self):
         data = self.spark.createDataFrame([(Vectors.dense([2.0, 1.0, 3.0]),)], ["features"])
         model = ElementwiseProduct(scalingVec=Vectors.dense([1.0, 2.0, 3.0]),

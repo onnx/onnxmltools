@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlVectorSlicer(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_vector_slicer(self):
         data = self.spark.createDataFrame([
             (Vectors.dense([-2.0, 2.3, 0.0, 0.0, 1.0]), ),

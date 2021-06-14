@@ -17,6 +17,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlLinearRegression(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_linear_regression_basic(self):
         data = self.spark.createDataFrame([
             (1.0, 2.0, Vectors.dense(1.0)),
@@ -38,6 +40,8 @@ class TestSparkmlLinearRegression(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['prediction'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_linear_regression(self):
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "sample_linear_regression_data.txt")
@@ -59,6 +63,8 @@ class TestSparkmlLinearRegression(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['prediction'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_generalized_linear_regression(self):
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         input_path = os.path.join(this_script_dir, "data", "sample_linear_regression_data.txt")

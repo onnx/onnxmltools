@@ -13,6 +13,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlVectorAssembler(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_model_vector_assembler(self):
         col_names = ["a", "b", "c"]
         model = VectorAssembler(inputCols=col_names, outputCol='features')

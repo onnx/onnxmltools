@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestBucketedRandomProjectionLSH(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_bucketed_random_projection_lsh(self):
         data = self.spark.createDataFrame([
             (0, Vectors.dense([-1.0, -1.0 ]),),

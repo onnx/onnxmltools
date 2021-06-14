@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmAFTSurvivalRegression(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_aft_regression_survival(self):
         data = self.spark.createDataFrame([
             (1.0, Vectors.dense(1.0), 1.0),

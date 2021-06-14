@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlScaler(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_maxabs_scaler(self):
         data = self.spark.createDataFrame([
             (0, Vectors.dense([1.0, 0.1, -1.0]),),
@@ -36,6 +38,8 @@ class TestSparkmlScaler(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['scaled_features'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_minmax_scaler(self):
         data = self.spark.createDataFrame([
             (0, Vectors.dense([1.0, 0.1, -1.0]),),
@@ -58,6 +62,8 @@ class TestSparkmlScaler(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['scaled_features'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_standard_scaler(self):
         data = self.spark.createDataFrame([
             (0, Vectors.dense([1.0, 0.1, -1.0]),),

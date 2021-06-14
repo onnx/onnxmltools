@@ -15,6 +15,8 @@ from tests.sparkml import SparkMlTestCase
 class TestSparkmMinHashLSH(SparkMlTestCase):
 
     @unittest.skipIf(True, reason="Investigate.")
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_min_hash_lsh(self):
         data = self.spark.createDataFrame([
             (0, Vectors.sparse(6, [0, 1, 2], [1.0, 1.0, 1.0]),),

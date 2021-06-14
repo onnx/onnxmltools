@@ -18,6 +18,8 @@ from tests.sparkml import SparkMlTestCase
 ##  Therefore we leave these tests out for now until a newere version of pyspark is availabe that address this issue
 class TestSparkmlWord2Vec(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_word2vec(self):
         data = self.spark.createDataFrame([
             ("Hi I heard about Spark".split(" "), ),

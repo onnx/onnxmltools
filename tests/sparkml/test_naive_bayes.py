@@ -15,6 +15,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlNaiveBayes(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_naive_bayes_bernoulli(self):
         data = self.spark.createDataFrame([
             Row(label=0.0, weight=0.1, features=Vectors.dense([0.0, 0.0])),
@@ -39,6 +41,8 @@ class TestSparkmlNaiveBayes(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_naive_bayes_multinomial(self):
         data = self.spark.createDataFrame([
             Row(label=0.0, weight=0.1, features=Vectors.dense([0.0, 0.0])),

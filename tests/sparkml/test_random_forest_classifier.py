@@ -20,6 +20,8 @@ from pyspark.ml.feature import StringIndexer, VectorIndexer
 
 class TestSparkmRandomForestClassifier(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     @unittest.skipIf(True, reason="Investigate.")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),
                      'Need Greater Opset 9')

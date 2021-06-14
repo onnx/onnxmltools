@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlIndexToString(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     @pytest.mark.xfail(raises=SparkMlConversionError)
     def test_index_to_string_throws(self):
         original_data = self.spark.createDataFrame(
@@ -29,6 +31,8 @@ class TestSparkmlIndexToString(SparkMlTestCase):
         with pytest.raises(SparkMlConversionError):
             model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([None, 1]))])
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_index_to_string(self):
         original_data = self.spark.createDataFrame(
             [(0, "a"), (1, "b"), (2, "c"), (3, "a"), (4, "a"), (5, "c")],

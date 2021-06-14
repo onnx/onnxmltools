@@ -12,6 +12,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlBucketizer(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_bucketizer(self):
         values = [(0.1,), (0.4,), (1.2,), (1.5,)]
         data = self.spark.createDataFrame(values, ["features"])

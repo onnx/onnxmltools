@@ -14,6 +14,8 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlChiSqSelector(SparkMlTestCase):
 
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_chi_sq_selector(self):
         data = self.spark.createDataFrame([
             (Vectors.dense([0.0, 0.0, 18.0, 1.0]), 1.0),
@@ -22,7 +24,6 @@ class TestSparkmlChiSqSelector(SparkMlTestCase):
         ], ["features", "label"])
         selector = ChiSqSelector(numTopFeatures=1, outputCol="selectedFeatures")
         model = selector.fit(data)
-        print(model.selectedFeatures)
 
         # the input name should match that of what StringIndexer.inputCol
         feature_count = data.first()[0].size
