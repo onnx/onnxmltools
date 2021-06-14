@@ -15,5 +15,3 @@ except ImportError:
             return False
 
 from onnxconverter_common.utils import *  # noqa
-
-
