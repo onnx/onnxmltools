@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from uuid import uuid4
-import lightgbm
-import warnings
-from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 import onnx
+import lightgbm
+from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 from ..common._topology import convert_topology
 from ..common.utils import hummingbird_installed
 from ._parse import parse_lightgbm, WrappedBooster
