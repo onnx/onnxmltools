@@ -72,6 +72,7 @@ def run_onnx_model(output_names, input, onnx_model):
     if isinstance(input, dict):
         inputs = input
     elif isinstance(input, list):
+        inp = sess.get_inputs()
         inputs = {i.name: v for i, v in zip(inp, input)}
     elif isinstance(input, numpy.ndarray):
         inp = sess.get_inputs()
