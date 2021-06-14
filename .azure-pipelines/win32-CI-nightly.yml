@@ -53,7 +53,7 @@ jobs:
       call activate py$(python.version)
       pip install -e .
       python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
-      python -c "import onnxruntime;print(onnxuntime.__version__)"
+      python -c "import onnxruntime;print(onnxruntime.__version__)"
       python -m pytest tests  --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
 

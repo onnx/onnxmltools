@@ -19,7 +19,7 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
     @unittest.skipIf(
         True, reason=(
             "discrepency, unfound values are replaced by -1 by ONNX and 0 "
-            "by spark.")
+            "by spark."))
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),
                      'Need Greater Opset 9')
     def test_model_vector_indexer_multi(self):
