@@ -103,6 +103,7 @@ jobs:
   - script: |
       call activate py$(python.version)
       python -m pip install -e .
+      export PYTHONPATH=.
       python -m pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
 

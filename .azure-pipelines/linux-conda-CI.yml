@@ -107,6 +107,7 @@ jobs:
     displayName: 'local installation'
 
   - script: |
+      export PYTHONPATH=.
       python -c "import onnxconverter_common"
       python -c "import onnxruntime"
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
