@@ -4,14 +4,12 @@ import sys
 import inspect
 import unittest
 from distutils.version import StrictVersion
-
 import onnx
 import pandas
 import numpy
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import DecisionTreeClassifier
 from pyspark.ml.linalg import VectorUDT, SparseVector, Vectors
-
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType, FloatTensorType
 from tests.sparkml.sparkml_test_utils import save_data_models, compare_results, run_onnx_model
@@ -20,7 +18,7 @@ from pyspark.ml.feature import StringIndexer, VectorIndexer
 
 
 class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_tree_pipeline(self):
         import os
@@ -43,8 +41,8 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         pipeline = Pipeline(stages=[label_indexer, feature_indexer, dt])
         model = pipeline.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Pipeline', [
-            ('label', StringTensorType([1, 1])),
-            ('features', FloatTensorType([1, feature_count]))
+            ('label', StringTensorType([None, 1])),
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         self.assertTrue(model_onnx is not None)
         # run the model
@@ -60,11 +58,10 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         ]
         paths = save_data_models(data_np, expected, model, model_onnx,
                                 basename="SparkmlDecisionTreePipeline")
-        onnx_model_path = paths[3]
+        onnx_model_path = paths[-1]
         output, output_shapes = run_onnx_model(['indexedLabel', 'prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_tree_one_class_classification(self):
         features = [[0., 1.], [1., 1.], [2., 0.]]
         features = numpy.array(features, dtype=numpy.float32)
@@ -75,7 +72,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = dt.fit(data)
         feature_count = 1
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree One Class', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
@@ -85,11 +82,10 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         ]
         paths = save_data_models(data_np, expected, model, model_onnx,
                                 basename="SparkmlDecisionTreeBinaryClass")
-        onnx_model_path = paths[3]
+        onnx_model_path = paths[-1]
         output, output_shapes = run_onnx_model(['prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_tree_binary_classification(self):
         features = [[0, 1], [1, 1], [2, 0]]
         features = numpy.array(features, dtype=numpy.float32)
@@ -100,7 +96,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = dt.fit(data)
         feature_count = 2
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Binary Class', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
@@ -110,11 +106,10 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         ]
         paths = save_data_models(data_np, expected, model, model_onnx,
                                 basename="SparkmlDecisionTreeBinaryClass")
-        onnx_model_path = paths[3]
+        onnx_model_path = paths[-1]
         output, output_shapes = run_onnx_model(['prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
     def test_tree_multiple_classification(self):
         features = [[0, 1], [1, 1], [2, 0], [0.5, 0.5], [1.1, 1.1], [2.1, 0.1]]
         features = numpy.array(features, dtype=numpy.float32)
@@ -125,7 +120,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = dt.fit(data)
         feature_count = 2
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Multi Class', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
@@ -135,7 +130,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         ]
         paths = save_data_models(data_np, expected, model, model_onnx,
                                 basename="SparkmlDecisionTreeMultiClass")
-        onnx_model_path = paths[3]
+        onnx_model_path = paths[-1]
         output, output_shapes = run_onnx_model(['prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 

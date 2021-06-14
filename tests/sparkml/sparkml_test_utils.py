@@ -1,23 +1,23 @@
 # SPDX-License-Identifier: Apache-2.0
 
-
+import pickle
+import os
+import warnings
+import sys
+import numpy
+import onnxruntime
+import pyspark
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.ml.linalg import VectorUDT
 from pyspark.sql.types import ArrayType, FloatType, DoubleType
-import numpy
-import pickle
-import os
-import warnings
-from onnxmltools.utils.utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled, \
-    OnnxRuntimeAssertionError, compare_outputs, ExpectedAssertionError
+from onnxmltools.utils.utils_backend import (
+    compare_backend, extract_options, evaluate_condition, is_backend_enabled,
+    OnnxRuntimeAssertionError, compare_outputs, ExpectedAssertionError)
 from onnxmltools.utils.utils_backend_onnxruntime import _create_column
 
 
 def start_spark(options):
-    import os
-    import sys
-    import pyspark
     executable = sys.executable
     os.environ["SPARK_HOME"] = pyspark.__path__[0]
     os.environ["PYSPARK_PYTHON"] = executable
@@ -28,7 +28,7 @@ def start_spark(options):
         for k,v in options.items():
             builder.config(k, v)
     spark = builder.getOrCreate()
-
+    # spark.sparkContext.setLogLevel("ALL")
     return spark
 
 
@@ -36,7 +36,8 @@ def stop_spark(spark):
     spark.sparkContext.stop()
 
 
-def save_data_models(input, expected, model, onnx_model, basename="model", folder=None):
+def save_data_models(input, expected, model, onnx_model, basename="model", folder=None,
+                     save_spark_model=False):
     if folder is None:
         folder = os.environ.get('ONNXTESTDUMP', 'tests_dump')
     if not os.path.exists(folder):
@@ -53,9 +54,10 @@ def save_data_models(input, expected, model, onnx_model, basename="model", folde
     with open(dest, "wb") as f:
         pickle.dump(input, f)
 
-    dest = os.path.join(folder, basename + ".model")
-    paths.append(dest)
-    model.write().overwrite().save(dest)
+    if save_spark_model:
+        dest = os.path.join(folder, basename + ".model")
+        paths.append(dest)
+        model.write().overwrite().save(dest)
 
     dest = os.path.join(folder, basename + ".model.onnx")
     paths.append(dest)
@@ -65,7 +67,6 @@ def save_data_models(input, expected, model, onnx_model, basename="model", folde
 
 
 def run_onnx_model(output_names, input, onnx_model):
-    import onnxruntime
     sess = onnxruntime.InferenceSession(onnx_model)
     if isinstance(input, dict):
         inputs = input

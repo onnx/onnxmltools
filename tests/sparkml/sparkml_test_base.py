@@ -3,6 +3,8 @@
 '''
 Testcase Base class for SparkML tests
 '''
+import os
+import inspect
 import unittest
 from tests.sparkml.sparkml_test_utils import start_spark, stop_spark
 
@@ -12,8 +14,6 @@ class SparkMlTestCase(unittest.TestCase):
         return None
 
     def setUp(self):
-        import os
-        import inspect
         if os.name == 'nt' and os.environ.get('HADOOP_HOME') is None:
             this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
             print('setting HADOOP_HOME to: ', this_script_dir)
