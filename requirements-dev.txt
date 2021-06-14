@@ -1,11 +1,14 @@
 -f https://download.pytorch.org/whl/torch_stable.html
+catboost
 codecov
 coremltools
 cython
+flake8
 flatbuffers
+h2o
+hummingbird-ml
 libsvm
 lightgbm
-h2o
 mleap
 numpy
 openpyxl
@@ -17,9 +20,7 @@ pytest-cov
 pytest-spark
 scikit-learn
 scipy
+tensorflow
+torch
 wheel
 xgboost
-catboost
-flake8
-torch
-hummingbird-ml
