@@ -38,22 +38,25 @@ def stop_spark(spark):
 
 
 def save_data_models(input, expected, model, onnx_model, basename="model", folder=None,
-                     save_spark_model=False):
+                     save_spark_model=False, pickle_spark_model=False, pickle_data=False):
     if folder is None:
         folder = os.environ.get('ONNXTESTDUMP', 'tests_dump')
     if not os.path.exists(folder):
         os.makedirs(folder)
 
     paths = []
-    dest = os.path.join(folder, basename + ".expected.pkl")
-    paths.append(dest)
-    with open(dest, "wb") as f:
-        pickle.dump(expected, f)
 
-    dest = os.path.join(folder, basename + ".data.pkl")
-    paths.append(dest)
-    with open(dest, "wb") as f:
-        pickle.dump(input, f)
+    if pickle_spark_model:
+        dest = os.path.join(folder, basename + ".expected.pkl")
+        paths.append(dest)
+        with open(dest, "wb") as f:
+            pickle.dump(expected, f)
+
+    if pickle_data:
+        dest = os.path.join(folder, basename + ".data.pkl")
+        paths.append(dest)
+        with open(dest, "wb") as f:
+            pickle.dump(input, f)
 
     if save_spark_model:
         dest = os.path.join(folder, basename + ".model")
