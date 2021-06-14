@@ -34,13 +34,6 @@ jobs:
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
         sklearn.version: ''
 
-      Python37-150-RT040:
-        python.version: '3.7'
-        ONNX_PATH: onnx==1.5.0
-        ONNXRT_PATH: onnxruntime==0.4.0
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        sklearn.version: ''
-
       Python37-160-RT111:
         python.version: '3.7'
         ONNX_PATH: onnx==1.6.0
@@ -76,6 +69,7 @@ jobs:
       python -m pip install %COREML_PATH% %ONNX_PATH%
       python -m pip install humming-bird-ml --no-deps
       python -m pip install -r requirements.txt
+      python -m pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio===0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
       python -m pip install -r requirements-dev.txt
       python -m pip install %ONNXRT_PATH%
       python -m pip install scikit-learn$(sklearn.version)
