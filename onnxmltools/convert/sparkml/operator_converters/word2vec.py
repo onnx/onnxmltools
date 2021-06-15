@@ -3,7 +3,6 @@
 import pandas
 import numpy
 from onnx import onnx_pb as onnx_proto
-from ..utils import SparkMlConversionError
 from ...common._apply_operation import apply_add, apply_mul, apply_sum
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import StringTensorType, FloatTensorType

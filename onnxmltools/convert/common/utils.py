@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 try:
-    from onnxconverter_common.utils import hummingbird_installed
+    from onnxconverter_common.utils import hummingbird_installed  # noqa
 except ImportError:
     def hummingbird_installed():
         """
