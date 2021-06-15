@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from onnx import onnx_pb as onnx_proto
-from ...common._apply_operation import apply_add, apply_mul, apply_sum, apply_div, apply_sub, \
-    apply_concat, apply_cast
+from ...common._apply_operation import (
+    apply_add, apply_mul, apply_sum, apply_div, apply_sub,
+    apply_concat, apply_cast)
 from ...common._registration import register_converter, register_shape_calculator
-from ...common.data_types import FloatTensorType
+from ...common.data_types import FloatTensorType, DoubleTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 from .tree_ensemble_common import save_read_sparkml_model_data
 
@@ -71,7 +72,8 @@ register_converter('pyspark.ml.feature.MinHashLSHModel', convert_min_hash_lsh)
 
 def calculate_min_hash_lsh_output_shapes(operator):
     check_input_and_output_numbers(operator, output_count_range=1)
-    check_input_and_output_types(operator, good_input_types=[FloatTensorType])
+    check_input_and_output_types(
+        operator, good_input_types=[FloatTensorType, DoubleTensorType])
 
     N = operator.inputs[0].type.shape[0]
     C = len(get_rand_coefficients(operator)) // 2

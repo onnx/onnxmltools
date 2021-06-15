@@ -33,8 +33,8 @@ class TestSparkmMinHashLSH(SparkMlTestCase):
         self.assertTrue(model_onnx is not None)
 
         # run the model
-        predicted = model.transform(data.limit(1))
-        data_np = data.limit(1).toPandas().features.apply(
+        predicted = model.transform(data.limit(2))
+        data_np = data.limit(2).toPandas().features.apply(
             lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         expected = [
             predicted.toPandas().hashes.apply(

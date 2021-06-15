@@ -14,7 +14,6 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlTokenizer(SparkMlTestCase):
 
-    @unittest.skipIf(False, reason="Input shape is wrong for StringNormalizer (ONNX).")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.5'),
@@ -25,14 +24,14 @@ class TestSparkmlTokenizer(SparkMlTestCase):
         predicted = model.transform(data)
 
         model_onnx = convert_sparkml(model, 'Sparkml Tokenizer', [
-            ('text', StringTensorType([None, 1]))])
+            ('text', StringTensorType([None]))])
         self.assertTrue(model_onnx is not None)
         # run the model
         expected = predicted.toPandas().words.apply(pandas.Series).values
-        data_np = data.toPandas().text.values.reshape([1, 1])
+        data_np = data.toPandas().text.values.reshape([-1])
         paths = save_data_models(data_np, expected, model, model_onnx, basename="SparkmlTokenizer")
         onnx_model_path = paths[-1]
-        output, output_shapes = run_onnx_model(['prediction'], data_np, onnx_model_path)
+        output, output_shapes = run_onnx_model(['words'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
 
