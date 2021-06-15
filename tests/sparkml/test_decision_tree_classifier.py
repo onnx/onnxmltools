@@ -19,6 +19,8 @@ from pyspark.ml.feature import StringIndexer, VectorIndexer
 
 class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
 
+    @unittest.skipIf(sys.platform == 'win32',
+                     reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
@@ -64,6 +66,8 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['indexedLabel', 'prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.platform == 'win32',
+                     reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     def test_tree_one_class_classification(self):
