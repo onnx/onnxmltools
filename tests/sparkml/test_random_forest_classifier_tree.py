@@ -20,7 +20,7 @@ from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, c
 from tests.sparkml import SparkMlTestCase
 
 
-class TestSparkmRandomForestClassifierNan(SparkMlTestCase):
+class TestSparkmRandomForestClassifierTree(SparkMlTestCase):
 
     @unittest.skipIf(sys.platform == 'win32',
                      reason="UnsatisfiedLinkError")
@@ -28,7 +28,7 @@ class TestSparkmRandomForestClassifierNan(SparkMlTestCase):
                      reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),
                      'Need Greater Opset 9')
-    def test_random_forest_classification_nan(self):
+    def test_random_forest_classification_tree(self):
         FEATURE_LEN = 32
 
         def infer_from_onnx(model_onnx, input_list):            
