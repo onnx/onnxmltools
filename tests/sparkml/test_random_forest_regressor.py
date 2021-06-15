@@ -20,7 +20,7 @@ from pyspark.ml.feature import VectorIndexer, StringIndexer
 
 class TestSparkmRandomForestRegressor(SparkMlTestCase):
 
-    @unittest.skipIf(True, reason="Investigate.")
+    @unittest.skipIf(False, reason="Investigate.")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),

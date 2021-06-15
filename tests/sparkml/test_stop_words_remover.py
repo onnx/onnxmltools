@@ -13,7 +13,7 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmlStopWordsRemover(SparkMlTestCase):
 
-    @unittest.skipIf(True, reason="Input shape is wrong for StringNormalizer (ONNX).")
+    @unittest.skipIf(False, reason="Input shape is wrong for StringNormalizer (ONNX).")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.5'),
