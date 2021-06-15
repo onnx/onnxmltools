@@ -92,6 +92,8 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.platform == 'win32',
+                     reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     def test_tree_binary_classification(self):
@@ -118,6 +120,8 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         output, output_shapes = run_onnx_model(['prediction', 'probability'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
+    @unittest.skipIf(sys.platform == 'win32',
+                     reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     def test_tree_multiple_classification(self):
