@@ -8,6 +8,8 @@ from distutils.version import StrictVersion
 import onnx
 import pandas
 import numpy
+from numpy.random import randint
+from onnxruntime import InferenceSession
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.linalg import VectorUDT, SparseVector
@@ -26,14 +28,13 @@ class TestSparkmRandomForestClassifierNan(SparkMlTestCase):
                      reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),
                      'Need Greater Opset 9')
-    def test_random_forest_classification(self):
+    def test_random_forest_classification_nan(self):
         FEATURE_LEN = 32
 
         def infer_from_onnx(model_onnx, input_list):            
             sess = InferenceSession(model_onnx.SerializeToString())
             input_name = sess.get_inputs()[0].name
-            output_name = sess.get_outputs()[0].name
-            pred_onx = sess.run([output_name], {input_name: numpy.array(input_list, numpy.float32)})
+            pred_onx = sess.run(None, {input_name: numpy.array(input_list, numpy.float32)})
             return pred_onx
 
         def export_as_onnx(model):
@@ -63,7 +64,7 @@ class TestSparkmRandomForestClassifierNan(SparkMlTestCase):
         input_list = [[randint(0, 20) for _ in range(32)]]
         pred_onx = infer_from_onnx(model_onnx, input_list)
         self.assertEqual(len(pred_onx), 2)
-        print(pred_onx)
+        # print(pred_onx)
 
 
 if __name__ == "__main__":
