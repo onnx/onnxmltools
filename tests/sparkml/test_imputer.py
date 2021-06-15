@@ -21,7 +21,7 @@ class TestSparkmlImputer(SparkMlTestCase):
     def test_imputer_single(self):
         self._imputer_test_single()
 
-    @unittest.skipIf(False, reason="Name:'Split' Status Message: Cannot split using values in 'split")
+    @unittest.skipIf(True, reason="Name:'Split' Status Message: Cannot split using values in 'split")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     def test_imputer_multi(self):

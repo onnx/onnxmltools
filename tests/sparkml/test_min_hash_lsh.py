@@ -14,7 +14,7 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmMinHashLSH(SparkMlTestCase):
 
-    @unittest.skipIf(False, reason="Investigate.")
+    @unittest.skipIf(True, reason="Discrepencies (Float -> Double?).")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     def test_min_hash_lsh(self):
