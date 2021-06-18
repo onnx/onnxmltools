@@ -96,7 +96,8 @@ def _parse_tree_structure(tree_id, class_id, learning_rate,
                 text = text[:100000] + "\n..."
             raise TypeError("threshold must be a number not '{}'"
                             "\n{}".format(tree_structure['threshold'], text))
-    attrs['nodes_values'].append(tree_structure['threshold'])
+    else:
+        attrs['nodes_values'].append(tree_structure['threshold'])
 
     # Assume left is the true branch and right is the false branch
     attrs['nodes_truenodeids'].append(left_id)
