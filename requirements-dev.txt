@@ -19,5 +19,5 @@ wheel
 xgboost
 catboost
 flake8
-torch==1.5.1+cpu
-hummingbird-ml==0.0.6
+torch
+hummingbird-ml
