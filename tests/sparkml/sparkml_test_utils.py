@@ -1,23 +1,24 @@
 # SPDX-License-Identifier: Apache-2.0
 
-
+import pickle
+import os
+import warnings
+import sys
+import numpy
+import onnxruntime
+from onnxruntime.capi.onnxruntime_pybind11_state import InvalidArgument, Fail
+import pyspark
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.ml.linalg import VectorUDT
 from pyspark.sql.types import ArrayType, FloatType, DoubleType
-import numpy
-import pickle
-import os
-import warnings
-from onnxmltools.utils.utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled, \
-    OnnxRuntimeAssertionError, compare_outputs, ExpectedAssertionError
+from onnxmltools.utils.utils_backend import (
+    compare_backend, extract_options, evaluate_condition, is_backend_enabled,
+    OnnxRuntimeAssertionError, compare_outputs, ExpectedAssertionError)
 from onnxmltools.utils.utils_backend_onnxruntime import _create_column
 
 
 def start_spark(options):
-    import os
-    import sys
-    import pyspark
     executable = sys.executable
     os.environ["SPARK_HOME"] = pyspark.__path__[0]
     os.environ["PYSPARK_PYTHON"] = executable
@@ -28,7 +29,7 @@ def start_spark(options):
         for k,v in options.items():
             builder.config(k, v)
     spark = builder.getOrCreate()
-
+    # spark.sparkContext.setLogLevel("ALL")
     return spark
 
 
@@ -36,26 +37,31 @@ def stop_spark(spark):
     spark.sparkContext.stop()
 
 
-def save_data_models(input, expected, model, onnx_model, basename="model", folder=None):
+def save_data_models(input, expected, model, onnx_model, basename="model", folder=None,
+                     save_spark_model=False, pickle_spark_model=False, pickle_data=False):
     if folder is None:
         folder = os.environ.get('ONNXTESTDUMP', 'tests_dump')
     if not os.path.exists(folder):
         os.makedirs(folder)
 
     paths = []
-    dest = os.path.join(folder, basename + ".expected.pkl")
-    paths.append(dest)
-    with open(dest, "wb") as f:
-        pickle.dump(expected, f)
 
-    dest = os.path.join(folder, basename + ".data.pkl")
-    paths.append(dest)
-    with open(dest, "wb") as f:
-        pickle.dump(input, f)
+    if pickle_spark_model:
+        dest = os.path.join(folder, basename + ".expected.pkl")
+        paths.append(dest)
+        with open(dest, "wb") as f:
+            pickle.dump(expected, f)
 
-    dest = os.path.join(folder, basename + ".model")
-    paths.append(dest)
-    model.write().overwrite().save(dest)
+    if pickle_data:
+        dest = os.path.join(folder, basename + ".data.pkl")
+        paths.append(dest)
+        with open(dest, "wb") as f:
+            pickle.dump(input, f)
+
+    if save_spark_model:
+        dest = os.path.join(folder, basename + ".model")
+        paths.append(dest)
+        model.write().overwrite().save(dest)
 
     dest = os.path.join(folder, basename + ".model.onnx")
     paths.append(dest)
@@ -65,42 +71,20 @@ def save_data_models(input, expected, model, onnx_model, basename="model", folde
 
 
 def run_onnx_model(output_names, input, onnx_model):
-    import onnxruntime
     sess = onnxruntime.InferenceSession(onnx_model)
     if isinstance(input, dict):
         inputs = input
-    elif isinstance(input, (list, numpy.ndarray)):
+    elif isinstance(input, list):
         inp = sess.get_inputs()
-        if len(inp) == len(input):
-            inputs = {i.name: v for i, v in zip(inp, input)}
-        elif len(inp) == 1:
+        inputs = {i.name: v for i, v in zip(inp, input)}
+    elif isinstance(input, numpy.ndarray):
+        inp = sess.get_inputs()
+        if len(inp) == 1:
             inputs = {inp[0].name: input}
-        elif isinstance(input, numpy.ndarray):
-            shape = sum(i.shape[1] if len(i.shape) == 2 else i.shape[0] for i in inp)
-            if shape == input.shape[1]:
-                inputs = {n.name: input[:, i] for i, n in enumerate(inp)}
-            else:
-                raise OnnxRuntimeAssertionError(
-                    "Wrong number of inputs onnx {0} != original shape {1}, onnx='{2}'".format(
-                        len(inp), input.shape, onnx_model))
-        elif isinstance(input, list):
-            try:
-                array_input = numpy.array(input)
-            except Exception as e:
-                raise OnnxRuntimeAssertionError(
-                    "Wrong number of inputs onnx {0} != original {1}, onnx='{2}'".format(
-                        len(inp), len(input), onnx_model))
-            shape = sum(i.shape[1] for i in inp)
-            if shape == array_input.shape[1]:
-                inputs = {n.name: _create_column([row[i] for row in input], n.type) for i, n in enumerate(inp)}
-            else:
-                raise OnnxRuntimeAssertionError(
-                    "Wrong number of inputs onnx {0} != original shape {1}, onnx='{2}'*".format(
-                        len(inp), array_input.shape, onnx_model))
         else:
             raise OnnxRuntimeAssertionError(
-                "Wrong number of inputs onnx {0} != original {1}, onnx='{2}'".format(
-                    len(inp), len(input), onnx_model))
+                "Wrong number of inputs onnx {0} != original shape {1}, onnx='{2}'".format(
+                    len(inp), input.shape, onnx_model))
     else:
         raise OnnxRuntimeAssertionError(
             "Dict or list is expected, not {0}".format(type(input)))
@@ -108,7 +92,23 @@ def run_onnx_model(output_names, input, onnx_model):
     for k in inputs:
         if isinstance(inputs[k], list):
             inputs[k] = numpy.array(inputs[k])
-    output = sess.run(output_names, inputs)
+    try:
+        output = sess.run(output_names, inputs)
+    except (InvalidArgument, Fail) as e:
+        rows = []
+        for inp in sess.get_inputs():
+            rows.append("input: {} - {} - {}".format(inp.name, inp.type, inp.shape))
+        for inp in sess.get_outputs():
+            rows.append("output: {} - {} - {}".format(inp.name, inp.type, inp.shape))
+        rows.append("REQUIRED: {}".format(output_names))
+        for k, v in sorted(inputs.items()):
+            if hasattr(v, 'shape'):
+                rows.append("{}={}-{}-{}".format(k, v.shape, v.dtype, v))
+            else:
+                rows.append("{}={}".format(k, v))
+        raise AssertionError(
+            "Unable to run onnxruntime\n{}".format("\n".join(rows))) from e
+        
     output_shapes = [_.shape for _ in sess.get_outputs()]
     return output, output_shapes
 
@@ -158,7 +158,8 @@ def compare_results(expected, output, decimal=5):
         if isinstance(msg, ExpectedAssertionError):
             raise msg
         if msg:
-            raise OnnxRuntimeAssertionError("Unexpected output\n{1}".format(msg))
+            raise OnnxRuntimeAssertionError(
+                "Unexpected output\n{}".format(msg))
         tested += 1
     else:
         from scipy.sparse.csr import csr_matrix

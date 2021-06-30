@@ -4,14 +4,12 @@ import sys
 import inspect
 import unittest
 from distutils.version import StrictVersion
-
 import onnx
 import pandas
 import numpy
 from pyspark.ml.linalg import Vectors, SparseVector, VectorUDT
 from pyspark.ml.regression import DecisionTreeRegressor
 from pyspark.ml import Pipeline
-
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
@@ -20,7 +18,11 @@ from pyspark.ml.feature import VectorIndexer
 
 
 class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+
+    @unittest.skipIf(sys.platform == 'win32',
+                     reason="UnsatisfiedLinkError")
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
     def test_decision_tree_regressor_pipeline(self):
         import os
@@ -41,7 +43,7 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         pipeline = Pipeline(stages=[featureIndexer, dt])
         model = pipeline.fit(trainingData)
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Regressor Pipeline', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         self.assertTrue(model_onnx is not None)
         # run the model
@@ -52,11 +54,14 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         ]
         paths = save_data_models(data_np, expected, model, model_onnx,
                                     basename="SparkmlDecisionTreeRegressorPipeline")
-        onnx_model_path = paths[3]
+        onnx_model_path = paths[-1]
         output, output_shapes = run_onnx_model(['prediction'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+    @unittest.skipIf(sys.platform == 'win32',
+                     reason="UnsatisfiedLinkError")
+    @unittest.skipIf(sys.version_info < (3, 8),
+                     reason="pickle fails on python 3.7")
     def test_decision_tree_regressor(self):
         features = [[0, 1], [1, 1], [2, 0]]
         features = numpy.array(features, dtype=numpy.float32)
@@ -67,7 +72,7 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         model = dt.fit(data)
         feature_count = data.select('features').first()[0].size
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Regressor', [
-            ('features', FloatTensorType([1, feature_count]))
+            ('features', FloatTensorType([None, feature_count]))
         ], spark_session=self.spark)
         self.assertTrue(model_onnx is not None)
         # run the model
@@ -78,9 +83,10 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         ]
         paths = save_data_models(data_np, expected, model, model_onnx,
                                     basename="SparkmlDecisionTreeRegressor")
-        onnx_model_path = paths[3]
+        onnx_model_path = paths[-1]
         output, output_shapes = run_onnx_model(['prediction'], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
+
 
 if __name__ == "__main__":
     unittest.main()

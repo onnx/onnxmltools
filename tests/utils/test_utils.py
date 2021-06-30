@@ -59,21 +59,14 @@ class TestUtils(unittest.TestCase):
 
 class TestWrapper(unittest.TestCase):
 
+    @unittest.skipIf(True, reason="Needs this PR: https://github.com/onnx/tensorflow-onnx/pull/1563")
     def test_keras_with_tf2onnx(self):
-        try:
-            import keras2onnx
-        except (ImportError, AssertionError):
-            warnings.warn("keras2onnx or one of its dependencies is missing.")
-            return
-        from keras2onnx.proto import keras
-        from keras2onnx.proto.tfcompat import is_tf2
-        if not is_tf2:  # tf2onnx is not available for tensorflow 2.0 yet.
-            model = keras.Sequential()
-            model.add(keras.layers.Dense(units=4, input_shape=(10,), activation='relu'))
-            model.compile(loss='binary_crossentropy', optimizer='Adam', metrics=['binary_accuracy'])
-            graph_def = keras2onnx.export_tf_frozen_graph(model)
-            onnx_model = onnxmltools.convert_tensorflow(graph_def, **keras2onnx.build_io_names_tf2onnx(model))
-            self.assertTrue(len(onnx_model.graph.node) > 0)
+        import tensorflow.keras as keras
+        model = keras.Sequential()
+        model.add(keras.layers.Dense(units=4, input_shape=(10,), activation='relu'))
+        model.compile(loss='binary_crossentropy', optimizer='Adam', metrics=['binary_accuracy'])
+        onnx_model = onnxmltools.convert_tensorflow(model)
+        self.assertTrue(len(onnx_model.graph.node) > 0)
 
 
 if __name__ == "__main__":

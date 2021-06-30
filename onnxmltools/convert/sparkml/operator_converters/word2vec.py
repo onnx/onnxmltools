@@ -3,7 +3,6 @@
 import pandas
 import numpy
 from onnx import onnx_pb as onnx_proto
-from ..utils import SparkMlConversionError
 from ...common._apply_operation import apply_add, apply_mul, apply_sum
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import StringTensorType, FloatTensorType
@@ -64,8 +63,6 @@ def calculate_word2vec_output_shapes(operator):
     check_input_and_output_types(operator, good_input_types=[StringTensorType])
 
     N = operator.inputs[0].type.shape[0]
-    if N != 1:
-        raise SparkMlConversionError('Word2Vec converter cannot handle batch size of more than 1')
     C = operator.raw_operator.getOrDefault('vectorSize')
     operator.outputs[0].type = FloatTensorType([N, C])
 

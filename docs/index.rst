@@ -32,7 +32,6 @@ Currently the following toolkits are supported:
 * `XGBoost <https://xgboost.readthedocs.io/en/latest/>`_
 
 *onnxmltools* leverages existing converting library,
-`keras-onnx <https://github.com/onnx/keras-onnx>`_,
 `sklearn-onnx <https://github.com/onnx/sklearn-onnx>`_,
 `tensorflow-onnx <https://github.com/onnx/tensorflow-onnx>`_
 and implements converters for the other libraries.

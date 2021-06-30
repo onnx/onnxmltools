@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from uuid import uuid4
-import lightgbm
-import warnings
-from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 import onnx
+import lightgbm
+from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 from ..common._topology import convert_topology
 from ..common.utils import hummingbird_installed
 from ._parse import parse_lightgbm, WrappedBooster
@@ -57,19 +56,12 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     onnx_ml_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
 
     if without_onnx_ml:
-        from hummingbird.ml import convert
-        from hummingbird.ml import constants
-
-        if target_opset == 13:
-            warnings.warn('Pytorch-onnx does not support opset 13 yet, use opset 12 instead.')
-            target_opset = 12
-
+        from hummingbird.ml import convert, constants
         extra_config = {}
-        extra_config[constants.ONNX_INITIAL_TYPES] = initial_types
+        # extra_config[constants.ONNX_INITIAL_TYPES] = initial_types
         extra_config[constants.ONNX_OUTPUT_MODEL_NAME] = name
         extra_config[constants.ONNX_TARGET_OPSET] = target_opset
         onnx_model = convert(onnx_ml_model, "onnx", extra_config=extra_config).model
-
         return onnx_model
 
     return onnx_ml_model

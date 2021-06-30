@@ -10,15 +10,27 @@ jobs:
 
 - job: 'Test'
   pool:
-    vmImage: 'Ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python36-141-RT050:
-        python.version: '3.6'
-        ONNX_PATH: onnx==1.4.1
-        ONNXRT_PATH: onnxruntime==0.5.0
+      Python39-190-RT180-xgb11:
+        python.version: '3.9'
+        ONNX_PATH: onnx==1.9.0
+        ONNXRT_PATH: onnxruntime==1.8.0
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        xgboost.version: ''
+        xgboost.version: '>=1.2'
+      Python38-181-RT170-xgb11:
+        python.version: '3.8'
+        ONNX_PATH: onnx==1.8.1
+        ONNXRT_PATH: onnxruntime==1.7.0
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        xgboost.version: '>=1.2'
+      Python37-180-RT160-xgb11:
+        python.version: '3.7'
+        ONNX_PATH: onnx==1.8.0
+        ONNXRT_PATH: onnxruntime==1.6.0
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        xgboost.version: '>=1.2'
       Python37-150-RT100:
         python.version: '3.7'
         ONNX_PATH: onnx==1.5.0
@@ -49,18 +61,6 @@ jobs:
         ONNXRT_PATH: onnxruntime==1.6.0
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
         xgboost.version: '>=1.0'
-      Python37-180-RT160-xgb11:
-        python.version: '3.7'
-        ONNX_PATH: onnx==1.8.0
-        ONNXRT_PATH: onnxruntime==1.6.0
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        xgboost.version: '>=1.2'
-      Python38-181-RT170-xgb11:
-        python.version: '3.7'
-        ONNX_PATH: onnx==1.8.1
-        ONNXRT_PATH: onnxruntime==1.7.0
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        xgboost.version: '>=1.2'
     maxParallel: 3
 
   steps:
@@ -81,11 +81,9 @@ jobs:
       conda install -c conda-forge cmake
       pip install $(COREML_PATH)
       pip install $(ONNX_PATH)
-      python -m pip install tensorflow-cpu==1.15.0
-      python -m pip install tf2onnx==1.5.6
-      python -m pip install git+https://github.com/microsoft/onnxconverter-common
-      python -m pip install git+https://github.com/onnx/keras-onnx
+      pip install hummingbird-ml --no-deps
       pip install -r requirements.txt
+      pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
       pip install -r requirements-dev.txt
       pip install xgboost$(xgboost.version)
       pip install $(ONNXRT_PATH)
@@ -101,9 +99,10 @@ jobs:
     displayName: 'local installation'
 
   - script: |
-      python -c "import onnxconverter_common"
-      python -c "import onnxruntime"
-      pytest tests --ignore=tests/sparkml --doctest-modules --junitxml=junit/test-results.xml
+      export PYTHONPATH=.
+      python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
+      python -c "import onnxruntime;print(onnxruntime.__version__)"
+      pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
 
   - task: PublishTestResults@2

@@ -2,10 +2,15 @@
 
 import unittest
 import sys
-from pyspark.ml import Pipeline
+import inspect
+import os
+import time
+import pathlib
+import numpy
+import pandas
+from pyspark.ml import Pipeline, PipelineModel
 from pyspark.ml.classification import LogisticRegression
-from pyspark.ml.feature import StringIndexer, OneHotEncoderEstimator, VectorAssembler
-
+from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.sparkml import buildInitialTypesSimple, buildInputDictSimple
 from onnxmltools.utils.utils_backend import OnnxRuntimeAssertionError, compare_outputs
@@ -20,17 +25,10 @@ class ProfileSparkmlPipeline(SparkMlTestCase):
 
 
 class ProfileSparkmlPipeline(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+
     def test_profile_sparkml_pipeline(self):
-        import inspect
-        import os
-        import numpy
-        import pandas
-        import time
-        import pathlib
         import mleap.pyspark
         from mleap.pyspark.spark_support import SimpleSparkSerializer
-        from pyspark.ml import PipelineModel
 
         # add additional jar files before creating SparkSession
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -53,7 +51,7 @@ class ProfileSparkmlPipeline(SparkMlTestCase):
 
                 tmp_col = "-".join([key, "tmp"])
                 si_xvars.append(StringIndexer(inputCol=key, outputCol=tmp_col, handleInvalid="skip"))
-                ohe_xvars.append(OneHotEncoderEstimator(inputCols=[tmp_col], outputCols=[feature_col], dropLast=False))
+                ohe_xvars.append(OneHotEncoder(inputCols=[tmp_col], outputCols=[feature_col], dropLast=False))
             else:
                 feature_cols.append(key)
         si_label = StringIndexer(inputCol=label, outputCol='label')
@@ -123,7 +121,6 @@ class ProfileSparkmlPipeline(SparkMlTestCase):
 
 
 def _compare_mleap_pyspark(mleap_prediction, spark_prediction):
-    import pandas
     spark_pandas = spark_prediction.toPandas()
     mleap_pandas = mleap_prediction.toPandas()
     spark_predicted_labels = spark_pandas.prediction.values
@@ -140,7 +137,6 @@ def _compare_mleap_pyspark(mleap_prediction, spark_prediction):
 
 def gen_plot(spark_times, mleap_times, runtime_times):
     import matplotlib.pyplot as pyplot
-
     pyplot.hist(spark_times, label='pyspark')
     pyplot.hist(mleap_times, label='MLeap')
     pyplot.hist(runtime_times, label='onnxruntime')
