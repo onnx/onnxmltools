@@ -14,7 +14,7 @@ from tests.sparkml import SparkMlTestCase
 
 
 class RPipeline(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info[0] == 2, reason="Sparkml not tested on python 2")
+
     def test_sparkml_r_pipeline(self):
         # add additional jar files before creating SparkSession
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
