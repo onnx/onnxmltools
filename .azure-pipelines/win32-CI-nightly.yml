@@ -45,6 +45,7 @@ jobs:
       pip install %COREML_PATH% %ONNX_PATH%
       pip install humming-bird-ml --no-deps
       pip install -r requirements.txt
+      python -m pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio===0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
       pip install -r requirements-dev.txt
       pip install %ONNXRT_PATH%
     displayName: 'Install dependencies'
