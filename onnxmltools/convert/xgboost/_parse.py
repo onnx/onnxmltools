@@ -59,10 +59,16 @@ def _get_attributes(booster):
             reg = re.compile(b'(multi:[a-z]{1,15})')
             objs = list(set(reg.findall(bstate)))
             if len(objs) != 1:
-                raise RuntimeError(
-                    "Unable to guess objective in {}.".format(objs))
-            kwargs['num_class'] = trees // ntrees
-            kwargs["objective"] = objs[0].decode('ascii')
+                if '"name":"binary:logistic"' in str(bstate):
+                    kwargs['num_class'] = 1
+                    kwargs["objective"] = "binary:logistic"
+                else:
+                    raise RuntimeError(
+                        "Unable to guess objective in %r (trees=%r, ntrees=%r)"
+                        "." % (objs, trees, ntrees))
+            else:
+                kwargs['num_class'] = trees // ntrees
+                kwargs["objective"] = objs[0].decode('ascii')
         else:
             kwargs['num_class'] = 1
             kwargs["objective"] = "binary:logistic"
