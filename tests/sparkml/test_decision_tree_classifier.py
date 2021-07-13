@@ -20,6 +20,8 @@ from pyspark.ml.feature import StringIndexer, VectorIndexer
 class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
 
     @unittest.skipIf(True, reason="Mismatched input dimensions.")
+    @unittest.skipIf(sys.platform == 'win32',
+                     reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
@@ -33,7 +35,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         #
         feature_count = 5
         self.spark.udf.register("truncateFeatures",
-                                lambda x: SparseVector(feature_count, range(0,feature_count), x.toArray()[125:130]),
+                                lambda x: SparseVector(feature_count, range(0, feature_count), x.toArray()[125:130]),
                                 VectorUDT())
         data = original_data.selectExpr("cast(label as string) as label", "truncateFeatures(features) as features")
         label_indexer = StringIndexer(inputCol="label", outputCol="indexedLabel", handleInvalid='error')
@@ -51,7 +53,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         # run the model
         predicted = model.transform(data.limit(1))
         data_np = {
-            'label': data.limit(1).toPandas().label.values,
+            'label': data.limit(1).toPandas().label.values.reshape((-1, 1)),
             'features': data.limit(1).toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         }
         expected = [
@@ -66,6 +68,8 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         compare_results(expected, output, decimal=5)
 
     @unittest.skipIf(True, reason="Mismatched input dimensions.")
+    @unittest.skipIf(sys.platform == 'win32',
+                     reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     def test_tree_one_class_classification(self):
@@ -76,9 +80,8 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         data = self.spark.createDataFrame(self.spark.sparkContext.parallelize(dd), schema=["label", "features"])
         dt = DecisionTreeClassifier(labelCol="label", featuresCol="features")
         model = dt.fit(data)
-        feature_count = 1
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree One Class', [
-            ('features', FloatTensorType([None, feature_count]))
+            ('features', FloatTensorType([None, 2]))
         ], spark_session=self.spark)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
@@ -104,9 +107,8 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         data = self.spark.createDataFrame(self.spark.sparkContext.parallelize(dd), schema=["label", "features"])
         dt = DecisionTreeClassifier(labelCol="label", featuresCol="features")
         model = dt.fit(data)
-        feature_count = 2
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Binary Class', [
-            ('features', FloatTensorType([None, feature_count]))
+            ('features', FloatTensorType([None, 2]))
         ], spark_session=self.spark)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
@@ -132,9 +134,8 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         data = self.spark.createDataFrame(self.spark.sparkContext.parallelize(dd), schema=["label", "features"])
         dt = DecisionTreeClassifier(labelCol="label", featuresCol="features")
         model = dt.fit(data)
-        feature_count = 2
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Multi Class', [
-            ('features', FloatTensorType([None, feature_count]))
+            ('features', FloatTensorType([None, 2]))
         ], spark_session=self.spark)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)

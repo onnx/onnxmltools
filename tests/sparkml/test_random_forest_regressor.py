@@ -20,7 +20,8 @@ from pyspark.ml.feature import VectorIndexer, StringIndexer
 
 class TestSparkmRandomForestRegressor(SparkMlTestCase):
 
-    @unittest.skipIf(True, reason="Investigate.")
+    @unittest.skipIf(sys.platform == 'win32',
+                     reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),
@@ -52,7 +53,7 @@ class TestSparkmRandomForestRegressor(SparkMlTestCase):
         # run the model
         predicted = model.transform(data.limit(1))
         data_np = {
-            'label': data.limit(1).toPandas().label.values,
+            'label': data.limit(1).toPandas().label.values.reshape((-1, 1)),
             'features': data.limit(1).toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         }
         expected = [

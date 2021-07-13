@@ -14,7 +14,7 @@ from tests.sparkml import SparkMlTestCase
 
 class TestSparkmMinHashLSH(SparkMlTestCase):
 
-    @unittest.skipIf(True, reason="Investigate.")
+    @unittest.skipIf(True, reason="Discrepencies (Float -> Double?).")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     def test_min_hash_lsh(self):
@@ -33,8 +33,8 @@ class TestSparkmMinHashLSH(SparkMlTestCase):
         self.assertTrue(model_onnx is not None)
 
         # run the model
-        predicted = model.transform(data.limit(1))
-        data_np = data.limit(1).toPandas().features.apply(
+        predicted = model.transform(data.limit(2))
+        data_np = data.limit(2).toPandas().features.apply(
             lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         expected = [
             predicted.toPandas().hashes.apply(
