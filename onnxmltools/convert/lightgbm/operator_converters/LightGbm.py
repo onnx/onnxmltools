@@ -234,7 +234,7 @@ def convert_lightgbm(scope, operator, container):
         n_classes = 1  # Regressor has only one output variable
         attrs['post_transform'] = 'NONE'
         attrs['n_targets'] = n_classes
-    elif gbm_text['objective'].startswith('poisson'):
+    elif gbm_text['objective'].startswith('poisson') or gbm_text['objective'].startswith('gamma'):
         n_classes = 1  # Regressor has only one output variable
         attrs['n_targets'] = n_classes
         # 'Exp' is not a supported post_transform value in the ONNX spec yet,
