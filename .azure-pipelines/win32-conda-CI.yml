@@ -87,9 +87,17 @@ jobs:
   - script: |
       call activate py$(python.version)
       python -m pip install %ONNXRT_PATH%
+    displayName: 'Install onnxruntime'
+
+  - script: |
+      call activate py$(python.version)
       python -m pip install scikit-learn$(sklearn.version)
+    displayName: 'Install scikit-learn'
+
+  - script: |
+      call activate py$(python.version)
       python -m pip show pytest
-    displayName: 'Install dependencies (3)'
+    displayName: 'show pytest'
 
   - script: |
       call activate py$(python.version)
