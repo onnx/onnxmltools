@@ -96,11 +96,6 @@ jobs:
 
   - script: |
       call activate py$(python.version)
-      python -m pip show pytest
-    displayName: 'show pytest'
-
-  - script: |
-      call activate py$(python.version)
       python -m flake8 ./onnxmltools
     displayName: 'run flake8 check'
 
