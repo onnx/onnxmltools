@@ -82,10 +82,14 @@ jobs:
   - script: |
       call activate py$(python.version)
       python -m pip install -r requirements-dev.txt
+    displayName: 'Install dependencies (2)'
+
+  - script: |
+      call activate py$(python.version)
       python -m pip install %ONNXRT_PATH%
       python -m pip install scikit-learn$(sklearn.version)
       python -m pip show pytest
-    displayName: 'Install dependencies (2)'
+    displayName: 'Install dependencies (3)'
 
   - script: |
       call activate py$(python.version)
