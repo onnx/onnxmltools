@@ -13,6 +13,13 @@ jobs:
     vmImage: 'windows-latest'
   strategy:
     matrix:
+      Python39-1100-RT181:
+        python.version: '3.9'
+        ONNX_PATH: '-i https://test.pypi.org/simple/ onnx==1.9.101'
+        ONNXRT_PATH: onnxruntime==1.8.1
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        sklearn.version: ''
+
       Python39-190-RT180:
         python.version: '3.9'
         ONNX_PATH: onnx==1.9.0
