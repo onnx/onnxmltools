@@ -27,9 +27,7 @@ class WrappedBooster:
         if (_model_dict['objective'].startswith('binary') or
                 _model_dict['objective'].startswith('multiclass')):
             self.operator_name = 'LgbmClassifier'
-        elif (_model_dict['objective'].startswith('regression') or
-                _model_dict['objective'].startswith('poisson') or
-                _model_dict['objective'].startswith('gamma')):
+        elif _model_dict['objective'].startswith(('regression', 'poisson', 'gamma')):
             self.operator_name = 'LgbmRegressor'
         else:
             # Other objectives are not supported.
