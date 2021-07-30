@@ -26,6 +26,7 @@ _DTYPE_MAP: Dict[str, TensorType] = {
 class ObjectiveTest(unittest.TestCase):
 
     _objectives: Tuple[str] = (
+        "regression",
         "poisson",
         "gamma",
     )
