@@ -4,6 +4,9 @@
 Tests CoreML GLMClassifier converter.
 """
 import unittest
+from distutils.version import StrictVersion
+import sys
+import onnx
 import numpy
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
@@ -31,6 +34,11 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         self.assertEqual(len(node.output), 1)
         self.assertTrue('classProbability' in node.output)
 
+    @unittest.skipIf(
+        sys.platform == "win32" and
+            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
+            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
+        reason="incompabilities scikit-learn, coremltools")
     def test_glm_classifier(self):
         iris = load_iris()
         X = iris.data[:, :2]

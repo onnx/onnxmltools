@@ -3,8 +3,11 @@
 """
 Tests CoreML Imputer converter.
 """
-import numpy as np
 import unittest
+from distutils.version import StrictVersion
+import sys
+import onnx
+import numpy as np
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
@@ -19,6 +22,11 @@ from onnxmltools.utils import dump_data_and_model
 
 class TestCoreMLImputerConverter(unittest.TestCase):
 
+    @unittest.skipIf(
+        sys.platform == "win32" and
+            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
+            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
+        reason="incompabilities scikit-learn, coremltools")
     def test_imputer(self):
         try:
             model = Imputer(missing_values='NaN', strategy='mean', axis=0)

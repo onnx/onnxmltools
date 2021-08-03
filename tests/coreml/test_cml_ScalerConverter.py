@@ -4,6 +4,9 @@
 Tests CoreML Scaler converter.
 """
 import unittest
+from distutils.version import StrictVersion
+import sys
+import onnx
 import numpy
 try:
     from sklearn.impute import SimpleImputer as Imputer
@@ -21,6 +24,11 @@ from onnxmltools.utils import dump_data_and_model
 
 class TestCoreMLScalerConverter(unittest.TestCase):
 
+    @unittest.skipIf(
+        sys.platform == "win32" and
+            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
+            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
+        reason="incompabilities scikit-learn, coremltools")
     def test_scaler(self):
         model = StandardScaler()
         data = numpy.array([[0, 0, 3], [1, 1, 0], [0, 2, 1], [1, 0, 2]], dtype=numpy.float32)

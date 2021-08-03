@@ -3,10 +3,13 @@
 """
 Main functions to convert machine learned model from *Core ML* model to *ONNX*.
 """
+import sys
 import os
 import unittest
 import warnings
+from distutils.version import StrictVersion
 import numpy
+import onnx
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
@@ -23,6 +26,11 @@ from onnxmltools.utils.tests_helper import dump_data_and_model
 
 class TestCoremlOneHotEncoderConverter(unittest.TestCase):
 
+    @unittest.skipIf(
+        sys.platform == "win32" and
+            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
+            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
+        reason="incompabilities scikit-learn, coremltools")
     def test_one_hot_encoder(self):
         script_dir = os.path.dirname(__file__)
         relative_path = "../data/onehot_simple.mlmodel"
