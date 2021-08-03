@@ -13,7 +13,7 @@ from lightgbm import LGBMRegressor
 
 _N_ROWS=10_000
 _N_COLS=10
-_N_DECIMALS=5
+_N_DECIMALS=4
 
 _X = pd.DataFrame(np.random.random(size=(_N_ROWS, _N_COLS)))
 _Y = pd.Series(np.random.random(size=_N_ROWS))
