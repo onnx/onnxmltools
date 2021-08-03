@@ -419,7 +419,8 @@ def modify_tree_for_rule_in_set(gbm, use_float=False):
     This function unfold theses nodes.
     """
     if 'tree_info' in gbm:
-        for tree in gbm['tree_info']:
+        for it, tree in enumerate(gbm['tree_info']):
+            print("modify_tree_for_rule_in_set: tree %d" % it)
             modify_tree_for_rule_in_set(tree, use_float=use_float)
         return
 
