@@ -17,6 +17,7 @@ try:
 except ImportError:
     from sklearn.preprocessing import Imputer
 import sklearn.preprocessing
+import coremltools
 from onnxmltools.utils import dump_data_and_model
 
 
