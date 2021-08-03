@@ -50,6 +50,19 @@ class ObjectiveTest(unittest.TestCase):
         input_name = input_names[0]
         return session.run(output_names, {input_name: X.values})[0][:, 0]
 
+    @staticmethod
+    def _assert_almost_equal(actual: np.array, desired: np.array, decimal: int=7, frac: float=1.0):
+        """
+        Assert that almost all rows in actual and desired are almost equal to each other.
+
+        Similar to np.testing.assert_almost_equal but allows to define a fraction of rows to be almost
+        equal instead of expecting all rows to be almost equal.
+        """
+        assert 0 <= frac <= 1, "frac must be in range(0, 1)."
+        success_abs = (abs(actual - desired) <= (10 ** -decimal)).sum()
+        success_rel = success_abs / len(actual)
+        assert success_rel >= frac, f"Only {success_abs} out of {len(actual)} rows are almost equal to {decimal} decimals."
+
 
     def test_objective(self):
         """
@@ -66,7 +79,7 @@ class ObjectiveTest(unittest.TestCase):
                 regressor_onnx: ModelProto = convert_lightgbm(regressor, initial_types=self._calc_initial_types(_X))
                 y_pred = regressor.predict(_X)
                 y_pred_onnx = self._predict_with_onnx(regressor_onnx, _X)
-                np.testing.assert_almost_equal(
+                self._assert_almost_equal(
                     y_pred,
                     y_pred_onnx,
                     decimal=_N_DECIMALS,
