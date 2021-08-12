@@ -2,7 +2,7 @@ import unittest
 from typing import Dict, List, Tuple
 
 import numpy as np
-import onnxmltools
+import onnxruntime
 import pandas as pd
 from onnx import ModelProto
 from onnxconverter_common.data_types import DoubleTensorType, TensorType
@@ -65,7 +65,7 @@ class ObjectiveTest(unittest.TestCase):
         success_rel = success_abs / len(actual)
         assert success_rel >= frac, f"Only {success_abs} out of {len(actual)} rows are almost equal to {decimal} decimals."
 
-    @unittest.skipIf(tuple(int(ver) for ver in onnxmltools.__version__.split(".")) < (1, 3), "not supported in this library version")
+    @unittest.skipIf(tuple(int(ver) for ver in onnxruntime.__version__.split(".")) < (1, 3), "not supported in this library version")
     def test_objective(self):
         """
         Test if a LGBMRegressor a with certain objective (e.g. 'poisson') can be converted to ONNX
