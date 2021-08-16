@@ -101,7 +101,10 @@ def _parse_tree_structure(tree_id, class_id, learning_rate,
     attrs['nodes_truenodeids'].append(left_id)
     attrs['nodes_falsenodeids'].append(right_id)
     if tree_structure['default_left']:
-        attrs['nodes_missing_value_tracks_true'].append(1)
+        if tree_structure["missing_type"] == 'None' and float(tree_structure['threshold']) < 0.0:
+            attrs['nodes_missing_value_tracks_true'].append(0)
+        else:
+            attrs['nodes_missing_value_tracks_true'].append(1)
     else:
         attrs['nodes_missing_value_tracks_true'].append(0)
     attrs['nodes_hitrates'].append(1.)
@@ -166,7 +169,10 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, node_pyid_pool,
         attrs['nodes_truenodeids'].append(left_id)
         attrs['nodes_falsenodeids'].append(right_id)
         if node['default_left']:
-            attrs['nodes_missing_value_tracks_true'].append(1)
+            if node['missing_type'] == 'None' and float(node['threshold']) < 0.0:
+                attrs['nodes_missing_value_tracks_true'].append(0)
+            else:
+                attrs['nodes_missing_value_tracks_true'].append(1)
         else:
             attrs['nodes_missing_value_tracks_true'].append(0)
         attrs['nodes_hitrates'].append(1.)
@@ -234,7 +240,7 @@ def convert_lightgbm(scope, operator, container):
         n_classes = 1  # Regressor has only one output variable
         attrs['post_transform'] = 'NONE'
         attrs['n_targets'] = n_classes
-    elif gbm_text['objective'].startswith('poisson'):
+    elif gbm_text['objective'].startswith(('poisson', 'gamma')):
         n_classes = 1  # Regressor has only one output variable
         attrs['n_targets'] = n_classes
         # 'Exp' is not a supported post_transform value in the ONNX spec yet,
