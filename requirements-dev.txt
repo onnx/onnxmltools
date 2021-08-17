@@ -1,7 +1,6 @@
 -f https://download.pytorch.org/whl/torch_stable.html
 catboost
 codecov
-coremltools
 cython
 dill
 flake8
