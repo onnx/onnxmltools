@@ -6,6 +6,7 @@ Tests CoreML DictVectorizer converter.
 from distutils.version import StrictVersion
 import sys
 import onnx
+import sklearn
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
@@ -32,7 +33,15 @@ class TestCoreMLDictVectorizerConverter(unittest.TestCase):
         model = DictVectorizer()
         data = [{'amy': 1., 'chin': 200.}, {'nice': 3., 'amy': 1.}]
         model.fit_transform(data)
-        model_coreml = coremltools.converters.sklearn.convert(model)
+        try:
+            model_coreml = coremltools.converters.sklearn.convert(model)
+        except NameError as e:
+            raise AssertionError(
+                "Unable to use coremltools, coremltools.__version__=%r, "
+                "onnx.__version__=%r, sklearn.__version__=%r, "
+                "sys.platform=%r." % (
+                    coremltools.__version__, onnx.__version__,
+                    sklearn.__version__, sys.platform))
         model_onnx = convert(model_coreml.get_spec())
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(data, model, model_onnx, basename="CmlDictVectorizer-OneOff-SkipDim1",
