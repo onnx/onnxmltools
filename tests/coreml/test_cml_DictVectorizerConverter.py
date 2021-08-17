@@ -3,8 +3,9 @@
 """
 Tests CoreML DictVectorizer converter.
 """
-from distutils.version import StrictVersion
 import sys
+from distutils.version import StrictVersion
+import unittest
 import onnx
 import sklearn
 try:
@@ -16,7 +17,6 @@ try:
 except ImportError:
     from sklearn.preprocessing import Imputer
 import coremltools
-import unittest
 from sklearn.feature_extraction import DictVectorizer
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
@@ -25,10 +25,8 @@ from onnxmltools.utils import dump_data_and_model
 class TestCoreMLDictVectorizerConverter(unittest.TestCase):
 
     @unittest.skipIf(
-        sys.platform == "win32" and
-            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
-            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
-        reason="incompabilities scikit-learn, coremltools")
+        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        reason="untested")
     def test_dict_vectorizer(self):
         model = DictVectorizer()
         data = [{'amy': 1., 'chin': 200.}, {'nice': 3., 'amy': 1.}]

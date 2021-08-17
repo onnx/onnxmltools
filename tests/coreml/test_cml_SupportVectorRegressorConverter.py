@@ -4,8 +4,6 @@
 Tests SupportVectorRegressor converter.
 """
 from distutils.version import StrictVersion
-import sys
-import onnx
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
@@ -26,10 +24,8 @@ from onnxmltools.utils import dump_data_and_model
 class TestCoreMLSupportVectorRegressorConverter(unittest.TestCase):
 
     @unittest.skipIf(
-        sys.platform == "win32" and
-            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
-            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
-        reason="incompabilities scikit-learn, coremltools")
+        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        reason="untested")
     def test_support_vector_regressor(self):
         X, y = make_regression(n_features=4, random_state=0)
 

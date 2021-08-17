@@ -4,8 +4,6 @@
 Tests CoreML SupportVectorClassifier converter.
 """
 from distutils.version import StrictVersion
-import sys
-import onnx
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
@@ -63,10 +61,8 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self.assertTrue('classProbability' in node.output)
 
     @unittest.skipIf(
-        sys.platform == "win32" and
-            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
-            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
-        reason="incompabilities scikit-learn, coremltools")
+        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        reason="untested")
     def test_support_vector_classifier_binary_no_prob(self):
         svm, X = self._fit_binary_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
@@ -80,10 +76,8 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
                             allow_failure=True)
 
     @unittest.skipIf(
-        sys.platform == "win32" and
-            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
-            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
-        reason="incompabilities scikit-learn, coremltools")
+        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        reason="untested")
     def test_support_vector_classifier_binary_with_prob(self):
         svm, X = self._fit_binary_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
@@ -93,10 +87,8 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self._check_model_outputs(svm_onnx, ['classLabel', 'classProbability'])
 
     @unittest.skipIf(
-        sys.platform == "win32" and
-            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
-            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
-        reason="incompabilities scikit-learn, coremltools")
+        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        reason="untested")
     def test_support_vector_classifier_multiclass_no_prob(self):
         svm, X = self._fit_multi_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
@@ -107,10 +99,8 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self._check_model_outputs(svm_onnx, ['classLabel'])
 
     @unittest.skipIf(
-        sys.platform == "win32" and
-            StrictVersion(coremltools.__version__) <= StrictVersion("3.1") and
-            StrictVersion(onnx.__version__) >= StrictVersion("1.9.0"),
-        reason="incompabilities scikit-learn, coremltools")
+        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        reason="untested")
     def test_support_vector_classifier_multiclass_with_prob(self):
         svm, X = self._fit_multi_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
