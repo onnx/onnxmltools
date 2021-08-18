@@ -21,28 +21,49 @@ class WrappedBooster:
 
     def __init__(self, booster):
         self.booster_ = booster
-        _model_dict = self.booster_.dump_model()
-        self.classes_ = self._generate_classes(_model_dict)
-        self.n_features_ = len(_model_dict['feature_names'])
-        if (_model_dict['objective'].startswith('binary') or
-                _model_dict['objective'].startswith('multiclass')):
+        self.n_features_ = self.booster_.feature_name()
+        self.objective_ = self.get_objective()
+        if self.objective_.startswith('binary'):
             self.operator_name = 'LgbmClassifier'
-        elif _model_dict['objective'].startswith(('regression', 'poisson', 'gamma')):
+            self.classes_ = self._generate_classes(booster)
+        elif self.objective_.startswith('multiclass'):
+            self.operator_name = 'LgbmClassifier'
+            self.classes_ = self._generate_classes(booster)
+        elif self.objective_.startswith('regression'):
             self.operator_name = 'LgbmRegressor'
         else:
-            # Other objectives are not supported.
-            raise ValueError("Unsupported LightGbm objective: '{}'.".format(_model_dict['objective']))
-        if _model_dict.get('average_output', False):
+            raise NotImplementedError(
+                'Unsupported LightGbm objective: %r.' % self.objective_)
+        average_output = self.booster_.attr('average_output')
+        if average_output:
             self.boosting_type = 'rf'
         else:
             # Other than random forest, other boosting types do not affect later conversion.
             # Here `gbdt` is chosen for no reason.
             self.boosting_type = 'gbdt'
 
-    def _generate_classes(self, model_dict):
-        if model_dict['num_class'] == 1:
+    @staticmethod
+    def _generate_classes(booster):
+        if isinstance(booster, dict):
+            num_class = booster['num_class']
+        else:
+            num_class = booster.attr('num_class')
+        if num_class is None:
+            dp = booster.dump_model(num_iteration=1)
+            num_class = dp['num_class']
+        if num_class == 1:
             return numpy.asarray([0, 1])
-        return numpy.arange(model_dict['num_class'])
+        return numpy.arange(num_class)
+
+    def get_objective(self):
+        "Returns the objective."
+        if hasattr(self, 'objective_') and self.objective_ is not None:
+            return self.objective_
+        objective = self.booster_.attr('objective')
+        if objective is not None:
+            return objective
+        dp = self.booster_.dump_model(num_iteration=1)
+        return dp['objective']
 
 
 def _get_lightgbm_operator_name(model):
