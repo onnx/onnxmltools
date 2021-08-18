@@ -15,7 +15,7 @@ from ....proto import onnx_proto
 
 def has_tqdm():
     try:
-        from tqdm import tqdm
+        from tqdm import tqdm  # noqa
         return True
     except ImportError:
         return False
