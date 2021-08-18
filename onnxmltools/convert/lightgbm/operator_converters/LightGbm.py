@@ -254,7 +254,7 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
 
     .. note::
         This function is inspired from
-        the :epkg:`lightgbm` (`dump_model
+        the *lightgbm* (`dump_model
         <https://lightgbm.readthedocs.io/en/latest/pythonapi/
         lightgbm.Booster.html#lightgbm.Booster.dump_model>`_.
         It creates intermediate structure to speed up the conversion
@@ -314,7 +314,7 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
             self.n_trees = n_trees
             self.verbose = verbose
             self.stored = 0
-            if verbose >= 2 and n_trees is not None:
+            if verbose >= 2 and n_trees is not None and has_tqdm():
                 from tqdm import tqdm
                 self.loop = tqdm(total=n_trees)
                 self.loop.set_description("dump_booster")
@@ -577,7 +577,7 @@ def modify_tree_for_rule_in_set(gbm, use_float=False, verbose=0, count=0,  # pyl
     :param gbm: a tree coming from lightgbm dump
     :param use_float: use float otherwise int first
         then float if it does not work
-    :param verbose: verbosity, use :epkg:`tqdm` to show progress
+    :param verbose: verbosity, use *tqdm* to show progress
     :param count: number of nodes already changed (origin) before this call
     :param info: addition information to speed up this search
     :return: number of changed nodes (include *count*)
@@ -588,7 +588,7 @@ def modify_tree_for_rule_in_set(gbm, use_float=False, verbose=0, count=0,  # pyl
         else:
             dec_nodes = None
         if verbose >= 2 and has_tqdm():
-            import tqdm
+            from tqdm import tqdm
             loop = tqdm(gbm['tree_info'])
             for i, tree in enumerate(loop):
                 loop.set_description("rules tree %d c=%d" % (i, count))
