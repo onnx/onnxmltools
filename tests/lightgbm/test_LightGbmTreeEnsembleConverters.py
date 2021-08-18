@@ -6,6 +6,7 @@ from distutils.version import StrictVersion
 import lightgbm
 import numpy
 from numpy.testing import assert_almost_equal
+from onnx.defs import onnx_opset_version
 from lightgbm import LGBMClassifier, LGBMRegressor
 import onnxruntime
 from onnxmltools.convert.common.utils import hummingbird_installed
@@ -16,7 +17,7 @@ from onnxmltools.utils import dump_binary_classification, dump_multiple_classifi
 from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
 
-TARGET_OPSET = 13
+TARGET_OPSET = min(13, onnx_opset_version())
 
 
 class TestLightGbmTreeEnsembleModels(unittest.TestCase):
