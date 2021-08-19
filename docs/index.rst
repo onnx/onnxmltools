@@ -4,23 +4,14 @@
 onnxmltools: Convert your model into ONNX
 =========================================
 
-.. list-table:
-    :header-rows: 1
-    :widths: 5 5
-    * - Linux
-      - Windows
-    * - .. image:: https://travis-ci.org/onnx/onnxmltools.svg?branch=master
-            :target: https://travis-ci.org/onnx/onnxmltools
-      - .. image:: https://ci.appveyor.com/api/projects/status/d1xav3amubypje4n?svg=true
-            :target: https://ci.appveyor.com/project/xadupre/onnxmltools
-
 ONNXMLTools enables you to convert models from different machine learning
 toolkits into `ONNX <https://onnx.ai>`_.
 Currently the following toolkits are supported:
 
 * `Apple Core ML <https://developer.apple.com/documentation/coreml>`_,
   (`onnx-coreml <https://github.com/onnx/onnx-coreml>`_ does the reverse
-  conversion from *onnx* to *Apple Core ML*),
+  conversion from *onnx* to *Apple Core ML*) (up to version 3.1)
+* `catboost <https://catboost.ai/>`_
 * `h2o <http://docs.h2o.ai/h2o/latest-stable/h2o-py/docs/intro.html>`_
   (a subset only)
 * `Keras <https://keras.io/>`_

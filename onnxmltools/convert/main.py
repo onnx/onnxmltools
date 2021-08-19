@@ -1,12 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import warnings
+from distutils.version import StrictVersion
 import onnx
 from .common import utils
-import warnings
 
 
 def convert_coreml(model, name=None, initial_types=None, doc_string='', target_opset=None,
-                   targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+                   targeted_onnx=None, custom_conversion_functions=None, custom_shape_calculators=None):
+    if targeted_onnx is not None:
+        warnings.warn("targeted_onnx is deprecated. Use target_opset.", DeprecationWarning)
     if not utils.coreml_installed():
         raise RuntimeError('coremltools is not installed. Please install coremltools to use this feature.')
 
@@ -15,22 +18,93 @@ def convert_coreml(model, name=None, initial_types=None, doc_string='', target_o
                    custom_conversion_functions, custom_shape_calculators)
 
 
-def convert_keras(model, name=None, initial_types=None, doc_string='',
-                  target_opset=None, targeted_onnx=onnx.__version__,
-                  channel_first_inputs=None, custom_conversion_functions=None, custom_shape_calculators=None,
+def convert_keras(model, name=None,
+                  initial_types=None,
+                  doc_string='',
+                  target_opset=None,
+                  targeted_onnx=None,
+                  channel_first_inputs=None,
+                  custom_conversion_functions=None,
+                  custom_shape_calculators=None,
                   default_batch_size=1):
-    if not utils.keras2onnx_installed():
-        raise RuntimeError('keras2onnx is not installed. Please install it to use this feature.')
+    """
+    .. versionchanged:: 1.9.0
+        The conversion is now using *tf2onnx*.
+    """
+    if targeted_onnx is not None:
+        warnings.warn("targeted_onnx is deprecated and unused. Use target_opset.", DeprecationWarning)
+    import tensorflow as tf
+    if StrictVersion(tf.__version__) < StrictVersion('2.0'):
+        # Former converter for tensorflow<2.0.
+        from keras2onnx import convert_keras as convert
+        return convert(model, name, doc_string, target_opset, channel_first_inputs)
+    else:
+        # For tensorflow>=2.0, new converter based on tf2onnx.
+        import tf2onnx
 
-    if custom_conversion_functions:
-        warnings.warn('custom_conversion_functions is not supported any more. Please set it to None.')
+        if not utils.tf2onnx_installed():
+            raise RuntimeError('tf2onnx is not installed. Please install it to use this feature.')
 
-    from keras2onnx import convert_keras as convert
-    return convert(model, name, doc_string, target_opset, channel_first_inputs)
+        if custom_conversion_functions is not None:
+            warnings.warn('custom_conversion_functions is not supported any more. Please set it to None.')
+        if custom_shape_calculators is not None:
+            warnings.warn('custom_shape_calculators is not supported any more. Please set it to None.')
+        if default_batch_size != 1:
+            warnings.warn('default_batch_size is not supported any more. Please set it to 1.')
+        if default_batch_size != 1:
+            warnings.warn('default_batch_size is not supported any more. Please set it to 1.')
+
+        if initial_types is not None:
+            from onnxconverter_common import (
+                FloatTensorType, DoubleTensorType,
+                Int64TensorType, Int32TensorType,
+                StringTensorType, BooleanTensorType)
+            spec = []
+            for name, kind in initial_types:
+                if isinstance(kind, FloatTensorType):
+                    dtype = tf.float32
+                elif isinstance(kind, Int64TensorType):
+                    dtype = tf.int64
+                elif isinstance(kind, Int32TensorType):
+                    dtype = tf.int32
+                elif isinstance(kind, DoubleTensorType):
+                    dtype = tf.float64
+                elif isinstance(kind, StringTensorType):
+                    dtype = tf.string
+                elif isinstance(kind, BooleanTensorType):
+                    dtype = tf.bool
+                else:
+                    raise TypeError(
+                        "Unexpected type %r, cannot infer tensorflow type." % type(kind))
+                spec.append(tf.TensorSpec(tuple(kind.shape), dtype, name=name))
+            input_signature = tuple(spec)
+        else:
+            input_signature = None
+
+        model_proto, external_tensor_storage = tf2onnx.convert.from_keras(
+            model,
+            input_signature=input_signature,
+            opset=target_opset,
+            custom_ops=None,
+            custom_op_handlers=None,
+            custom_rewriter=None,
+            inputs_as_nchw=channel_first_inputs,
+            extra_opset=None,
+            shape_override=None,
+            target=None,
+            large_model=False,
+            output_path=None)
+        if external_tensor_storage is not None:
+            warnings.warn("The current API does not expose the second result 'external_tensor_storage'. "
+                          "Use tf2onnx directly to get it.")
+        model_proto.doc_string = doc_string
+        return model_proto
 
 
 def convert_libsvm(model, name=None, initial_types=None, doc_string='', target_opset=None,
-                   targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+                   targeted_onnx=None, custom_conversion_functions=None, custom_shape_calculators=None):
+    if targeted_onnx is not None:
+        warnings.warn("targeted_onnx is deprecated. Use target_opset.", DeprecationWarning)
     if not utils.libsvm_installed():
         raise RuntimeError('libsvm is not installed. Please install libsvm to use this feature.')
 
@@ -51,8 +125,10 @@ def convert_catboost(model, name=None, initial_types=None, doc_string='', target
 
 
 def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target_opset=None,
-                     targeted_onnx=onnx.__version__, custom_conversion_functions=None,
+                     targeted_onnx=None, custom_conversion_functions=None,
                      custom_shape_calculators=None, without_onnx_ml=False, zipmap=True):
+    if targeted_onnx is not None:
+        warnings.warn("targeted_onnx is deprecated. Use target_opset.", DeprecationWarning)
     if not utils.lightgbm_installed():
         raise RuntimeError('lightgbm is not installed. Please install lightgbm to use this feature.')
 
@@ -63,7 +139,9 @@ def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target
 
 
 def convert_sklearn(model, name=None, initial_types=None, doc_string='', target_opset=None,
-                    targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+                    targeted_onnx=None, custom_conversion_functions=None, custom_shape_calculators=None):
+    if targeted_onnx is not None:
+        warnings.warn("targeted_onnx is deprecated. Use target_opset.", DeprecationWarning)
     if not utils.sklearn_installed():
         raise RuntimeError('scikit-learn is not installed. Please install scikit-learn to use this feature.')
 
@@ -76,8 +154,10 @@ def convert_sklearn(model, name=None, initial_types=None, doc_string='', target_
 
 
 def convert_sparkml(model, name=None, initial_types=None, doc_string='', target_opset=None,
-                    targeted_onnx=onnx.__version__, custom_conversion_functions=None,
+                    targeted_onnx=None, custom_conversion_functions=None,
                     custom_shape_calculators=None, spark_session=None):
+    if targeted_onnx is not None:
+        warnings.warn("targeted_onnx is deprecated. Use target_opset.", DeprecationWarning)
     if not utils.sparkml_installed():
         raise RuntimeError('Spark is not installed. Please install Spark to use this feature.')
 
@@ -87,6 +167,8 @@ def convert_sparkml(model, name=None, initial_types=None, doc_string='', target_
 
 
 def convert_xgboost(*args, **kwargs):
+    if kwargs.get('targeted_onnx', None) is not None:
+        warnings.warn("targeted_onnx is deprecated. Use target_opset.", DeprecationWarning)
     if not utils.xgboost_installed():
         raise RuntimeError('xgboost is not installed. Please install xgboost to use this feature.')
 
@@ -95,6 +177,8 @@ def convert_xgboost(*args, **kwargs):
 
 
 def convert_h2o(*args, **kwargs):
+    if kwargs.get('targeted_onnx', None) is not None:
+        warnings.warn("targeted_onnx is deprecated. Use target_opset.", DeprecationWarning)
     if not utils.h2o_installed():
         raise RuntimeError('h2o is not installed. Please install h2o to use this feature.')
 
