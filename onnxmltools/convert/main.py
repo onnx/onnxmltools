@@ -83,7 +83,7 @@ def convert_keras(model, name=None,
 
         model_proto, external_tensor_storage = tf2onnx.convert.from_keras(
             model,
-            input_signature=None,
+            input_signature=input_signature,
             opset=target_opset,
             custom_ops=None,
             custom_op_handlers=None,
