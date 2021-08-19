@@ -48,6 +48,8 @@ model.compile(loss='categorical_crossentropy',
               optimizer='sgd',
               metrics=['accuracy'])
 model.fit(X_train, y_train, epochs=5, batch_size=16)
+print("keras prediction")
+print(model.predict(X_test.astype(numpy.float32)))
 
 ###########################
 # Convert a model into ONNX
@@ -62,9 +64,10 @@ onx = convert_keras(model, initial_types=initial_type)
 
 sess = rt.InferenceSession(onx.SerializeToString())
 input_name = sess.get_inputs()[0].name
-label_name = sess.get_outputs()[0].name
+output_name = sess.get_outputs()[0].name
 pred_onx = sess.run(
-    [label_name], {input_name: X_test.astype(numpy.float32)})[0]
+    [output_name], {input_name: X_test.astype(numpy.float32)})[0]
+print("ONNX prediction")
 print(pred_onx)
 
 ##################################

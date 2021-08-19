@@ -14,13 +14,19 @@ in *onnxmltools*.
 Converters
 ==========
 
+.. autofunction:: onnxmltools.convert.h2o.catboost
+
 .. autofunction:: onnxmltools.convert.coreml.convert
+
+.. autofunction:: onnxmltools.convert.h2o.convert
 
 .. autofunction:: onnxmltools.convert.keras.convert
 
 .. autofunction:: onnxmltools.convert.lightgbm.convert
 
 .. autofunction:: onnxmltools.convert.sklearn.convert
+
+.. autofunction:: onnxmltools.convert.xgboost.convert
 
 Utils
 =====
