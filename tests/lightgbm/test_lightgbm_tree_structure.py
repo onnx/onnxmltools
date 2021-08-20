@@ -3,8 +3,7 @@
 import unittest
 import copy
 from onnxmltools.convert.lightgbm.operator_converters.LightGbm import (
-    modify_tree_for_rule_in_set
-)
+    modify_tree_for_rule_in_set)
 
 
 def count_nodes(tree, done=None):

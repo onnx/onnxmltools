@@ -3,8 +3,9 @@
 """
 Tests CoreML Imputer converter.
 """
-import numpy as np
 import unittest
+from distutils.version import StrictVersion
+import numpy as np
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
@@ -14,11 +15,15 @@ try:
 except ImportError:
     from sklearn.preprocessing import Imputer
 import sklearn.preprocessing
+import coremltools
 from onnxmltools.utils import dump_data_and_model
 
 
 class TestCoreMLImputerConverter(unittest.TestCase):
 
+    @unittest.skipIf(
+        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        reason="untested")
     def test_imputer(self):
         try:
             model = Imputer(missing_values='NaN', strategy='mean', axis=0)

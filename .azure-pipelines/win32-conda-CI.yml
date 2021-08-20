@@ -13,6 +13,20 @@ jobs:
     vmImage: 'windows-latest'
   strategy:
     matrix:
+      Python39-1101-RT181:
+        python.version: '3.9'
+        ONNX_PATH: 'onnx==1.10.1'  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
+        ONNXRT_PATH: onnxruntime==1.8.1
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        sklearn.version: ''
+
+      Python39-190-RT181:
+        python.version: '3.9'
+        ONNX_PATH: 'onnx==1.9.0'
+        ONNXRT_PATH: onnxruntime==1.8.1
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        sklearn.version: ''
+
       Python39-190-RT180:
         python.version: '3.9'
         ONNX_PATH: onnx==1.9.0
@@ -66,15 +80,32 @@ jobs:
       call activate py$(python.version)
       python -m pip install --upgrade pip numpy
       echo Test numpy installation... && python -c "import numpy"
-      python -m pip install %COREML_PATH% %ONNX_PATH%
+      python -m pip install scikit-learn
+      python -m pip install %ONNX_PATH%
       python -m pip install humming-bird-ml --no-deps
       python -m pip install -r requirements.txt
       python -m pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio===0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
+    displayName: 'Install dependencies (1)'
+
+  - script: |
+      call activate py$(python.version)
       python -m pip install -r requirements-dev.txt
+    displayName: 'Install dependencies (2)'
+
+  - script: |
+      call activate py$(python.version)
+      python -m pip install %COREML_PATH%
+    displayName: 'Install coremltools'
+
+  - script: |
+      call activate py$(python.version)
       python -m pip install %ONNXRT_PATH%
+    displayName: 'Install onnxruntime'
+
+  - script: |
+      call activate py$(python.version)
       python -m pip install scikit-learn$(sklearn.version)
-      python -m pip show pytest
-    displayName: 'Install dependencies'
+    displayName: 'Install scikit-learn'
 
   - script: |
       call activate py$(python.version)
