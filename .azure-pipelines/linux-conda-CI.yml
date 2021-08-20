@@ -97,6 +97,7 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
+      pip install flake8
       python -m flake8 ./onnxmltools
     displayName: 'run flake8 check'
 

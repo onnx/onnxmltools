@@ -6,6 +6,7 @@ from distutils.version import StrictVersion
 import lightgbm
 import numpy
 from numpy.testing import assert_almost_equal
+from onnx.defs import onnx_opset_version
 from lightgbm import LGBMClassifier, LGBMRegressor
 import onnxruntime
 from onnxmltools.convert.common.utils import hummingbird_installed
@@ -15,6 +16,8 @@ from onnxmltools.utils import dump_data_and_model
 from onnxmltools.utils import dump_binary_classification, dump_multiple_classification
 from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
+
+TARGET_OPSET = min(13, onnx_opset_version())
 
 
 class TestLightGbmTreeEnsembleModels(unittest.TestCase):
@@ -31,7 +34,8 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1)
         model.fit(X, y)
         onx = convert_model(
-            model, 'dummy', input_types=[('X', FloatTensorType([None, X.shape[1]]))])
+            model, 'dummy', input_types=[('X', FloatTensorType([None, X.shape[1]]))],
+            target_opset=TARGET_OPSET)
         assert "zipmap" in str(onx).lower()
 
     def test_lightgbm_classifier_nozipmap(self):
@@ -42,7 +46,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         model.fit(X, y)
         onx = convert_model(
             model, 'dummy', input_types=[('X', FloatTensorType([None, X.shape[1]]))],
-            zipmap=False)
+            zipmap=False, target_opset=TARGET_OPSET)
         assert "zipmap" not in str(onx).lower()
         onxs = onx[0].SerializeToString()
         try:
@@ -99,7 +103,8 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))])
+                                           [('input', FloatTensorType([None, 2]))],
+                                           target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -114,7 +119,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
                                            [('input', FloatTensorType([None, 2]))],
-                                           zipmap=False)
+                                           zipmap=False, target_opset=TARGET_OPSET)
         assert "zipmap" not in str(model_onnx).lower()
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
@@ -129,7 +134,8 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))])
+                                           [('input', FloatTensorType([None, 2]))],
+                                           target_opset=TARGET_OPSET)
         assert "zipmap" in str(model_onnx).lower()
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
@@ -246,13 +252,13 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
     def _test_lgbm(self, X, model, extra_config={}):
         # Create ONNX-ML model
         onnx_ml_model = convert_model(
-            model, 'lgbm-onnxml', [("input", FloatTensorType([X.shape[0], X.shape[1]]))]
-        )[0]
+            model, 'lgbm-onnxml', [("input", FloatTensorType([X.shape[0], X.shape[1]]))],
+            target_opset=TARGET_OPSET)[0]
 
         # Create ONNX model
         onnx_model = convert_model(
-            model, 'lgbm-onnx', [("input", FloatTensorType([X.shape[0], X.shape[1]]))], without_onnx_ml=True
-        )[0]
+            model, 'lgbm-onnx', [("input", FloatTensorType([X.shape[0], X.shape[1]]))], without_onnx_ml=True,
+            target_opset=TARGET_OPSET)[0]
 
         try:
             from onnxruntime import InferenceSession
