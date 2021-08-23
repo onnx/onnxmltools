@@ -1,2 +1,3 @@
 include onnxmltools/utils/*.js
 include onnxmltools/utils/*.css
+include requirements.txt
