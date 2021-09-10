@@ -9,7 +9,7 @@ from onnx.defs import onnx_opset_version
 from lightgbm import LGBMRegressor
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-from onnxruntime import InferenceSession
+from onnxruntime import InferenceSession, __version__ as ort_version
 from onnxmltools.convert.common.utils import hummingbird_installed
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.convert import convert_lightgbm
@@ -23,6 +23,8 @@ TARGET_OPSET = min(13, onnx_opset_version())
 
 class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
 
+    @unittest.skipIf(StrictVersion(ort_version) < StrictVersion('1.7.0'),
+                     reason="Sum<double> not implemented.")
     def test_lgbm_regressor10(self):
         data = load_iris()
         X, y = data.data, data.target
@@ -49,6 +51,8 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         assert_almost_equal(expected, got1.ravel(), decimal=5)
         assert_almost_equal(expected, got2.ravel(), decimal=5)
 
+    @unittest.skipIf(StrictVersion(ort_version) < StrictVersion('1.7.0'),
+                     reason="Sum<double> not implemented.")
     def test_lgbm_regressor(self):
         data = load_iris()
         X, y = data.data, data.target
@@ -78,6 +82,8 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         d2 = numpy.abs(expected.ravel() - got2.ravel()).mean()
         self.assertGreater(d1, d2)
 
+    @unittest.skipIf(StrictVersion(ort_version) < StrictVersion('1.7.0'),
+                     reason="Sum<double> not implemented.")
     def test_lightgbm_booster_regressor(self):
         data = load_iris()
         X, y = data.data, data.target
