@@ -6,6 +6,7 @@ from collections import deque, Counter
 import ctypes
 import json
 import numpy as np
+from onnx import TensorProto
 from ...common._apply_operation import (
     apply_div, apply_reshape, apply_sub, apply_cast, apply_identity, apply_clip)
 from ...common._registration import register_converter
@@ -364,6 +365,64 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
     return ret, info
 
 
+def _split_tree_ensemble_atts(attrs, split):
+    """
+    Splits the attributes of a TreeEnsembleRegressor into
+    multiple trees in order to do the summation in double instead of floats.
+    """
+    trees_id = list(sorted(set(attrs['nodes_treeids'])))
+    results = []
+    index = 0
+    while index < len(trees_id):
+        index2 = min(index + split, len(trees_id))
+        subset = set(trees_id[index: index2])
+
+        indices_node = []
+        indices_target = []
+        for j, v in enumerate(attrs['nodes_treeids']):
+            if v in subset:
+                indices_node.append(j)
+        for j, v in enumerate(attrs['target_treeids']):
+            if v in subset:
+                indices_target.append(j)
+
+        if (len(indices_node) >= len(attrs['nodes_treeids']) or
+                len(indices_target) >= len(attrs['target_treeids'])):
+            raise RuntimeError(  # pragma: no cover
+                "Initial attributes are not consistant."
+                "\nindex=%r index2=%r subset=%r"
+                "\nnodes_treeids=%r\ntarget_treeids=%r"
+                "\nindices_node=%r\nindices_target=%r" % (
+                    index, index2, subset,
+                    attrs['nodes_treeids'], attrs['target_treeids'],
+                    indices_node, indices_target))
+
+        ats = {}
+        for name, att in attrs.items():
+            if name == 'nodes_treeids':
+                new_att = [att[i] for i in indices_node]
+                new_att = [i - att[0] for i in new_att]
+            elif name == 'target_treeids':
+                new_att = [att[i] for i in indices_target]
+                new_att = [i - att[0] for i in new_att]
+            elif name.startswith("nodes_"):
+                new_att = [att[i] for i in indices_node]
+                assert len(new_att) == len(indices_node)
+            elif name.startswith("target_"):
+                new_att = [att[i] for i in indices_target]
+                assert len(new_att) == len(indices_target)
+            elif name == 'name':
+                new_att = "%s%d" % (att, len(results))
+            else:
+                new_att = att
+            ats[name] = new_att
+
+        results.append(ats)
+        index = index2
+
+    return results
+
+
 def convert_lightgbm(scope, operator, container):
     """
     Converters for *lightgbm*.
@@ -541,9 +600,32 @@ def convert_lightgbm(scope, operator, container):
             # and TreeEnsembleClassifier have different ONNX attributes
             attrs['target' + k[5:]] = copy.deepcopy(attrs[k])
             del attrs[k]
-        container.add_node(
-            'TreeEnsembleRegressor', operator.input_full_names,
-            output_name, op_domain='ai.onnx.ml', **attrs)
+
+        split = operator.split
+        if split in (None, -1):
+            container.add_node(
+                'TreeEnsembleRegressor', operator.input_full_names,
+                output_name, op_domain='ai.onnx.ml', **attrs)
+        else:
+            tree_attrs = _split_tree_ensemble_atts(attrs, split)
+            tree_nodes = []
+            for i, ats in enumerate(tree_attrs):
+                tree_name = scope.get_unique_variable_name('tree%d' % i)
+                container.add_node(
+                    'TreeEnsembleRegressor', operator.input_full_names,
+                    tree_name, op_domain='ai.onnx.ml', **ats)
+                cast_name = scope.get_unique_variable_name('dtree%d' % i)
+                container.add_node(
+                    'Cast', tree_name, cast_name, to=TensorProto.DOUBLE,  # pylint: disable=E1101
+                    name=scope.get_unique_operator_name("dtree%d" % i))
+                tree_nodes.append(cast_name)
+            cast_name = scope.get_unique_variable_name('ftrees')
+            container.add_node(
+                'Sum', tree_nodes, cast_name,
+                name=scope.get_unique_operator_name("sumtree%d" % len(tree_nodes)))
+            container.add_node(
+                'Cast', cast_name, output_name, to=TensorProto.FLOAT,  # pylint: disable=E1101
+                name=scope.get_unique_operator_name("dtree%d" % i))
         if gbm_model.boosting_type == 'rf':
             denominator_name = scope.get_unique_variable_name('denominator')
 

@@ -126,7 +126,8 @@ def convert_catboost(model, name=None, initial_types=None, doc_string='', target
 
 def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target_opset=None,
                      targeted_onnx=None, custom_conversion_functions=None,
-                     custom_shape_calculators=None, without_onnx_ml=False, zipmap=True):
+                     custom_shape_calculators=None, without_onnx_ml=False, zipmap=True,
+                     split=None):
     if targeted_onnx is not None:
         warnings.warn("targeted_onnx is deprecated. Use target_opset.", DeprecationWarning)
     if not utils.lightgbm_installed():
@@ -135,7 +136,7 @@ def convert_lightgbm(model, name=None, initial_types=None, doc_string='', target
     from .lightgbm.convert import convert
     return convert(model, name, initial_types, doc_string, target_opset, targeted_onnx,
                    custom_conversion_functions, custom_shape_calculators, without_onnx_ml,
-                   zipmap=zipmap)
+                   zipmap=zipmap, split=split)
 
 
 def convert_sklearn(model, name=None, initial_types=None, doc_string='', target_opset=None,

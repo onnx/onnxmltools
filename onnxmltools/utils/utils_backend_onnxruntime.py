@@ -161,7 +161,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
             smodel = "\nJSON ONNX\n" + str(model)
         else:
             smodel = ""
-        raise OnnxRuntimeAssertionError("Model '{0}' has discrepencies.\n{1}: {2}{3}".format(onx, type(e), e, smodel))
+        raise OnnxRuntimeAssertionError("Model '{0}' has discrepancies.\n{1}: {2}{3}".format(onx, type(e), e, smodel))
 
     return output0
 
