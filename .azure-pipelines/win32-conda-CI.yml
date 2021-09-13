@@ -106,6 +106,7 @@ jobs:
 
   - script: |
       call activate py$(python.version)
+      python -m pip install flatbuffers pyspark
       python -m pip install %ONNXRT_PATH%
     displayName: 'Install onnxruntime'
 
