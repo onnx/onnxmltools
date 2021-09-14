@@ -98,7 +98,7 @@ jobs:
       pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
       pip install -r requirements-dev.txt
       pip install xgboost$(xgboost.version)
-      pip install flatbuffers pyspark
+      pip install flatbuffers pyspark pandas
       pip install $(ONNXRT_PATH)
       pip install pytest
     displayName: 'Install dependencies'
