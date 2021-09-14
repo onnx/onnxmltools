@@ -106,7 +106,7 @@ jobs:
 
   - script: |
       call activate py$(python.version)
-      python -m pip install flatbuffers pyspark pandas
+      python -m pip install flatbuffers pyspark pandas catboost lightgbm
       python -m pip install %ONNXRT_PATH%
     displayName: 'Install onnxruntime'
 
