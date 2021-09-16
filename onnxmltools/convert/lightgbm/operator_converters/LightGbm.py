@@ -601,7 +601,7 @@ def convert_lightgbm(scope, operator, container):
             attrs['target' + k[5:]] = copy.deepcopy(attrs[k])
             del attrs[k]
 
-        split = operator.split
+        split = getattr(operator, 'split', None)
         if split in (None, -1):
             container.add_node(
                 'TreeEnsembleRegressor', operator.input_full_names,
