@@ -112,8 +112,52 @@ jobs:
       export PYTHONPATH=.
       python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
       python -c "import onnxruntime;print(onnxruntime.__version__)"
-      pytest tests --durations=0
-    displayName: 'pytest - onnxmltools'
+    displayName: 'version'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/baseline --durations=0
+    displayName: 'pytest - baseline'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/catboost --durations=0
+    displayName: 'pytest - catboost'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/coreml --durations=0
+    displayName: 'pytest - coreml'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/h2o --durations=0
+    displayName: 'pytest - h2o'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/lightgbm --durations=0
+    displayName: 'pytest - lightgbm'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/sparkml --durations=0
+    displayName: 'pytest - sparkml'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/svmlib --durations=0
+    displayName: 'pytest - svmlib'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/utils --durations=0
+    displayName: 'pytest - utils'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/xgboost --durations=0
+    displayName: 'pytest - xgboost'
 
   - task: PublishTestResults@2
     inputs:

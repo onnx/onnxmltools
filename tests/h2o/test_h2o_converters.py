@@ -146,6 +146,7 @@ class TestH2OModels(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         h2o.cluster().shutdown()
+        h2o.remove_all()
 
     def test_h2o_unsupported_algo(self):
         gbm = H2ORandomForestEstimator(ntrees=7, max_depth=5)

@@ -116,8 +116,61 @@ jobs:
       export PYTHONPATH=.
       python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
       python -c "import onnxruntime;print(onnxruntime.__version__)"
-      python -m pytest tests --durations=0
-    displayName: 'pytest - onnxmltools'
+    displayName: 'version'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/baseline --durations=0
+    displayName: 'pytest baseline'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/catboost --durations=0
+    displayName: 'pytest catboost'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/coreml --durations=0
+    displayName: 'pytest coreml'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/h2o --durations=0
+    displayName: 'pytest h2o'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/lightgbm --durations=0
+    displayName: 'pytest lightgbm'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/sparkml --durations=0
+    displayName: 'pytest sparkml'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/svmlib --durations=0
+    displayName: 'pytest svmlib'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/utils --durations=0
+    displayName: 'pytest utils'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/xgboost --durations=0
+    displayName: 'pytest xgboost'
 
   - task: PublishTestResults@2
     inputs:
