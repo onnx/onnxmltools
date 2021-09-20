@@ -160,7 +160,11 @@ def build_io_name_map():
         "pyspark.ml.feature.VectorAssembler": (
             lambda model: model.getOrDefault("inputCols"),
             lambda model: [model.getOrDefault("outputCol")]
-        )
+        ),
+        "pyspark.ml.classification.MultilayerPerceptronClassificationModel": (
+            lambda model: [model.getOrDefault("featuresCol")],
+            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")]
+        ),
     }
     return map
 
