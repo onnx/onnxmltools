@@ -84,7 +84,6 @@ jobs:
       conda config --set always_yes yes --set changeps1 no
       conda install -c conda-forge protobuf numpy cmake cython scikit-learn
       pip install -r requirements.txt
-      # pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
     displayName: 'Install dependencies'
 
   - script: |
@@ -113,7 +112,7 @@ jobs:
       export PYTHONPATH=.
       python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
       python -c "import onnxruntime;print(onnxruntime.__version__)"
-      pytest tests --doctest-modules --junitxml=junit/test-results.xml
+      pytest tests --durations=0 --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest - onnxmltools'
 
   - task: PublishTestResults@2
