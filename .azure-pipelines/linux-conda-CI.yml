@@ -159,6 +159,11 @@ jobs:
       pytest tests/h2o --durations=0
     displayName: 'pytest - h2o'
 
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/hummingbirdml --durations=0
+    displayName: 'pytest - hummingbirdml'
+
   - task: PublishTestResults@2
     inputs:
       testResultsFiles: '**/test-results.xml'

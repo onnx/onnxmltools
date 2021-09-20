@@ -30,7 +30,7 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         X, y = data.data, data.target
         X = X.astype(numpy.float32)
         X_train, X_test, y_train, _ = train_test_split(X, y, random_state=0)
-        reg = LGBMRegressor(max_depth=2, n_estimators=4, seed=0)
+        reg = LGBMRegressor(max_depth=2, n_estimators=4, seed=0, num_thread=1)
         reg.fit(X_train, y_train)
         expected = reg.predict(X_test)
 
@@ -58,7 +58,7 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         X, y = data.data, data.target
         X = X.astype(numpy.float32)
         X_train, X_test, y_train, _ = train_test_split(X, y, random_state=0)
-        reg = LGBMRegressor(max_depth=2, n_estimators=100, seed=0)
+        reg = LGBMRegressor(max_depth=2, n_estimators=100, seed=0, num_thread=1)
         reg.fit(X_train, y_train)
         expected = reg.predict(X_test)
 
@@ -90,7 +90,7 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         X_train, X_test, y_train, _ = train_test_split(X, y, random_state=0)
         data = lightgbm.Dataset(X_train, label=y_train)
         model = lightgbm.train({'boosting_type': 'gbdt', 'objective': 'regression',
-                                'n_estimators': 100, 'max_depth': 2},
+                                'n_estimators': 100, 'max_depth': 2, 'num_thread': 1},
                                data)
         expected = model.predict(X_test)
         onx = convert_lightgbm(model, '', [('X', FloatTensorType([None, 4]))])
