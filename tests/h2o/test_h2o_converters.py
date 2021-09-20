@@ -14,6 +14,7 @@ from sklearn.preprocessing import OneHotEncoder
 import h2o
 from h2o import H2OFrame
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
+from h2o.exceptions import H2OConnectionError
 from h2o.estimators.random_forest import H2ORandomForestEstimator
 from onnxmltools.convert import convert_h2o
 from onnxmltools.utils import dump_data_and_model
@@ -146,7 +147,11 @@ class TestH2OModels(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         h2o.cluster().shutdown()
-        h2o.remove_all()
+        try:
+            h2o.remove_all()
+        except H2OConnectionError as e:
+            print(e)
+            sys.exit(1)
 
     def test_h2o_unsupported_algo(self):
         gbm = H2ORandomForestEstimator(ntrees=7, max_depth=5)
