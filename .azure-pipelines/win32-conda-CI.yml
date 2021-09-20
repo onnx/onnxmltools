@@ -116,7 +116,7 @@ jobs:
       export PYTHONPATH=.
       python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
       python -c "import onnxruntime;print(onnxruntime.__version__)"
-      python -m pytest tests --durations=0 --doctest-modules --junitxml=junit/test-results.xml
+      python -m pytest tests --durations=0
     displayName: 'pytest - onnxmltools'
 
   - task: PublishTestResults@2
