@@ -82,11 +82,9 @@ jobs:
   - script: |
       python -m pip install --upgrade pip
       conda config --set always_yes yes --set changeps1 no
-      conda install -c conda-forge protobuf
-      conda install -c conda-forge numpy
-      conda install -c conda-forge cmake
+      conda install -c conda-forge protobuf numpy cmake
       pip install -r requirements.txt
-      pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
+      # pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
     displayName: 'Install dependencies'
 
   - script: |
@@ -99,7 +97,6 @@ jobs:
       pip install xgboost$(xgboost.version)
       pip install $(COREML_PATH)
       pip install $(ONNX_PATH)
-      pip install hummingbird-ml --no-deps
       pip install $(ONNXRT_PATH)
     displayName: 'Install xgboost, onnxruntime'
 

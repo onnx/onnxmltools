@@ -21,7 +21,5 @@ pytest-cov
 pytest-spark
 scikit-learn
 scipy
-tensorflow
-torch
 wheel
 xgboost
