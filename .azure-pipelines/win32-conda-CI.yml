@@ -139,12 +139,6 @@ jobs:
   - script: |
       call activate py$(python.version)
       export PYTHONPATH=.
-      python -m pytest tests/h2o --durations=0
-    displayName: 'pytest h2o'
-
-  - script: |
-      call activate py$(python.version)
-      export PYTHONPATH=.
       python -m pytest tests/lightgbm --durations=0
     displayName: 'pytest lightgbm'
 
@@ -171,6 +165,12 @@ jobs:
       export PYTHONPATH=.
       python -m pytest tests/xgboost --durations=0
     displayName: 'pytest xgboost'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      python -m pytest tests/h2o --durations=0
+    displayName: 'pytest h2o'
 
   - task: PublishTestResults@2
     inputs:

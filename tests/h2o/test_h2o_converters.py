@@ -151,7 +151,7 @@ class TestH2OModels(unittest.TestCase):
             h2o.remove_all()
         except H2OConnectionError as e:
             print(e)
-            sys.exit(1)
+            sys.exit(0)
 
     def test_h2o_unsupported_algo(self):
         gbm = H2ORandomForestEstimator(ntrees=7, max_depth=5)

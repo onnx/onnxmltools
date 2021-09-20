@@ -131,11 +131,6 @@ jobs:
 
   - script: |
       export PYTHONPATH=.
-      pytest tests/h2o --durations=0
-    displayName: 'pytest - h2o'
-
-  - script: |
-      export PYTHONPATH=.
       pytest tests/lightgbm --durations=0
     displayName: 'pytest - lightgbm'
 
@@ -158,6 +153,11 @@ jobs:
       export PYTHONPATH=.
       pytest tests/xgboost --durations=0
     displayName: 'pytest - xgboost'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/h2o --durations=0
+    displayName: 'pytest - h2o'
 
   - task: PublishTestResults@2
     inputs:
