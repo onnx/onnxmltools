@@ -83,7 +83,7 @@ jobs:
       python -m pip install scikit-learn
       python -m pip install %ONNX_PATH%
       python -m pip install -r requirements.txt
-      # python -m pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio===0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
+      echo python -m pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio===0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
     displayName: 'Install dependencies (1)'
 
   - script: |
