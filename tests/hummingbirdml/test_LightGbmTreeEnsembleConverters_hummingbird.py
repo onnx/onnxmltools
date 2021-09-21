@@ -44,7 +44,8 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
                                            [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
-                                           target_opset=TARGET_OPSET)
+                                           target_opset=TARGET_OPSET,
+                                           zipmap=False)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -62,10 +63,14 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                            [('input', FloatTensorType([None, 2]))], without_onnx_ml=False,
                                            target_opset=TARGET_OPSET)
         assert "zipmap" in str(model_onnx).lower()
-        model_onnx, prefix = convert_model(model, 'tree-based classifier',
+        with self.assertRaises(NotImplementedError):
+            convert_model(model, 'tree-based classifier',
                                            [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
                                            target_opset=TARGET_OPSET)
-        assert "zipmap" in str(model_onnx).lower()
+                                           
+        model_onnx, prefix = convert_model(model, 'tree-based classifier',
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
+                                           target_opset=TARGET_OPSET, zipmap=False)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -81,7 +86,7 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
                                            [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
-                                           target_opset=TARGET_OPSET)
+                                           target_opset=TARGET_OPSET, zipmap=False)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -99,9 +104,9 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
         model = lightgbm.train({'boosting_type': 'gbdt', 'objective': 'regression',
                                 'n_estimators': 3, 'min_child_samples': 1, 'max_depth': 1},
                                data)
-        model_onnx, prefix = convert_model(model, 'tree-based binary classifier',
+        model_onnx, prefix = convert_model(model, 'tree-based binary regressor',
                                            [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
-                                           target_opset=TARGET_OPSET)
+                                           target_opset=TARGET_OPSET, zipmap=False)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.0.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)

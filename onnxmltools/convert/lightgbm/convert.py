@@ -67,6 +67,9 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     onnx_ml_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
 
     if without_onnx_ml:
+        if zipmap:
+            raise NotImplementedError(
+                "Conversion with zipmap operator is not implemented with hummingbird-ml.")
         from hummingbird.ml import convert, constants
         extra_config = {}
         # extra_config[constants.ONNX_INITIAL_TYPES] = initial_types

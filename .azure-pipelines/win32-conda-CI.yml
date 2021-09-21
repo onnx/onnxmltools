@@ -80,7 +80,7 @@ jobs:
   - script: |
       call activate py$(python.version)
       python -m pip install -r requirements-dev.txt
-    displayName: 'Install dependencies (2)'
+    displayName: 'Install dependencies-dev'
 
   - script: |
       call activate py$(python.version)
@@ -156,15 +156,8 @@ jobs:
 
   - script: |
       call activate py$(python.version)
-      export PYTHONPATH=.
-      pip install h2o
-      python -m pytest tests/h2o --durations=0
-    displayName: 'pytest h2o'
-
-  - script: |
-      call activate py$(python.version)
-      pip install torch==1.9.0
-      python -m pip install hummingbird-ml
+      python -m pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio===0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install hummingbird-ml --no-deps
     displayName: 'Install hummingbird-ml'
 
   - script: |
@@ -172,6 +165,13 @@ jobs:
       export PYTHONPATH=.
       python -m pytest tests/hummingbirdml --durations=0
     displayName: 'pytest hummingbirdml'
+
+  - script: |
+      call activate py$(python.version)
+      export PYTHONPATH=.
+      pip install h2o
+      python -m pytest tests/h2o --durations=0
+    displayName: 'pytest h2o'
 
   - task: PublishTestResults@2
     inputs:

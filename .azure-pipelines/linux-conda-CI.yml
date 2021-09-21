@@ -78,8 +78,7 @@ jobs:
 
   - script: |
       python -m pip install --upgrade pip
-      pip install $(ONNX_PATH)
-      pip install $(ONNXRT_PATH)
+      pip install $(ONNX_PATH) $(ONNXRT_PATH) cython
       pip install -r requirements.txt
     displayName: 'Install dependencies'
 
@@ -90,6 +89,8 @@ jobs:
   - script: |
       python -m pip install --upgrade pip
       pip install xgboost$(xgboost.version)
+      pip install $(ONNX_PATH)
+      pip install $(ONNXRT_PATH)
       pip install $(COREML_PATH)
     displayName: 'Install xgboost, onnxruntime'
 
@@ -155,8 +156,8 @@ jobs:
     displayName: 'pytest - h2o'
 
   - script: |
-      pip install torch==1.9.0
-      pip install hummingbird-ml
+      pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
+      pip install hummingbird-ml --no-deps
     displayName: 'Install hummingbird-ml'
 
   - script: |

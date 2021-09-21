@@ -8,7 +8,7 @@ import json
 import numpy as np
 from onnx import TensorProto
 from ...common._apply_operation import (
-    apply_div, apply_reshape, apply_sub, apply_cast, apply_identity, apply_clip)
+    apply_div, apply_reshape, apply_sub, apply_cast, apply_identity)
 from ...common._registration import register_converter
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
 from ....proto import onnx_proto
@@ -804,12 +804,15 @@ def convert_lgbm_zipmap(scope, operator, container):
                            operator.outputs[1].full_name,
                            op_domain='ai.onnx.ml', **zipmap_attrs)
     else:
-        # This should be apply_identity but optimization fails in
-        # onnxconverter-common when trying to remove identity nodes.
-        apply_clip(scope, operator.inputs[1].full_name,
-                   operator.outputs[1].full_name, container,
-                   min=np.array([0], dtype=np.float32),
-                   max=np.array([1], dtype=np.float32))
+        # onnxconverter-common when trying to remove identity nodes
+        # if node identity is used.
+        one = scope.get_unique_variable_name('one')
+
+        container.add_initializer(
+            one, onnx_proto.TensorProto.FLOAT, [], [1])
+        container.add_node(
+            'Mul', [operator.inputs[1].full_name, one],
+            operator.outputs[1].full_name)
 
 
 register_converter('LgbmClassifier', convert_lightgbm)
