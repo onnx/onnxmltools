@@ -22,6 +22,16 @@ TARGET_OPSET = min(13, onnx_opset_version())
 
 class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        print('BEGIN.')
+        import torch
+        print(torch.device("cuda:0" if torch.cuda.is_available() else "cpu"))
+
+    @classmethod
+    def tearDownClass(cls):
+        print("END.")
+
     # Tests with ONNX operators only
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
     def test_lightgbm_booster_classifier(self):
@@ -48,6 +58,10 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
         model = lightgbm.train({'boosting_type': 'gbdt', 'objective': 'binary',
                                 'n_estimators': 3, 'min_child_samples': 1, 'num_thread': 1},
                                data)
+        model_onnx, prefix = convert_model(model, 'tree-based classifier',
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=False,
+                                           target_opset=TARGET_OPSET)
+        assert "zipmap" in str(model_onnx).lower()
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
                                            [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
                                            target_opset=TARGET_OPSET)

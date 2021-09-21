@@ -9,7 +9,7 @@ trigger:
 jobs:
 
 - job: 'Test'
-  timeoutInMinutes: 30
+  timeoutInMinutes: 25
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -71,24 +71,19 @@ jobs:
     maxParallel: 3
 
   steps:
-  - script: sudo install -d -m 0777 /home/vsts/.conda/envs
-    displayName: Fix Conda permissions
-
-  - task: CondaEnvironment@1
+  - task: UsePythonVersion@0
     inputs:
-      createCustomEnvironment: true
-      environmentName: 'py$(python.version)'
-      packageSpecs: 'python=$(python.version)'
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
 
   - script: |
       python -m pip install --upgrade pip
-      conda config --set always_yes yes --set changeps1 no
-      conda install -c conda-forge protobuf numpy cmake cython scikit-learn
+      pip install $(ONNX_PATH)
+      pip install $(ONNXRT_PATH)
       pip install -r requirements.txt
     displayName: 'Install dependencies'
 
   - script: |
-      python -m pip install --upgrade pip
       pip install -r requirements-dev.txt
     displayName: 'Install dependencies-dev'
 
@@ -96,8 +91,6 @@ jobs:
       python -m pip install --upgrade pip
       pip install xgboost$(xgboost.version)
       pip install $(COREML_PATH)
-      pip install $(ONNX_PATH)
-      pip install $(ONNXRT_PATH)
     displayName: 'Install xgboost, onnxruntime'
 
   - script: |
@@ -157,11 +150,11 @@ jobs:
 
   - script: |
       export PYTHONPATH=.
+      pip install h2o
       pytest tests/h2o --durations=0
     displayName: 'pytest - h2o'
 
   - script: |
-      python -m pip install --upgrade pip
       pip install torch==1.9.0
       pip install hummingbird-ml
     displayName: 'Install hummingbird-ml'
