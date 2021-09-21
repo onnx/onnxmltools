@@ -33,7 +33,8 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1, 'num_thread': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True)
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
+                                           target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -48,7 +49,8 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1, 'num_thread': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True)
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
+                                           target_opset=TARGET_OPSET)
         assert "zipmap" in str(model_onnx).lower()
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
@@ -64,7 +66,8 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1, 'num_class': 3, 'num_thread': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True)
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
+                                           target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -83,7 +86,8 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1, 'max_depth': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based binary classifier',
-                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True)
+                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
+                                           target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.0.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -99,7 +103,6 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
         onnx_model = convert_model(
             model, 'lgbm-onnx', [("input", FloatTensorType([None, X.shape[1]]))], without_onnx_ml=True,
             target_opset=TARGET_OPSET)[0]
-        return
 
         # Get the predictions for the ONNX-ML model
         session = InferenceSession(onnx_ml_model.SerializeToString())
@@ -143,10 +146,10 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
 
     # Regression test with 3 estimators.
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
-    def test_lightgbm_regressor(self):
-        X = [[0, 1], [1, 1], [2, 0]]
+    def _test_lightgbm_regressor(self):
+        X = [[0, 1], [1, 1], [2, 0], [4, 0], [2, 3]]
         X = numpy.array(X, dtype=numpy.float32)
-        y = numpy.array([100, -10, 50], dtype=numpy.float32)
+        y = numpy.array([100, -10, 50, 10, 10], dtype=numpy.float32)
         model = LGBMRegressor(n_estimators=3, min_child_samples=1, num_thread=1)
         model.fit(X, y)
         self._test_regressor(X, model)
@@ -179,7 +182,8 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
         y = [0, 1, 1.1]
         data = lightgbm.Dataset(X, label=y)
         model = lightgbm.train(
-            {"boosting_type": "gbdt", "objective": "regression", "n_estimators": 3, "min_child_samples": 1, "max_depth": 1, 'num_thread': 1},
+            {"boosting_type": "gbdt", "objective": "regression", "n_estimators": 3, 
+             "min_child_samples": 1, "max_depth": 1, 'num_thread': 1},
             data,
         )
         self._test_regressor(X, model)

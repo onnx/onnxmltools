@@ -5,7 +5,6 @@ dill
 flake8
 flatbuffers
 h2o
-hummingbird-ml
 libsvm
 lightgbm
 mleap

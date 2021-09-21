@@ -9,6 +9,7 @@ trigger:
 jobs:
 
 - job: 'Test'
+  timeoutInMinutes: 30
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -158,6 +159,12 @@ jobs:
       export PYTHONPATH=.
       pytest tests/h2o --durations=0
     displayName: 'pytest - h2o'
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install torch==1.9.0
+      pip install hummingbird-ml
+    displayName: 'Install hummingbird-ml'
 
   - script: |
       export PYTHONPATH=.
