@@ -81,17 +81,20 @@ def _get_lightgbm_operator_name(model):
     return lightgbm_operator_name_map[model_type]
 
 
-def _parse_lightgbm_simple_model(scope, model, inputs):
+def _parse_lightgbm_simple_model(scope, model, inputs, split=None):
     '''
     This function handles all non-pipeline models.
 
     :param scope: Scope object
     :param model: A lightgbm object
     :param inputs: A list of variables
+    :param split: split TreeEnsembleRegressor into multiple node to reduce
+        discrepancies
     :return: A list of output variables which will be passed to next stage
     '''
     operator_name = _get_lightgbm_operator_name(model)
     this_operator = scope.declare_local_operator(operator_name, model)
+    this_operator.split = split
     this_operator.inputs = inputs
 
     if operator_name == 'LgbmClassifier':
@@ -151,7 +154,7 @@ def _parse_sklearn_classifier(scope, model, inputs, zipmap=True):
     return this_operator.outputs
 
 
-def _parse_lightgbm(scope, model, inputs, zipmap=True):
+def _parse_lightgbm(scope, model, inputs, zipmap=True, split=None):
     '''
     This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
     model's type.
@@ -159,6 +162,8 @@ def _parse_lightgbm(scope, model, inputs, zipmap=True):
     :param model: A lightgbm object
     :param inputs: A list of variables
     :param zipmap: add operator ZipMap after operator TreeEnsembleClassifier
+    :param split: split TreeEnsembleRegressor into multiple node to reduce
+        discrepancies
     :return: The output variables produced by the input model
     '''
     if isinstance(model, LGBMClassifier):
@@ -166,12 +171,12 @@ def _parse_lightgbm(scope, model, inputs, zipmap=True):
     if (isinstance(model, WrappedBooster) and
             model.operator_name == 'LgbmClassifier'):
         return _parse_sklearn_classifier(scope, model, inputs, zipmap=zipmap)
-    return _parse_lightgbm_simple_model(scope, model, inputs)
+    return _parse_lightgbm_simple_model(scope, model, inputs, split=split)
 
 
 def parse_lightgbm(model, initial_types=None, target_opset=None,
                    custom_conversion_functions=None, custom_shape_calculators=None,
-                   zipmap=True):
+                   zipmap=True, split=None):
     raw_model_container = LightGbmModelContainer(model)
     topology = Topology(raw_model_container, default_batch_size='None',
                         initial_types=initial_types, target_opset=target_opset,
@@ -186,7 +191,7 @@ def parse_lightgbm(model, initial_types=None, target_opset=None,
     for variable in inputs:
         raw_model_container.add_input(variable)
 
-    outputs = _parse_lightgbm(scope, model, inputs, zipmap=zipmap)
+    outputs = _parse_lightgbm(scope, model, inputs, zipmap=zipmap, split=split)
 
     for variable in outputs:
         raw_model_container.add_output(variable)

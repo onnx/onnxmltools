@@ -76,7 +76,7 @@ class ObjectiveTest(unittest.TestCase):
         """
         for objective in self._objectives:
             with self.subTest(X=_X, objective=objective):
-                regressor = LGBMRegressor(objective=objective)
+                regressor = LGBMRegressor(objective=objective, num_thread=1)
                 regressor.fit(_X, _Y)
                 regressor_onnx: ModelProto = convert_lightgbm(regressor, initial_types=self._calc_initial_types(_X))
                 y_pred = regressor.predict(_X)
@@ -87,3 +87,7 @@ class ObjectiveTest(unittest.TestCase):
                     decimal=_N_DECIMALS,
                     frac=_FRAC,
                 )
+
+
+if __name__ == "__main__":
+    unittest.main()

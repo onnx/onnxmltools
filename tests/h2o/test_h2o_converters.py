@@ -14,6 +14,7 @@ from sklearn.preprocessing import OneHotEncoder
 import h2o
 from h2o import H2OFrame
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
+from h2o.exceptions import H2OConnectionError
 from h2o.estimators.random_forest import H2ORandomForestEstimator
 from onnxmltools.convert import convert_h2o
 from onnxmltools.utils import dump_data_and_model

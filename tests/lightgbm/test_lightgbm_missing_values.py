@@ -54,7 +54,7 @@ class TestMissingValues(unittest.TestCase):
             min_data_in_leaf=1,
             n_estimators=1,
             learning_rate=1,
-        )
+            num_thread=1)
         regressor.fit(_X_train, _y)
         regressor_onnx: ModelProto = convert_lightgbm(regressor, initial_types=_INITIAL_TYPES)
         y_pred = regressor.predict(_X_test)
@@ -65,3 +65,8 @@ class TestMissingValues(unittest.TestCase):
             decimal=_N_DECIMALS,
             frac=_FRAC,
         )
+
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -9,6 +9,7 @@ trigger:
 jobs:
 
 - job: 'Test'
+  timeoutInMinutes: 25
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -70,31 +71,28 @@ jobs:
     maxParallel: 3
 
   steps:
-  - script: sudo install -d -m 0777 /home/vsts/.conda/envs
-    displayName: Fix Conda permissions
-
-  - task: CondaEnvironment@1
+  - task: UsePythonVersion@0
     inputs:
-      createCustomEnvironment: true
-      environmentName: 'py$(python.version)'
-      packageSpecs: 'python=$(python.version)'
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
 
   - script: |
       python -m pip install --upgrade pip
-      conda config --set always_yes yes --set changeps1 no
-      conda install -c conda-forge protobuf
-      conda install -c conda-forge numpy
-      conda install -c conda-forge cmake
-      pip install $(COREML_PATH)
-      pip install $(ONNX_PATH)
-      pip install hummingbird-ml --no-deps
+      pip install $(ONNX_PATH) $(ONNXRT_PATH) cython
       pip install -r requirements.txt
-      pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
-      pip install -r requirements-dev.txt
-      pip install xgboost$(xgboost.version)
-      pip install $(ONNXRT_PATH)
-      pip install pytest
     displayName: 'Install dependencies'
+
+  - script: |
+      pip install -r requirements-dev.txt
+    displayName: 'Install dependencies-dev'
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install xgboost$(xgboost.version)
+      pip install $(ONNX_PATH)
+      pip install $(ONNXRT_PATH)
+      pip install $(COREML_PATH)
+    displayName: 'Install xgboost, onnxruntime'
 
   - script: |
       pip install flake8
@@ -109,8 +107,63 @@ jobs:
       export PYTHONPATH=.
       python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
       python -c "import onnxruntime;print(onnxruntime.__version__)"
-      pytest tests --doctest-modules --junitxml=junit/test-results.xml
-    displayName: 'pytest - onnxmltools'
+    displayName: 'version'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/baseline --durations=0
+    displayName: 'pytest - baseline'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/catboost --durations=0
+    displayName: 'pytest - catboost'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/coreml --durations=0
+    displayName: 'pytest - coreml'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/lightgbm --durations=0
+    displayName: 'pytest - lightgbm'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/sparkml --durations=0
+    displayName: 'pytest - sparkml'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/svmlib --durations=0
+    displayName: 'pytest - svmlib'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/utils --durations=0
+    displayName: 'pytest - utils'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/xgboost --durations=0
+    displayName: 'pytest - xgboost'
+
+  - script: |
+      export PYTHONPATH=.
+      pip install h2o
+      pytest tests/h2o --durations=0
+    displayName: 'pytest - h2o'
+
+  - script: |
+      pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
+      pip install hummingbird-ml --no-deps
+    displayName: 'Install hummingbird-ml'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/hummingbirdml --durations=0
+    displayName: 'pytest - hummingbirdml'
 
   - task: PublishTestResults@2
     inputs:
