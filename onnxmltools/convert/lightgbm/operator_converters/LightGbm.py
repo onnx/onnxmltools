@@ -444,7 +444,7 @@ def convert_lightgbm(scope, operator, container):
     elif gbm_text['objective'].startswith('multiclass'):
         n_classes = gbm_text['num_class']
         attrs['post_transform'] = 'SOFTMAX'
-    elif gbm_text['objective'].startswith('regression'):
+    elif gbm_text['objective'].startswith(('regression', 'quantile')):
         n_classes = 1  # Regressor has only one output variable
         attrs['post_transform'] = 'NONE'
         attrs['n_targets'] = n_classes
