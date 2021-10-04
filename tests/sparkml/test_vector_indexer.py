@@ -6,6 +6,7 @@ from distutils.version import StrictVersion
 import numpy
 import pandas
 import onnx
+from onnx.defs import onnx_opset_version
 from pyspark.ml.feature import VectorIndexer
 from pyspark.ml.linalg import Vectors
 from onnxmltools import convert_sparkml
@@ -14,7 +15,7 @@ from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, c
 from tests.sparkml import SparkMlTestCase
 
 
-TARGET_OPSET = 15
+TARGET_OPSET = min(onnx_opset_version(), 15)
 
 
 class TestSparkmlVectorIndexer(SparkMlTestCase):
