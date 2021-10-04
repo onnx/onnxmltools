@@ -31,6 +31,7 @@ class ObjectiveTest(unittest.TestCase):
         "regression",
         "poisson",
         "gamma",
+        "quantile"
     )
 
     @staticmethod
