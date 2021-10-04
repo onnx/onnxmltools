@@ -15,7 +15,6 @@ from onnxmltools.convert.common.data_types import FloatTensorType
 
 class TestXGBoostUnpickle06(unittest.TestCase):
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="xgboost converted not tested on python 2")
     @unittest.skipIf(StrictVersion(xgboost.__version__) >= StrictVersion('1.0'),
                      reason="compatibility break with pickle in 1.0")
     def test_xgboost_unpickle_06(self):

@@ -15,7 +15,6 @@ from onnxmltools.utils import dump_data_and_model
 
 class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="pickled with Python 3, cannot unpickle with 2")
     @unittest.skipIf(sys.platform.startswith('win'), reason="pickled on linux, may not work on windows")
     @unittest.skipIf(sys.platform.startswith('lin'), reason="recover linux CI build, needs to be fixed")
     def test_root_leave(self):
@@ -29,7 +28,6 @@ class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
             dump_data_and_model(X, model.steps[1][1], model_onnx, basename="LightGbmPkl1")
 
 
-    @unittest.skipIf(sys.version_info[0] == 2, reason="pickled with Python 3, cannot unpickle with 2")
     @unittest.skipIf(sys.platform.startswith('win'), reason="pickled on linux, may not work on windows")
     @unittest.skipIf(sys.platform.startswith('lin'), reason="recover linux CI build, needs to be fixed")
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")

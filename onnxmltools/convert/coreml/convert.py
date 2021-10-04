@@ -2,10 +2,10 @@
 
 import coremltools
 from uuid import uuid4
-from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 import onnx
 from ...proto import onnx_proto
 from ..common._topology import convert_topology
+from ..common.onnx_ex import get_maximum_opset_supported
 from ._parse import parse_coreml
 
 # Import modules to invoke function registrations

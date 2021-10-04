@@ -9,38 +9,29 @@ import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
+import onnxruntime as rt
+from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from onnxmltools.convert import convert_xgboost, convert_sklearn
+from onnxmltools.convert.common.data_types import FloatTensorType
+from onnxmltools.utils import dump_data_and_model
+from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost as convert_xgb
+from onnxmltools.convert.common.onnx_ex import get_maximum_opset_supported
 
-try:
-    import onnxruntime as rt
-    from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
-    from sklearn.model_selection import train_test_split
-    from sklearn.compose import ColumnTransformer
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-    from onnxmltools.convert import convert_xgboost, convert_sklearn
-    from onnxmltools.convert.common.data_types import FloatTensorType
-    from onnxmltools.utils import dump_data_and_model
-    from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost as convert_xgb
-    from onnxconverter_common.onnx_ex import get_maximum_opset_supported
-
-
-    can_test = True
-except ImportError:
-    # python 2.7
-    can_test = False
 try:
     from skl2onnx import update_registered_converter
     from skl2onnx.common.shape_calculator import calculate_linear_regressor_output_shapes
 
-    can_test |= True
+    can_test = True
 except ImportError:
     # sklearn-onnx not recent enough
     can_test = False
 
 
 @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
-@unittest.skipIf(sys.version_info[0] == 2,
-                 reason="xgboost converter not tested on python 2")
 @unittest.skipIf(not can_test,
                  reason="sklearn-onnx not recent enough")
 class TestXGBoostModelsPipeline(unittest.TestCase):

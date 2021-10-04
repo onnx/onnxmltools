@@ -18,7 +18,7 @@ from onnxmltools.utils import dump_binary_classification, dump_multiple_classifi
 from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
 
-TARGET_OPSET = min(13, onnx_opset_version())
+TARGET_OPSET = min(15, onnx_opset_version())
 
 
 class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):

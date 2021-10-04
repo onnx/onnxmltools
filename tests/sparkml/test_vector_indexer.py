@@ -14,6 +14,9 @@ from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, c
 from tests.sparkml import SparkMlTestCase
 
 
+TARGET_OPSET = 15
+
+
 class TestSparkmlVectorIndexer(SparkMlTestCase):
 
     @unittest.skipIf(
@@ -35,7 +38,7 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
         model = vi.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml VectorIndexer Multi',  [
             ('a', FloatTensorType([None, model.numFeatures]))
-        ], target_opset=9)
+        ], target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)
@@ -62,7 +65,7 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
         model = vi.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml VectorIndexer Single',  [
             ('a', FloatTensorType([None, model.numFeatures]))
-        ], target_opset=9)
+        ], target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)

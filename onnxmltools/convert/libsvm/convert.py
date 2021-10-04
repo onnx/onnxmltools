@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from uuid import uuid4
-from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 import onnx
+from ..common.onnx_ex import get_maximum_opset_supported
 from ..common._topology import convert_topology
 from ._parse import parse_libsvm
 
