@@ -25,7 +25,7 @@ class TestBaseLine(unittest.TestCase):
         this = os.path.dirname(__file__)
         coreml_file = os.path.join(this, "models", input_file)
         cml = coremltools.utils.load_spec(coreml_file)
-        onnx_model = convert_coreml(cml, target_opset=14)
+        onnx_model = convert_coreml(cml, target_opset=TARGET_OPSET)
         output_dir = os.path.join(this, "outmodels")
         output_file = os.path.join(this, "outmodels", ref_file)
         if not os.path.exists(output_dir):
