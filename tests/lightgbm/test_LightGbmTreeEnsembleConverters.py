@@ -10,13 +10,15 @@ from onnx.defs import onnx_opset_version
 from lightgbm import LGBMClassifier, LGBMRegressor
 import onnxruntime
 from onnxmltools.convert.common.data_types import FloatTensorType
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert import convert_lightgbm
 from onnxmltools.utils import dump_data_and_model
 from onnxmltools.utils import dump_binary_classification, dump_multiple_classification
 from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
 
-TARGET_OPSET = min(13, onnx_opset_version())
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestLightGbmTreeEnsembleModels(unittest.TestCase):
