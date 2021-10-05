@@ -7,6 +7,7 @@ import lightgbm
 import numpy
 from numpy.testing import assert_almost_equal
 from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from lightgbm import LGBMClassifier, LGBMRegressor
 from onnxruntime import InferenceSession
 from onnxmltools.convert.common.utils import hummingbird_installed
@@ -17,7 +18,8 @@ from onnxmltools.utils import dump_binary_classification, dump_multiple_classifi
 from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
 
-TARGET_OPSET = min(15, onnx_opset_version())
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
