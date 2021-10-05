@@ -17,8 +17,13 @@ import unittest
 import numpy
 from sklearn.datasets import make_regression
 from sklearn.svm import SVR
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLSupportVectorRegressorConverter(unittest.TestCase):
@@ -32,7 +37,7 @@ class TestCoreMLSupportVectorRegressorConverter(unittest.TestCase):
         svm = SVR(gamma=1./len(X))
         svm.fit(X, y)
         svm_coreml = coremltools.converters.sklearn.convert(svm)
-        svm_onnx = convert(svm_coreml.get_spec())
+        svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(svm_onnx is not None)
         dump_data_and_model(X.astype(numpy.float32), svm, svm_onnx, basename="CmlRegSVR-Dec3")
 

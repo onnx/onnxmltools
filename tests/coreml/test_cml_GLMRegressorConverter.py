@@ -18,8 +18,13 @@ import coremltools
 from sklearn.datasets import make_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import LinearSVR
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLGLMRegressorConverter(unittest.TestCase):
@@ -40,7 +45,7 @@ class TestCoreMLGLMRegressorConverter(unittest.TestCase):
         svr = LinearSVR()
         svr.fit(X, y)
         svr_coreml = coremltools.converters.sklearn.convert(svr)
-        svr_onnx = convert(svr_coreml.get_spec())
+        svr_onnx = convert(svr_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(svr_onnx is not None)
         dump_data_and_model(X.astype(numpy.float32), svr, svr_onnx, basename="CmlLinearSvr-Dec4")
 

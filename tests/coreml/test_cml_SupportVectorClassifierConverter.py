@@ -17,8 +17,13 @@ import unittest
 import numpy
 from sklearn.datasets import load_iris
 from sklearn.svm import SVC
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
@@ -66,7 +71,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
     def test_support_vector_classifier_binary_no_prob(self):
         svm, X = self._fit_binary_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
-        svm_onnx = convert(svm_coreml.get_spec())
+        svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(svm_onnx is not None)
         # This should not have a probability output and will be a single node
         nodes = svm_onnx.graph.node
@@ -81,7 +86,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
     def test_support_vector_classifier_binary_with_prob(self):
         svm, X = self._fit_binary_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
-        svm_onnx = convert(svm_coreml.get_spec())
+        svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(svm_onnx is not None)
         self.validate_zipmap(svm_onnx)
         self._check_model_outputs(svm_onnx, ['classLabel', 'classProbability'])
@@ -92,7 +97,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
     def test_support_vector_classifier_multiclass_no_prob(self):
         svm, X = self._fit_multi_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
-        svm_onnx = convert(svm_coreml.get_spec())
+        svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(svm_onnx is not None)
         nodes = svm_onnx.graph.node
         self.assertEqual(len(nodes), 1)
@@ -104,7 +109,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
     def test_support_vector_classifier_multiclass_with_prob(self):
         svm, X = self._fit_multi_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
-        svm_onnx = convert(svm_coreml.get_spec())
+        svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(svm_onnx is not None)
         self.validate_zipmap(svm_onnx)
         self._check_model_outputs(svm_onnx, ['classLabel', 'classProbability'])

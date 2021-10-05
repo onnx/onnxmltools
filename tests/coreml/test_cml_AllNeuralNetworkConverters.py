@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
+from distutils.version import StrictVersion
 import numpy
 try:
     from sklearn.impute import SimpleImputer as Imputer
@@ -11,11 +12,15 @@ try:
 except ImportError:
     from sklearn.preprocessing import Imputer
 import onnx
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from coremltools.models import datatypes
 from coremltools.proto.FeatureTypes_pb2 import ImageFeatureType
-from distutils.version import StrictVersion
 from onnxmltools import convert_coreml
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestNeuralNetworkLayerConverter(unittest.TestCase):
@@ -32,7 +37,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder = NeuralNetworkBuilder(input, output)
         builder.add_inner_product(name='FC', W=weights, b=bias, input_channels=3, output_channels=2, has_bias=True,
                                   input_name='input', output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_unary_function_converter(self):
@@ -49,7 +54,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder.add_unary(name='Unary6', input_name='mid5', output_name='mid6', mode='exp')
         builder.add_unary(name='Unary7', input_name='mid6', output_name='mid7', mode='log')
         builder.add_unary(name='Unary8', input_name='mid7', output_name='output', mode='threshold')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_convolution_converter(self):
@@ -66,7 +71,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
                                 stride_width=1, border_mode='same', groups=1,
                                 W=weights, b=bias, has_bias=True, input_name='input', output_name='output',
                                 is_deconv=True, output_shape=(1, 1, 4, 2))
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_pooling_converter(self):
@@ -77,7 +82,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder = NeuralNetworkBuilder(input, output)
         builder.add_pooling(name='Pool', height=2, width=2, stride_height=1, stride_width=1, layer_type='MAX',
                             padding_type='SAME', input_name='input', output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_activation_converter(self):
@@ -87,7 +92,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(input, output)
         builder.add_activation(name='Activation', non_linearity='RELU', input_name='input', output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_embedding_converter(self):
@@ -102,7 +107,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         bias[:] = [-100, 100]
         builder.add_embedding(name='Embed', input_dim=1, W=weights, b=bias, output_channels=2, has_bias=True,
                               input_name='input', output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_batchnorm_converter(self):
@@ -121,7 +126,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         variance[:] = [1, 1, 1]
         builder.add_batchnorm(name='BatchNormalize', channels=3, gamma=gamma, beta=beta, mean=mean, variance=variance,
                               input_name='input', output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_mean_variance_normalize_converter(self):
@@ -131,7 +136,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(input, output)
         builder.add_mvn(name='MVN', input_name='input', output_name='output', epsilon=0)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_l2_normalize_converter(self):
@@ -141,7 +146,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(input, output)
         builder.add_l2_normalize(name='L2', input_name='input', output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_softmax_converter(self):
@@ -151,7 +156,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(input, output)
         builder.add_softmax(name='Softmax', input_name='input', output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_lrn_converter(self):
@@ -161,7 +166,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(input, output)
         builder.add_lrn(name='LRN', input_name='input', output_name='output', alpha=0.5, beta=2, k=1, local_size=2)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_crop_converter(self):
@@ -176,7 +181,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder = NeuralNetworkBuilder(input, output)
         builder.add_crop(name='Crop', left=left_crop, right=right_crop, top=top_crop, bottom=bottom_crop, offset=[0, 0],
                          input_names=['input'], output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_padding_converter(self):
@@ -187,7 +192,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder = NeuralNetworkBuilder(input, output)
         builder.add_padding(name='Pad', left=2, right=0, top=2, bottom=0, input_name='input', output_name='output',
                             padding_type='constant')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_upsample_converter(self):
@@ -198,7 +203,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder = NeuralNetworkBuilder(input, output)
         builder.add_upsample(name='Upsample', scaling_factor_h=2, scaling_factor_w=2, input_name='input',
                              output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_add_converter(self):
@@ -208,7 +213,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, output)
         builder.add_elementwise(name='Add', input_names=['input1', 'input2'], output_name='output', mode='ADD')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_multiply_converter(self):
@@ -218,7 +223,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, output)
         builder.add_elementwise(name='Mul', input_names=['input1', 'input2'], output_name='output', mode='MULTIPLY')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_average_converter(self):
@@ -228,7 +233,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, output)
         builder.add_elementwise(name='MEAN', input_names=['input1', 'input2'], output_name='output', mode='AVE')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_scale_converter(self):
@@ -242,7 +247,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         bias = numpy.ndarray(shape=(1,))
         bias[:] = -100
         builder.add_scale(name='ImageScaler', W=scale, b=bias, has_bias=True, input_name='input', output_name='output')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_bias_converter(self):
@@ -254,7 +259,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         bias = numpy.ndarray(shape=(2,))
         bias[:] = [1, 2]
         builder.add_bias(name='Bias', b=bias, input_name='input', output_name='output', shape_bias=[2])
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_max_converter(self):
@@ -264,7 +269,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, output)
         builder.add_elementwise(name='Max', input_names=['input1', 'input2'], output_name='output', mode='MAX')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_min_converter(self):
@@ -274,7 +279,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, output)
         builder.add_elementwise(name='Min', input_names=['input1', 'input2'], output_name='output', mode='MIN')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_dot_product_converter(self):
@@ -284,7 +289,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, output)
         builder.add_elementwise(name='Dot', input_names=['input1', 'input2'], output_name='output', mode='DOT')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_reduce_converter(self):
@@ -294,7 +299,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         output = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, output)
         builder.add_reduce(name='Reduce', input_name='input', output_name='output', axis='CHW', mode='sum')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_load_constant_converter(self):
@@ -307,7 +312,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder = NeuralNetworkBuilder(inputs, outputs)
         builder.add_load_constant(name='LoadConstant', output_name='const', constant_value=value, shape=shape)
         builder.add_permute(name='Permute', input_name='input', output_name='output', dim=(0, 1, 2, 3))
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_reshape_converter(self):
@@ -317,7 +322,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         outputs = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, outputs)
         builder.add_reshape(name='Reshape', input_name='input', output_name='output', target_shape=output_dim, mode=1)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_flatten_converter(self):
@@ -327,7 +332,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         outputs = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, outputs)
         builder.add_flatten(name='Flatten', input_name='input', output_name='output', mode=1)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_permute_converter(self):
@@ -337,7 +342,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         outputs = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, outputs)
         builder.add_permute(name='Permute', input_name='input', output_name='output', dim=(0, 2, 3, 1))
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_concat_converter(self):
@@ -347,7 +352,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         outputs = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, outputs)
         builder.add_elementwise(name='Concate', input_names=['input1', 'input2'], output_name='output', mode='CONCAT')
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_split_converter(self):
@@ -357,7 +362,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         outputs = [('output1', datatypes.Array(*output_dim)), ('output2', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, outputs)
         builder.add_split(name='Split', input_name='input', output_names=['output1', 'output2'])
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_sequence_repeat_converter(self):
@@ -367,7 +372,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         outputs = [('output', datatypes.Array(*output_dim))]
         builder = NeuralNetworkBuilder(inputs, outputs)
         builder.add_sequence_repeat(name='Repeat', input_name='input', output_name='output', nrep=3)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_reorganize_data_converter(self):
@@ -379,7 +384,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder = NeuralNetworkBuilder(inputs, outputs)
         builder.add_reorganize_data(name='Reorg', input_name='input', output_name='output', mode='SPACE_TO_DEPTH',
                                     block_size=2)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_slice_converter(self):
@@ -390,7 +395,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder = NeuralNetworkBuilder(inputs, outputs)
         builder.add_slice(name='Slice', input_name='input', output_name='output', axis='height', start_index=0,
                           end_index=-1, stride=1)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_gru_converter(self):
@@ -405,7 +410,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder.add_gru(name='GRU', W_h=W_h, W_x=W_x, b=b, hidden_size=2, input_size=8, input_names=['input'],
                         output_names=['output'], activation='TANH', inner_activation='SIGMOID_HARD', output_all=False,
                         reverse_input=False)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_simple_recurrent_converter(self):
@@ -420,7 +425,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         builder.add_simple_rnn(name='RNN', W_h=W_h, W_x=W_x, b=b, hidden_size=2, input_size=8,
                                input_names=['input', 'h_init'], output_names=['output', 'h'], activation='TANH',
                                output_all=False, reverse_input=False)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_unidirectional_lstm_converter(self):
@@ -437,7 +442,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
                             output_names=['output'], inner_activation='SIGMOID', cell_state_update_activation='TANH',
                             output_activation='TANH', peep=p, output_all=False, forget_bias=False,
                             coupled_input_forget_gate=False, cell_clip_threshold=10000, reverse_input=False)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_bidirectional_lstm_converter(self):
@@ -455,7 +460,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
                               cell_state_update_activation='TANH', output_activation='TANH', peep=p, peep_back=p,
                               output_all=False, forget_bias=False, coupled_input_forget_gate=False,
                               cell_clip_threshold=10000)
-        model_onnx = convert_coreml(builder.spec)
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     def test_image_input_type_converter(self):

@@ -121,11 +121,6 @@ jobs:
 
   - script: |
       export PYTHONPATH=.
-      pytest tests/coreml --durations=0
-    displayName: 'pytest - coreml'
-
-  - script: |
-      export PYTHONPATH=.
       pytest tests/lightgbm --durations=0
     displayName: 'pytest - lightgbm'
 
@@ -164,6 +159,11 @@ jobs:
       export PYTHONPATH=.
       pytest tests/hummingbirdml --durations=0
     displayName: 'pytest - hummingbirdml'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/coreml --durations=0
+    displayName: 'pytest - coreml'
 
   - task: PublishTestResults@2
     inputs:

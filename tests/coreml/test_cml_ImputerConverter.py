@@ -16,7 +16,12 @@ except ImportError:
     from sklearn.preprocessing import Imputer
 import sklearn.preprocessing
 import coremltools
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLImputerConverter(unittest.TestCase):
@@ -40,7 +45,7 @@ class TestCoreMLImputerConverter(unittest.TestCase):
             if 'not supported' in str(e):
                 # Python 2.7 + scikit-learn 0.22
                 return
-        model_onnx = convert(model_coreml.get_spec())
+        model_onnx = convert(model_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(np.array(data, dtype=np.float32),
                             model, model_onnx, basename="CmlImputerMeanFloat32")
