@@ -5,6 +5,8 @@ import numpy as np
 import onnxruntime
 import pandas as pd
 from onnx import ModelProto
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxconverter_common.data_types import DoubleTensorType, TensorType
 from onnxmltools import convert_lightgbm
 from onnxruntime import InferenceSession
@@ -23,6 +25,9 @@ _Y = pd.Series(np.random.random(size=_N_ROWS))
 _DTYPE_MAP: Dict[str, TensorType] = {
     "float64": DoubleTensorType,
 }
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class ObjectiveTest(unittest.TestCase):
@@ -79,7 +84,8 @@ class ObjectiveTest(unittest.TestCase):
             with self.subTest(X=_X, objective=objective):
                 regressor = LGBMRegressor(objective=objective, num_thread=1)
                 regressor.fit(_X, _Y)
-                regressor_onnx: ModelProto = convert_lightgbm(regressor, initial_types=self._calc_initial_types(_X))
+                regressor_onnx: ModelProto = convert_lightgbm(regressor, initial_types=self._calc_initial_types(_X),
+                                                              target_opset=TARGET_OPSET)
                 y_pred = regressor.predict(_X)
                 y_pred_onnx = self._predict_with_onnx(regressor_onnx, _X)
                 self._assert_almost_equal(

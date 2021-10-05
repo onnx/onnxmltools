@@ -7,10 +7,15 @@ import numpy
 import pickle
 import os
 import onnxruntime
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_lightgbm
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.convert.common.utils import hummingbird_installed
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
@@ -41,7 +46,8 @@ class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
                 model = pickle.load(f)
             X = [[0., 1.], [1., 1.], [2., 0.]]
             X = numpy.array(X, dtype=numpy.float32)
-            model_onnx = convert_lightgbm(model.steps[1][1], 'pkl1', [('input', FloatTensorType([1, X.shape[1]]))], without_onnx_ml=True)
+            model_onnx = convert_lightgbm(model.steps[1][1], 'pkl1', [('input', FloatTensorType([1, X.shape[1]]))],
+                                          without_onnx_ml=True, target_opset=TARGET_OPSET)
             dump_data_and_model(X, model.steps[1][1], model_onnx, basename="LightGbmPkl1")
 
 
