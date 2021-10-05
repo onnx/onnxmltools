@@ -28,10 +28,13 @@ def _append_covers(node):
 
 def _get_attributes(booster):
     atts = booster.attributes()
-    ntrees = booster.best_ntree_limit
     dp = booster.get_dump(dump_format='json', with_stats=True)
     res = [json.loads(d) for d in dp]
     trees = len(res)
+    try:
+        ntrees = booster.best_ntree_limit
+    except AttributeError:
+        ntrees = trees
     kwargs = atts.copy()
     kwargs['feature_names'] = booster.feature_names
     kwargs['n_estimators'] = ntrees

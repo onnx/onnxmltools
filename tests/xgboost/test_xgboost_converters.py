@@ -11,7 +11,7 @@ import pandas
 from sklearn.datasets import (
     load_diabetes, load_iris, make_classification, load_digits)
 from sklearn.model_selection import train_test_split
-from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
+from xgboost import XGBRegressor, XGBClassifier, train, DMatrix, Booster, train as train_xgb
 from sklearn.preprocessing import StandardScaler
 from onnxmltools.convert import convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType
@@ -341,6 +341,44 @@ class TestXGBoostModels(unittest.TestCase):
         res = sess.run(None, {'input': X.astype(np.float32)})
         assert_almost_equal(xgb.predict_proba(X), res[1])
         assert_almost_equal(xgb.predict(X), res[0])
+
+    def test_xgb_best_tree_limit(self):
+
+        # Train
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        dtrain = DMatrix(X_train, label=y_train)
+        dtest = DMatrix(X_test)
+        param = {'objective': 'multi:softmax', 'num_class': 3}
+        bst_original = train_xgb(param, dtrain, 10)
+        initial_type = [('float_input', FloatTensorType([None, 4]))]
+        bst_original.save_model('model.json')
+
+        onx_loaded = convert_xgboost(bst_original, initial_types=initial_type)
+        # with open("model.onnx", "wb") as f:
+        #     f.write(onx_loaded.SerializeToString())
+        sess = InferenceSession(onx_loaded.SerializeToString())
+        res = sess.run(None, {'float_input': X_test.astype(np.float32)})
+        assert_almost_equal(bst_original.predict(dtest, output_margin=True), res[1], decimal=5)
+        assert_almost_equal(bst_original.predict(dtest), res[0])
+
+        # After being restored, the loaded booster is not exactly the same
+        # in memory and the conversion fails to find the objective.
+        bst_loaded = Booster()
+        bst_loaded.load_model('model.json')
+        bst_loaded.save_model('model2.json')
+        assert_almost_equal(bst_loaded.predict(dtest, output_margin=True),
+                            bst_original.predict(dtest, output_margin=True), decimal=5)
+        assert_almost_equal(bst_loaded.predict(dtest), bst_original.predict(dtest))
+
+        onx_loaded = convert_xgboost(bst_loaded, initial_types=initial_type)
+        # with open("model2.onnx", "wb") as f:
+        #     f.write(onx_loaded.SerializeToString())
+        sess = InferenceSession(onx_loaded.SerializeToString())
+        res = sess.run(None, {'float_input': X_test.astype(np.float32)})
+        assert_almost_equal(bst_loaded.predict(dtest, output_margin=True), res[1], decimal=5)
+        assert_almost_equal(bst_loaded.predict(dtest), res[0])
 
 
 if __name__ == "__main__":

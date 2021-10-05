@@ -36,7 +36,7 @@ class XGBConverter:
         booster = xgb_node.get_booster()
         # The json format was available in October 2017.
         # XGBoost 0.7 was the first version released with it.
-        js_tree_list = booster.get_dump(with_stats=True, dump_format = 'json')
+        js_tree_list = booster.get_dump(with_stats=True, dump_format='json')
         js_trees = [json.loads(s) for s in js_tree_list]
         return objective, base_score, js_trees
 
