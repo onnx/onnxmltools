@@ -18,7 +18,7 @@ from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
 
 
-TARGET_OPSET = min(13, min(DEFAULT_OPSET_NUMBER, onnx_opset_version()))
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestLightGbmTreeEnsembleModels(unittest.TestCase):
