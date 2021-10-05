@@ -69,7 +69,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         model.fit(X, y)
         onx = convert_lightgbm(
             model, 'dummy', initial_types=[('X', FloatTensorType([None, X.shape[1]]))],
-            zipmap=False)
+            zipmap=False, target_opset=TARGET_OPSET)
         assert "zipmap" not in str(onx).lower()
         onxs = onx.SerializeToString()
         try:

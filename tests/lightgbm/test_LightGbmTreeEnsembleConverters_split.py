@@ -74,7 +74,7 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         assert_almost_equal(expected, got1.ravel(), decimal=5)
 
         # float split
-        onx = convert_lightgbm(reg, None, init, split=10)
+        onx = convert_lightgbm(reg, None, init, split=10, target_opset=TARGET_OPSET)
         self.assertIn('op_type: "Sum"', str(onx))
         oinf = InferenceSession(onx.SerializeToString())
         got2 = oinf.run(None, {'X': X_test})[0]
