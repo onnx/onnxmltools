@@ -105,8 +105,9 @@ jobs:
 
   - script: |
       export PYTHONPATH=.
-      python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
-      python -c "import onnxruntime;print(onnxruntime.__version__)"
+      python -c "import onnxruntime;print('onnx:',onnx.__version__)"
+      python -c "import onnxconverter_common;print('cc:',onnxconverter_common.__version__)"
+      python -c "import onnxruntime;print('ort:',onnxruntime.__version__)"
     displayName: 'version'
 
   - script: |

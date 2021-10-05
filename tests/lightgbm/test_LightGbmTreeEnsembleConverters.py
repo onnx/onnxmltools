@@ -18,7 +18,7 @@ from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
 
 
-TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
+TARGET_OPSET = min(13, min(DEFAULT_OPSET_NUMBER, onnx_opset_version()))
 
 
 class TestLightGbmTreeEnsembleModels(unittest.TestCase):
@@ -151,7 +151,8 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1, 'num_class': 3, 'num_thread': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))])
+                                           [('input', FloatTensorType([None, 2]))],
+                                           target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
@@ -174,7 +175,8 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                 'n_estimators': 3, 'min_child_samples': 1, 'max_depth': 1, 'num_thread': 1},
                                data)
         model_onnx, prefix = convert_model(model, 'tree-based binary classifier',
-                                           [('input', FloatTensorType([None, 2]))])
+                                           [('input', FloatTensorType([None, 2]))],
+                                           target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
