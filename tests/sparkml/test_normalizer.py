@@ -6,10 +6,15 @@ import numpy
 import pandas
 from pyspark.ml.feature import Normalizer
 from pyspark.ml.linalg import Vectors
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
 from tests.sparkml import SparkMlTestCase
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlNormalizer(SparkMlTestCase):
@@ -24,7 +29,7 @@ class TestSparkmlNormalizer(SparkMlTestCase):
         ]).toDF("id", "features")
         model = Normalizer(inputCol='features', outputCol='norm_feature', p=1.0)
 
-        model_onnx = convert_sparkml(model, 'Sparkml Normalizer', [('features', FloatTensorType([None, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml Normalizer', [('features', FloatTensorType([None, 3]))], target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
         # run the model
@@ -46,7 +51,7 @@ class TestSparkmlNormalizer(SparkMlTestCase):
         ]).toDF("id", "features")
         model = Normalizer(inputCol='features', outputCol='norm_feature', p=2.0)
 
-        model_onnx = convert_sparkml(model, 'Sparkml Normalizer', [('features', FloatTensorType([None, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml Normalizer', [('features', FloatTensorType([None, 3]))], target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
         # run the model

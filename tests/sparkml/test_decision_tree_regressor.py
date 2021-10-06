@@ -10,11 +10,16 @@ import numpy
 from pyspark.ml.linalg import Vectors, SparseVector, VectorUDT
 from pyspark.ml.regression import DecisionTreeRegressor
 from pyspark.ml import Pipeline
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
 from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import VectorIndexer
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
@@ -44,7 +49,7 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         model = pipeline.fit(trainingData)
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Regressor Pipeline', [
             ('features', FloatTensorType([None, feature_count]))
-        ], spark_session=self.spark)
+        ], spark_session=self.spark, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(testData)
@@ -73,7 +78,7 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         feature_count = data.select('features').first()[0].size
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Regressor', [
             ('features', FloatTensorType([None, feature_count]))
-        ], spark_session=self.spark)
+        ], spark_session=self.spark, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         # run the model
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)

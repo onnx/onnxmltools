@@ -10,11 +10,16 @@ import numpy
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import DecisionTreeClassifier
 from pyspark.ml.linalg import VectorUDT, SparseVector, Vectors
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType, FloatTensorType
 from tests.sparkml.sparkml_test_utils import save_data_models, compare_results, run_onnx_model
 from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import StringIndexer, VectorIndexer
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
@@ -48,7 +53,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Pipeline', [
             ('label', StringTensorType([None, 1])),
             ('features', FloatTensorType([None, feature_count]))
-        ], spark_session=self.spark)
+        ], spark_session=self.spark, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data.limit(1))
@@ -82,7 +87,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = dt.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree One Class', [
             ('features', FloatTensorType([None, 2]))
-        ], spark_session=self.spark)
+        ], spark_session=self.spark, target_opset=TARGET_OPSET)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
         expected = [
@@ -109,7 +114,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = dt.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Binary Class', [
             ('features', FloatTensorType([None, 2]))
-        ], spark_session=self.spark)
+        ], spark_session=self.spark, target_opset=TARGET_OPSET)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
         expected = [
@@ -136,7 +141,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         model = dt.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Multi Class', [
             ('features', FloatTensorType([None, 2]))
-        ], spark_session=self.spark)
+        ], spark_session=self.spark, target_opset=TARGET_OPSET)
         data_np = data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
         predicted = model.transform(data)
         expected = [
