@@ -38,7 +38,7 @@ class TestCoreMLGLMRegressorConverter(unittest.TestCase):
         lr = LinearRegression()
         lr.fit(X, y)
         lr_coreml = coremltools.converters.sklearn.convert(lr)
-        lr_onnx = convert(lr_coreml.get_spec())
+        lr_onnx = convert(lr_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(lr_onnx is not None)
         dump_data_and_model(X.astype(numpy.float32), lr, lr_onnx, basename="CmlLinearRegression-Dec4")
 

@@ -476,7 +476,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         input.type.imageType.width = dim[2]
         for coreml_colorspace, onnx_colorspace in (('RGB', 'Rgb8'), ('BGR', 'Bgr8'), ('GRAYSCALE', 'Gray8')):
             input.type.imageType.colorSpace = ImageFeatureType.ColorSpace.Value(coreml_colorspace)
-            model_onnx = convert_coreml(spec)
+            model_onnx = convert_coreml(spec, target_opset=TARGET_OPSET)
             dims = [(d.dim_param or d.dim_value) for d in model_onnx.graph.input[0].type.tensor_type.shape.dim]
             self.assertEqual(dims, ['None', 1 if onnx_colorspace == 'Gray8' else 3, 15, 25])
 
