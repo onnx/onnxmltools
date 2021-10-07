@@ -76,7 +76,7 @@ input2 = Input(shape=(D,))
 mapped1_2 = sub_model1(input1)
 mapped2_2 = sub_model2(input2)
 sub_sum = Add()([mapped1_2, mapped2_2])
-keras_model = Model(inputs=[input1, input2], output=sub_sum)
+keras_model = Model(inputs=[input1, input2], outputs=sub_sum)
 
 # Convert it! The target_opset parameter is optional.
 onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7)
