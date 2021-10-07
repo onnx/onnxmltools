@@ -15,6 +15,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert import convert_xgboost, convert_sklearn
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
@@ -29,6 +31,9 @@ try:
 except ImportError:
     # sklearn-onnx not recent enough
     can_test = False
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
@@ -129,7 +134,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
             input_xgb[input_xgb[:, :] == missing] = np.nan
         onnx_last = convert_sklearn(model.steps[1][-1],
                                     initial_types=[('X', FloatTensorType(shape=[None, input_xgb.shape[1]]))],
-                                    target_opset=get_maximum_opset_supported())
+                                    target_opset=TARGET_OPSET)
         session = rt.InferenceSession(onnx_last.SerializeToString())
         pred_skl = model.steps[1][-1].predict(input_xgb).ravel()
         pred_onx = session.run(None, {'X': input_xgb})[0].ravel()
