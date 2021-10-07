@@ -18,8 +18,13 @@ except ImportError:
     from sklearn.preprocessing import Imputer
 import coremltools
 from sklearn.feature_extraction import DictVectorizer
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLDictVectorizerConverter(unittest.TestCase):
@@ -40,7 +45,7 @@ class TestCoreMLDictVectorizerConverter(unittest.TestCase):
                 "sys.platform=%r." % (
                     coremltools.__version__, onnx.__version__,
                     sklearn.__version__, sys.platform)) from e
-        model_onnx = convert(model_coreml.get_spec())
+        model_onnx = convert(model_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(data, model, model_onnx, basename="CmlDictVectorizer-OneOff-SkipDim1",
                             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")

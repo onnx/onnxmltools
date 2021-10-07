@@ -10,9 +10,14 @@ from numpy.testing import assert_almost_equal
 import pandas
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor, XGBClassifier, train, DMatrix
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert import convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxruntime import InferenceSession
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestXGBoost13(unittest.TestCase):
@@ -34,7 +39,7 @@ class TestXGBoost13(unittest.TestCase):
                 early_stopping_rounds=40)
 
         initial_type = [('float_input', FloatTensorType([None, 797]))]
-        onx = convert_xgboost(clr, initial_types=initial_type)
+        onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
         expected = clr.predict(X_test), clr.predict_proba(X_test)
         sess = InferenceSession(onx.SerializeToString())
         X_test = X_test.values.astype(np.float32)

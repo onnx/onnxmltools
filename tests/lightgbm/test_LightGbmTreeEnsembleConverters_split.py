@@ -10,6 +10,8 @@ from lightgbm import LGBMRegressor
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from onnxruntime import InferenceSession, __version__ as ort_version
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.common.utils import hummingbird_installed
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.convert import convert_lightgbm
@@ -18,7 +20,8 @@ from onnxmltools.utils import dump_binary_classification, dump_multiple_classifi
 from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
 
-TARGET_OPSET = min(13, onnx_opset_version())
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
@@ -36,13 +39,13 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
 
         # float
         init = [('X', FloatTensorType([None, X_train.shape[1]]))]
-        onx = convert_lightgbm(reg, None, init)
+        onx = convert_lightgbm(reg, None, init, target_opset=TARGET_OPSET)
         self.assertNotIn('op_type: "Sum"', str(onx))
         oinf = InferenceSession(onx.SerializeToString())
         got1 = oinf.run(None, {'X': X_test})[0]
 
         # float split
-        onx = convert_lightgbm(reg, None, init, split=2)
+        onx = convert_lightgbm(reg, None, init, split=2, target_opset=TARGET_OPSET)
         self.assertIn('op_type: "Sum"', str(onx))
         oinf = InferenceSession(onx.SerializeToString())
         got2 = oinf.run(None, {'X': X_test})[0]
@@ -64,14 +67,14 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
 
         # float
         init = [('X', FloatTensorType([None, X_train.shape[1]]))]
-        onx = convert_lightgbm(reg, None, init)
+        onx = convert_lightgbm(reg, None, init, target_opset=TARGET_OPSET)
         self.assertNotIn('op_type: "Sum"', str(onx))
         oinf = InferenceSession(onx.SerializeToString())
         got1 = oinf.run(None, {'X': X_test})[0]
         assert_almost_equal(expected, got1.ravel(), decimal=5)
 
         # float split
-        onx = convert_lightgbm(reg, None, init, split=10)
+        onx = convert_lightgbm(reg, None, init, split=10, target_opset=TARGET_OPSET)
         self.assertIn('op_type: "Sum"', str(onx))
         oinf = InferenceSession(onx.SerializeToString())
         got2 = oinf.run(None, {'X': X_test})[0]
@@ -93,8 +96,8 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
                                 'n_estimators': 100, 'max_depth': 2, 'num_thread': 1},
                                data)
         expected = model.predict(X_test)
-        onx = convert_lightgbm(model, '', [('X', FloatTensorType([None, 4]))])
-        onx10 = convert_lightgbm(model, '', [('X', FloatTensorType([None, 4]))], split=1)
+        onx = convert_lightgbm(model, '', [('X', FloatTensorType([None, 4]))], target_opset=TARGET_OPSET)
+        onx10 = convert_lightgbm(model, '', [('X', FloatTensorType([None, 4]))], split=1, target_opset=TARGET_OPSET)
 
         self.assertNotIn('op_type: "Sum"', str(onx))
         oinf = InferenceSession(onx.SerializeToString())

@@ -5,8 +5,8 @@ import json
 import tempfile
 import h2o
 
-from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 import onnx
+from ..common.onnx_ex import get_maximum_opset_supported
 from ..common._topology import convert_topology
 from ..common.data_types import FloatTensorType
 from ._parse import parse_h2o

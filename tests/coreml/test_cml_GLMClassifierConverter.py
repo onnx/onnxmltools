@@ -18,8 +18,13 @@ try:
 except ImportError:
     from sklearn.preprocessing import Imputer
 import coremltools
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLGLMClassifierConverter(unittest.TestCase):
@@ -45,7 +50,7 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         lr = LogisticRegression(multi_class='ovr')
         lr.fit(X, y)
         lr_coreml = coremltools.converters.sklearn.convert(lr)
-        lr_onnx = convert(lr_coreml.get_spec())
+        lr_onnx = convert(lr_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(lr_onnx is not None)
         self.validate_zipmap(lr_onnx)
         dump_data_and_model(X.astype(numpy.float32), lr, lr_onnx, basename="CmlbinLogitisticRegression",
@@ -55,7 +60,7 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         svm = LinearSVC()
         svm.fit(X, y)
         svm_coreml = coremltools.converters.sklearn.convert(svm)
-        svm_onnx = convert(svm_coreml.get_spec())
+        svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(svm_onnx is not None)
         self.validate_zipmap(svm_onnx)
         dump_data_and_model(X.astype(numpy.float32), svm, svm_onnx, basename="CmlBinLinearSVC-NoProb",

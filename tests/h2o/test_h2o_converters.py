@@ -8,6 +8,8 @@ import os
 import sys
 import numpy as np
 import pandas as pd
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from sklearn.datasets import load_diabetes, load_iris, make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
@@ -18,6 +20,9 @@ from h2o.exceptions import H2OConnectionError
 from h2o.estimators.random_forest import H2ORandomForestEstimator
 from onnxmltools.convert import convert_h2o
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 def _make_mojo(model, train, y=-1, force_y_numeric=False):
@@ -38,7 +43,7 @@ def _convert_mojo(mojo_path):
     f = open(mojo_path, "rb")
     mojo_content = f.read()
     f.close()
-    return convert_h2o(mojo_content)
+    return convert_h2o(mojo_content, target_opset=TARGET_OPSET)
 
 
 def _prepare_one_hot(file, y, exclude_cols=None):

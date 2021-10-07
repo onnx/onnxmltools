@@ -17,9 +17,14 @@ try:
 except ImportError:
     from sklearn.preprocessing import Imputer
 from coremltools.converters.xgboost import convert as convert_xgb_to_coreml
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml import convert as convert_cml
 from xgboost import XGBRegressor
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
@@ -38,7 +43,7 @@ class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
         # See https://github.com/apple/coremltools/issues/51.
         model.booster = model.get_booster
         model_coreml = convert_xgb_to_coreml(model)
-        model_onnx = convert_cml(model_coreml)
+        model_onnx = convert_cml(model_coreml, target_opset=TARGET_OPSET)
         assert model_onnx is not None
         if sys.version_info[0] >= 3:
             # python 2.7 returns TypeError: can't pickle instancemethod objects

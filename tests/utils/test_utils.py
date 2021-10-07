@@ -6,9 +6,14 @@ Tests utilities.
 import os
 import unittest
 import warnings
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 import onnxmltools
 from onnxmltools.utils import load_model, save_model
 from onnxmltools.utils import set_model_version, set_model_domain, set_model_doc_string
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestUtils(unittest.TestCase):
@@ -65,7 +70,7 @@ class TestWrapper(unittest.TestCase):
         model = keras.Sequential()
         model.add(keras.layers.Dense(units=4, input_shape=(10,), activation='relu'))
         model.compile(loss='binary_crossentropy', optimizer='Adam', metrics=['binary_accuracy'])
-        onnx_model = onnxmltools.convert_tensorflow(model)
+        onnx_model = onnxmltools.convert_tensorflow(model, target_opset=TARGET_OPSET)
         self.assertTrue(len(onnx_model.graph.node) > 0)
 
 

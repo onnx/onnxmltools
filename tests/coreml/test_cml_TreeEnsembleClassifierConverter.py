@@ -16,8 +16,13 @@ except ImportError:
     from sklearn.preprocessing import Imputer
 import coremltools
 from sklearn.ensemble import RandomForestClassifier
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
@@ -38,7 +43,7 @@ class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
         y = [1, 0, 1]
         model = RandomForestClassifier().fit(X, y)
         model_coreml = coremltools.converters.sklearn.convert(model)
-        model_onnx = convert(model_coreml.get_spec())
+        model_onnx = convert(model_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         self.validate_zipmap(model_onnx)
         dump_data_and_model(X, model, model_onnx, basename="CmlBinRandomForestClassifier",

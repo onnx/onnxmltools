@@ -6,10 +6,15 @@ import numpy
 import pandas
 from pyspark.ml.feature import ElementwiseProduct
 from pyspark.ml.linalg import Vectors
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
 from tests.sparkml import SparkMlTestCase
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlElementwiseProduct(SparkMlTestCase):
@@ -22,7 +27,8 @@ class TestSparkmlElementwiseProduct(SparkMlTestCase):
                                    inputCol="features", outputCol="eprod")
         feature_count = data.first()[0].size
         model_onnx = convert_sparkml(model, 'Sparkml ElementwiseProduct',
-                                     [('features', FloatTensorType([None, feature_count]))])
+                                     [('features', FloatTensorType([None, feature_count]))],
+                                     target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
         # run the model
