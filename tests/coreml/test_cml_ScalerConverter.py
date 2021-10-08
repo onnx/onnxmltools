@@ -15,9 +15,14 @@ try:
 except ImportError:
     from sklearn.preprocessing import Imputer
 import coremltools
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from sklearn.preprocessing import StandardScaler
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLScalerConverter(unittest.TestCase):
@@ -30,7 +35,7 @@ class TestCoreMLScalerConverter(unittest.TestCase):
         data = numpy.array([[0, 0, 3], [1, 1, 0], [0, 2, 1], [1, 0, 2]], dtype=numpy.float32)
         model.fit(data)
         model_coreml = coremltools.converters.sklearn.convert(model)
-        model_onnx = convert(model_coreml.get_spec())
+        model_onnx = convert(model_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(data, model, model_onnx, basename="CmlStandardScalerFloat32")
 

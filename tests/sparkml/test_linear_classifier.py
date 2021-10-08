@@ -8,10 +8,15 @@ import numpy
 import pandas
 from pyspark.ml.classification import LogisticRegression, LinearSVC
 from pyspark.ml.linalg import VectorUDT, SparseVector
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
 from tests.sparkml import SparkMlTestCase
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlLogisticRegression(SparkMlTestCase):
@@ -32,7 +37,8 @@ class TestSparkmlLogisticRegression(SparkMlTestCase):
         model = lr.fit(data)
         # the name of the input for Logistic Regression is 'features'
         C = model.numFeatures
-        model_onnx = convert_sparkml(model, 'sparkml logistic regression', [('features', FloatTensorType([None, C]))])
+        model_onnx = convert_sparkml(model, 'sparkml logistic regression', [('features', FloatTensorType([None, C]))],
+                                     target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)
@@ -64,7 +70,8 @@ class TestSparkmlLogisticRegression(SparkMlTestCase):
         model = lsvc.fit(data)
         # the name of the input for Logistic Regression is 'features'
         C = model.numFeatures
-        model_onnx = convert_sparkml(model, 'Spark ML Linear SVC', [('features', FloatTensorType([None, C]))])
+        model_onnx = convert_sparkml(model, 'Spark ML Linear SVC', [('features', FloatTensorType([None, C]))],
+                                     target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)

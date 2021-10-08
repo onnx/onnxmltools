@@ -5,11 +5,16 @@ import unittest
 import numpy
 import pytest
 from pyspark.ml.feature import IndexToString, StringIndexer
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import Int64TensorType
 from onnxmltools.convert.sparkml.utils import SparkMlConversionError
 from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
 from tests.sparkml import SparkMlTestCase
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlIndexToString(SparkMlTestCase):
@@ -29,7 +34,8 @@ class TestSparkmlIndexToString(SparkMlTestCase):
         # the input name should match that of what IndexToString.inputCol
         model_onnx = None
         with pytest.raises(SparkMlConversionError):
-            model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([None, 1]))])
+            model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([None, 1]))],
+                                         target_opset=TARGET_OPSET)
 
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
@@ -44,7 +50,8 @@ class TestSparkmlIndexToString(SparkMlTestCase):
         model = IndexToString(inputCol="categoryIndex", outputCol="originalCategory",
                               labels=['A', 'B', 'C'])
         # the input name should match that of what IndexToString.inputCol
-        model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([None, 1]))])
+        model_onnx = convert_sparkml(model, 'Sparkml IndexToString', [('categoryIndex', Int64TensorType([None, 1]))],
+                                     target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)

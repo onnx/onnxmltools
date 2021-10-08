@@ -2,8 +2,8 @@
 
 from uuid import uuid4
 import xgboost
-from onnxconverter_common.onnx_ex import get_maximum_opset_supported
 import onnx
+from ..common.onnx_ex import get_maximum_opset_supported
 from ..common._topology import convert_topology
 from ._parse import parse_xgboost, WrappedBooster
 

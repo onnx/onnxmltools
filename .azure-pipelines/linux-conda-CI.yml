@@ -14,10 +14,10 @@ jobs:
     vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      Python39-1101-RT181-xgb11:
+      Python39-1101-RT190:
         python.version: '3.9'
         ONNX_PATH: onnx==1.10.1  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
-        ONNXRT_PATH: onnxruntime==1.8.1
+        ONNXRT_PATH: onnxruntime==1.9.0
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
         xgboost.version: '>=1.2'
       Python39-190-RT180-xgb11:
@@ -105,8 +105,9 @@ jobs:
 
   - script: |
       export PYTHONPATH=.
-      python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
-      python -c "import onnxruntime;print(onnxruntime.__version__)"
+      python -c "import onnxruntime;print('onnx:',onnx.__version__)"
+      python -c "import onnxconverter_common;print('cc:',onnxconverter_common.__version__)"
+      python -c "import onnxruntime;print('ort:',onnxruntime.__version__)"
     displayName: 'version'
 
   - script: |
@@ -118,11 +119,6 @@ jobs:
       export PYTHONPATH=.
       pytest tests/catboost --durations=0
     displayName: 'pytest - catboost'
-
-  - script: |
-      export PYTHONPATH=.
-      pytest tests/coreml --durations=0
-    displayName: 'pytest - coreml'
 
   - script: |
       export PYTHONPATH=.
@@ -164,6 +160,11 @@ jobs:
       export PYTHONPATH=.
       pytest tests/hummingbirdml --durations=0
     displayName: 'pytest - hummingbirdml'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/coreml --durations=0
+    displayName: 'pytest - coreml'
 
   - task: PublishTestResults@2
     inputs:

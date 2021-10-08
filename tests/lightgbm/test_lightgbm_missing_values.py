@@ -5,7 +5,8 @@ from onnx import ModelProto
 from onnxconverter_common.data_types import FloatTensorType
 from onnxmltools import convert_lightgbm
 from onnxruntime import InferenceSession
-
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from lightgbm import LGBMRegressor
 
 _N_DECIMALS=5
@@ -16,6 +17,7 @@ _X_train = np.array([[1.0, 0.0], [1.0, -1.0], [1.0, -1.0], [2.0, -1.0], [2.0, -1
 _X_test = np.array([[1.0, np.nan]], dtype=np.float32)
 
 _INITIAL_TYPES = [("input", FloatTensorType([None, _X_train.shape[1]]))]
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestMissingValues(unittest.TestCase):
@@ -56,7 +58,7 @@ class TestMissingValues(unittest.TestCase):
             learning_rate=1,
             num_thread=1)
         regressor.fit(_X_train, _y)
-        regressor_onnx: ModelProto = convert_lightgbm(regressor, initial_types=_INITIAL_TYPES)
+        regressor_onnx: ModelProto = convert_lightgbm(regressor, initial_types=_INITIAL_TYPES, target_opset=TARGET_OPSET)
         y_pred = regressor.predict(_X_test)
         y_pred_onnx = self._predict_with_onnx(regressor_onnx, _X_test)
         self._assert_almost_equal(

@@ -6,10 +6,15 @@ import numpy
 import pandas
 from pyspark.ml.feature import StandardScaler, MaxAbsScaler, MinMaxScaler
 from pyspark.ml.linalg import Vectors
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
 from tests.sparkml import SparkMlTestCase
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlScaler(SparkMlTestCase):
@@ -26,7 +31,7 @@ class TestSparkmlScaler(SparkMlTestCase):
         model = scaler.fit(data)
 
         # the input names must match the inputCol(s) above
-        model_onnx = convert_sparkml(model, 'Sparkml MaxAbsScaler', [('features', FloatTensorType([None, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml MaxAbsScaler', [('features', FloatTensorType([None, 3]))], target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
         # run the model
@@ -50,7 +55,7 @@ class TestSparkmlScaler(SparkMlTestCase):
         model = scaler.fit(data)
 
         # the input names must match the inputCol(s) above
-        model_onnx = convert_sparkml(model, 'Sparkml MinMaxScaler', [('features', FloatTensorType([None, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml MinMaxScaler', [('features', FloatTensorType([None, 3]))], target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
         # run the model
@@ -74,7 +79,7 @@ class TestSparkmlScaler(SparkMlTestCase):
         model = scaler.fit(data)
 
         # the input names must match the inputCol(s) above
-        model_onnx = convert_sparkml(model, 'Sparkml StandardScaler', [('features', FloatTensorType([None, 3]))])
+        model_onnx = convert_sparkml(model, 'Sparkml StandardScaler', [('features', FloatTensorType([None, 3]))], target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
         # run the model

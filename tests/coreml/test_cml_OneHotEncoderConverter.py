@@ -19,9 +19,14 @@ try:
 except ImportError:
     from sklearn.preprocessing import Imputer
 import coremltools
+from onnx.defs import onnx_opset_version
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from sklearn.preprocessing import OneHotEncoder
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils.tests_helper import dump_data_and_model
+
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoremlOneHotEncoderConverter(unittest.TestCase):
@@ -34,7 +39,7 @@ class TestCoremlOneHotEncoderConverter(unittest.TestCase):
         relative_path = "../data/onehot_simple.mlmodel"
         abs_file = os.path.join(script_dir, relative_path)
         model_coreml = coremltools.utils.load_spec(abs_file)
-        model_onnx = convert(model_coreml)
+        model_onnx = convert(model_coreml, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
     @unittest.skip('broken with the dump_data_and_model change.')
@@ -54,7 +59,7 @@ class TestCoremlOneHotEncoderConverter(unittest.TestCase):
         except Exception as e:
             warnings.warn("Unable to run convert OneHotEncoder with coreml.")
             return
-        model_onnx = convert(model_coreml)
+        model_onnx = convert(model_coreml, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(scikit_data, scikit_model, model_onnx, basename="CmlOneHotEncoder-SkipDim1")
 
