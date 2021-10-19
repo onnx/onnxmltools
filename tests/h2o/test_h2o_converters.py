@@ -158,7 +158,7 @@ class TestH2OModels(unittest.TestCase):
         mojo_path, test_data = _train_classifier(gbm, 2, is_str=True)
         with self.assertRaises(ValueError) as err:
             _convert_mojo(mojo_path)
-        self.assertRegexpMatches(err.exception.args[0], "not supported")
+        self.assertRegex(err.exception.args[0], "not supported")
 
     def test_h2o_regressor_unsupported_dists(self):
         diabetes = load_diabetes()
@@ -169,7 +169,7 @@ class TestH2OModels(unittest.TestCase):
             mojo_path = _make_mojo(gbm, train)
             with self.assertRaises(ValueError) as err:
                 _convert_mojo(mojo_path)
-            self.assertRegexpMatches(err.exception.args[0], "not supported")
+            self.assertRegex(err.exception.args[0], "not supported")
 
     def test_h2o_regressor(self):
         diabetes = load_diabetes()
@@ -202,7 +202,7 @@ class TestH2OModels(unittest.TestCase):
         mojo_path, test_data = _train_classifier(gbm, 2, is_str=True)
         with self.assertRaises(ValueError) as err:
             _convert_mojo(mojo_path)
-        self.assertRegexpMatches(err.exception.args[0], "not supported")
+        self.assertRegex(err.exception.args[0], "not supported")
 
     def test_h2o_classifier_bin_cat(self):
         y = "IsDepDelayed_REC"
