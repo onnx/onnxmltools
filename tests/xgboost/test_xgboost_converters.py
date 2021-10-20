@@ -225,9 +225,9 @@ class TestXGBoostModels(unittest.TestCase):
         }
 
         train_df = pandas.read_csv(train)
-        X_train, y_train = train_df.drop('label', axis=1).values, train_df['label'].values
+        X_train, y_train = train_df.drop('label', axis=1).values, train_df['label'].fillna(0).values
         test_df = pandas.read_csv(test)
-        X_test, y_test = test_df.drop('label', axis=1).values, test_df['label'].values
+        X_test, y_test = test_df.drop('label', axis=1).values, test_df['label'].fillna(0).values
 
         regressor = XGBRegressor(verbose=0, objective='reg:squarederror', **param_distributions)
         regressor.fit(X_train, y_train)
