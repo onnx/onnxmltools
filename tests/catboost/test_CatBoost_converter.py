@@ -10,7 +10,7 @@ import numpy
 from sklearn.datasets import make_regression, make_classification
 try:
     import catboost
-except ImportError:
+except (ImportError, FileNotFoundError):
     catboost = None
 from onnxmltools.convert import convert_catboost
 from onnxmltools.utils import dump_data_and_model, dump_single_regression, dump_multiple_classification
