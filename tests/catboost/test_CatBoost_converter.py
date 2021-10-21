@@ -7,7 +7,10 @@ import unittest
 import warnings
 from distutils.version import StrictVersion
 import numpy
-from sklearn.datasets import make_regression, make_classification
+try:
+    from sklearn.datasets import make_regression, make_classification
+except (ImportError, FileNotFoundError):
+    sklearn = None
 try:
     import catboost
 except (ImportError, FileNotFoundError):
@@ -18,7 +21,7 @@ from onnxmltools.utils import dump_data_and_model, dump_single_regression, dump_
 
 class TestCatBoost(unittest.TestCase):
 
-    @unittest.skipIf(catboost is None, reason="catboost not imported")
+    @unittest.skipIf(catboost is None or sklearn is None, reason="catboost not imported")
     def test_catboost_regressor(self):
         X, y = make_regression(n_samples=100, n_features=4, random_state=0)
         catboost_model = catboost.CatBoostRegressor(task_type='CPU', loss_function='RMSE',
@@ -31,7 +34,7 @@ class TestCatBoost(unittest.TestCase):
         self.assertTrue(catboost_onnx is not None)
         dump_data_and_model(X.astype(numpy.float32), catboost_model, catboost_onnx, basename="CatBoostReg-Dec4")
 
-    @unittest.skipIf(catboost is None, reason="catboost not imported")
+    @unittest.skipIf(catboost is None or sklearn is None, reason="catboost not imported")
     def test_catboost_bin_classifier(self):
         import onnxruntime
 
@@ -50,7 +53,7 @@ class TestCatBoost(unittest.TestCase):
             warnings.warn('Converted CatBoost models for binary classification work with onnxruntime version 1.3.0 or '
                           'a newer one')
 
-    @unittest.skipIf(catboost is None, reason="catboost not imported")
+    @unittest.skipIf(catboost is None or sklearn is None, reason="catboost not imported")
     def test_catboost_multi_classifier(self):
         X, y = make_classification(n_samples=10, n_informative=8, n_classes=3, random_state=0)
         catboost_model = catboost.CatBoostClassifier(task_type='CPU', loss_function='MultiClass',
