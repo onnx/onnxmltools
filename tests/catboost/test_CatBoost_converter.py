@@ -4,10 +4,10 @@
 Tests for CatBoostRegressor and CatBoostClassifier converter.
 """
 import unittest
-import numpy
 import warnings
+from distutils.version import StrictVersion
+import numpy
 import catboost
-
 from sklearn.datasets import make_regression, make_classification
 from onnxmltools.convert import convert_catboost
 from onnxmltools.utils import dump_data_and_model, dump_single_regression, dump_multiple_classification
@@ -28,9 +28,8 @@ class TestCatBoost(unittest.TestCase):
 
     def test_catboost_bin_classifier(self):
         import onnxruntime
-        from distutils.version import StrictVersion
 
-        if StrictVersion(onnxruntime.__version__) >= StrictVersion('1.3.0'):
+        if StrictVersion('.'.join(onnxruntime.__version__.split('.')[:2])) >= StrictVersion('1.3.0'):
             X, y = make_classification(n_samples=100, n_features=4, random_state=0)
             catboost_model = catboost.CatBoostClassifier(task_type='CPU', loss_function='CrossEntropy',
                                                          n_estimators=10, verbose=0)
