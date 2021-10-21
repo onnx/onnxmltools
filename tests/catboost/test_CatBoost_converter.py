@@ -8,6 +8,7 @@ import warnings
 from distutils.version import StrictVersion
 import numpy
 try:
+    import sklearn
     from sklearn.datasets import make_regression, make_classification
 except (ImportError, FileNotFoundError):
     sklearn = None
