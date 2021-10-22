@@ -79,6 +79,11 @@ jobs:
 
   - script: |
       call activate py$(python.version)
+      python -m pip install --upgrade scikit-learn
+    displayName: 'Install scikit-learn'
+
+  - script: |
+      call activate py$(python.version)
       python -m pip install %COREML_PATH%
     displayName: 'Install coremltools'
 
