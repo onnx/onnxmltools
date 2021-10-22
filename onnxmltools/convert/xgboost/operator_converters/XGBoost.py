@@ -33,6 +33,8 @@ class XGBConverter:
         params = XGBConverter.get_xgb_params(xgb_node)
         objective = params["objective"]
         base_score = params["base_score"]
+        if base_score is None:
+            base_score = 0.5
         booster = xgb_node.get_booster()
         # The json format was available in October 2017.
         # XGBoost 0.7 was the first version released with it.

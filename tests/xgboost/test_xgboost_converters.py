@@ -53,13 +53,8 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test.astype("float32"),
-            xgb,
-            conv_model,
-            basename="SklearnXGBRegressor-Dec3",
-            allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
-        )
+            xgb, conv_model,
+            basename="SklearnXGBRegressor-Dec3")
 
     def test_xgb_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
@@ -68,14 +63,8 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
-            x_test,
-            xgb,
-            conv_model,
-            basename="SklearnXGBClassifier",
-            allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
-        )
+            x_test, xgb, conv_model,
+            basename="SklearnXGBClassifier")
 
     def test_xgb_classifier_uint8(self):
         xgb, x_test = _fit_classification_model(
@@ -85,14 +74,8 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
-            x_test,
-            xgb,
-            conv_model,
-            basename="SklearnXGBClassifier",
-            allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
-        )
+            x_test, xgb, conv_model,
+            basename="SklearnXGBClassifier")
 
     def test_xgb_classifier_multi(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 3)
@@ -101,14 +84,8 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
-            x_test,
-            xgb,
-            conv_model,
-            basename="SklearnXGBClassifierMulti",
-            allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
-        )
+            x_test, xgb, conv_model,
+            basename="SklearnXGBClassifierMulti")
 
     def test_xgb_classifier_multi_reglog(self):
         xgb, x_test = _fit_classification_model(
@@ -118,14 +95,8 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
-            x_test,
-            xgb,
-            conv_model,
-            basename="SklearnXGBClassifierMultiRegLog",
-            allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
-        )
+            x_test, xgb, conv_model,
+            basename="SklearnXGBClassifierMultiRegLog")
 
     def test_xgb_classifier_reglog(self):
         xgb, x_test = _fit_classification_model(
@@ -135,14 +106,8 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
-            x_test,
-            xgb,
-            conv_model,
-            basename="SklearnXGBClassifierRegLog",
-            allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
-        )
+            x_test, xgb, conv_model,
+            basename="SklearnXGBClassifierRegLog")
 
     def test_xgb_classifier_multi_str_labels(self):
         xgb, x_test = _fit_classification_model(
@@ -152,14 +117,8 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
-            x_test,
-            xgb,
-            conv_model,
-            basename="SklearnXGBClassifierMultiStrLabels",
-            allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
-        )
+            x_test, xgb, conv_model,
+            basename="SklearnXGBClassifierMultiStrLabels")
 
     def test_xgb_classifier_multi_discrete_int_labels(self):
         iris = load_iris()
@@ -180,13 +139,8 @@ class TestXGBoostModels(unittest.TestCase):
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test.astype("float32"),
-            xgb,
-            conv_model,
-            basename="SklearnXGBClassifierMultiDiscreteIntLabels",
-            allow_failure="StrictVersion("
-            "onnx.__version__)"
-            "< StrictVersion('1.3.0')",
-        )
+            xgb, conv_model,
+            basename="SklearnXGBClassifierMultiDiscreteIntLabels")
 
     def test_xgboost_booster_classifier_bin(self):
         x, y = make_classification(n_classes=2, n_features=5,
@@ -202,9 +156,7 @@ class TestXGBoostModels(unittest.TestCase):
                                      [('input', FloatTensorType([None, x.shape[1]]))],
                                      target_opset=TARGET_OPSET)
         dump_data_and_model(x_test.astype(np.float32),
-                            model, model_onnx,
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-                            basename="XGBBoosterMCl")
+                            model, model_onnx, basename="XGBBoosterMCl")
 
     def test_xgboost_booster_classifier_multiclass_softprob(self):
         x, y = make_classification(n_classes=3, n_features=5,
@@ -221,9 +173,7 @@ class TestXGBoostModels(unittest.TestCase):
                                      [('input', FloatTensorType([None, x.shape[1]]))],
                                      target_opset=TARGET_OPSET)
         dump_data_and_model(x_test.astype(np.float32),
-                            model, model_onnx,
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-                            basename="XGBBoosterMClSoftProb")
+                            model, model_onnx, basename="XGBBoosterMClSoftProb")
 
     def test_xgboost_booster_classifier_multiclass_softmax(self):
         x, y = make_classification(n_classes=3, n_features=5,
@@ -240,9 +190,7 @@ class TestXGBoostModels(unittest.TestCase):
                                      [('input', FloatTensorType([None, x.shape[1]]))],
                                      target_opset=TARGET_OPSET)
         dump_data_and_model(x_test.astype(np.float32),
-                            model, model_onnx,
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-                            basename="XGBBoosterMClSoftMax")
+                            model, model_onnx, basename="XGBBoosterMClSoftMax")
 
     def test_xgboost_booster_classifier_reg(self):
         x, y = make_classification(n_classes=2, n_features=5,
@@ -259,9 +207,7 @@ class TestXGBoostModels(unittest.TestCase):
                                      [('input', FloatTensorType([None, x.shape[1]]))],
                                      target_opset=TARGET_OPSET)
         dump_data_and_model(x_test.astype(np.float32),
-                            model, model_onnx,
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-                            basename="XGBBoosterReg")
+                            model, model_onnx, basename="XGBBoosterReg")
 
     def test_xgboost_10(self):
         this = os.path.abspath(os.path.dirname(__file__))
@@ -279,9 +225,9 @@ class TestXGBoostModels(unittest.TestCase):
         }
 
         train_df = pandas.read_csv(train)
-        X_train, y_train = train_df.drop('label', axis=1).values, train_df['label'].values
+        X_train, y_train = train_df.drop('label', axis=1).values, train_df['label'].fillna(0).values
         test_df = pandas.read_csv(test)
-        X_test, y_test = test_df.drop('label', axis=1).values, test_df['label'].values
+        X_test, y_test = test_df.drop('label', axis=1).values, test_df['label'].fillna(0).values
 
         regressor = XGBRegressor(verbose=0, objective='reg:squarederror', **param_distributions)
         regressor.fit(X_train, y_train)
@@ -292,9 +238,7 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET)
 
         dump_data_and_model(
-            X_test.astype(np.float32),
-            regressor, model_onnx,
-            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+            X_test.astype(np.float32), regressor, model_onnx,
             basename="XGBBoosterRegBug")
 
     def test_xgboost_classifier_i5450(self):
@@ -315,9 +259,7 @@ class TestXGBoostModels(unittest.TestCase):
         bst = clr.get_booster()
         bst.dump_model('dump.raw.txt')
         dump_data_and_model(
-            X_test.astype(np.float32) + 1e-5,
-            clr, onx,
-            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+            X_test.astype(np.float32) + 1e-5, clr, onx,
             basename="XGBClassifierIris")
 
     def test_xgboost_example_mnist(self):
@@ -342,7 +284,6 @@ class TestXGBoostModels(unittest.TestCase):
 
         dump_data_and_model(
             X_test.astype(np.float32), clf, onnx_model,
-            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
             basename="XGBoostExample")
 
     def test_xgb_empty_tree(self):
