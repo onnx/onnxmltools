@@ -27,11 +27,23 @@ def _append_covers(node):
 
 
 def _get_attributes(booster):
+    # num_class
+    state = booster.__getstate__()
+    bstate = bytes(state['handle'])
+    reg = re.compile(b'("tree_info":\\[[0-9,]*\\])')
+    objs = list(set(reg.findall(bstate)))
+    assert len(objs) == 1, 'Missing required property "tree_info".'
+    tree_info = json.loads("{{{}}}".format(objs[0].decode('ascii')))['tree_info']
+    num_class = len(set(tree_info))
+
     atts = booster.attributes()
-    ntrees = booster.best_ntree_limit
     dp = booster.get_dump(dump_format='json', with_stats=True)
     res = [json.loads(d) for d in dp]
     trees = len(res)
+    try:
+        ntrees = booster.best_ntree_limit
+    except AttributeError:
+        ntrees = trees // num_class if num_class > 0 else trees
     kwargs = atts.copy()
     kwargs['feature_names'] = booster.feature_names
     kwargs['n_estimators'] = ntrees
@@ -43,34 +55,22 @@ def _get_attributes(booster):
 
     if all(map(lambda x: int(x) == x, set(covs))):
         # regression
+        kwargs['num_target'] = num_class
         kwargs['num_class'] = 0
-        if trees > ntrees > 0:
-            kwargs['num_target'] = trees // ntrees
-            kwargs["objective"] = "reg:squarederror"
-        else:
-            kwargs['num_target'] = 1
-            kwargs["objective"] = "reg:squarederror"
+        kwargs["objective"] = "reg:squarederror"
     else:
         # classification
-        kwargs['num_target'] = 0
-        if trees > ntrees > 0:
-            state = booster.__getstate__()
-            bstate = bytes(state['handle'])
+        kwargs['num_class'] = num_class
+        if num_class != 1:
             reg = re.compile(b'(multi:[a-z]{1,15})')
             objs = list(set(reg.findall(bstate)))
-            if len(objs) != 1:
-                if '"name":"binary:logistic"' in str(bstate):
-                    kwargs['num_class'] = 1
-                    kwargs["objective"] = "binary:logistic"
-                else:
-                    raise RuntimeError(
-                        "Unable to guess objective in %r (trees=%r, ntrees=%r)"
-                        "." % (objs, trees, ntrees))
-            else:
-                kwargs['num_class'] = trees // ntrees
+            if len(objs) == 1:
                 kwargs["objective"] = objs[0].decode('ascii')
+            else:
+                raise RuntimeError(
+                    "Unable to guess objective in %r (trees=%r, ntrees=%r, num_class=%r)"
+                    "." % (objs, trees, ntrees, kwargs['num_class']))
         else:
-            kwargs['num_class'] = 1
             kwargs["objective"] = "binary:logistic"
 
     if 'base_score' not in kwargs:
