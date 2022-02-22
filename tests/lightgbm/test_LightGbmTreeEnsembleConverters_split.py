@@ -22,6 +22,7 @@ from onnxmltools.utils.tests_helper import convert_model
 
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
+ort_version = ".".join(ort_version.split('.')[:2])
 
 
 class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):

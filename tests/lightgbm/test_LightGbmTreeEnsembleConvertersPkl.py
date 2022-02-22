@@ -17,6 +17,8 @@ from onnxmltools.utils import dump_data_and_model
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
+ort_version = ".".join(onnxruntime.__version__.split('.')[:2])
+
 
 class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
 
@@ -37,7 +39,7 @@ class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
     @unittest.skipIf(sys.platform.startswith('lin'), reason="recover linux CI build, needs to be fixed")
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
     @unittest.skipIf(
-        StrictVersion(onnxruntime.__version__) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+        StrictVersion(ort_version) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
     )
     def test_root_leave_onnx_only(self):
         this = os.path.abspath(os.path.dirname(__file__))
