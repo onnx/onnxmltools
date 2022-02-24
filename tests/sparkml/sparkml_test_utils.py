@@ -71,7 +71,7 @@ def save_data_models(input, expected, model, onnx_model, basename="model", folde
 
 
 def run_onnx_model(output_names, input, onnx_model):
-    sess = onnxruntime.InferenceSession(onnx_model)
+    sess = onnxruntime.InferenceSession(onnx_model, providers=['CPUExecutionProvider'])
     if isinstance(input, dict):
         inputs = input
     elif isinstance(input, list):
