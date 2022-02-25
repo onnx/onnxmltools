@@ -28,8 +28,6 @@ def convert_word2vec(scope, operator, container):
     container.add_initializer(one, onnx_proto.TensorProto.INT64, [1], [1])
     zero = scope.get_unique_variable_name('zero_tensor')
     container.add_initializer(zero, onnx_proto.TensorProto.INT64, [1], [0])
-    word_count_tensor = scope.get_unique_variable_name('word_count_tensor')
-    container.add_initializer(word_count_tensor, onnx_proto.TensorProto.INT64, [1], [word_count])
 
     sliced_outputs = []
     for i in range(0, word_count):
