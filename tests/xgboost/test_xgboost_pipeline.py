@@ -34,6 +34,7 @@ except ImportError:
 
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
+TARGET_OPSET_ML = 2
 
 
 @unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
@@ -134,7 +135,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
             input_xgb[input_xgb[:, :] == missing] = np.nan
         onnx_last = convert_sklearn(model.steps[1][-1],
                                     initial_types=[('X', FloatTensorType(shape=[None, input_xgb.shape[1]]))],
-                                    target_opset=TARGET_OPSET)
+                                    target_opset={'': TARGET_OPSET, 'ai.onnx.ml': TARGET_OPSET_ML})
         session = rt.InferenceSession(onnx_last.SerializeToString())
         pred_skl = model.steps[1][-1].predict(input_xgb).ravel()
         pred_onx = session.run(None, {'X': input_xgb})[0].ravel()

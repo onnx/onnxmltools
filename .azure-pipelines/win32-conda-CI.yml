@@ -14,9 +14,15 @@ jobs:
     vmImage: 'windows-latest'
   strategy:
     matrix:
-      Python39-1101-RT190:
+      Python39-1110-RT190:
         python.version: '3.9'
-        ONNX_PATH: 'onnx==1.10.1'  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
+        ONNX_PATH: 'onnx==1.11.0'  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
+        ONNXRT_PATH: onnxruntime==1.10.0
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+
+      Python39-1102-RT190:
+        python.version: '3.9'
+        ONNX_PATH: 'onnx==1.10.2'  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
         ONNXRT_PATH: onnxruntime==1.9.0
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
 
