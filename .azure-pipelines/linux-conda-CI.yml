@@ -9,7 +9,7 @@ trigger:
 jobs:
 
 - job: 'Test'
-  timeoutInMinutes: 25
+  timeoutInMinutes: 30
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
