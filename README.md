@@ -18,7 +18,7 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * XGBoost
 * H2O
 * CatBoost
-<p>Pytorch has its builtin ONNX exporter check <a href="https://pytorch.org/docs/stable/onnx.html">here</a>  for details</p>
+<p>Pytorch has its built-in ONNX exporter check <a href="https://pytorch.org/docs/stable/onnx.html">here</a>  for details</p>
 
 ## Install
 You can install latest release of ONNXMLTools from [PyPi](https://pypi.org/project/onnxmltools/):
@@ -100,7 +100,7 @@ onnxmltools.utils.save_model(onnx_model, 'example.onnx')
 ```
 
 ## H2O to ONNX Conversion
-Below is a code snippet to convert a H2O MOJO model into an ONNX model. The only pre-requisity is to have a MOJO model saved on the local file-system.
+Below is a code snippet to convert a H2O MOJO model into an ONNX model. The only prerequisite is to have a MOJO model saved on the local file-system.
 
 ```python
 import onnxmltools
