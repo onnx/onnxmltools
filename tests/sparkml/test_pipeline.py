@@ -125,7 +125,7 @@ class TestSparkmlPipeline(SparkMlTestCase):
         stages = []
         for col in cols:
             stages.append(StringIndexer(inputCol=col, outputCol=col+'_index', handleInvalid='skip'))
-            stages.append(OneHotEncoder(inputCols=[col+'_index'], outputCols=[col+'_vec']))
+            stages.append(OneHotEncoder(inputCols=[col+'_index'], outputCols=[col+'_vec'], dropLast=False))
 
         pipeline = Pipeline(stages=stages)
 
