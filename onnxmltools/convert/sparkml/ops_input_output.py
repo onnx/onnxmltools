@@ -150,8 +150,12 @@ def build_io_name_map():
             lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")]
         ),
         "pyspark.ml.feature.OneHotEncoderModel": (
-            lambda model: model.getOrDefault("inputCols"),
+            lambda model: model.getOrDefault("inputCols")
+            if model.isSet("inputCols")
+            else [model.getOrDefault("inputCol")],
             lambda model: model.getOrDefault("outputCols")
+            if model.isSet("outputCols")
+            else [model.getOrDefault("outputCol")],
         ),
         "pyspark.ml.feature.StringIndexerModel": (
             lambda model: [model.getOrDefault("inputCol")],
