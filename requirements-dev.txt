@@ -19,4 +19,4 @@ pytest-spark
 scikit-learn
 scipy
 wheel
-xgboost
+xgboost==1.5.2
