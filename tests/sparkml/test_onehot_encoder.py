@@ -27,7 +27,7 @@ class TestSparkmlOneHotEncoder(SparkMlTestCase):
         data = self.spark.createDataFrame([(0.0,5.0,), (1.0,4.0,), (2.0,3.0,), (2.0,2.0,), (0.0,1.0,), (2.0,0.0,)], ['index1','index2'])
         model = encoder.fit(data)
         model_onnx = convert_sparkml(
-            model, 'Sparkml OneHotEncoder', [('index1', FloatTensorType([None, 1])), ('index2', FloatTensorType([-1, 1]))],
+            model, 'Sparkml OneHotEncoder', [('index1', FloatTensorType([None, 1])), ('index2', FloatTensorType([None, 1]))],
             target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
@@ -65,7 +65,7 @@ class TestSparkmlOneHotEncoder(SparkMlTestCase):
 
         model = encoder.fit(data)
         model_onnx = convert_sparkml(
-            model, 'Sparkml OneHotEncoder', [('index1', FloatTensorType([None, 1])), ('index2', FloatTensorType([-1, 1]))],
+            model, 'Sparkml OneHotEncoder', [('index1', FloatTensorType([None, 1])), ('index2', FloatTensorType([None, 1]))],
             target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
