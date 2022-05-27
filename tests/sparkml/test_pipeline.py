@@ -125,7 +125,7 @@ class TestSparkmlPipeline(SparkMlTestCase):
         stages = []
         for col in cols:
             stages.append(StringIndexer(inputCol=col, outputCol=col+'_index', handleInvalid='skip'))
-            stages.append(OneHotEncoder(inputCols=[col+'_index'], outputCols=[col+'_vec']))
+            stages.append(OneHotEncoder(inputCols=[col+'_index'], outputCols=[col+'_vec'], dropLast=False))
 
         pipeline = Pipeline(stages=stages)
 
@@ -149,21 +149,14 @@ class TestSparkmlPipeline(SparkMlTestCase):
             predicted.toPandas().education_vec.apply(lambda x: pandas.Series(x.toArray())).values,
             predicted.toPandas().marital_status_vec.apply(lambda x: pandas.Series(x.toArray())).values
             ]
-        expected = [numpy.asarray([expand_one_hot_vec(x) for x in row]) for row in predicted_np]
+            
+        expected = [numpy.asarray(row) for row in predicted_np]
         paths = save_data_models(data_np, expected, model, model_onnx,
                                  basename="SparkmlPipeline_2Stage")
         onnx_model_path = paths[-1]
         output, output_shapes = run_onnx_model(['workclass_vec', 'education_vec', 'marital_status_vec'],
                                                data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
-
-
-def expand_one_hot_vec(v):
-    import numpy
-    if numpy.amax(v) == 1:
-        return v.tolist() + [0]
-    else:
-        return v.tolist() + [1]
 
 
 if __name__ == "__main__":
