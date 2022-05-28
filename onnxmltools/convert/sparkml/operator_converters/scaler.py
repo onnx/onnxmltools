@@ -18,8 +18,8 @@ def convert_sparkml_scaler(scope, operator, container):
     attrs = {'name': scope.get_unique_operator_name(op_type)}
     if isinstance(op, StandardScalerModel):
         C = operator.inputs[0].type.shape[1]
-        attrs['offset'] = op.mean if op.getOrDefault("withMean") else [0.0] * C
-        attrs['scale'] = [1.0 / x for x in op.std] if op.getOrDefault("withStd") else [1.0] * C
+        attrs['offset'] = op.mean.toArray() if op.getOrDefault("withMean") else [0.0] * C
+        attrs['scale'] = [1.0 / x for x in op.std.toArray()] if op.getOrDefault("withStd") else [1.0] * C
     elif isinstance(op, MinMaxScalerModel):
         epsilon = 1.0e-8  # to avoid dividing by zero
         attrs['offset'] = [x for x in op.originalMin]
