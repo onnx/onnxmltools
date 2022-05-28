@@ -10,7 +10,7 @@ mleap
 numpy
 openpyxl
 pandas
-protobuf
+protobuf<4.0
 psutil
 pyspark
 pytest
