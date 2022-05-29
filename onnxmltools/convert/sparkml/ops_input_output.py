@@ -164,6 +164,10 @@ def build_io_name_map():
         "pyspark.ml.feature.VectorAssembler": (
             lambda model: model.getOrDefault("inputCols"),
             lambda model: [model.getOrDefault("outputCol")]
+        ),
+        "pyspark.ml.clustering.KMeansModel": (
+            lambda model: [model.getOrDefault("featuresCol")],
+            lambda model: [model.getOrDefault("predictionCol")]
         )
     }
     return map
