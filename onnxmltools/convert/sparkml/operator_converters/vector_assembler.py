@@ -18,12 +18,15 @@ register_converter('pyspark.ml.feature.VectorAssembler', convert_sparkml_vector_
 
 def calculate_vector_assembler_shapes(operator):
     check_input_and_output_numbers(operator, output_count_range=1)
-    C = len(operator.raw_operator.getInputCols())
+
+    # Sum up the rank 1 (length of input vector) from each input.
+    C = sum([input.type.shape[1] for input in operator.inputs])
+    N = operator.inputs[0].type.shape[0]
     col_type = operator.inputs[0].type
     if isinstance(col_type, FloatTensorType):
-        col_type = FloatTensorType([1, C])
+        col_type = FloatTensorType([N, C])
     elif isinstance(col_type, Int64TensorType):
-        col_type = Int64TensorType([1, C])
+        col_type = Int64TensorType([N, C])
     else:
         raise TypeError("Unsupported input type")
     operator.outputs[0].type = col_type
