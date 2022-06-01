@@ -48,9 +48,6 @@ class TestSparkmlKMeansModel(SparkMlTestCase):
 
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
-        
-        with open('kmeans.onnx', 'wb') as f:
-            f.write(model_onnx.SerializeToString())
 
         # run the model
         predicted = model.transform(data).toPandas()
