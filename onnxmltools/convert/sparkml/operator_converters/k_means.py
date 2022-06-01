@@ -101,6 +101,13 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
         )
 
         # input * Transpose(Center): [N x K]
+        zeros_variable_name = scope.get_unique_variable_name("zeros")
+        container.add_initializer(
+            zeros_variable_name, 
+            onnx_proto.TensorProto.FLOAT, 
+            [1, K], 
+            np.zeros([1, K]).flatten().astype(np.float32)
+        )
         gemm_output_variable_name = scope.get_unique_variable_name("gemm_output")
         gemm_attrs = {
             "name": scope.get_unique_operator_name("GeMM"),
@@ -109,7 +116,7 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
         }
         container.add_node(
             op_type="Gemm", 
-            inputs=[operator.inputs[0].full_name, centers_variable_name], 
+            inputs=[operator.inputs[0].full_name, centers_variable_name, zeros_variable_name],
             outputs=[gemm_output_variable_name],
             **gemm_attrs
         )
