@@ -50,7 +50,6 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
             op_type="ReduceSumSquare",
             inputs=[operator.inputs[0].full_name],
             outputs=[input_row_squared_sum_variable_name],
-            op_domain="ai.onnx",
             **reduce_sum_square_attrs
         )
 
@@ -66,7 +65,6 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
             op_type="Gemm", 
             inputs=[operator.inputs[0].full_name, centers_variable_name, input_row_squared_sum_variable_name], 
             outputs=[gemm_output_variable_name],
-            op_domain="ai.onnx",
             **gemm_attrs
         )
         
@@ -76,7 +74,6 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
             op_type="Add",
             inputs=[gemm_output_variable_name, centers_row_squared_sum_variable_name],
             outputs=[distance_output_variable_name],
-            op_domain="ai.onnx",
         )
     elif op.getDistanceMeasure() == "cosine":
         # centers_row_norm2: [1 x K]
@@ -100,7 +97,6 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
             op_type="ReduceL2",
             inputs=[operator.inputs[0].full_name],
             outputs=[input_row_norm2_variable_name],
-            op_domain="ai.onnx",
             **reduce_l2_attrs
         )
 
@@ -115,7 +111,6 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
             op_type="Gemm", 
             inputs=[operator.inputs[0].full_name, centers_variable_name], 
             outputs=[gemm_output_variable_name],
-            op_domain="ai.onnx",
             **gemm_attrs
         )
 
@@ -125,7 +120,6 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
             op_type="Div",
             inputs=[gemm_output_variable_name, input_row_norm2_variable_name],
             outputs=[div_output_variable_name],
-            op_domain="ai.onnx",
             op_version=7, # Setting to version 7 for broadcasting support
         )
         cosine_similarity_output_variable_name = scope.get_unique_variable_name("cosine_similarity_output")
@@ -133,7 +127,6 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
             op_type="Div",
             inputs=[div_output_variable_name, centers_row_norm2_variable_name],
             outputs=[cosine_similarity_output_variable_name],
-            op_domain="ai.onnx",
             op_version=7, # Setting to version 7 for broadcasting support
         )
 
@@ -142,7 +135,6 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
             op_type="Neg",
             inputs=[cosine_similarity_output_variable_name],
             outputs=[distance_output_variable_name],
-            op_domain="ai.onnx",
         )
     else:
         raise ValueError(f"Distance measure {op.getDistanceMeasure()} not supported")
@@ -156,7 +148,6 @@ def convert_sparkml_k_means_model(scope: Scope, operator: Operator, container: M
         op_type="ArgMin",
         inputs=[distance_output_variable_name],
         outputs=[operator.outputs[0].full_name],
-        op_domain="ai.onnx",
         **argmin_attrs
     )
 
