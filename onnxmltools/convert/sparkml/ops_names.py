@@ -48,7 +48,7 @@ from pyspark.ml.regression import IsotonicRegressionModel
 from pyspark.ml.regression import LinearRegressionModel
 
 from pyspark.ml.clustering import BisectingKMeans
-from pyspark.ml.clustering import KMeans
+from pyspark.ml.clustering import KMeansModel
 from pyspark.ml.clustering import GaussianMixture
 from pyspark.ml.clustering import LDA
 
@@ -69,6 +69,9 @@ def build_sparkml_operator_name_map():
     res.update({k: "pyspark.ml.regression." + k.__name__ for k in [
         AFTSurvivalRegressionModel, DecisionTreeRegressionModel, GBTRegressionModel, GBTRegressionModel,
         GeneralizedLinearRegressionModel, IsotonicRegressionModel, LinearRegressionModel, RandomForestRegressionModel
+    ]})
+    res.update({k: "pyspark.ml.clustering." + k.__name__ for k in [
+        KMeansModel
     ]})
     return res
 
