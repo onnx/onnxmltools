@@ -75,7 +75,7 @@ class TestSparkmlScaler(SparkMlTestCase):
             (1, Vectors.dense([2.0, 1.1, 1.0]),),
             (2, Vectors.dense([3.0, 10.1, 3.0]),)
         ], ["id", "features"])
-        scaler = StandardScaler(inputCol='features', outputCol='scaled_features')
+        scaler = StandardScaler(inputCol='features', outputCol='scaled_features', withStd=True, withMean=True)
         model = scaler.fit(data)
 
         # the input names must match the inputCol(s) above
