@@ -141,6 +141,10 @@ def build_io_name_map():
             lambda model: [model.getOrDefault("inputCol")],
             lambda model: [model.getOrDefault("outputCol")]
         ),
+        "pyspark.ml.feature.CountVectorizerModel": (
+            lambda model: [model.getOrDefault("inputCol")],
+            lambda model: [model.getOrDefault("outputCol")]
+        ),
         "pyspark.ml.classification.LinearSVCModel": (
             lambda model: [model.getOrDefault("featuresCol")],
             lambda model: [model.getOrDefault("predictionCol")]
