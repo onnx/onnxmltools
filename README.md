@@ -1,14 +1,16 @@
 <!--- SPDX-License-Identifier: Apache-2.0 -->
+#
 
+![ONNXMLTools_logo_main](docs/ONNXMLTools_logo_main.png)
 
-<p align="center"><img width="40%" src="docs/ONNXMLTools_logo_main.png" /></p>
+| Linux                                                                                                                                                                                                                          | Windows                                                                                                                                                                                                                        |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master) | [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-win32-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master) |
 
-| Linux | Windows |
-|-------|---------|
-| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-win32-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master)|
+## Introduction
 
-# Introduction
 ONNXMLTools enables you to convert models from different machine learning toolkits into [ONNX](https://onnx.ai). Currently the following toolkits are supported:
+
 * Tensorflow (a wrapper of [tf2onnx converter](https://github.com/onnx/tensorflow-onnx/))
 * scikit-learn (a wrapper of [skl2onnx converter](https://github.com/onnx/sklearn-onnx/))
 * Apple Core ML
@@ -18,22 +20,30 @@ ONNXMLTools enables you to convert models from different machine learning toolki
 * XGBoost
 * H2O
 * CatBoost
-<p>Pytorch has its builtin ONNX exporter check <a href="https://pytorch.org/docs/stable/onnx.html">here</a>  for details</p>
+
+Pytorch has its builtin ONNX exporter check [here](https://pytorch.org/docs/stable/onnx.html) for details.
 
 ## Install
+
 You can install latest release of ONNXMLTools from [PyPi](https://pypi.org/project/onnxmltools/):
-```
+
+```bash
 pip install onnxmltools
 ```
+
 or install from source:
-```
+
+```bash
 pip install git+https://github.com/microsoft/onnxconverter-common
 pip install git+https://github.com/onnx/onnxmltools
 ```
+
 If you choose to install `onnxmltools` from its source code, you must set the environment variable `ONNX_ML=1` before installing the `onnx` package.
 
 ## Dependencies
+
 This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model from scikit-learn, Core ML, Keras, LightGBM, SparkML, XGBoost, H2O, CatBoost or LibSVM, you will need an environment with the respective package installed from the list below:
+
 1. scikit-learn
 2. CoreMLTools (version 3.1 or lower)
 3. Keras (version 2.0.8 or higher) with the corresponding Tensorflow version
@@ -47,9 +57,11 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 ONNXMLTools is tested with Python **3.7+**.
 
 # Examples
+
 If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions).
 
 ## Keras to ONNX Conversion
+
 Next, we show an example of converting a Keras model into an ONNX model with `target_opset=7`, which corresponds to ONNX release version 1.2.
 
 ```python
@@ -83,6 +95,7 @@ onnx_model = onnxmltools.convert_keras(keras_model, target_opset=7)
 ```
 
 ## CoreML to ONNX Conversion
+
 Here is a simple code snippet to convert a Core ML model into an ONNX model.
 
 ```python
@@ -100,7 +113,8 @@ onnxmltools.utils.save_model(onnx_model, 'example.onnx')
 ```
 
 ## H2O to ONNX Conversion
-Below is a code snippet to convert a H2O MOJO model into an ONNX model. The only pre-requisity is to have a MOJO model saved on the local file-system.
+
+Below is a code snippet to convert a H2O MOJO model into an ONNX model. The only prerequisite is to have a MOJO model saved on the local file-system.
 
 ```python
 import onnxmltools
@@ -122,7 +136,7 @@ backend of your choice.
 
 You can check the operator set of your converted ONNX model using [Netron](https://github.com/lutzroeder/Netron), a viewer for Neural Network models. Alternatively, you could identify your converted model's opset version through the following line of code.
 
-```
+```python
 opset_version = onnx_model.opset_import[0].version
 ```
 
@@ -138,7 +152,8 @@ All converter unit test can generate the original model and converted model to a
 [onnxruntime](https://pypi.org/project/onnxruntime/) or
 [onnxruntime-gpu](https://pypi.org/project/onnxruntime-gpu/).
 The unit test cases are all the normal python unit test cases, you can run it with pytest command line, for example:
-```
+
+```bash
 python -m pytest --ignore .\tests\
 ```
 
@@ -159,4 +174,5 @@ be added in *tests_backend* to compute the prediction
 with the runtime.
 
 # License
+
 [Apache License v2.0](LICENSE)
