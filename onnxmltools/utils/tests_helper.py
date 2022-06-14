@@ -4,6 +4,7 @@ import pickle
 import os
 import warnings
 import numpy
+from distutils.version import StrictVersion, LooseVersion
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from ..convert.common.data_types import FloatTensorType
