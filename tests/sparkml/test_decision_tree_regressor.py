@@ -3,7 +3,7 @@
 import sys
 import inspect
 import unittest
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 import onnx
 import pandas
 import numpy
@@ -28,7 +28,7 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
                      reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
-    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
+    @unittest.skipIf(LooseVersion(onnx.__version__) <= LooseVersion('1.3'), 'Need Greater Opset 9')
     def test_decision_tree_regressor_pipeline(self):
         import os
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))

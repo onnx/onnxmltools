@@ -2,7 +2,7 @@
 
 import sys
 import unittest
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 import inspect
 import os
 import onnx
@@ -24,7 +24,7 @@ class TestSparkmOneVsRest(SparkMlTestCase):
 
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
-    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),
+    @unittest.skipIf(LooseVersion(onnx.__version__) <= LooseVersion('1.3'),
                      'Need Greater Opset 9')
     def test_one_vs_rest(self):
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
