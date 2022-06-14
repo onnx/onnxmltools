@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 import lightgbm
 import numpy
@@ -25,8 +25,8 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     def test_lightgbm_classifier(self):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1, num_thread=1)
-        dump_binary_classification(model, allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
-        dump_multiple_classification(model, allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
+        dump_binary_classification(model, allow_failure="StrictVersion(onnx.__version__) < LooseVersion('1.3.0')")
+        dump_multiple_classification(model, allow_failure="StrictVersion(onnx.__version__) < LooseVersion('1.3.0')")
 
     def test_lightgbm_classifier_zipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
