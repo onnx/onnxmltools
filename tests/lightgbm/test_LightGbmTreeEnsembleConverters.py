@@ -107,7 +107,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                            [('input', FloatTensorType([None, 2]))],
                                            target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            allow_failure="LooseVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     def test_lightgbm_booster_classifier_nozipmap(self):
@@ -123,7 +123,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                            zipmap=False, target_opset=TARGET_OPSET)
         assert "zipmap" not in str(model_onnx).lower()
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            allow_failure="LooseVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     def test_lightgbm_booster_classifier_zipmap(self):
@@ -139,7 +139,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                            target_opset=TARGET_OPSET)
         assert "zipmap" in str(model_onnx).lower()
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            allow_failure="LooseVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     def test_lightgbm_booster_multi_classifier(self):
@@ -154,7 +154,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                            [('input', FloatTensorType([None, 2]))],
                                            target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            allow_failure="LooseVersion(onnx.__version__) < StrictVersion('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
         try:
             from onnxruntime import InferenceSession
