@@ -15,6 +15,12 @@ jobs:
   strategy:
     matrix:
 
+      Python39-1120-RT1110:
+        python.version: '3.9'
+        ONNX_PATH: '-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
+        ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+
       Python39-1110-RT1110:
         python.version: '3.9'
         ONNX_PATH: onnx==1.11.0  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
