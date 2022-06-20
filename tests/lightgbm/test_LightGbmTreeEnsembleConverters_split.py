@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
-from distutils.version import StrictVersion
+import packaging.version as pv
 import lightgbm
 import numpy
 from numpy.testing import assert_almost_equal
@@ -27,7 +27,7 @@ ort_version = ".".join(ort_version.split('.')[:2])
 
 class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
 
-    @unittest.skipIf(StrictVersion(ort_version) < StrictVersion('1.7.0'),
+    @unittest.skipIf(pv.Version(ort_version) < pv.Version('1.7.0'),
                      reason="Sum<double> not implemented.")
     def test_lgbm_regressor10(self):
         data = load_iris()
@@ -55,7 +55,7 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         assert_almost_equal(expected, got1.ravel(), decimal=5)
         assert_almost_equal(expected, got2.ravel(), decimal=5)
 
-    @unittest.skipIf(StrictVersion(ort_version) < StrictVersion('1.7.0'),
+    @unittest.skipIf(pv.Version(ort_version) < pv.Version('1.7.0'),
                      reason="Sum<double> not implemented.")
     def test_lgbm_regressor(self):
         data = load_iris()
@@ -86,7 +86,7 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         d2 = numpy.abs(expected.ravel() - got2.ravel()).mean()
         self.assertGreater(d1, d2)
 
-    @unittest.skipIf(StrictVersion(ort_version) < StrictVersion('1.7.0'),
+    @unittest.skipIf(pv.Version(ort_version) < pv.Version('1.7.0'),
                      reason="Sum<double> not implemented.")
     def test_lightgbm_booster_regressor(self):
         data = load_iris()

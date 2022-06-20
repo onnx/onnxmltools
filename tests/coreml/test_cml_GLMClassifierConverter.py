@@ -4,7 +4,7 @@
 Tests CoreML GLMClassifier converter.
 """
 import unittest
-from distutils.version import StrictVersion
+import packaging.version as pv
 import numpy
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
@@ -38,7 +38,7 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         self.assertTrue('classProbability' in node.output)
 
     @unittest.skipIf(
-        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        pv.Version(coremltools.__version__) > pv.Version("3.1"),
         reason="untested")
     def test_glm_classifier(self):
         iris = load_iris()
@@ -54,7 +54,7 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         self.assertTrue(lr_onnx is not None)
         self.validate_zipmap(lr_onnx)
         dump_data_and_model(X.astype(numpy.float32), lr, lr_onnx, basename="CmlbinLogitisticRegression",
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
+                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')")
 
         # Ensure there is a probability output
         svm = LinearSVC()

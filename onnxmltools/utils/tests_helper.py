@@ -4,7 +4,7 @@ import pickle
 import os
 import warnings
 import numpy
-from distutils.version import StrictVersion, LooseVersion
+import packaging.version as pv
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from ..convert.common.data_types import FloatTensorType
@@ -41,7 +41,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     :param allow_failure: None to raise an exception if comparison fails
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
-        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
+        ``"pv.Version(onnx.__version__) < pv.Version('1.3.0')"``
     :param verbose: prints more information when it fails
     :return: the created files
 
@@ -244,7 +244,7 @@ def dump_one_class_classification(model, suffix="", folder=None, allow_failure=N
     :param allow_failure: None to raise an exception if comparison fails
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
-        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
+        ``"pv.Version(onnx.__version__) < pv.Version('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
 
     Every created filename will follow the pattern:
@@ -270,7 +270,7 @@ def dump_binary_classification(model, suffix="", folder=None, allow_failure=None
     :param allow_failure: None to raise an exception if comparison fails
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
-        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
+        ``"pv.Version(onnx.__version__) < pv.Version('1.3.0')"``
     :param verbose: prints more information when it fails
     :return: output of :func:`dump_data_and_model`
 
@@ -297,7 +297,7 @@ def dump_multiple_classification(model, suffix="", folder=None, allow_failure=No
     :param allow_failure: None to raise an exception if comparison fails
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
-        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
+        ``"pv.Version(onnx.__version__) < pv.Version('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
 
     Every created filename will follow the pattern:
@@ -323,7 +323,7 @@ def dump_multiple_regression(model, suffix="", folder=None, allow_failure=None):
     :param allow_failure: None to raise an exception if comparison fails
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
-        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
+        ``"pv.Version(onnx.__version__) < pv.Version('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
 
     Every created filename will follow the pattern:
@@ -350,7 +350,7 @@ def dump_single_regression(model, suffix="", folder=None, allow_failure=None):
     :param allow_failure: None to raise an exception if comparison fails
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
-        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
+        ``"pv.Version(onnx.__version__) < pv.Version('1.3.0')"``
     :return: output of :func:`dump_data_and_model`
 
     Every created filename will follow the pattern:

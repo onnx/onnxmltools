@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
-from distutils.version import StrictVersion
+import packaging.version as pv
 import numpy
 try:
     from sklearn.impute import SimpleImputer as Imputer
@@ -480,7 +480,7 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
             dims = [(d.dim_param or d.dim_value) for d in model_onnx.graph.input[0].type.tensor_type.shape.dim]
             self.assertEqual(dims, ['None', 1 if onnx_colorspace == 'Gray8' else 3, 15, 25])
 
-            if StrictVersion(onnx.__version__) >= StrictVersion('1.2.1'):
+            if pv.Version(onnx.__version__) >= pv.Version('1.2.1'):
                 metadata = {prop.key: prop.value for prop in model_onnx.metadata_props}
                 self.assertEqual(metadata, { 'Image.BitmapPixelFormat': onnx_colorspace })
                 self.assertEqual(model_onnx.graph.input[0].type.denotation, 'IMAGE')

@@ -2,7 +2,7 @@
 
 import sys
 import unittest
-from distutils.version import LooseVersion
+import packaging.version as pv
 import numpy
 import onnx
 from pyspark.ml.feature import StopWordsRemover
@@ -21,7 +21,7 @@ class TestSparkmlStopWordsRemover(SparkMlTestCase):
 
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
-    @unittest.skipIf(LooseVersion(onnx.__version__) <= LooseVersion('1.5'),
+    @unittest.skipIf(pv.Version(onnx.__version__) <= pv.Version('1.5'),
                      'Need Greater Opset 10')
     def test_stop_words_remover2(self):
         data = self.spark.createDataFrame([(["a", "b", "c"],)], ["text"])
