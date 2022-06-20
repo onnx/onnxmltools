@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from distutils.version import StrictVersion
+import packaging.version as pv
 import unittest
 import sys
 import onnx
@@ -21,7 +21,7 @@ class TestSparkmlTokenizer(SparkMlTestCase):
 
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
-    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.5'),
+    @unittest.skipIf(pv.Version(onnx.__version__) <= pv.Version('1.5'),
                      'Need Greater Opset 10')
     def test_tokenizer(self):
         data = self.spark.createDataFrame([("a b c",)], ["text"])

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import sys
-from distutils.version import StrictVersion
+import packaging.version as pv
 import unittest
 import numpy
 import pickle
@@ -39,7 +39,7 @@ class TestLightGbmTreeEnsembleModelsPkl(unittest.TestCase):
     @unittest.skipIf(sys.platform.startswith('lin'), reason="recover linux CI build, needs to be fixed")
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
     @unittest.skipIf(
-        StrictVersion(ort_version) < StrictVersion('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
+        pv.Version(ort_version) < pv.Version('1.0.0'), reason="Hummingbird supports only latest versions of ORT"
     )
     def test_root_leave_onnx_only(self):
         this = os.path.abspath(os.path.dirname(__file__))

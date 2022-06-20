@@ -5,7 +5,7 @@ Tests scikit-linear converter.
 """
 import sys
 import os
-from distutils.version import StrictVersion
+import packaging.version as pv
 import unittest
 import pickle
 import xgboost
@@ -20,7 +20,7 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 class TestXGBoostUnpickle06(unittest.TestCase):
 
-    @unittest.skipIf(StrictVersion(xgboost.__version__) >= StrictVersion('1.0'),
+    @unittest.skipIf(pv.Version(xgboost.__version__) >= pv.Version('1.0'),
                      reason="compatibility break with pickle in 1.0")
     def test_xgboost_unpickle_06(self):
         # Unpickle a model trained with an old version of xgboost.

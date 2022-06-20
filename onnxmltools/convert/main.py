@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import warnings
-from distutils.version import StrictVersion
+import packaging.version as pv
 import onnx
 from .common import utils
 
@@ -34,7 +34,7 @@ def convert_keras(model, name=None,
     if targeted_onnx is not None:
         warnings.warn("targeted_onnx is deprecated and unused. Use target_opset.", DeprecationWarning)
     import tensorflow as tf
-    if StrictVersion(tf.__version__) < StrictVersion('2.0'):
+    if pv.Version(tf.__version__) < pv.Version('2.0'):
         # Former converter for tensorflow<2.0.
         from keras2onnx import convert_keras as convert
         return convert(model, name, doc_string, target_opset, channel_first_inputs)

@@ -204,7 +204,7 @@ def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="mod
     :param allow_failure: None to raise an exception if comparison fails
         for the backends, otherwise a string which is then evaluated to check
         whether or not the test can fail, example:
-        ``"StrictVersion(onnx.__version__) < StrictVersion('1.3.0')"``
+        ``"pv.Version(onnx.__version__) < pv.Version('1.3.0')"``
     :param verbose: additional information
     :return: the created files
 

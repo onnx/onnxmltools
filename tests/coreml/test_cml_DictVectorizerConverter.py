@@ -4,7 +4,7 @@
 Tests CoreML DictVectorizer converter.
 """
 import sys
-from distutils.version import StrictVersion
+import packaging.version as pv
 import unittest
 import onnx
 import sklearn
@@ -30,7 +30,7 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 class TestCoreMLDictVectorizerConverter(unittest.TestCase):
 
     @unittest.skipIf(
-        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        pv.Version(coremltools.__version__) > pv.Version("3.1"),
         reason="untested")
     def test_dict_vectorizer(self):
         model = DictVectorizer()
@@ -48,7 +48,7 @@ class TestCoreMLDictVectorizerConverter(unittest.TestCase):
         model_onnx = convert(model_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(data, model, model_onnx, basename="CmlDictVectorizer-OneOff-SkipDim1",
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
+                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')")
 
 
 if __name__ == "__main__":

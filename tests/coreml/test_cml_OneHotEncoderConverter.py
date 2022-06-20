@@ -7,7 +7,7 @@ import sys
 import os
 import unittest
 import warnings
-from distutils.version import StrictVersion
+import packaging.version as pv
 import numpy
 import onnx
 try:
@@ -32,7 +32,7 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 class TestCoremlOneHotEncoderConverter(unittest.TestCase):
 
     @unittest.skipIf(
-        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        pv.Version(coremltools.__version__) > pv.Version("3.1"),
         reason="untested")
     def test_one_hot_encoder(self):
         script_dir = os.path.dirname(__file__)

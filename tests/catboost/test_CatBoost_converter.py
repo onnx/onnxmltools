@@ -5,7 +5,7 @@ Tests for CatBoostRegressor and CatBoostClassifier converter.
 """
 import unittest
 import warnings
-from distutils.version import StrictVersion
+import packaging.version as pv
 import numpy
 try:
     import sklearn
@@ -39,7 +39,7 @@ class TestCatBoost(unittest.TestCase):
     def test_catboost_bin_classifier(self):
         import onnxruntime
 
-        if StrictVersion('.'.join(onnxruntime.__version__.split('.')[:2])) >= StrictVersion('1.3.0'):
+        if pv.Version('.'.join(onnxruntime.__version__.split('.')[:2])) >= pv.Version('1.3.0'):
             X, y = make_classification(n_samples=100, n_features=4, random_state=0)
             catboost_model = catboost.CatBoostClassifier(task_type='CPU', loss_function='CrossEntropy',
                                                          n_estimators=10, verbose=0)

@@ -4,7 +4,7 @@
 Tests CoreML GLMRegressor converter.
 """
 import unittest
-from distutils.version import StrictVersion
+import packaging.version as pv
 import numpy
 try:
     from sklearn.impute import SimpleImputer as Imputer
@@ -30,7 +30,7 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 class TestCoreMLGLMRegressorConverter(unittest.TestCase):
 
     @unittest.skipIf(
-        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        pv.Version(coremltools.__version__) > pv.Version("3.1"),
         reason="untested")
     def test_glm_regressor(self):
         X, y = make_regression(n_features=4, random_state=0)

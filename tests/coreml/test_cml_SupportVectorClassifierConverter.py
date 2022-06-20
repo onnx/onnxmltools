@@ -3,7 +3,7 @@
 """
 Tests CoreML SupportVectorClassifier converter.
 """
-from distutils.version import StrictVersion
+import packaging.version as pv
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
@@ -66,7 +66,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self.assertTrue('classProbability' in node.output)
 
     @unittest.skipIf(
-        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        pv.Version(coremltools.__version__) > pv.Version("3.1"),
         reason="untested")
     def test_support_vector_classifier_binary_no_prob(self):
         svm, X = self._fit_binary_classification(SVC(gamma=0.5))
@@ -81,7 +81,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
                             allow_failure=True)
 
     @unittest.skipIf(
-        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        pv.Version(coremltools.__version__) > pv.Version("3.1"),
         reason="untested")
     def test_support_vector_classifier_binary_with_prob(self):
         svm, X = self._fit_binary_classification(SVC(probability=True, gamma=0.5))
@@ -92,7 +92,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self._check_model_outputs(svm_onnx, ['classLabel', 'classProbability'])
 
     @unittest.skipIf(
-        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        pv.Version(coremltools.__version__) > pv.Version("3.1"),
         reason="untested")
     def test_support_vector_classifier_multiclass_no_prob(self):
         svm, X = self._fit_multi_classification(SVC(gamma=0.5))
@@ -104,7 +104,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         self._check_model_outputs(svm_onnx, ['classLabel'])
 
     @unittest.skipIf(
-        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        pv.Version(coremltools.__version__) > pv.Version("3.1"),
         reason="untested")
     def test_support_vector_classifier_multiclass_with_prob(self):
         svm, X = self._fit_multi_classification(SVC(probability=True, gamma=0.5))

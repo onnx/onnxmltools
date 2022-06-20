@@ -3,7 +3,7 @@
 import sys
 import inspect
 import unittest
-from distutils.version import StrictVersion
+import packaging.version as pv
 import os
 import onnx
 import pandas
@@ -29,7 +29,7 @@ class TestSparkmRandomForestRegressor(SparkMlTestCase):
                      reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
-    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'),
+    @unittest.skipIf(pv.Version(onnx.__version__) <= pv.Version('1.3'),
                      'Need Greater Opset 9')
     def test_random_forest_regression(self):
         this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))

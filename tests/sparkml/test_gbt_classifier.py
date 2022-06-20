@@ -2,7 +2,7 @@
 
 import sys
 import unittest
-from distutils.version import StrictVersion
+import packaging.version as pv
 import onnx
 import pandas
 import numpy
@@ -26,7 +26,7 @@ class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
                      reason="UnsatisfiedLinkError")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
-    @unittest.skipIf(StrictVersion(onnx.__version__) <= StrictVersion('1.3'), 'Need Greater Opset 9')
+    @unittest.skipIf(pv.Version(onnx.__version__) <= pv.Version('1.3'), 'Need Greater Opset 9')
     def test_gbt_classifier(self):
         raw_data = self.spark.createDataFrame([
             (1.0, Vectors.dense(1.0)),

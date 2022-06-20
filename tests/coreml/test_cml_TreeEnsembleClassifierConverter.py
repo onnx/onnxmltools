@@ -4,7 +4,7 @@
 Tests CoreML TreeEnsembleClassifier converter.
 """
 import unittest
-from distutils.version import StrictVersion
+import packaging.version as pv
 import numpy
 try:
     from sklearn.impute import SimpleImputer as Imputer
@@ -36,7 +36,7 @@ class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
         self.assertTrue('classProbability' in node.output)
 
     @unittest.skipIf(
-        StrictVersion(coremltools.__version__) > StrictVersion("3.1"),
+        pv.Version(coremltools.__version__) > pv.Version("3.1"),
         reason="untested")
     def test_tree_ensemble_classifier(self):
         X = numpy.array([[0, 1], [1, 1], [2, 0]], dtype=numpy.float32)
@@ -47,7 +47,7 @@ class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
         self.assertTrue(model_onnx is not None)
         self.validate_zipmap(model_onnx)
         dump_data_and_model(X, model, model_onnx, basename="CmlBinRandomForestClassifier",
-                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')")
+                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')")
 
 
 if __name__ == "__main__":
