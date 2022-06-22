@@ -113,7 +113,11 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                 prediction = [model.predict(datax)]
         elif hasattr(model, "predict_proba"):
             # Classifier
-            prediction = [model.predict(data), model.predict_proba(data)]
+            objective = model.get_params()['objective']
+            if objective == "multi:softmax":
+                prediction = [model.predict(data)]
+            else:
+                prediction = [model.predict(data), model.predict_proba(data)]
         elif hasattr(model, "predict_with_probabilities"):
             # Classifier that returns all in one go
             prediction = model.predict_with_probabilities(data)
