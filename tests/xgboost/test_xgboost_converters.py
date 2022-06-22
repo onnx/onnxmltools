@@ -341,6 +341,27 @@ class TestXGBoostModels(unittest.TestCase):
         assert_almost_equal(bst_loaded.predict(dtest, output_margin=True), res[1], decimal=5)
         assert_almost_equal(bst_loaded.predict(dtest), res[0])
 
+    def test_onnxrt_python_xgbclassifier(self):
+        x = np.random.randn(100, 10).astype(np.float32)
+        y = ((x.sum(axis=1) + np.random.randn(x.shape[0]) / 50 + 0.5) >= 0).astype(np.int64)
+        x_train, x_test, y_train, y_test = train_test_split(x, y)
+        bmy = np.mean(y_train)
+        
+        for bm, n_est in [(None, 1), (None, 3), (bmy, 1), (bmy, 3)]:
+            model_skl = XGBClassifier(n_estimators=n_est, 
+                                      learning_rate=0.01,
+                                      subsample=0.5, objective="binary:logistic",
+                                      base_score=bm, max_depth=2)
+            model_skl.fit(x_train, y_train, eval_set=[(x_test, y_test)], verbose=0)
+
+            model_onnx_skl = convert_xgboost(
+                model_skl, initial_types=[('X', FloatTensorType([None, x.shape[1]]))],
+                target_opset=TARGET_OPSET)
+            with self.subTest(base_score=bm, n_estimators=n_est):
+                oinf = InferenceSession(model_onnx_skl.SerializeToString())
+                res2 = oinf.run(None, {'X': x_test})
+                assert_almost_equal(model_skl.predict_proba(x_test), res2[1])
+
 
 if __name__ == "__main__":
     unittest.main()
