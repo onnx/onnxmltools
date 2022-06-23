@@ -113,11 +113,14 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
                 prediction = [model.predict(datax)]
         elif hasattr(model, "predict_proba"):
             # Classifier
-            params = model.get_params()
-            if 'objective' in params:
-                objective = params['objective']
-                if objective == "multi:softmax":
-                    prediction = [model.predict(data)]
+            if hasattr(model, 'get_params'):
+                params = model.get_params()
+                if 'objective' in params:
+                    objective = params['objective']
+                    if objective == "multi:softmax":
+                        prediction = [model.predict(data)]
+                    else:
+                        prediction = [model.predict(data), model.predict_proba(data)]
                 else:
                     prediction = [model.predict(data), model.predict_proba(data)]
             else:
