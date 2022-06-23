@@ -4,7 +4,6 @@
 Helpers to test runtimes.
 """
 import os
-import sys
 import glob
 import pickle
 import packaging.version as pv
