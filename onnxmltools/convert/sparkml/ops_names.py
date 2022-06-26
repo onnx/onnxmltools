@@ -4,6 +4,7 @@
 Mapping and utility functions for Name to Spark ML operators
 '''
 
+from pyspark.ml import Transformer, Estimator
 from pyspark.ml.feature import Binarizer
 from pyspark.ml.feature import BucketedRandomProjectionLSHModel
 from pyspark.ml.feature import Bucketizer
@@ -86,6 +87,12 @@ def get_sparkml_operator_name(model_type):
     :param model_type:  A spark-ml object (LinearRegression, StringIndexer, ...)
     :return: A string which stands for the type of the input model in our conversion framework
     '''
+    if not issubclass(model_type, Transformer):
+        if issubclass(model_type, Estimator):
+            raise ValueError("Estimator must be fitted before being converted to ONNX")
+        else:
+            raise ValueError("Unknown model type: {}".format(model_type))
+    
     if model_type not in sparkml_operator_name_map:
         raise ValueError("No proper operator name found for '%s'" % model_type)
     return sparkml_operator_name_map[model_type]
