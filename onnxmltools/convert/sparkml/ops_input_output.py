@@ -97,6 +97,10 @@ def build_io_name_map():
             lambda model: [model.getOrDefault("featuresCol")],
             lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
         ),
+        "pyspark.ml.classification.MultilayerPerceptronClassificationModel": (
+            lambda model: [model.getOrDefault("featuresCol")],
+            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+        ),
         "pyspark.ml.regression.DecisionTreeRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],
             lambda model: [model.getOrDefault("predictionCol")],
