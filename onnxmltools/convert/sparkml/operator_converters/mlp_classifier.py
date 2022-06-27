@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from unicodedata import name
 from pyspark.ml.classification import MultilayerPerceptronClassificationModel
 
 from ...common._registration import register_converter, register_shape_calculator
@@ -9,14 +8,13 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 from ...common._topology import Operator, Scope, ModelComponentContainer
 from ....proto import onnx_proto
 from typing import List
-from numpy import ndarray
 import numpy as np
 
 
 def convert_sparkml_mlp_classifier(scope: Scope, operator: Operator, container: ModelComponentContainer):
     op: MultilayerPerceptronClassificationModel = operator.raw_operator
     layers: List[int] = op.getLayers()
-    weights: ndarray = op.weights.toArray()
+    weights: np.ndarray = op.weights.toArray()
 
     offset = 0
 
