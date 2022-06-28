@@ -34,3 +34,4 @@ from . import onehot_encoder
 from . import vector_assembler
 from . import k_means
 from . import count_vectorizer
+from . import mlp_classifier
