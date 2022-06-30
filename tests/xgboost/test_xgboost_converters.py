@@ -109,24 +109,10 @@ class TestXGBoostModels(unittest.TestCase):
             x_test, xgb, conv_model,
             basename="SklearnXGBClassifierRegLog")
 
-    def test_xgb_classifier_multi_str_labels(self):
-        xgb, x_test = _fit_classification_model(
-            XGBClassifier(n_estimators=4), 5, is_str=True)
-        conv_model = convert_xgboost(
-            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
-            target_opset=TARGET_OPSET)
-        self.assertTrue(conv_model is not None)
-        dump_data_and_model(
-            x_test, xgb, conv_model,
-            basename="SklearnXGBClassifierMultiStrLabels")
-
     def test_xgb_classifier_multi_discrete_int_labels(self):
         iris = load_iris()
         x = iris.data[:, :2]
         y = iris.target
-        y[y == 0] = 10
-        y[y == 1] = 20
-        y[y == 2] = -30
         x_train, x_test, y_train, _ = train_test_split(x,
                                                        y,
                                                        test_size=0.5,
@@ -241,11 +227,31 @@ class TestXGBoostModels(unittest.TestCase):
             X_test.astype(np.float32), regressor, model_onnx,
             basename="XGBBoosterRegBug")
 
-    def test_xgboost_classifier_i5450(self):
+    def test_xgboost_classifier_i5450_softmax(self):
         iris = load_iris()
         X, y = iris.data, iris.target
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=10)
         clr = XGBClassifier(objective="multi:softmax", max_depth=1, n_estimators=2)
+        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
+        initial_type = [('float_input', FloatTensorType([None, 4]))]
+        onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
+        sess = InferenceSession(onx.SerializeToString())
+        input_name = sess.get_inputs()[0].name
+        label_name = sess.get_outputs()[1].name
+        predict_list = [1.,  20., 466.,   0.]
+        predict_array = np.array(predict_list).reshape((1,-1)).astype(np.float32)
+        pred_onx = sess.run([label_name], {input_name: predict_array})[0]
+        bst = clr.get_booster()
+        bst.dump_model('dump.raw.txt')
+        dump_data_and_model(
+            X_test.astype(np.float32) + 1e-5, clr, onx,
+            basename="XGBClassifierIris-Out0")
+
+    def test_xgboost_classifier_i5450(self):
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=10)
+        clr = XGBClassifier(objective="multi:softprob", max_depth=1, n_estimators=2)
         clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
         initial_type = [('float_input', FloatTensorType([None, 4]))]
         onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
@@ -364,4 +370,5 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    # TestXGBoostModels().test_xgboost_booster_classifier_multiclass_softprob()
     unittest.main()

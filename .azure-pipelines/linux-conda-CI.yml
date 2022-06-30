@@ -15,11 +15,19 @@ jobs:
   strategy:
     matrix:
 
-      Python39-1120-RT1110:
+      Python39-1120-RT1110-xgb161:
         python.version: '3.9'
         ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
         ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        xgboost.version: '>=1.6.1'
+
+      Python39-1120-RT1110-xgb142:
+        python.version: '3.9'
+        ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
+        ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
+        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        xgboost.version: '==1.4.2'
 
       Python39-1110-RT1110:
         python.version: '3.9'
@@ -126,7 +134,10 @@ jobs:
       export PYTHONPATH=.
       python -c "import onnxruntime;print('onnx:',onnx.__version__)"
       python -c "import onnxconverter_common;print('cc:',onnxconverter_common.__version__)"
+      python -c "import onnx;print('onnx:',onnx.__version__)"
       python -c "import onnxruntime;print('ort:',onnxruntime.__version__)"
+      python -c "import xgboost;print('xgboost:',xgboost.__version__)"
+      python -c "import lightgbm;print('lightgbm:',lightgbm.__version__)"
     displayName: 'version'
 
   - script: |

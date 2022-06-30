@@ -4,7 +4,6 @@
 Helpers to test runtimes.
 """
 import os
-import sys
 import glob
 import pickle
 import packaging.version as pv
@@ -75,13 +74,9 @@ def compare_backend(backend, test, decimal=5, options=None, verbose=False, conte
     if the comparison failed.
     """
     if backend == "onnxruntime":
-        if sys.version_info[0] == 2:
-            # onnxruntime is not available on Python 2.
-            return
         from .utils_backend_onnxruntime import compare_runtime
         return compare_runtime(test, decimal, options, verbose)
-    else:
-        raise ValueError("Does not support backend '{0}'.".format(backend))
+    raise ValueError("Does not support backend '{0}'.".format(backend))
 
 
 def search_converted_models(root=None):

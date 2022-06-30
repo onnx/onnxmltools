@@ -122,7 +122,10 @@ jobs:
       python -m pip install -e .
       export PYTHONPATH=.
       python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
+      python -c "import onnx;print(onnx.__version__)"
       python -c "import onnxruntime;print(onnxruntime.__version__)"
+      python -c "import xgboost;print(xgboost.__version__)"
+      python -c "import lightgbm;print(lightgbm.__version__)"
     displayName: 'version'
 
   - script: |

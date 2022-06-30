@@ -2,8 +2,10 @@
 
 import json
 import re
+import pprint
+from packaging.version import Version
 import numpy as np
-from xgboost import XGBRegressor, XGBClassifier
+from xgboost import XGBRegressor, XGBClassifier, __version__
 from onnxconverter_common.data_types import FloatTensorType
 from ..common._container import XGBoostModelContainer
 from ..common._topology import Topology
@@ -27,23 +29,36 @@ def _append_covers(node):
 
 
 def _get_attributes(booster):
-    # num_class
-    state = booster.__getstate__()
-    bstate = bytes(state['handle'])
-    reg = re.compile(b'("tree_info":\\[[0-9,]*\\])')
-    objs = list(set(reg.findall(bstate)))
-    assert len(objs) == 1, 'Missing required property "tree_info".'
-    tree_info = json.loads("{{{}}}".format(objs[0].decode('ascii')))['tree_info']
-    num_class = len(set(tree_info))
-
     atts = booster.attributes()
     dp = booster.get_dump(dump_format='json', with_stats=True)
     res = [json.loads(d) for d in dp]
-    trees = len(res)
-    try:
+
+    # num_class
+    if Version(__version__) < Version('1.5'):
+        state = booster.__getstate__()
+        bstate = bytes(state['handle'])
+        reg = re.compile(b'("tree_info":\\[[0-9,]*\\])')
+        objs = list(set(reg.findall(bstate)))
+        if len(objs) != 1:
+            raise RuntimeError(
+                "Unable to retrieve the tree coefficients from\n%s"
+                "" % bstate.decode("ascii", errors="ignore"))
+        tree_info = json.loads("{{{}}}".format(objs[0].decode('ascii')))['tree_info']
+        num_class = len(set(tree_info))
+        trees = len(res)
+        try:
+            ntrees = booster.best_ntree_limit
+        except AttributeError:
+            ntrees = trees // num_class if num_class > 0 else trees
+    else:
+        trees = len(res)
         ntrees = booster.best_ntree_limit
-    except AttributeError:
-        ntrees = trees // num_class if num_class > 0 else trees
+        num_class = trees // ntrees
+        if num_class == 0:
+            raise RuntimeError(
+                "Unable to retrieve the number of classes, trees=%d, ntrees=%d." % (
+                    trees, ntrees))
+
     kwargs = atts.copy()
     kwargs['feature_names'] = booster.feature_names
     kwargs['n_estimators'] = ntrees
@@ -62,14 +77,23 @@ def _get_attributes(booster):
         # classification
         kwargs['num_class'] = num_class
         if num_class != 1:
-            reg = re.compile(b'(multi:[a-z]{1,15})')
-            objs = list(set(reg.findall(bstate)))
-            if len(objs) == 1:
-                kwargs["objective"] = objs[0].decode('ascii')
+            if Version(__version__) < Version('1.5'):
+                reg = re.compile(b'(multi:[a-z]{1,15})')
+                objs = list(set(reg.findall(bstate)))
+                if len(objs) == 1:
+                    kwargs["objective"] = objs[0].decode('ascii')
+                else:
+                    raise RuntimeError(
+                        "Unable to guess objective in %r (trees=%r, ntrees=%r, num_class=%r)"
+                        "." % (objs, trees, ntrees, kwargs['num_class']))
             else:
-                raise RuntimeError(
-                    "Unable to guess objective in %r (trees=%r, ntrees=%r, num_class=%r)"
-                    "." % (objs, trees, ntrees, kwargs['num_class']))
+                att = json.loads(booster.save_config())
+                kwargs["objective"] = att['learner']['objective']['name']
+                nc = int(att['learner']['learner_model_param']['num_class'])
+                if nc != num_class:
+                    raise RuntimeError(
+                        "Mismatched value %r != %r from\n%s" % (
+                            nc, num_class, pprint.pformat(att)))
         else:
             kwargs["objective"] = "binary:logistic"
 
