@@ -124,6 +124,7 @@ jobs:
       python -m pip install --upgrade pip
       pip install coloredlogs
       pip install flatbuffers
+      pip install sympy
       pip install xgboost$(xgboost.version)
       pip install $(ONNX_PATH)
       pip install $(ONNXRT_PATH)
