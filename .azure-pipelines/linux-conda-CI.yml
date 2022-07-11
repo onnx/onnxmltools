@@ -122,6 +122,7 @@ jobs:
 
   - script: |
       python -m pip install --upgrade pip
+      pip install coloredlogs
       pip install xgboost$(xgboost.version)
       pip install $(ONNX_PATH)
       pip install $(ONNXRT_PATH)
