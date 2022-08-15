@@ -5,6 +5,7 @@ Tests scikit-linear converter.
 """
 import tempfile
 import numpy
+import os
 try:
     from libsvm.svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
     import libsvm.svm as svm    
