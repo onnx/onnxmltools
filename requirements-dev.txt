@@ -17,6 +17,6 @@ pytest
 pytest-cov
 pytest-spark
 scikit-learn
-scipy
+scipy==1.8.0
 wheel
 xgboost==1.5.2
