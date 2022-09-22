@@ -21,6 +21,9 @@ def convert_decision_tree_classifier(scope, operator, container):
     tree = sparkml_tree_dataset_to_sklearn(tree_df, is_classifier=True)
     add_tree_to_attribute_pairs(attrs, True, tree, 0, 1., 0, True)
 
+    import pprint
+    pprint.pprint(attrs)
+
     container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
                        operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)
 
