@@ -34,7 +34,7 @@ def convert_decision_tree_classifier(scope, operator, container):
         except Exception as e:
             print("DEBUG", e)
             p = attrs.popitem()
-            print("DROP", p[0]s)
+            print("DROP", p[0])
     print("DEBUG LEFT", len(attrs))
         
 
