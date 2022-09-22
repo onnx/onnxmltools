@@ -20,7 +20,7 @@ def convert_decision_tree_classifier(scope, operator, container):
     tree_df = save_read_sparkml_model_data(operator.raw_params['SparkSession'], op)
     tree = sparkml_tree_dataset_to_sklearn(tree_df, is_classifier=True)
     import pprint
-    pprint.pprint(tree)
+    pprint.pprint(tree.__dict__)
     add_tree_to_attribute_pairs(attrs, True, tree, 0, 1., 0, True)
 
     print("DEBUG", operator.outputs[0].full_name)

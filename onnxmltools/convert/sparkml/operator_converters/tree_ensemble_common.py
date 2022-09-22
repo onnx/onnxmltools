@@ -22,7 +22,7 @@ def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
         if isinstance(item[0], int):
             feature.append(item[0])
         else:
-            feature.append(0)
+            feature.append(-1)
         threshold.append(item[1][0] if len(item[1]) >= 1 else -1.0)
     tree = SparkMLTree()
     tree.children_left = children_left
