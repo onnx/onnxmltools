@@ -19,7 +19,10 @@ def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
     value = tree_pandas.impurityStats.values.tolist() if is_classifier else tree_pandas.prediction.values.tolist()
     split = tree_pandas.split.apply(tuple).values
     for item in split:
-        feature.append(item[0])
+        if isinstance(item[0], int):
+            feature.append(item[0])
+        else:
+            feature.append(0)
         threshold.append(item[1][0] if len(item[1]) >= 1 else -1.0)
     tree = SparkMLTree()
     tree.children_left = children_left
