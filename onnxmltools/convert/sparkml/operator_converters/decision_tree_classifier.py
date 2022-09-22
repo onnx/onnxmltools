@@ -27,6 +27,7 @@ def convert_decision_tree_classifier(scope, operator, container):
         print("DEBUG",k, type(v))
 
     print("DEBUG nodes_featureids=", attrs["nodes_featureids"]) 
+    print("DEBUG nodes_values=", attrs["nodes_values"]) 
     while len(attrs) > 0:
         try:
             container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
