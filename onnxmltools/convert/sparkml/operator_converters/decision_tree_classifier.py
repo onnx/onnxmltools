@@ -26,8 +26,17 @@ def convert_decision_tree_classifier(scope, operator, container):
     for k,v in attrs.items():
         print("DEBUG",k, type(v))
 
-    container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
-                       operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)
+    while len(attrs) > 0:
+        try:
+            container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
+                               operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)
+            break
+        except Exception as e:
+            print("DEBUG", e)
+            p = attrs.pop()
+            print("DROP", p)
+    print("DEBUG LEFT", len(attrs))
+        
 
 
 register_converter('pyspark.ml.classification.DecisionTreeClassificationModel', convert_decision_tree_classifier)
