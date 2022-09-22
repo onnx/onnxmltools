@@ -15,7 +15,7 @@ def convert_decision_tree_classifier(scope, operator, container):
 
     attrs = get_default_tree_classifier_attribute_pairs()
     attrs['name'] = scope.get_unique_operator_name(op_type)
-    attrs["classlabels_int64s"] = range(0, op.numClasses)
+    attrs["classlabels_int64s"] = list(range(0, op.numClasses))
 
     tree_df = save_read_sparkml_model_data(operator.raw_params['SparkSession'], op)
     tree = sparkml_tree_dataset_to_sklearn(tree_df, is_classifier=True)
