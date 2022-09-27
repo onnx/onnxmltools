@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import pprint
 from ...common.data_types import Int64TensorType, FloatTensorType
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs, \
-    add_tree_to_attribute_pairs
+    add_tree_to_attribute_pairs, _process_process_tree_attributes
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 from ...common._registration import register_converter, register_shape_calculator
 from .tree_ensemble_common import save_read_sparkml_model_data, \
@@ -20,25 +21,13 @@ def convert_decision_tree_classifier(scope, operator, container):
     tree_df = save_read_sparkml_model_data(operator.raw_params['SparkSession'], op)
     tree = sparkml_tree_dataset_to_sklearn(tree_df, is_classifier=True)
     add_tree_to_attribute_pairs(attrs, True, tree, 0, 1., 0, True)
+    _process_process_tree_attributes(attrs)
 
-    # Spark may store attributes as range and not necessary list.
-    # ONNX does not support this type of attribute value.
-    update = {}
-    wrong_types = []
-    for k, v in attrs.items():
-        if isinstance(v, (str, list)):
-            continue
-        if isinstance(v, range):
-            update[k] = list(v)
-            continue
-        wrong_types.append(f"Unexpected type {type(v)} for attribute {k!r}.")
-    if len(wrong_types) > 0:
-        raise TypeError("Unexpected type for one or several attributes:\n" + "\n".join(wrong_types))
-    if update:
-        attrs.update(update)
-
-    container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
-                       operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)
+    try:
+        container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
+                        operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)
+    except ValueError as e:
+        raise ValueError(f"Unable to create a node due to {e}\nattrs={pprint.pformat(attrs)}") from e
 
 
 register_converter('pyspark.ml.classification.DecisionTreeClassificationModel', convert_decision_tree_classifier)

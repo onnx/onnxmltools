@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import pprint
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs, \
-    add_tree_to_attribute_pairs
+    add_tree_to_attribute_pairs, _process_process_tree_attributes
 from ...common._registration import register_converter, register_shape_calculator
 from .tree_ensemble_common import save_read_sparkml_model_data, sparkml_tree_dataset_to_sklearn
 from .decision_tree_classifier import calculate_decision_tree_classifier_output_shapes
@@ -26,10 +27,14 @@ def convert_random_forest_classifier(scope, operator, container):
         add_tree_to_attribute_pairs(attr_pairs, True, tree, tree_id,
                                     tree_weight, 0, True)
 
-    container.add_node(
-        op_type, operator.input_full_names,
-        [operator.outputs[0].full_name, operator.outputs[1].full_name],
-        op_domain='ai.onnx.ml', **attr_pairs)
+    _process_process_tree_attributes(attr_pairs)
+    try:
+        container.add_node(
+            op_type, operator.input_full_names,
+            [operator.outputs[0].full_name, operator.outputs[1].full_name],
+            op_domain='ai.onnx.ml', **attr_pairs)
+    except ValueError as e:
+        raise ValueError(f"Unable to create a node due to {e}\nattrs={pprint.pformat(attr_pairs)}") from e
 
 
 register_converter('pyspark.ml.classification.RandomForestClassificationModel', convert_random_forest_classifier)

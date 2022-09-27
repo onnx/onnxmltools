@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import pprint
 from ...common.tree_ensemble import add_tree_to_attribute_pairs, \
-    get_default_tree_regressor_attribute_pairs
+    get_default_tree_regressor_attribute_pairs, _process_process_tree_attributes
 from ...common._registration import register_converter, register_shape_calculator
 from .decision_tree_classifier import save_read_sparkml_model_data
 from .decision_tree_regressor import calculate_decision_tree_regressor_output_shapes
@@ -27,8 +28,12 @@ def convert_random_forest_regressor(scope, operator, container):
         add_tree_to_attribute_pairs(attrs, False, tree, tree_id,
                                     tree_weight, 0, False)
 
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names[0],
-                       op_domain='ai.onnx.ml', **attrs)
+    _process_process_tree_attributes(attrs)
+    try:
+        container.add_node(op_type, operator.input_full_names, operator.output_full_names[0],
+                        op_domain='ai.onnx.ml', **attrs)
+    except ValueError as e:
+        raise ValueError(f"Unable to create a node due to {e}\nattrs={pprint.pformat(attrs)}") from e
 
 
 register_converter('pyspark.ml.regression.RandomForestRegressionModel', convert_random_forest_regressor)
