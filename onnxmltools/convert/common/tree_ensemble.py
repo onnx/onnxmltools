@@ -15,10 +15,13 @@ def _process_process_tree_attributes(attrs):
         if isinstance(v, range):
             v = update[k] = list(v)
         if isinstance(v, list):
+            print("***", k, v)
             if k in ("nodes_values", "nodes_hitrates", "nodes_featureids"):
+                print("====")
                 if any(map(lambda s: not isinstance(s, (float, int)), v)):
                     v = [x if isinstance(x, (float, int)) else 0 for x in v]
                     update[k] = v
+                    print("+", v)
             continue
         wrong_types.append(f"Unexpected type {type(v)} for attribute {k!r}.")
     if len(wrong_types) > 0:
