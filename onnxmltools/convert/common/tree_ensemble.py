@@ -10,10 +10,15 @@ def _process_process_tree_attributes(attrs):
     update = {}
     wrong_types = []
     for k, v in attrs.items():
-        if isinstance(v, (str, list, int, float, np.ndarray)):
+        if isinstance(v, (str, int, float, np.ndarray)):
             continue
         if isinstance(v, range):
-            update[k] = list(v)
+            v = update[k] = list(v)
+        if isinstance(v, list):
+            if k == "nodes_values":
+                if any(map(lambda s: not isinstance(s, (float, int)), v)):
+                    v = [x if isinstance(x, (float, int)) else 0 for x in v]
+                    update[k] = v
             continue
         wrong_types.append(f"Unexpected type {type(v)} for attribute {k!r}.")
     if len(wrong_types) > 0:
