@@ -15,7 +15,7 @@ def _process_process_tree_attributes(attrs):
         if isinstance(v, range):
             v = update[k] = list(v)
         if isinstance(v, list):
-            if k == "nodes_values":
+            if k in ("nodes_values", "nodes_hitrates", "nodes_featureids"):
                 if any(map(lambda s: not isinstance(s, (float, int)), v)):
                     v = [x if isinstance(x, (float, int)) else 0 for x in v]
                     update[k] = v
