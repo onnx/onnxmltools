@@ -19,28 +19,23 @@ def convert_decision_tree_classifier(scope, operator, container):
 
     tree_df = save_read_sparkml_model_data(operator.raw_params['SparkSession'], op)
     tree = sparkml_tree_dataset_to_sklearn(tree_df, is_classifier=True)
-    import pprint
-    pprint.pprint(tree.__dict__)
     add_tree_to_attribute_pairs(attrs, True, tree, 0, 1., 0, True)
+    attrs["class_ids"] = [int(v) for v, mode in zip(tree.value, tree.children_left) if mode == -1]
 
-    print("DEBUG", operator.outputs[0].full_name)
-    print("DEBUG", operator.outputs[1].full_name)
-    for k,v in attrs.items():
-        print("DEBUG",k, type(v))
+    # Some values appear in an array of one element instead of a float.
+    for key in ["nodes_values"]:
+        values = attrs["nodes_values"]
+        new_values = []
+        for v in values:
+            if isinstance(v, np.ndarray):
+                assert v.shape == (1,)
+                new_values.append(v[0])
+            else:
+                new_values.append(v)
+        attrs["nodes_values"] = new_values
 
-    print("DEBUG nodes_featureids=", attrs["nodes_featureids"]) 
-    print("DEBUG nodes_values=", attrs["nodes_values"]) 
-    while len(attrs) > 0:
-        try:
-            container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
-                               operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)
-            break
-        except Exception as e:
-            print("DEBUG", e)
-            p = attrs.popitem()
-            print("DROP", p[0])
-    print("DEBUG LEFT", len(attrs))
-        
+    container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
+                       operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)        
 
 
 register_converter('pyspark.ml.classification.DecisionTreeClassificationModel', convert_decision_tree_classifier)

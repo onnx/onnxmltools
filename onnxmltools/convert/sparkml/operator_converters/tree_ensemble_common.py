@@ -17,13 +17,19 @@ def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
     children_left = tree_pandas.leftChild.values.tolist()
     children_right = tree_pandas.rightChild.values.tolist()
     value = tree_pandas.impurityStats.values.tolist() if is_classifier else tree_pandas.prediction.values.tolist()
-    split = tree_pandas.split.apply(tuple).values
-    for item in split:
-        if isinstance(item[0], int):
-            feature.append(item[0])
+
+    for item in tree_pandas.split:
+        if isinstance(item, dict):
+            try:
+                feature.append(item["featureIndex"])
+                threshold.append(item["leftCategoriesOrThreshold"])
+            except KeyError as e:
+                raise RuntimeError(f"Unable to process {item}.")
         else:
-            feature.append(-1)
-        threshold.append(item[1][0] if len(item[1]) >= 1 else -1.0)
+            tuple_item = tuple(item)
+            feature.append(item[0])
+            threshold.append(item[1][0] if len(item[1]) >= 1 else -1.0)
+
     tree = SparkMLTree()
     tree.children_left = children_left
     tree.children_right = children_right
