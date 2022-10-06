@@ -111,14 +111,6 @@ def add_tree_to_attribute_pairs(attr_pairs, is_classifier, tree, tree_id, tree_w
                  left_child_id, right_child_id, weight, weight_id_bias, leaf_weights_are_counts)
 
 
-def _cv(value):
-    if isinstance(value, np.ndarray):
-        if value.shape != (1,):
-            raise ValueError(f"Cannot convert shape {value.shape}:{value} into a float.")
-        return value[0]
-    return value
-
-
 def convert_decision_tree_classifier(scope, operator, container):
     op = operator.raw_operator
     op_type = 'TreeEnsembleClassifier'
@@ -132,8 +124,13 @@ def convert_decision_tree_classifier(scope, operator, container):
     add_tree_to_attribute_pairs(attrs, True, tree, 0, 1., 0, leaf_weights_are_counts=True)
 
     # Some values appear in an array of one element instead of a float.
-    for key in ["nodes_values"]:
-        attrs[key] = [_cv(v) for v in attrs[key]]
+    new_values = []
+    for i, value in enumerate(attrs["nodes_values"]):
+        if isinstance(value, np.ndarray):
+            raise NotImplementedError(f"Node {i}, rule is 'IN SET' and not {attrs['nodes_modes']!r}.")
+        else:
+            new_values.append(value)
+    attrs["nodes_values"] = new_values
 
     container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
                        operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)
