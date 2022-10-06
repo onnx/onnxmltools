@@ -6,6 +6,7 @@ from ...common.utils import check_input_and_output_numbers, check_input_and_outp
 from ...common._registration import register_converter, register_shape_calculator
 from .tree_ensemble_common import save_read_sparkml_model_data, \
     sparkml_tree_dataset_to_sklearn
+from .tree_helper import Node
 
 
 
@@ -124,13 +125,19 @@ def convert_decision_tree_classifier(scope, operator, container):
     add_tree_to_attribute_pairs(attrs, True, tree, 0, 1., 0, leaf_weights_are_counts=True)
 
     # Some values appear in an array of one element instead of a float.
-    new_values = []
+    in_sets_rules = []
     for i, value in enumerate(attrs["nodes_values"]):
         if isinstance(value, np.ndarray):
-            raise NotImplementedError(f"Node {i}, rule is 'IN SET' and not {attrs['nodes_modes']!r}.")
-        else:
-            new_values.append(value)
-    attrs["nodes_values"] = new_values
+            in_sets_rules.append(i)
+    if True or len(in_sets_rules) > 0:
+        for i in in_sets_rules:
+            attrs["nodes_modes"][i] = "||"
+        root, _ = Node.create(attrs)
+        root.unfold_rule_or()
+        new_attrs = root.to_attrs(
+                post_transform=attrs['post_transform'],
+                classlabels_int64s=attrs["classlabels_int64s"])
+        attrs = new_attrs
 
     container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
                        operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)

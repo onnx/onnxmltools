@@ -63,22 +63,17 @@ class TestSparkmDecisionTreeClassifierBig(SparkMlTestCase):
         cat = set(s for s in df["c1"])
         df["c1"] = pandas.Categorical(list(map(lambda s: int(s), df['c1'])), categories=cat, ordered=False)
         df["label"] = labels
-        print(df.head())
-        print(df.dtypes)
 
         sparkDF = self.spark.createDataFrame(df) 
 
         data = sparkDF # self.spark.read.csv(input_path, header=True, inferSchema=True)
-        print(data.printSchema())
         va = VectorAssembler(inputCols=features_names, outputCol='features')
         va_df = va.transform(data)
         va_df = va_df.select(['features', 'label'])
 
-        dt = DecisionTreeClassifier(labelCol="label", featuresCol='features', maxDepth=15, maxBins=50)
+        dt = DecisionTreeClassifier(labelCol="label", featuresCol='features', maxDepth=3, maxBins=50)
         model = dt.fit(va_df)
-        print('----------')
-        print(model.toDebugString)
-        print('----------')
+        # print(model.toDebugString)
         model_onnx = convert_sparkml(model, 'Sparkml Decision Tree Binary Class', [
             ('features', FloatTensorType([None, n_features]))
         ], spark_session=self.spark, target_opset=TARGET_OPSET)
