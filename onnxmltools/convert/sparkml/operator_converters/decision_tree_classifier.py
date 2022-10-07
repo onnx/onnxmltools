@@ -147,6 +147,15 @@ def convert_decision_tree_classifier(scope, operator, container):
         new_attrs = root.to_attrs(
                 post_transform=attrs['post_transform'],
                 classlabels_int64s=attrs["classlabels_int64s"])
+        if len(attrs['nodes_nodeids']) > len(new_attrs['nodes_nodeids']):
+            import pprint
+            with open("debug1.tree", "w") as f:
+                f.write(pprint.pformat(attrs))
+            with open("debug2.tree", "w") as f:
+                f.write(pprint.pformat(new_attrs))
+            raise RuntimeError(
+                f"The replacement fails as there are less nodes in the new tree."
+            )
         attrs = new_attrs
         logger.info("[convert_decision_tree_classifier] n_nodes=%d", len(attrs['nodes_nodeids']))
 
