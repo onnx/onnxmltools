@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import numpy as np
+
 
 class Node:
 
@@ -40,18 +42,24 @@ class Node:
         nodes = {}
         root = None
         indices = attrs["nodes_nodeids"]
-        for nid in indices:
-            tid = attrs["nodes_treeids"][nid]
-            mode = attrs["nodes_modes"][nid]
+        for n, nid in enumerate(indices):
+            tid = attrs["nodes_treeids"][n]
+            mode = attrs["nodes_modes"][n]
             kwargs = {}
             for k, v in attrs.items():
                 if not k.startswith("nodes"):
                     continue
-                kwargs[k] = v[nid]
+                kwargs[k] = v[n]
             if mode == "LEAF":
-                pos = [i for i, c in enumerate(attrs["class_nodeids"]) if c == nid]
+                pos = [
+                    i
+                    for i, (t, c) in enumerate(
+                        zip(attrs["class_treeids"], attrs["class_nodeids"])
+                    )
+                    if t == tid and c == nid
+                ]
                 for k, v in attrs.items():
-                    if k in {"post_transform"}:
+                    if k in {"post_transform", "name", "domain"}:
                         continue
                     if k.startswith("nodes"):
                         continue
@@ -61,6 +69,10 @@ class Node:
                     kwargs[k] = [v[p] for p in pos]
 
             node = Node(**kwargs)
+            if mode == "BRANCH_LEQ" and isinstance(
+                node.nodes_values, (np.ndarray, list)
+            ):
+                node.nodes_modes = "||"
             nodes[tid, nid] = node
             if root is None:
                 root = node

@@ -127,9 +127,9 @@ def convert_decision_tree_classifier(scope, operator, container):
     # Some values appear in an array of one element instead of a float.
     in_sets_rules = []
     for i, value in enumerate(attrs["nodes_values"]):
-        if isinstance(value, np.ndarray):
+        if isinstance(value, (np.ndarray, list)):
             in_sets_rules.append(i)
-    if True or len(in_sets_rules) > 0:
+    if len(in_sets_rules) > 0:
         for i in in_sets_rules:
             attrs["nodes_modes"][i] = "||"
         root, _ = Node.create(attrs)
