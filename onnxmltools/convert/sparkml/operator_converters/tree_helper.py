@@ -119,7 +119,7 @@ class Node:
             if len(values) == 1:
                 self.nodes_modes = "BRANCH_EQ"
                 self.nodes_values = self.nodes_values[0]
-                return True
+                return self
             if len(values) == 0:
                 raise ValueError(f"Issue with {self!r}.")
             th = self.nodes_values[-1]
@@ -133,17 +133,22 @@ class Node:
 
             self.nodes_values = vals
             self._nodes_falsenode = new_node
-            return True
-        return False
+            return self
+        return None
 
     def unfold_rule_or(self):
-        r = True
-        while r:
-            r = False
-            for node in self:
-                r = node._unfold_rule_or()
-                if r:
-                    break
+        cond = True
+        nodes = []
+        for node in self:
+            if node.nodes_modes == "||":
+                nodes.append(node)
+        if len(nodes) == 0:
+            return
+        for node in nodes:
+            r = node._unfold_rule_or()
+            if r is not None:
+                while r is not None:
+                    r = r._unfold_rule_or()
         self.set_new_numbers()
 
     def set_new_numbers(self):

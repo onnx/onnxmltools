@@ -232,5 +232,4 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestSparkmDecisionTreeClassifierBig().test_split()
     unittest.main(verbosity=2)

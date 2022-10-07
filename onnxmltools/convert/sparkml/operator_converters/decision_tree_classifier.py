@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
 import numpy as np
 from ...common.data_types import Int64TensorType, FloatTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
@@ -8,6 +9,7 @@ from .tree_ensemble_common import save_read_sparkml_model_data, \
     sparkml_tree_dataset_to_sklearn
 from .tree_helper import Node
 
+logger = logging.getLogger("onnxmltools")
 
 
 def get_default_tree_classifier_attribute_pairs():
@@ -120,24 +122,35 @@ def convert_decision_tree_classifier(scope, operator, container):
     attrs['name'] = scope.get_unique_operator_name(op_type)
     attrs["classlabels_int64s"] = list(range(0, op.numClasses))
 
+    logger.info("[convert_decision_tree_classifier] save_read_sparkml_model_data")
     tree_df = save_read_sparkml_model_data(operator.raw_params['SparkSession'], op)
+    logger.info("[convert_decision_tree_classifier] sparkml_tree_dataset_to_sklearn")
     tree = sparkml_tree_dataset_to_sklearn(tree_df, is_classifier=True)
+    logger.info("[convert_decision_tree_classifier] add_tree_to_attribute_pairs")
     add_tree_to_attribute_pairs(attrs, True, tree, 0, 1., 0, leaf_weights_are_counts=True)
+    logger.info("[convert_decision_tree_classifier] n_nodes=%d", len(attrs['nodes_nodeids']))
 
     # Some values appear in an array of one element instead of a float.
     in_sets_rules = []
     for i, value in enumerate(attrs["nodes_values"]):
         if isinstance(value, (np.ndarray, list)):
             in_sets_rules.append(i)
-    if len(in_sets_rules) > 0:
+    if True or len(in_sets_rules) > 0:
+        logger.info("[convert_decision_tree_classifier] in_set_rules has %d elements", len(in_sets_rules))
         for i in in_sets_rules:
             attrs["nodes_modes"][i] = "||"
+        logger.info("[convert_decision_tree_classifier] Node.create")
         root, _ = Node.create(attrs)
+        logger.info("[convert_decision_tree_classifier] unfold_rule_or")
         root.unfold_rule_or()
+        logger.info("[convert_decision_tree_classifier] to_attrs")
         new_attrs = root.to_attrs(
                 post_transform=attrs['post_transform'],
                 classlabels_int64s=attrs["classlabels_int64s"])
         attrs = new_attrs
+        logger.info("[convert_decision_tree_classifier] n_nodes=%d", len(attrs['nodes_nodeids']))
+
+    logger.info("[convert_decision_tree_classifier] end")
 
     container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
                        operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)

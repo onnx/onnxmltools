@@ -91,4 +91,6 @@ class TestSparkmDecisionTreeClassifierBig(SparkMlTestCase):
 
 
 if __name__ == "__main__":
+    import logging
+    logging.basicConfig(encoding='utf-8', level=logging.INFO)
     unittest.main()
