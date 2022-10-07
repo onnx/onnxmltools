@@ -5,8 +5,8 @@ import numpy as np
 from ...common.data_types import Int64TensorType, FloatTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 from ...common._registration import register_converter, register_shape_calculator
-from .tree_ensemble_common import save_read_sparkml_model_data, \
-    sparkml_tree_dataset_to_sklearn
+from .tree_ensemble_common import (
+    save_read_sparkml_model_data, sparkml_tree_dataset_to_sklearn)
 from .tree_helper import Node
 
 logger = logging.getLogger("onnxmltools")
@@ -94,7 +94,7 @@ def add_node(attr_pairs, is_classifier, tree_id, tree_weight, node_id, feature_i
 def add_tree_to_attribute_pairs(attr_pairs, is_classifier, tree, tree_id, tree_weight,
                                 weight_id_bias, leaf_weights_are_counts):
     for i in range(tree.node_count):
-        node_id = i
+        node_id = tree.nodes_ids[i]
         weight = tree.value[i]
 
         if tree.children_left[i] > i or tree.children_right[i] > i:

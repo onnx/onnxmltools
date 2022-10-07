@@ -230,6 +230,24 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
                                       classlabels_int64s= [0, 1, 2], domain="ai.onnx.ml")
         self.assertEqual(new_attrs, new_new_attrs)
 
+    def test_debug(self):
+        try:
+            from onnxmltools.debug1 import attrs
+        except ImportError as e:
+            return
+        root, nodes = Node.create(attrs)
+        root.unfold_rule_or()
+        new_attrs = root.to_attrs(post_transform=None, name="TreeEnsembleClassifier",
+                                  classlabels_int64s=[0, 1, 2], domain="ai.onnx.ml")
+        for k in attrs:
+            if k in {"post_transform"}:
+                continue
+            if len(attrs[k]) > len(new_attrs[k]):
+                raise AssertionError(
+                    f"Issue with attribute {k!r}\n{len(new_attrs[k])}\nbefore {len(attrs[k])}."
+                )
+
 
 if __name__ == "__main__":
+    TestSparkmDecisionTreeClassifierBig().test_debug()
     unittest.main(verbosity=2)
