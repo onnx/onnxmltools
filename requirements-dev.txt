@@ -9,7 +9,7 @@ humanfriendly
 libsvm
 lightgbm
 mleap
-mppath
+mpmath
 numpy
 openpyxl
 packaging
