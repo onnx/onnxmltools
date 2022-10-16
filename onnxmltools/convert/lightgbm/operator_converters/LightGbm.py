@@ -519,6 +519,8 @@ def convert_lightgbm(scope, operator, container):
         # onnx does not support int and float values for a float tensor
         update = {}
         for k, v in attrs.items():
+            if not isinstance(v, list):
+                continue
             tps = set(map(type, v))
             if len(tps) == 2:
                 if tps == {int, float}:
@@ -613,6 +615,8 @@ def convert_lightgbm(scope, operator, container):
         # onnx does not support int and float values for a float tensor
         update = {}
         for k, v in attrs.items():
+            if not isinstance(v, list):
+                continue
             tps = set(map(type, v))
             if len(tps) == 2:
                 if tps == {int, float}:
