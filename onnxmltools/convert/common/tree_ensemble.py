@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import numpy as np
 from onnxconverter_common.tree_ensemble import *  # noqa
 
 

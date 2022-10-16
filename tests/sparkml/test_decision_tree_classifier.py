@@ -80,7 +80,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
     def test_tree_one_class_classification(self):
         features = [[0., 1.], [1., 1.], [2., 0.]]
         features = numpy.array(features, dtype=numpy.float32)
-        labels = [1, 1, 1]
+        labels = [1, 1, 0]
         dd = [(labels[i], Vectors.dense(features[i])) for i in range(len(labels))]
         data = self.spark.createDataFrame(self.spark.sparkContext.parallelize(dd), schema=["label", "features"])
         dt = DecisionTreeClassifier(labelCol="label", featuresCol="features")
