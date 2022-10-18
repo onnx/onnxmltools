@@ -51,13 +51,24 @@ class Node:
                     continue
                 kwargs[k] = v[n]
             if mode == "LEAF":
-                pos = [
-                    i
-                    for i, (t, c) in enumerate(
-                        zip(attrs["class_treeids"], attrs["class_nodeids"])
-                    )
-                    if t == tid and c == nid
-                ]
+                if "class_treeids" in attrs:
+                    # classifier
+                    pos = [
+                        i
+                        for i, (t, c) in enumerate(
+                            zip(attrs["class_treeids"], attrs["class_nodeids"])
+                        )
+                        if t == tid and c == nid
+                    ]
+                else:
+                    # regressor
+                    pos = [
+                        i
+                        for i, (t, c) in enumerate(
+                            zip(attrs["target_treeids"], attrs["target_nodeids"])
+                        )
+                        if t == tid and c == nid
+                    ]                    
                 for k, v in attrs.items():
                     if k in {"post_transform", "name", "domain"}:
                         continue
@@ -210,3 +221,29 @@ class Node:
                         attrs[k].extend(getattr(node, k))
         attrs.update(kwargs)
         return attrs
+
+
+def rewrite_ids_and_process(attrs, logger):
+    in_sets_rules = []
+    for i, value in enumerate(attrs["nodes_values"]):
+        if isinstance(value, (np.ndarray, list)):
+            in_sets_rules.append(i)
+
+    logger.info("[convert_decision_tree_classifier] in_set_rules has %d elements", len(in_sets_rules))
+    for i in in_sets_rules:
+        attrs["nodes_modes"][i] = "||"
+    logger.info("[convert_decision_tree_classifier] Node.create")
+    root, _ = Node.create(attrs)
+    logger.info("[convert_decision_tree_classifier] unfold_rule_or")
+    root.unfold_rule_or()
+    logger.info("[convert_decision_tree_classifier] to_attrs")
+    new_attrs = root.to_attrs(
+            post_transform=attrs['post_transform'],
+            classlabels_int64s=attrs["classlabels_int64s"])
+    if len(attrs['nodes_nodeids']) > len(new_attrs['nodes_nodeids']):
+        raise RuntimeError(
+            f"The replacement fails as there are less nodes in the new tree."
+        )
+    logger.info("[convert_decision_tree_classifier] n_nodes=%d", len(attrs['nodes_nodeids']))
+    logger.info("[convert_decision_tree_classifier] end")
+    return new_attrs
