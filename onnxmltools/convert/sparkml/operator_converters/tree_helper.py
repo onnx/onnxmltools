@@ -241,13 +241,28 @@ class Node:
                     if k not in attrs:
                         attrs[k] = []
                     if k == "class_nodeids":
-                        attrs[k].extend([node.nodes_nodeids for k in node.class_ids])
+                        attrs[k].extend([node.nodes_nodeids for _ in node.class_ids])
                     else:
                         try:
                             attrs[k].extend(getattr(node, k))
                         except TypeError as e:
                             raise TypeError(f"Issue with attribute {k!r}.") from e
         attrs.update(kwargs)
+
+        # update numbers
+        new_numbers = {}
+        for tid, nid, md in sorted(zip(attrs["nodes_treeids"], attrs["nodes_nodeids"], attrs["nodes_modes"])):
+            new_numbers[tid, nid] = len(new_numbers)
+        for k in ["nodes_truenodeids", "nodes_falsenodeids", "nodes_nodeids", "class_nodeids", "target_nodeids"]:
+            if k not in attrs:
+                continue
+            for i in range(len(attrs[k])):
+                nid = attrs[k][i]
+                if nid == 0 and k in {'nodes_truenodeids', 'nodes_falsenodeids'}:
+                    continue
+                tid = attrs["nodes_treeids"][i]
+                new_id = new_numbers[tid, nid]
+                attrs[k][i] = new_id
         return attrs
 
 

@@ -13,7 +13,7 @@ class SparkMLTree(dict):
 def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
     feature = []
     threshold = []
-    tree_pandas = tree_df.toPandas()
+    tree_pandas = tree_df.toPandas().sort_values("id")
     children_left = tree_pandas.leftChild.values.tolist()
     children_right = tree_pandas.rightChild.values.tolist()
     ids = tree_pandas.id.values.tolist()
