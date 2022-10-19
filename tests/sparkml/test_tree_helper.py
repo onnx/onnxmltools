@@ -14,6 +14,8 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
+
+    @unittest.skipIf(TARGET_OPSET < 17, reason="Opset 17 is needed")
     def test_split(self):
 
         attrs = {
@@ -87,6 +89,7 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
                                       classlabels_int64s= [0, 1, 2], domain="ai.onnx.ml")
         self.assertEqual(new_attrs, new_new_attrs)
 
+    @unittest.skipIf(TARGET_OPSET < 17, reason="Opset 17 is needed")
     def test_split_non_contiguous_ids(self):
 
         attrs = {
@@ -160,6 +163,7 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
                                       classlabels_int64s= [0, 1, 2], domain="ai.onnx.ml")
         self.assertEqual(new_attrs, new_new_attrs)
 
+    @unittest.skipIf(TARGET_OPSET < 17, reason="Opset 17 is needed")
     def test_split_more_complex(self):
 
         attrs = {
