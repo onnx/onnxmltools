@@ -77,7 +77,10 @@ class Node:
                     if "label" in k:
                         kwargs[k] = v
                         continue
-                    kwargs[k] = [v[p] for p in pos]
+                    try:
+                        kwargs[k] = [v[p] for p in pos]
+                    except TypeError as e:
+                        raise TypeError(f"Unabel to update attribute {k!r}.") from e
 
             node = Node(**kwargs)
             if mode == "BRANCH_LEQ" and isinstance(
