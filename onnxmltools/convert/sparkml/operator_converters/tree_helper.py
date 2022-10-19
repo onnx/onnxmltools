@@ -5,7 +5,7 @@ import numpy as np
 
 class Node:
 
-    _names = [
+    _names_classifier = [
         "class_ids",
         "class_nodeids",
         "class_treeids",
@@ -22,20 +22,42 @@ class Node:
         "nodes_values",
     ]
 
-    def __init__(self, **kwargs):
-        for att in Node._names:
+    _names_regressor = [
+        "target_ids",
+        "target_nodeids",
+        "target_treeids",
+        "target_weights",
+        "nodes_falsenodeids",
+        "nodes_featureids",
+        "nodes_hitrates",
+        "nodes_missing_value_tracks_true",
+        "nodes_modes",
+        "nodes_nodeids",
+        "nodes_treeids",
+        "nodes_truenodeids",
+        "nodes_values",
+    ]
+
+    def __init__(self, is_classifier, **kwargs):
+        if is_classifier:
+            self.is_classifier = True
+            self._names = Node._names_classifier
+        else:
+            self.is_classifier = False
+            self._names = Node._names_regressor
+        for att in self._names:
             setattr(self, att, None)
 
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     def __repr__(self):
-        ps = ", ".join(map(lambda k: f"{k}={getattr(self, k)!r}", Node._names))
+        ps = ", ".join(map(lambda k: f"{k}={getattr(self, k)!r}", self._names))
         return f"Node({ps})"
 
     @property
     def attrs(self):
-        return {k: getattr(self, k) for k in Node._names}
+        return {k: getattr(self, k) for k in self._names}
 
     @staticmethod
     def create(attrs):
@@ -82,7 +104,7 @@ class Node:
                     except TypeError as e:
                         raise TypeError(f"Unabel to update attribute {k!r}.") from e
 
-            node = Node(**kwargs)
+            node = Node("class_treeids" in attrs, **kwargs)
             if mode == "BRANCH_LEQ" and isinstance(
                 node.nodes_values, (np.ndarray, list)
             ):
@@ -139,7 +161,7 @@ class Node:
             th = self.nodes_values[-1]
             vals = self.nodes_values[:-1]
 
-            new_node = Node(**self.attrs)
+            new_node = Node(self.is_classifier, **self.attrs)
             new_node.nodes_values = th
             new_node.nodes_modes = "BRANCH_EQ"
             new_node._nodes_truenode = self._nodes_truenode
@@ -205,15 +227,15 @@ class Node:
             nodes[node.nodes_treeids, node.nodes_nodeids] = node
         sort = [v for k, v in sorted(nodes.items())]
         attrs = {}
-        for name in Node._names:
+        for name in self._names:
             attrs[name] = []
         for node in sort:
-            for k in Node._names:
+            for k in self._names:
                 if not k.startswith("nodes"):
                     continue
                 attrs[k].append(getattr(node, k))
             if node.nodes_modes == "LEAF":
-                for k in Node._names:
+                for k in self._names:
                     if k.startswith("nodes"):
                         continue
                     if k not in attrs:
@@ -221,7 +243,10 @@ class Node:
                     if k == "class_nodeids":
                         attrs[k].extend([node.nodes_nodeids for k in node.class_ids])
                     else:
-                        attrs[k].extend(getattr(node, k))
+                        try:
+                            attrs[k].extend(getattr(node, k))
+                        except TypeError as e:
+                            raise TypeError(f"Issue with attribute {k!r}.") from e
         attrs.update(kwargs)
         return attrs
 
@@ -240,13 +265,22 @@ def rewrite_ids_and_process(attrs, logger):
     logger.info("[convert_decision_tree_classifier] unfold_rule_or")
     root.unfold_rule_or()
     logger.info("[convert_decision_tree_classifier] to_attrs")
-    new_attrs = root.to_attrs(
-            post_transform=attrs['post_transform'],
-            classlabels_int64s=attrs["classlabels_int64s"])
+    if "class_nodeids" in attrs:
+        new_attrs = root.to_attrs(
+                post_transform=attrs['post_transform'],
+                classlabels_int64s=attrs["classlabels_int64s"],
+                name=attrs['name'])
+    else:
+        new_attrs = root.to_attrs(
+                post_transform=attrs['post_transform'],
+                n_targets=attrs['n_targets'],
+                name=attrs['name'])
     if len(attrs['nodes_nodeids']) > len(new_attrs['nodes_nodeids']):
         raise RuntimeError(
             f"The replacement fails as there are less nodes in the new tree."
         )
+    if set(attrs) != set(new_attrs):
+        raise RuntimeError(f"Missing key: {list(sorted(attrs))} != {list(sorted(new_attrs))}.")
     logger.info("[convert_decision_tree_classifier] n_nodes=%d", len(attrs['nodes_nodeids']))
     logger.info("[convert_decision_tree_classifier] end")
     return new_attrs
