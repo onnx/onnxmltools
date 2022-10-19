@@ -34,7 +34,7 @@ def convert_decision_tree_classifier(scope, operator, container):
     new_attrs = rewrite_ids_and_process(attrs, logger)
 
     container.add_node(op_type, operator.input_full_names, [operator.outputs[0].full_name,
-                       operator.outputs[1].full_name], op_domain='ai.onnx.ml', **attrs)
+                       operator.outputs[1].full_name], op_domain='ai.onnx.ml', **new_attrs)
 
 
 register_converter('pyspark.ml.classification.DecisionTreeClassificationModel', convert_decision_tree_classifier)

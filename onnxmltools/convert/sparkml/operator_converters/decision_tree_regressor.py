@@ -26,7 +26,7 @@ def convert_decision_tree_regressor(scope, operator, container):
     new_attrs = rewrite_ids_and_process(attrs, logger)
 
     container.add_node(op_type, operator.input_full_names, operator.output_full_names,
-                       op_domain='ai.onnx.ml', **attrs)
+                       op_domain='ai.onnx.ml', **new_attrs)
 
 
 register_converter('pyspark.ml.regression.DecisionTreeRegressionModel', convert_decision_tree_regressor)
