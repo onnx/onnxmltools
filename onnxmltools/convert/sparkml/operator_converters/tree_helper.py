@@ -70,7 +70,7 @@ class Node:
                         if t == tid and c == nid
                     ]                    
                 for k, v in attrs.items():
-                    if k in {"post_transform", "name", "domain"}:
+                    if k in {"post_transform", "name", "domain", "n_targets"}:
                         continue
                     if k.startswith("nodes"):
                         continue
