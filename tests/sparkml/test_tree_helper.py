@@ -1,11 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
+from distutils.version import StrictVersion
 import numpy as np
 from onnx import TensorProto
 from onnx.helper import make_node, make_graph, make_model, make_tensor_value_info, make_opsetid
-from onnxruntime import InferenceSession
+from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxruntime import InferenceSession, __version__ as ort_version
 from onnxmltools.convert.sparkml.operator_converters.tree_helper import Node
+
+TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
@@ -249,5 +253,5 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestSparkmDecisionTreeClassifierBig().test_debug()
+    # TestSparkmDecisionTreeClassifierBig().test_debug()
     unittest.main(verbosity=2)
