@@ -4,6 +4,7 @@ import unittest
 from distutils.version import StrictVersion
 import numpy as np
 from onnx import TensorProto
+from onnx.defs import onnx_opset_version
 from onnx.helper import make_node, make_graph, make_model, make_tensor_value_info, make_opsetid
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxruntime import InferenceSession, __version__ as ort_version
