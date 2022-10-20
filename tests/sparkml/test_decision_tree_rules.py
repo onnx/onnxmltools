@@ -132,8 +132,6 @@ class TestSparkmDecisionTreeClassifier(unittest.TestCase):
         assert len(attrs['nodes_nodeids']) <= len(new_attrs2['nodes_nodeids'])
         for k in new_attrs:
             if new_attrs[k] != new_attrs2[k]:
-                import pprint
-                pprint.pprint(new_attrs2)
                 raise ValueError(f"Key {k!r}, {new_attrs[k]} != {new_attrs2[k]}")
         self.assertEqual(new_attrs, new_attrs2)
 

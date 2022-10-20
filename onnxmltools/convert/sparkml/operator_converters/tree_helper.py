@@ -250,24 +250,23 @@ class Node:
         attrs.update(kwargs)
 
         # update numbers
-        if False:
-            new_numbers = {}
-            for tid, nid, md in sorted(zip(attrs["nodes_treeids"], attrs["nodes_nodeids"], attrs["nodes_modes"])):
-                new_numbers[tid, nid] = len(new_numbers)
-            for k in ["nodes_truenodeids", "nodes_falsenodeids", "nodes_nodeids", "class_nodeids", "target_nodeids"]:
-                if k not in attrs:
+        new_numbers = {}
+        for tid, nid, md in sorted(zip(attrs["nodes_treeids"], attrs["nodes_nodeids"], attrs["nodes_modes"])):
+            new_numbers[tid, nid] = len(new_numbers)
+        for k in ["nodes_truenodeids", "nodes_falsenodeids", "nodes_nodeids", "class_nodeids", "target_nodeids"]:
+            if k not in attrs:
+                continue
+            if "class_" in k or "target_" in k:
+                field = k.split('_')[0] + "_treeids"
+            else:
+                field = "nodes_treeids"
+            for i in range(len(attrs[k])):
+                nid = attrs[k][i]
+                if nid == 0 and k in {'nodes_truenodeids', 'nodes_falsenodeids'}:
                     continue
-                if "class_" in k or "target_" in k:
-                    field = k.split('_')[0] + "_treeids"
-                else:
-                    field = "nodes_treeids"
-                for i in range(len(attrs[k])):
-                    nid = attrs[k][i]
-                    if nid == 0 and k in {'nodes_truenodeids', 'nodes_falsenodeids'}:
-                        continue
-                    tid = attrs[field][i]
-                    new_id = new_numbers[tid, nid]
-                    attrs[k][i] = new_id
+                tid = attrs[field][i]
+                new_id = new_numbers[tid, nid]
+                attrs[k][i] = new_id
         return attrs
 
 
