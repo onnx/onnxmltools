@@ -19,7 +19,7 @@ from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import VectorIndexer
 
 
-TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
+TARGET_OPSET = min(15, min(DEFAULT_OPSET_NUMBER, onnx_opset_version()))
 
 
 class TestSparkmDecisionTreeRegressor(SparkMlTestCase):

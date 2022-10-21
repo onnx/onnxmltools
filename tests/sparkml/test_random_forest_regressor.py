@@ -47,7 +47,7 @@ class TestSparkmRandomForestRegressor(SparkMlTestCase):
         feature_indexer = VectorIndexer(inputCol="features", outputCol="indexedFeatures",
                                         maxCategories=10, handleInvalid='error')
 
-        rf = RandomForestRegressor(labelCol="indexedLabel", featuresCol="indexedFeatures", numTrees=10)
+        rf = RandomForestRegressor(labelCol="indexedLabel", featuresCol="indexedFeatures", numTrees=3)
         pipeline = Pipeline(stages=[label_indexer, feature_indexer, rf])
         model = pipeline.fit(data)
         model_onnx = convert_sparkml(model, 'Sparkml RandomForest Regressor', [
