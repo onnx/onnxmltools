@@ -19,7 +19,7 @@ from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import StringIndexer, VectorIndexer
 
 
-TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
+TARGET_OPSET = min(15, min(DEFAULT_OPSET_NUMBER, onnx_opset_version()))
 
 
 class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
@@ -80,7 +80,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
     def test_tree_one_class_classification(self):
         features = [[0., 1.], [1., 1.], [2., 0.]]
         features = numpy.array(features, dtype=numpy.float32)
-        labels = [1, 1, 1]
+        labels = [1, 1, 0]
         dd = [(labels[i], Vectors.dense(features[i])) for i in range(len(labels))]
         data = self.spark.createDataFrame(self.spark.sparkContext.parallelize(dd), schema=["label", "features"])
         dt = DecisionTreeClassifier(labelCol="label", featuresCol="features")
