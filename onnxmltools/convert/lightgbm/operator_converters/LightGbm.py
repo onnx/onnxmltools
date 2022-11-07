@@ -516,6 +516,17 @@ def convert_lightgbm(scope, operator, container):
             'probability_tensor')
         label_tensor_name = scope.get_unique_variable_name('label_tensor')
 
+        # onnx does not support int and float values for a float tensor
+        update = {}
+        for k, v in attrs.items():
+            if not isinstance(v, list):
+                continue
+            tps = set(map(type, v))
+            if len(tps) == 2:
+                if tps == {int, float}:
+                    update[k] = [float(x) for x in v]
+        attrs.update(update)
+
         container.add_node(
             'TreeEnsembleClassifier', operator.input_full_names,
             [label_tensor_name, probability_tensor_name],
@@ -600,6 +611,17 @@ def convert_lightgbm(scope, operator, container):
             # and TreeEnsembleClassifier have different ONNX attributes
             attrs['target' + k[5:]] = copy.deepcopy(attrs[k])
             del attrs[k]
+
+        # onnx does not support int and float values for a float tensor
+        update = {}
+        for k, v in attrs.items():
+            if not isinstance(v, list):
+                continue
+            tps = set(map(type, v))
+            if len(tps) == 2:
+                if tps == {int, float}:
+                    update[k] = [float(x) for x in v]
+        attrs.update(update)
 
         split = getattr(operator, 'split', None)
         if split in (None, -1):
