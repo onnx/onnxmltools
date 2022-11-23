@@ -36,7 +36,7 @@ class TestXGBoost13(unittest.TestCase):
             verbosity=0)
 
         clr.fit(X_train, y_train, eval_set=[(X_test, y_test)],
-                early_stopping_rounds=40)
+                early_stopping_rounds=40, verbose=False)
 
         initial_type = [('float_input', FloatTensorType([None, 797]))]
         onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
@@ -44,6 +44,39 @@ class TestXGBoost13(unittest.TestCase):
         sess = InferenceSession(onx.SerializeToString())
         X_test = X_test.values.astype(np.float32)
         got = sess.run(None, {'float_input': X_test})
+        assert_almost_equal(expected[1], got[1])
+        assert_almost_equal(expected[0], got[0])
+
+    def test_xgb_classifier(self):
+        this = os.path.dirname(__file__)
+        df = pandas.read_csv(os.path.join(this, "data_bug.csv"))
+        X, y = df.drop('y', axis=1), df['y']
+        x_train, x_test, y_train, y_test = train_test_split(
+            X.values.astype(np.float32),
+            y.values.astype(np.float32),
+            random_state=2022)
+
+        model_param = {
+            "objective": "binary:logistic",
+            "n_estimators": 1000,
+            "early_stopping_rounds": 120,
+            "random_state": 42,
+            "max_depth": 3}
+        eval_metric = ["logloss", "auc", "error"]
+        model = XGBClassifier(**model_param)
+        model.fit(
+            X=x_train,
+            y=y_train,
+            eval_set=[(x_test, y_test)],
+            eval_metric=eval_metric,
+            verbose=False)
+
+        initial_types = [("float_input", FloatTensorType([None, x_train.shape[1]]))]
+        onnx_model = convert_xgboost(model, initial_types=initial_types)
+
+        expected = model.predict(x_test), model.predict_proba(x_test)
+        sess = InferenceSession(onnx_model.SerializeToString())
+        got = sess.run(None, {'float_input': x_test})
         assert_almost_equal(expected[1], got[1])
         assert_almost_equal(expected[0], got[0])
 
