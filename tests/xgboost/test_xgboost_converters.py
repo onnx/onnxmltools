@@ -42,7 +42,7 @@ def _fit_classification_model(model, n_classes, is_str=False, dtype=None):
     x, y = make_classification(n_classes=n_classes, n_features=100,
                                n_samples=1000,
                                random_state=42, n_informative=7)
-    y = y.astype(np.str) if is_str else y.astype(np.int64)
+    y = y.astype(np.str_) if is_str else y.astype(np.int64)
     x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
                                                    random_state=42)
     if dtype is not None:
@@ -476,6 +476,18 @@ class TestXGBoostModels(unittest.TestCase):
         dump_data_and_model(
             x_test, xgb, conv_model,
             basename="SklearnXGBClassifier601")
+
+    def test_xgb_classifier_hinge(self):
+        model = XGBClassifier(
+            n_estimators=3, objective='binary:hinge', random_state=0,
+            max_depth=2)
+        xgb, x_test = _fit_classification_model(model, 2)
+        conv_model = convert_xgboost(
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
+        dump_data_and_model(
+            x_test, xgb, conv_model,
+            basename="SklearnXGBClassifierHinge")
 
 
 

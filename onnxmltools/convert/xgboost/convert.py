@@ -41,4 +41,13 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     topology = parse_xgboost(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
     onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
+    opsets = {d.domain: d.version for d in onnx_model.opset_import}
+    if '' in opsets and opsets[''] < 9 and target_opset >= 9:
+        # a bug?
+        opsets[''] = 9
+        del onnx_model.opset_import[:]
+        for k, v in opsets.items():
+            opset = onnx_model.opset_import.add()
+            opset.domain = k
+            opset.version = v
     return onnx_model
