@@ -235,7 +235,7 @@ class TestXGBoostModels(unittest.TestCase):
         clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
         initial_type = [('float_input', FloatTensorType([None, 4]))]
         onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
-        sess = InferenceSession(onx.SerializeToString())
+        sess = InferenceSession(onx.SerializeToString(), providers=["CPUExecutionProvider"])
         input_name = sess.get_inputs()[0].name
         label_name = sess.get_outputs()[1].name
         predict_list = [1.,  20., 466.,   0.]
@@ -255,7 +255,7 @@ class TestXGBoostModels(unittest.TestCase):
         clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
         initial_type = [('float_input', FloatTensorType([None, 4]))]
         onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
-        sess = InferenceSession(onx.SerializeToString())
+        sess = InferenceSession(onx.SerializeToString(), providers=["CPUExecutionProvider"])
         input_name = sess.get_inputs()[0].name
         label_name = sess.get_outputs()[1].name
         predict_list = [1.,  20., 466.,   0.]
@@ -304,7 +304,7 @@ class TestXGBoostModels(unittest.TestCase):
             xgb, initial_types=[
                 ('input', FloatTensorType(shape=[None, X.shape[1]]))],
                 target_opset=TARGET_OPSET)
-        sess = InferenceSession(conv_model.SerializeToString())
+        sess = InferenceSession(conv_model.SerializeToString(), providers=["CPUExecutionProvider"])
         res = sess.run(None, {'input': X.astype(np.float32)})
         assert_almost_equal(xgb.predict_proba(X), res[1])
         assert_almost_equal(xgb.predict(X), res[0])
@@ -325,7 +325,7 @@ class TestXGBoostModels(unittest.TestCase):
         onx_loaded = convert_xgboost(
             bst_original, initial_types=initial_type,
             target_opset=TARGET_OPSET)
-        sess = InferenceSession(onx_loaded.SerializeToString())
+        sess = InferenceSession(onx_loaded.SerializeToString(), providers=["CPUExecutionProvider"])
         res = sess.run(None, {'float_input': X_test.astype(np.float32)})
         assert_almost_equal(bst_original.predict(dtest, output_margin=True), res[1], decimal=5)
         assert_almost_equal(bst_original.predict(dtest), res[0])
@@ -342,7 +342,7 @@ class TestXGBoostModels(unittest.TestCase):
         onx_loaded = convert_xgboost(
             bst_loaded, initial_types=initial_type,
             target_opset=TARGET_OPSET)
-        sess = InferenceSession(onx_loaded.SerializeToString())
+        sess = InferenceSession(onx_loaded.SerializeToString(), providers=["CPUExecutionProvider"])
         res = sess.run(None, {'float_input': X_test.astype(np.float32)})
         assert_almost_equal(bst_loaded.predict(dtest, output_margin=True), res[1], decimal=5)
         assert_almost_equal(bst_loaded.predict(dtest), res[0])
@@ -364,7 +364,7 @@ class TestXGBoostModels(unittest.TestCase):
                 model_skl, initial_types=[('X', FloatTensorType([None, x.shape[1]]))],
                 target_opset=TARGET_OPSET)
             with self.subTest(base_score=bm, n_estimators=n_est):
-                oinf = InferenceSession(model_onnx_skl.SerializeToString())
+                oinf = InferenceSession(model_onnx_skl.SerializeToString(), providers=["CPUExecutionProvider"])
                 res2 = oinf.run(None, {'X': x_test})
                 assert_almost_equal(model_skl.predict_proba(x_test), res2[1])
 

@@ -52,7 +52,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
         return
 
     try:
-        sess = onnxruntime.InferenceSession(onx)
+        sess = onnxruntime.InferenceSession(onx, providers=["CPUExecutionProvider"])
     except ExpectedAssertionError as expe:
         raise expe
     except Exception as e:
@@ -312,7 +312,7 @@ def run_with_runtime(inputs, model_path):
     '''
     try:
         import onnxruntime
-        session = onnxruntime.InferenceSession(model_path)
+        session = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
         output = session.run(None, inputs)
         return (output, session)
     except Exception as e:
