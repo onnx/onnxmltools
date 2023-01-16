@@ -242,7 +242,7 @@ class XGBClassifierConverter(XGBConverter):
             raise RuntimeError("XGBoost model is empty.")
         if ncl <= 1:
             ncl = 2
-            if objective == 'binary:logistic':
+            if objective != 'binary:hinge':
                 # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L23.
                 attr_pairs['post_transform'] = "LOGISTIC"
                 attr_pairs['class_ids'] = [0 for v in attr_pairs['class_treeids']]
