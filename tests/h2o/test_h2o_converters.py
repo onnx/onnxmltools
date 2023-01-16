@@ -91,7 +91,7 @@ def _prepare_one_hot(file, y, exclude_cols=None):
 
 
 def _train_test_split_as_frames(x, y, is_str=False, is_classifier=False):
-    y = y.astype(np.str) if is_str else y.astype(np.int64)
+    y = y.astype(np.str_) if is_str else y.astype(np.int64)
     x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.3, random_state=42)
     f_train_x = H2OFrame(x_train)
     f_train_y = H2OFrame(y_train)
