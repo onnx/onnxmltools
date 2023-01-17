@@ -177,7 +177,7 @@ jobs:
       export PYTHONPATH=.
       pip install $(COREML_PATH)
       pytest tests/coreml --durations=0
-    displayName: 'pytest - coreml'
+    displayName: 'pytest - coreml [$(COREML_PATH)]'
     condition: ne('$(COREML_PATH)', '')
 
   - task: PublishTestResults@2
