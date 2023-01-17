@@ -138,7 +138,7 @@ class H2OMojoWrapper:
             return [preds.to_numpy()]
         else:
             return [
-                preds.iloc[:, 0].to_numpy().astype(np.str),
+                preds.iloc[:, 0].to_numpy().astype(np.str_),
                 preds.iloc[:, 1:].to_numpy()
             ]
 
