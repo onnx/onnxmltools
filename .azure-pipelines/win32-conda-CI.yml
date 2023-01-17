@@ -19,7 +19,7 @@ jobs:
         python.version: '3.10'
         ONNX_PATH: 'onnx==1.13.0' # '-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
         ONNXRT_PATH: onnxruntime==1.13.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        COREML_PATH: ''
 
       Python39-1120-RT1110:
         python.version: '3.9'
@@ -93,6 +93,7 @@ jobs:
       call activate py$(python.version)
       python -m pip install %COREML_PATH%
     displayName: 'Install coremltools'
+    condition: not(eq('$(python.version)', '3.10'))
 
   - script: |
       call activate py$(python.version)
@@ -166,7 +167,7 @@ jobs:
 
   - script: |
       call activate py$(python.version)
-      python -m pip install torch==1.8.1+cpu torchvision==0.9.1+cpu torchaudio===0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install torch
       python -m pip install hummingbird-ml --no-deps
     displayName: 'Install hummingbird-ml'
 
