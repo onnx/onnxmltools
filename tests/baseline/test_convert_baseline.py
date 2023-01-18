@@ -9,7 +9,10 @@ import unittest
 from onnx.defs import onnx_opset_version
 from onnxmltools.convert import convert_coreml
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
-import coremltools
+try:
+    import coremltools
+except ImportError:
+    coremltools = None
 
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
@@ -24,6 +27,8 @@ class TestBaseLine(unittest.TestCase):
     def get_diff(self, input_file, ref_file):
         this = os.path.dirname(__file__)
         coreml_file = os.path.join(this, "models", input_file)
+        if coremltools is None:
+            return  []
         cml = coremltools.utils.load_spec(coreml_file)
         onnx_model = convert_coreml(cml, target_opset=TARGET_OPSET)
         output_dir = os.path.join(this, "outmodels")

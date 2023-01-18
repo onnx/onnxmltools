@@ -21,7 +21,7 @@ def _check_onnx_version():
 _check_onnx_version()
 
 
-def _make_tensor_fixed(name, data_type, dims, vals, raw=False):
+def make_tensor_fixed(name, data_type, dims, vals, raw=False):
     '''
     Make a TensorProto with specified arguments.  If raw is False, this
     function will choose the corresponding proto field to store the
@@ -45,6 +45,3 @@ def _make_tensor_fixed(name, data_type, dims, vals, raw=False):
 
     tensor.dims.extend(dims)
     return tensor
-
-
-helper.make_tensor = _make_tensor_fixed

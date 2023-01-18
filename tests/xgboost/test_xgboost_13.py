@@ -41,7 +41,7 @@ class TestXGBoost13(unittest.TestCase):
         initial_type = [('float_input', FloatTensorType([None, 797]))]
         onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
         expected = clr.predict(X_test), clr.predict_proba(X_test)
-        sess = InferenceSession(onx.SerializeToString())
+        sess = InferenceSession(onx.SerializeToString(), providers=["CPUExecutionProvider"])
         X_test = X_test.values.astype(np.float32)
         got = sess.run(None, {'float_input': X_test})
         assert_almost_equal(expected[1], got[1])
