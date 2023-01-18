@@ -18,14 +18,14 @@ jobs:
         python.version: '3.10'
         ONNX_PATH: 'onnx==1.13.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
         ONNXRT_PATH: onnxruntime==1.13.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-        COREML_PATH: ''
+        COREML_PATH: '-'
         xgboost.version: '>=1.7.3'
         numpy.version: ''
       Python310-1120-RT1121-xgb161:
         python.version: '3.10'
         ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
         ONNXRT_PATH: onnxruntime==1.12.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
+        COREML_PATH: '-'
         xgboost.version: '==1.6.1'
         numpy.version: ''
       Python39-1120-RT1110-xgb161:
@@ -178,7 +178,7 @@ jobs:
       pip install $(COREML_PATH)
       pytest tests/coreml --durations=0
     displayName: 'pytest - coreml [$(COREML_PATH)]'
-    condition: ne('$(COREML_PATH)', '')
+    condition: ne('$(COREML_PATH)', '-')
 
   - task: PublishTestResults@2
     inputs:
