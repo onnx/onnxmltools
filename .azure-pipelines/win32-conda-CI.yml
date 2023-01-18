@@ -134,7 +134,7 @@ jobs:
 
   - script: |
       call activate py$(python.version)
-      export PYTHONPATH=.
+      set PYTHONPATH=.
       if "$(COREML_PATH)" neq "NONE" python -m pip install %COREML_PATH%
       if "$(COREML_PATH)" neq "NONE" python -m pytest tests/coreml --durations=0
     displayName: 'pytest coreml - [$(COREML_PATH)]'
