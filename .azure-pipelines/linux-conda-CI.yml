@@ -174,11 +174,16 @@ jobs:
     displayName: 'pytest - hummingbirdml'
 
   - script: |
-      export PYTHONPATH=.
-      pip install $(COREML_PATH)
-      pytest tests/coreml --durations=0
+      if [ '$(COREML_PATH)' == 'NONE' ]
+      then
+        echo "required version of coremltools does not work on python 3.10"
+      else
+        export PYTHONPATH=.
+        pip install $(COREML_PATH)
+        pytest tests/coreml --durations=0
+      fi
     displayName: 'pytest - coreml [$(COREML_PATH)]'
-    condition: ne('$(COREML_PATH)', 'NONE')
+    # condition: ne('$(COREML_PATH)', 'NONE')
 
   - task: PublishTestResults@2
     inputs:
