@@ -97,8 +97,10 @@ jobs:
 
   - script: |
       python -m pip install --upgrade pip
-      pip install $(ONNX_PATH) $(ONNXRT_PATH) cython
       pip install -r requirements.txt
+      pip install $(ONNX_PATH)
+      pip install $(ONNXRT_PATH)
+      pip install cython
     displayName: 'Install dependencies'
 
   - script: |
