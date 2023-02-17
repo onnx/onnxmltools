@@ -15,6 +15,13 @@ jobs:
   strategy:
     matrix:
 
+      Python310-1130-RT1140:
+        python.version: '3.10'
+        ONNX_PATH: 'onnx==1.13.0' # '-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
+        ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
+        COREML_PATH: NONE
+        numpy.version: ''
+
       Python310-1130-RT1131:
         python.version: '3.10'
         ONNX_PATH: 'onnx==1.13.0' # '-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
