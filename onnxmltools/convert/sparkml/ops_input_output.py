@@ -122,8 +122,12 @@ def build_io_name_map():
             lambda model: [model.getOrDefault("predictionCol")],
         ),
         "pyspark.ml.feature.ImputerModel": (
-            lambda model: model.getOrDefault("inputCols"),
-            lambda model: model.getOrDefault("outputCols"),
+            lambda model: model.getOrDefault("inputCols")
+            if model.isSet("inputCols")
+            else [model.getOrDefault("inputCol")],
+            lambda model: model.getOrDefault("outputCols")
+            if model.isSet("outputCols")
+            else [model.getOrDefault("outputCol")],
         ),
         "pyspark.ml.feature.MaxAbsScalerModel": (
             lambda model: [model.getOrDefault("inputCol")],
