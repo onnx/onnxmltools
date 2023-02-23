@@ -44,7 +44,6 @@ def convert_imputer(scope: Scope, operator: Operator, container):
         container.add_node(op_type, operator.inputs[0].full_name, operator.output_full_names[0],
                            op_domain='ai.onnx.ml',
                            **attrs)
-        
 
 register_converter('pyspark.ml.feature.ImputerModel', convert_imputer)
 
