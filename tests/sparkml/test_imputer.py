@@ -27,7 +27,6 @@ class TestSparkmlImputer(SparkMlTestCase):
     def test_imputer_single(self):
         self._imputer_test_single()
 
-    @unittest.skipIf(True, reason="Name:'Split' Status Message: Cannot split using values in 'split")
     @unittest.skipIf(sys.version_info < (3, 8),
                      reason="pickle fails on python 3.7")
     def test_imputer_multi(self):
@@ -52,13 +51,20 @@ class TestSparkmlImputer(SparkMlTestCase):
     
         # run the model
         predicted = model.transform(data)
-        expected = predicted.select("out_a", "out_b").toPandas().values.astype(numpy.float32)
+        
+        expected = {
+            "out_a": predicted.select("out_a").toPandas().values.astype(numpy.int64),
+            "out_b": predicted.select("out_b").toPandas().values.astype(numpy.int64),
+        }
+
         data_np = data.toPandas().values.astype(numpy.float32)
         data_np = {'a': data_np[:, :1], 'b': data_np[:, 1:]}
         paths = save_data_models(data_np, expected, model, model_onnx, basename="SparkmlImputerMulti")
         onnx_model_path = paths[-1]
-        output, output_shapes = run_onnx_model(['out_a', 'out_b'], data_np, onnx_model_path)
-        compare_results(expected, output, decimal=5)
+        output_names = ['out_a', 'out_b']
+        output, output_shapes = run_onnx_model(output_names, data_np, onnx_model_path)
+        actual_output = dict(zip(output_names, output))
+        compare_results(expected, actual_output, decimal=5)
     
     def _imputer_test_single(self):
         data = self.spark.createDataFrame([
