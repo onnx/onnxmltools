@@ -511,7 +511,6 @@ class TestXGBoostModels(unittest.TestCase):
         dtest = DMatrix(X_test)
         param = {'objective': 'multi:softmax', 'num_class': 3}
         bst = train_xgb(param, dtrain, 10)
-        print(dir(bst))
         expected_prob = bst.predict(dtest, output_margin=True)
         initial_type = [('float_input', FloatTensorType([None, 4]))]
         onx = convert_xgboost(bst, initial_types=initial_type)
