@@ -489,8 +489,39 @@ class TestXGBoostModels(unittest.TestCase):
             x_test, xgb, conv_model,
             basename="SklearnXGBClassifierHinge")
 
+    def test_doc_example(self):
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        X = X.astype(np.float32)
+        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        clr = XGBClassifier()
+        clr.fit(X_train, y_train)
+        expected_prob = clr.predict_proba(X_test)
+
+        initial_type = [('float_input', FloatTensorType([None, 4]))]
+        onx = convert_xgboost(clr, initial_types=initial_type)
+
+        sess = InferenceSession(onx.SerializeToString())
+        input_name = sess.get_inputs()[0].name
+        pred_onx = sess.run(
+            None, {input_name: X_test.astype(np.float32)})
+        assert_almost_equal(expected_prob, pred_onx[1], decimal=5)
+
+        dtrain = DMatrix(X_train, label=y_train)
+        dtest = DMatrix(X_test)
+        param = {'objective': 'multi:softmax', 'num_class': 3}
+        bst = train_xgb(param, dtrain, 10)
+        print(dir(bst))
+        expected_prob = bst.predict(dtest, output_margin=True)
+        initial_type = [('float_input', FloatTensorType([None, 4]))]
+        onx = convert_xgboost(bst, initial_types=initial_type)
+        sess = InferenceSession(onx.SerializeToString())
+        input_name = sess.get_inputs()[0].name
+        pred_onx = sess.run(
+            None, {input_name: X_test.astype(np.float32)})
+        assert_almost_equal(expected_prob, pred_onx[1], decimal=5)
 
 
 if __name__ == "__main__":
-    # TestXGBoostModels().test_xgboost_booster_classifier_multiclass_softprob()
+    # TestXGBoostModels().test_doc_example()
     unittest.main(verbosity=2)
