@@ -5,17 +5,19 @@ import copy
 from ...common.data_types import Int64TensorType, FloatTensorType
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
 from ...common._registration import register_converter, register_shape_calculator
+from ...common._topology import Operator, Scope
+from pyspark.ml.feature import ImputerModel
+from typing import List
 
-
-def convert_imputer(scope, operator, container):
-    op = operator.raw_operator
-
+def convert_imputer(scope: Scope, operator: Operator, container):
+    op: ImputerModel = operator.raw_operator
     op_type = 'Imputer'
     name = scope.get_unique_operator_name(op_type)
     attrs = {'name': name}
     input_type = operator.inputs[0].type
     surrogates = op.surrogateDF.toPandas().values[0].tolist()
     value = op.getOrDefault('missingValue')
+    
     if isinstance(input_type, FloatTensorType):
         attrs['imputed_value_floats'] = surrogates
         attrs['replaced_value_float'] = value
@@ -37,12 +39,11 @@ def convert_imputer(scope, operator, container):
                            name=scope.get_unique_operator_name('Split'),
                            op_version=2,
                            axis=1,
-                           split=range(1, len(operator.output_full_names)))
+                           split=[1] * len(operator.output_full_names))
     else:
         container.add_node(op_type, operator.inputs[0].full_name, operator.output_full_names[0],
                            op_domain='ai.onnx.ml',
                            **attrs)
-
 
 register_converter('pyspark.ml.feature.ImputerModel', convert_imputer)
 

@@ -2,6 +2,7 @@
 
 import json
 import numpy as np
+from onnx import TensorProto
 from xgboost import XGBClassifier
 from ...common._registration import register_converter
 from ..common import get_xgb_params
@@ -241,14 +242,17 @@ class XGBClassifierConverter(XGBConverter):
             raise RuntimeError("XGBoost model is empty.")
         if ncl <= 1:
             ncl = 2
-            # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L23.
-            attr_pairs['post_transform'] = "LOGISTIC"
-            attr_pairs['class_ids'] = [0 for v in attr_pairs['class_treeids']]
-            if js_trees[0].get('leaf', None) == 0:
-                attr_pairs['base_values'] = [0.5]
-            elif base_score != 0.5:
-                cst = - np.log(1 / np.float32(base_score) - 1.)
-                attr_pairs['base_values'] = [cst]
+            if objective != 'binary:hinge':
+                # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L23.
+                attr_pairs['post_transform'] = "LOGISTIC"
+                attr_pairs['class_ids'] = [0 for v in attr_pairs['class_treeids']]
+                if js_trees[0].get('leaf', None) == 0:
+                    attr_pairs['base_values'] = [0.5]
+                elif base_score != 0.5:
+                    cst = - np.log(1 / np.float32(base_score) - 1.)
+                    attr_pairs['base_values'] = [cst]
+            else:
+                attr_pairs['base_values'] = [base_score]
         else:
             # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L35.
             attr_pairs['post_transform'] = "SOFTMAX"
@@ -264,13 +268,33 @@ class XGBClassifierConverter(XGBConverter):
             attr_pairs['classlabels_strings'] = classes
 
         # add nodes
-        if objective == "binary:logistic":
+        if objective in ("binary:logistic", "binary:hinge"):
             ncl = 2
-            container.add_node('TreeEnsembleClassifier', operator.input_full_names,
-                               operator.output_full_names,
+            if objective == "binary:hinge":
+                attr_pairs['post_transform'] = 'NONE'
+                output_names = [operator.output_full_names[0],
+                                scope.get_unique_variable_name("output_prob")]
+            else:
+                output_names = operator.output_full_names
+            container.add_node('TreeEnsembleClassifier',
+                               operator.input_full_names,
+                               output_names,
                                op_domain='ai.onnx.ml',
                                name=scope.get_unique_operator_name('TreeEnsembleClassifier'),
                                **attr_pairs)
+            if objective == "binary:hinge":
+                if container.target_opset < 9:
+                    raise RuntimeError(
+                        f"hinge function cannot be implemented because "
+                        f"opset={container.target_opset}<9.")
+                zero = scope.get_unique_variable_name("zero")
+                one = scope.get_unique_variable_name("one")
+                container.add_initializer(zero, TensorProto.FLOAT, [1], [0.])
+                container.add_initializer(one, TensorProto.FLOAT, [1], [1.])
+                greater = scope.get_unique_variable_name("output_prob")
+                container.add_node("Greater", [output_names[1], zero], [greater])
+                container.add_node('Where', [greater, one, zero], 
+                                   operator.output_full_names[1])
         elif objective in ("multi:softprob", "multi:softmax"):
             ncl = len(js_trees) // params['n_estimators']
             if objective == 'multi:softmax':

@@ -9,7 +9,7 @@ import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
 from sklearn.datasets import (
-    load_diabetes, load_iris, make_classification, load_digits)
+    load_diabetes, load_iris, make_classification, load_digits, make_regression)
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor, XGBClassifier, train, DMatrix, Booster, train as train_xgb
 from sklearn.preprocessing import StandardScaler
@@ -24,11 +24,25 @@ from onnxruntime import InferenceSession
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
+def fct_cl2(y):
+    y[y == 2] = 0
+    return y
+
+
+def fct_cl3(y):
+    y[y == 0] = 6
+    return y
+
+
+def fct_id(y):
+    return y
+
+
 def _fit_classification_model(model, n_classes, is_str=False, dtype=None):
     x, y = make_classification(n_classes=n_classes, n_features=100,
                                n_samples=1000,
                                random_state=42, n_informative=7)
-    y = y.astype(np.str) if is_str else y.astype(np.int64)
+    y = y.astype(np.str_) if is_str else y.astype(np.int64)
     x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
                                                    random_state=42)
     if dtype is not None:
@@ -235,7 +249,7 @@ class TestXGBoostModels(unittest.TestCase):
         clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
         initial_type = [('float_input', FloatTensorType([None, 4]))]
         onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
-        sess = InferenceSession(onx.SerializeToString())
+        sess = InferenceSession(onx.SerializeToString(), providers=["CPUExecutionProvider"])
         input_name = sess.get_inputs()[0].name
         label_name = sess.get_outputs()[1].name
         predict_list = [1.,  20., 466.,   0.]
@@ -255,7 +269,7 @@ class TestXGBoostModels(unittest.TestCase):
         clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
         initial_type = [('float_input', FloatTensorType([None, 4]))]
         onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
-        sess = InferenceSession(onx.SerializeToString())
+        sess = InferenceSession(onx.SerializeToString(), providers=["CPUExecutionProvider"])
         input_name = sess.get_inputs()[0].name
         label_name = sess.get_outputs()[1].name
         predict_list = [1.,  20., 466.,   0.]
@@ -304,7 +318,7 @@ class TestXGBoostModels(unittest.TestCase):
             xgb, initial_types=[
                 ('input', FloatTensorType(shape=[None, X.shape[1]]))],
                 target_opset=TARGET_OPSET)
-        sess = InferenceSession(conv_model.SerializeToString())
+        sess = InferenceSession(conv_model.SerializeToString(), providers=["CPUExecutionProvider"])
         res = sess.run(None, {'input': X.astype(np.float32)})
         assert_almost_equal(xgb.predict_proba(X), res[1])
         assert_almost_equal(xgb.predict(X), res[0])
@@ -325,7 +339,7 @@ class TestXGBoostModels(unittest.TestCase):
         onx_loaded = convert_xgboost(
             bst_original, initial_types=initial_type,
             target_opset=TARGET_OPSET)
-        sess = InferenceSession(onx_loaded.SerializeToString())
+        sess = InferenceSession(onx_loaded.SerializeToString(), providers=["CPUExecutionProvider"])
         res = sess.run(None, {'float_input': X_test.astype(np.float32)})
         assert_almost_equal(bst_original.predict(dtest, output_margin=True), res[1], decimal=5)
         assert_almost_equal(bst_original.predict(dtest), res[0])
@@ -342,7 +356,7 @@ class TestXGBoostModels(unittest.TestCase):
         onx_loaded = convert_xgboost(
             bst_loaded, initial_types=initial_type,
             target_opset=TARGET_OPSET)
-        sess = InferenceSession(onx_loaded.SerializeToString())
+        sess = InferenceSession(onx_loaded.SerializeToString(), providers=["CPUExecutionProvider"])
         res = sess.run(None, {'float_input': X_test.astype(np.float32)})
         assert_almost_equal(bst_loaded.predict(dtest, output_margin=True), res[1], decimal=5)
         assert_almost_equal(bst_loaded.predict(dtest), res[0])
@@ -364,11 +378,119 @@ class TestXGBoostModels(unittest.TestCase):
                 model_skl, initial_types=[('X', FloatTensorType([None, x.shape[1]]))],
                 target_opset=TARGET_OPSET)
             with self.subTest(base_score=bm, n_estimators=n_est):
-                oinf = InferenceSession(model_onnx_skl.SerializeToString())
+                oinf = InferenceSession(model_onnx_skl.SerializeToString(), providers=["CPUExecutionProvider"])
                 res2 = oinf.run(None, {'X': x_test})
                 assert_almost_equal(model_skl.predict_proba(x_test), res2[1])
+
+    def test_xgb_cost(self):
+        obj_classes = {
+            'reg:logistic': (XGBClassifier, fct_cl2,
+                             make_classification(n_features=4, n_classes=2,
+                                                 n_clusters_per_class=1)),
+            'binary:logistic': (XGBClassifier, fct_cl2,
+                                make_classification(n_features=4, n_classes=2,
+                                                    n_clusters_per_class=1)),
+            'multi:softmax': (XGBClassifier, fct_id,
+                              make_classification(n_features=4, n_classes=3,
+                                                  n_clusters_per_class=1)),
+            'multi:softprob': (XGBClassifier, fct_id,
+                               make_classification(n_features=4, n_classes=3,
+                                                   n_clusters_per_class=1)),
+            'reg:squarederror': (XGBRegressor, fct_id,
+                                 make_regression(n_features=4, n_targets=1)),
+            'reg:squarederror2': (XGBRegressor, fct_id,
+                                  make_regression(n_features=4, n_targets=2)),
+        }
+        nb_tests = 0
+        for objective in obj_classes:  # pylint: disable=C0206
+            for n_estimators in [1, 2]:
+                with self.subTest(objective=objective, n_estimators=n_estimators):
+                    probs = []
+                    cl, fct, prob = obj_classes[objective]
+
+                    iris = load_iris()
+                    X, y = iris.data, iris.target
+                    y = fct(y)
+                    X_train, X_test, y_train, _ = train_test_split(
+                        X, y, random_state=11)
+                    probs.append((X_train, X_test, y_train))
+
+                    X_train, X_test, y_train, _ = train_test_split(
+                        *prob, random_state=11)
+                    probs.append((X_train, X_test, y_train))
+
+                    for X_train, X_test, y_train in probs:
+                        obj = objective.replace(
+                            'reg:squarederror2', 'reg:squarederror')
+                        obj = obj.replace(
+                            'multi:softmax2', 'multi:softmax')
+                        clr = cl(objective=obj, n_estimators=n_estimators)
+                        if len(y_train.shape) == 2:
+                            y_train = y_train[:, 1]
+                        try:
+                            clr.fit(X_train, y_train)
+                        except ValueError as e:
+                            raise AssertionError(
+                                "Unable to train with objective %r and data %r." % (
+                                    objective, y_train)) from e
+
+                        model_def = convert_xgboost(
+                            clr, initial_types=[('X', FloatTensorType([None, X.shape[1]]))],
+                            target_opset=TARGET_OPSET)
+
+                        oinf = InferenceSession(model_def.SerializeToString(),
+                                                providers=["CPUExecutionProvider"])
+                        y = oinf.run(None, {'X': X_test.astype(np.float32)})
+                        if cl == XGBRegressor:
+                            exp = clr.predict(X_test)
+                            assert_almost_equal(exp, y[0].ravel(), decimal=5)
+                        else:
+                            if 'softmax' not in obj:
+                                exp = clr.predict_proba(X_test)
+                                got = pandas.DataFrame(y[1]).values
+                                assert_almost_equal(exp, got, decimal=5)
+
+                            exp = clr.predict(X_test[:10])
+                            assert_almost_equal(exp, y[0][:10])
+
+                        nb_tests += 1
+
+        self.assertGreater(nb_tests, 8)
+
+    def test_xgb_classifier_601(self):
+        model = XGBClassifier(
+            base_score=0.5, booster='gbtree', colsample_bylevel=1,
+            colsample_bynode=1, colsample_bytree=1, gamma=0,
+            importance_type='gain', interaction_constraints='',
+            learning_rate=0.3, max_delta_step=0, max_depth=6,
+            min_child_weight=1, missing=np.nan,
+            n_estimators=3, n_jobs=0, num_parallel_tree=1,
+            objective='multi:softprob', random_state=0, reg_alpha=0,
+            reg_lambda=1, scale_pos_weight=None, subsample=1,
+            tree_method='exact', validate_parameters=1)
+        xgb, x_test = _fit_classification_model(model, 3)
+        conv_model = convert_xgboost(
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
+        self.assertTrue(conv_model is not None)
+        dump_data_and_model(
+            x_test, xgb, conv_model,
+            basename="SklearnXGBClassifier601")
+
+    def test_xgb_classifier_hinge(self):
+        model = XGBClassifier(
+            n_estimators=3, objective='binary:hinge', random_state=0,
+            max_depth=2)
+        xgb, x_test = _fit_classification_model(model, 2)
+        conv_model = convert_xgboost(
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
+        dump_data_and_model(
+            x_test, xgb, conv_model,
+            basename="SklearnXGBClassifierHinge")
+
 
 
 if __name__ == "__main__":
     # TestXGBoostModels().test_xgboost_booster_classifier_multiclass_softprob()
-    unittest.main()
+    unittest.main(verbosity=2)

@@ -15,7 +15,10 @@ def convert_aft_survival_regression(scope, operator, container):
     coefficients = op.coefficients.toArray().astype(float)
     coefficients_tensor = scope.get_unique_variable_name('coefficients_tensor')
     container.add_initializer(coefficients_tensor, onnx_proto.TensorProto.FLOAT, [1, len(coefficients)], coefficients)
-    intercepts = op.intercept.astype(float) if isinstance(op.intercept, collections.Iterable) else [float(op.intercept)]
+    intercepts = (
+        op.intercept.astype(float)
+        if isinstance(op.intercept, collections.abc.Iterable)
+        else [float(op.intercept)])
     intercepts_tensor = scope.get_unique_variable_name('intercepts_tensor')
     container.add_initializer(intercepts_tensor, onnx_proto.TensorProto.FLOAT, [len(intercepts)], intercepts)
 

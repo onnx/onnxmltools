@@ -13,8 +13,10 @@ def convert_sparkml_linear_regressor(scope, operator, container):
     attrs = {
         'name': scope.get_unique_operator_name(op_type),
         'coefficients': op.coefficients.astype(float),
-        'intercepts': op.intercept.astype(float) if isinstance(op.intercept, collections.Iterable) else [
-                 float(op.intercept)]
+        'intercepts': (
+            op.intercept.astype(float)
+            if isinstance(op.intercept, collections.abc.Iterable)
+            else [float(op.intercept)])
     }
     container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
 
