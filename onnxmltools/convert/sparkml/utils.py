@@ -33,7 +33,7 @@ def buildInputDictSimple(dataframe):
     import numpy
     result = {}
     for field in dataframe.schema.fields:
-        if str(field.dataType) == 'StringType':
+        if str(field.dataType) == 'StringType' or str(field.dataType) == 'StringType()':
             result[field.name] = dataframe.select(field.name).toPandas().values
         else:
             result[field.name] = dataframe.select(field.name).toPandas().values.astype(numpy.float32)
