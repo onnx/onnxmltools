@@ -44,7 +44,7 @@ def buildInputDictSimple(dataframe):
 
     result = {}
     for field in dataframe.schema.fields:
-        if str(field.dataType) == "StringType":
+        if str(field.dataType) == 'StringType' or str(field.dataType) == 'StringType()':
             result[field.name] = dataframe.select(field.name).toPandas().values
         else:
             result[field.name] = (
