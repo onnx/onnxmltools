@@ -15,7 +15,7 @@ def buildInitialTypesSimple(dataframe):
 
 def getTensorTypeFromSpark(sparktype):
     if sparktype == 'StringType' or sparktype == 'StringType()':
-        return StringTensorType([1, 1])
+        return StringTensorType([None, 1])
     elif sparktype == 'DecimalType' or sparktype == 'DecimalType()' \
             or sparktype == 'DoubleType' or sparktype == 'DoubleType()' \
             or sparktype == 'FloatType' or sparktype == 'FloatType()' \
@@ -24,7 +24,7 @@ def getTensorTypeFromSpark(sparktype):
             or sparktype == 'ShortType' or sparktype == 'ShortType()' \
             or sparktype == 'ByteType' or sparktype == 'ByteType()' \
             or sparktype == 'BooleanType' or sparktype == 'BooleanType()':
-        return FloatTensorType([1, 1])
+        return FloatTensorType([None, 1])
     else:
         raise TypeError("Cannot map this type to Onnx types: " + sparktype)
 
