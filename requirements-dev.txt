@@ -1,5 +1,4 @@
 catboost
-codecov
 cython
 dill
 flake8
