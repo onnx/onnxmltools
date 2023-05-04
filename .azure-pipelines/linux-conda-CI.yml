@@ -16,7 +16,7 @@ jobs:
     matrix:
       Python311-1140-RT1140-xgb173:
         python.version: '3.10'
-        ONNX_PATH: '-i https://test.pypi.org/simple/ onnx==1.14.0rc2'
+        ONNX_PATH: '-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
         ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
         COREML_PATH: NONE
         xgboost.version: '>=1.7.3'
