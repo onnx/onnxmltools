@@ -61,7 +61,7 @@ jobs:
         python.version: '3.9'
         ONNX_PATH: 'onnx==1.10.2'  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
         ONNXRT_PATH: onnxruntime==1.9.0
-        COREML_PATH: coremltools=5.2 # 5.0 doesn't work
+        COREML_PATH: coremltools==5.2 # 5.0 doesn't work
         numpy.version: '<=1.23.5'
 
       Python39-190-RT181:
