@@ -47,7 +47,7 @@ jobs:
         python.version: '3.9'
         ONNX_PATH: onnx==1.11.0  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
         ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-        COREML_PATH: coremltools==6.2  # git+https://github.com/apple/coremltools@3.1
+        COREML_PATH: coremltools==6.2  # 6.0 doesn't work
         numpy.version: ''
 
       Python39-1110-RT190:
@@ -61,7 +61,7 @@ jobs:
         python.version: '3.9'
         ONNX_PATH: 'onnx==1.10.2'  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
         ONNXRT_PATH: onnxruntime==1.9.0
-        COREML_PATH: coremltools=5.0 # git+https://github.com/apple/coremltools@3.1
+        COREML_PATH: coremltools=5.2 # 5.0 doesn't work
         numpy.version: '<=1.23.5'
 
       Python39-190-RT181:

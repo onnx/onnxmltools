@@ -49,12 +49,12 @@ jobs:
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
         xgboost.version: '>=1.6.1'
         numpy.version: ''
-      Python39-1120-RT1110-xgb142:
+      Python39-1120-RT1110-xgb150:
         python.version: '3.9'
         ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
         ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
         COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        xgboost.version: '==1.4.2'
+        xgboost.version: '==1.5.0'
         numpy.version: ''
       Python39-1110-RT1110:
         python.version: '3.9'
