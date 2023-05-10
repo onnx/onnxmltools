@@ -126,6 +126,11 @@ jobs:
     displayName: 'Install onnxruntime'
 
   - script: |
+      python -m pip install coloredlogs flatbuffers packaging sympy numpy protobuf
+      python -m pip install $(ONNXRT_PATH)
+    displayName: 'Install ort-nightly'
+
+  - script: |
       call activate py$(python.version)
       python -m flake8 ./onnxmltools
     displayName: 'run flake8 check'
