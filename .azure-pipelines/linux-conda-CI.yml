@@ -18,7 +18,7 @@ jobs:
       Python310-1140-RT1150-xgb175:
         python.version: '3.10'
         ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
-        ONNXRT_PATH: '-i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ORT-Nightly/pypi/simple/ ort_nightly==1.15.0.dev20230502003'
+        ONNXRT_PATH: onnxruntime==1.15.0 #'-i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ORT-Nightly/pypi/simple/ ort_nightly==1.15.0.dev20230502003'
         COREML_PATH: NONE
         xgboost.version: '>=1.7.5'
         numpy.version: ''
@@ -30,34 +30,39 @@ jobs:
         COREML_PATH: NONE
         xgboost.version: '>=1.7.5'
         numpy.version: ''
-      # Python310-1130-RT1140-xgb173:
-      #   python.version: '3.10'
-      #   ONNX_PATH: 'onnx==1.13.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-      #   ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: NONE
-      #   xgboost.version: '>=1.7.3'
-      #   numpy.version: ''
-      # Python310-1130-RT1131-xgb173:
-      #   python.version: '3.10'
-      #   ONNX_PATH: 'onnx==1.13.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-      #   ONNXRT_PATH: onnxruntime==1.13.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: NONE
-      #   xgboost.version: '>=1.7.3'
-      #   numpy.version: ''
-      # Python310-1120-RT1121-xgb161:
-      #   python.version: '3.10'
-      #   ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-      #   ONNXRT_PATH: onnxruntime==1.12.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: NONE
-      #   xgboost.version: '==1.6.1'
-      #   numpy.version: ''
-      # Python39-1120-RT1110-xgb161:
-      #   python.version: '3.9'
-      #   ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-      #   ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: coremltools==6.3 # git+https://github.com/apple/coremltools@3.1
-      #   xgboost.version: '>=1.6.1'
-      #   numpy.version: ''
+
+      Python310-1130-RT1140-xgb173:
+        python.version: '3.10'
+        ONNX_PATH: 'onnx==1.13.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
+        ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
+        COREML_PATH: NONE
+        xgboost.version: '>=1.7.3'
+        numpy.version: ''
+
+      Python310-1130-RT1131-xgb173:
+        python.version: '3.10'
+        ONNX_PATH: 'onnx==1.13.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
+        ONNXRT_PATH: onnxruntime==1.13.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
+        COREML_PATH: NONE
+        xgboost.version: '>=1.7.3'
+        numpy.version: ''
+
+      Python310-1120-RT1121-xgb161:
+        python.version: '3.10'
+        ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
+        ONNXRT_PATH: onnxruntime==1.12.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
+        COREML_PATH: NONE
+        xgboost.version: '==1.6.1'
+        numpy.version: ''
+
+      Python39-1120-RT1110-xgb161:
+        python.version: '3.9'
+        ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
+        ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
+        COREML_PATH: coremltools==6.3 # git+https://github.com/apple/coremltools@3.1
+        xgboost.version: '>=1.6.1'
+        numpy.version: ''
+
       # Python39-1120-RT1110-xgb160:
       #   python.version: '3.9'
       #   ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
