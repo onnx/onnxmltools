@@ -1,4 +1,5 @@
 catboost
+codecov
 cython
 dill
 flake8
@@ -18,4 +19,4 @@ pytest-spark
 scikit-learn==1.1.0
 scipy==1.8.0
 wheel
-xgboost==1.7.5
+xgboost==1.5.2
