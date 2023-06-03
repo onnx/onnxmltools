@@ -7,14 +7,15 @@ from ..common._topology import Topology
 from ..common.data_types import (FloatTensorType,
                                  SequenceType, DictionaryType, StringType, Int64Type)
 
-from lightgbm import LGBMClassifier, LGBMRegressor
+from lightgbm import LGBMClassifier, LGBMRegressor, LGBMRanker
 
 lightgbm_classifier_list = [LGBMClassifier]
 
 # Associate scikit-learn types with our operator names. If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
 lightgbm_operator_name_map = {LGBMClassifier: 'LgbmClassifier',
-                              LGBMRegressor: 'LgbmRegressor'}
+                              LGBMRegressor: 'LgbmRegressor',
+                              LGBMRanker: 'LgbmRanker'}
 
 
 class WrappedBooster:
@@ -31,6 +32,8 @@ class WrappedBooster:
             self.classes_ = self._generate_classes(booster)
         elif self.objective_.startswith('regression'):
             self.operator_name = 'LgbmRegressor'
+        elif self.objective_.startswith('lambdarank'):
+            self.operator_name = 'LgbmRanker'
         else:
             raise NotImplementedError(
                 'Unsupported LightGbm objective: %r.' % self.objective_)
