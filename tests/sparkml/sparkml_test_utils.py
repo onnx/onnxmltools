@@ -2,7 +2,6 @@
 
 import pickle
 import os
-import warnings
 import sys
 import numpy
 import onnxruntime
@@ -12,7 +11,6 @@ from pyspark.sql import SparkSession
 from onnxmltools.utils.utils_backend import (
     compare_backend,
     extract_options,
-    evaluate_condition,
     is_backend_enabled,
     OnnxRuntimeAssertionError,
     compare_outputs,
@@ -308,32 +306,14 @@ def dump_data_and_sparkml_model(
             if not is_backend_enabled(b):
                 continue
             if isinstance(allow_failure, str):
-                allow = evaluate_condition(b, allow_failure)
-            else:
-                allow = allow_failure
-            if allow is None:
-                output = compare_backend(
-                    b,
-                    runtime_test,
-                    options=extract_options(basename),
-                    context=context,
-                    verbose=verbose,
-                )
-            else:
-                try:
-                    output = compare_backend(
-                        b,
-                        runtime_test,
-                        options=extract_options(basename),
-                        context=context,
-                        verbose=verbose,
-                    )
-                except AssertionError as e:
-                    if isinstance(allow, bool) and allow:
-                        warnings.warn("Issue with '{0}' due to {1}".format(basename, e))
-                        continue
-                    else:
-                        raise e
+                raise NotImplementedError("allow_failure is deprecated.")
+            output = compare_backend(
+                b,
+                runtime_test,
+                options=extract_options(basename),
+                context=context,
+                verbose=verbose,
+            )
             if output is not None:
                 dest = os.path.join(folder, basename + ".backend.{0}.pkl".format(b))
                 names.append(dest)

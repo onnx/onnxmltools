@@ -60,7 +60,6 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
             X,
             model,
             model_onnx,
-            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')",
             basename=prefix + "BoosterBin" + model.__class__.__name__,
         )
 
@@ -109,7 +108,6 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
             X,
             model,
             model_onnx,
-            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')",
             basename=prefix + "BoosterBin" + model.__class__.__name__,
         )
 
@@ -142,10 +140,11 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
             X,
             model,
             model_onnx,
-            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')",
             basename=prefix + "BoosterBin" + model.__class__.__name__,
         )
-        sess = InferenceSession(model_onnx.SerializeToString())
+        sess = InferenceSession(
+            model_onnx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         out = sess.get_outputs()
         names = [o.name for o in out]
         assert names == ["label", "probabilities"]
@@ -178,7 +177,6 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
             X,
             model,
             model_onnx,
-            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.0.0')",
             basename=prefix + "BoosterBin" + model.__class__.__name__,
         )
 

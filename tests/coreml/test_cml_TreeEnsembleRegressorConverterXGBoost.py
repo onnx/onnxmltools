@@ -54,7 +54,6 @@ class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
                 model,
                 model_onnx,
                 basename="CmlXGBoostRegressor-OneOff-Reshape",
-                allow_failure=True,
             )
 
 
