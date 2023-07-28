@@ -51,7 +51,6 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                            target_opset=HUMMINGBIRD_TARGET_OPSET,
                                            zipmap=False)
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
@@ -76,7 +75,6 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                            [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
                                            target_opset=HUMMINGBIRD_TARGET_OPSET, zipmap=False)
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
@@ -92,9 +90,8 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                            [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
                                            target_opset=HUMMINGBIRD_TARGET_OPSET, zipmap=False)
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
-        sess = InferenceSession(model_onnx.SerializeToString())
+        sess = InferenceSession(model_onnx.SerializeToString(), providers=["CPUExecutionProvider"])
         out = sess.get_outputs()
         names = [o.name for o in out]
         assert names == ['label', 'probabilities']
@@ -112,7 +109,6 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                                            [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
                                            target_opset=HUMMINGBIRD_TARGET_OPSET, zipmap=False)
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.0.0')",
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     # Base test implementation comparing ONNXML and ONNX models.

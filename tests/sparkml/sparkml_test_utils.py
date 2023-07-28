@@ -13,7 +13,7 @@ from pyspark.sql import SparkSession
 from pyspark.ml.linalg import VectorUDT
 from pyspark.sql.types import ArrayType, FloatType, DoubleType
 from onnxmltools.utils.utils_backend import (
-    compare_backend, extract_options, evaluate_condition, is_backend_enabled,
+    compare_backend, extract_options, is_backend_enabled,
     OnnxRuntimeAssertionError, compare_outputs, ExpectedAssertionError)
 from onnxmltools.utils.utils_backend_onnxruntime import _create_column
 
@@ -272,9 +272,7 @@ def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="mod
             if not is_backend_enabled(b):
                 continue
             if isinstance(allow_failure, str):
-                allow = evaluate_condition(b, allow_failure)
-            else:
-                allow = allow_failure
+                raise NotImplementedError("allow_failure is deprecated.")
             if allow is None:
                 output = compare_backend(b, runtime_test, options=extract_options(basename),
                                          context=context, verbose=verbose)
