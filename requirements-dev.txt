@@ -9,13 +9,12 @@ mleap
 numpy
 openpyxl
 pandas
-protobuf<4.0
 psutil
 pyspark
 pytest
 pytest-cov
 pytest-spark
-scikit-learn==1.1.0
-scipy==1.10.0
+scikit-learn
+scipy
 wheel
 xgboost==1.7.5
