@@ -8,7 +8,7 @@ import packaging.version as pv
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from ..convert.common.data_types import FloatTensorType
-from .utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
+from .utils_backend import compare_backend, extract_options, is_backend_enabled
 
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
@@ -183,22 +183,9 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
             if not is_backend_enabled(b):
                 continue
             if isinstance(allow_failure, str):
-                allow = evaluate_condition(b, allow_failure)
-            else:
-                allow = allow_failure
-            if allow is None:
-                output = compare_backend(b, runtime_test, options=extract_options(basename),
-                                         context=context, verbose=verbose)
-            else:
-                try:
-                    output = compare_backend(b, runtime_test, options=extract_options(basename),
-                                             context=context, verbose=verbose)
-                except AssertionError as e:
-                    if isinstance(allow, bool) and allow:
-                        warnings.warn("Issue with '{0}' due to {1}".format(basename, e))
-                        continue
-                    else:
-                        raise e
+                raise NotImplementedError("allow_failure is deprecated.")
+            output = compare_backend(b, runtime_test, options=extract_options(basename),
+                                        context=context, verbose=verbose)
             if output is not None:
                 dest = os.path.join(folder, basename + ".backend.{0}.pkl".format(b))
                 names.append(dest)
