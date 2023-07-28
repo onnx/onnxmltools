@@ -9,7 +9,6 @@ mleap
 numpy
 openpyxl
 pandas
-psutil
 pyspark
 pytest
 pytest-cov
