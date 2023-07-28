@@ -25,19 +25,6 @@ class OnnxRuntimeAssertionError(AssertionError):
     pass
 
 
-def evaluate_condition(backend, condition):
-    """
-    Evaluates a condition such as
-    ``pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3')``
-    """
-    if backend == "onnxruntime":
-        import onnxruntime
-        import onnx
-        return eval(condition)
-    else:
-        raise NotImplementedError("Not implemented for backend '{0}'".format(backend))
-
-
 def is_backend_enabled(backend):
     """
     Tells if a backend is enabled.

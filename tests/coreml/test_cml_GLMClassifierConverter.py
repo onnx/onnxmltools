@@ -53,8 +53,7 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         lr_onnx = convert(lr_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(lr_onnx is not None)
         self.validate_zipmap(lr_onnx)
-        dump_data_and_model(X.astype(numpy.float32), lr, lr_onnx, basename="CmlbinLogitisticRegression",
-                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')")
+        dump_data_and_model(X.astype(numpy.float32), lr, lr_onnx, basename="CmlbinLogitisticRegression")
 
         # Ensure there is a probability output
         svm = LinearSVC()
@@ -63,8 +62,7 @@ class TestCoreMLGLMClassifierConverter(unittest.TestCase):
         svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(svm_onnx is not None)
         self.validate_zipmap(svm_onnx)
-        dump_data_and_model(X.astype(numpy.float32), svm, svm_onnx, basename="CmlBinLinearSVC-NoProb",
-                            allow_failure=True)
+        dump_data_and_model(X.astype(numpy.float32), svm, svm_onnx, basename="CmlBinLinearSVC-NoProb")
 
 
 if __name__ == "__main__":

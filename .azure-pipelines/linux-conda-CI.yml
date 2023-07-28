@@ -15,90 +15,46 @@ jobs:
   strategy:
     matrix:
 
-      Python310-1140-RT1150-xgb175:
-        python.version: '3.10'
+      Python311-1140-RT1151-xgb175:
+        python.version: '3.11'
         ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
-        ONNXRT_PATH: '-i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ORT-Nightly/pypi/simple/ ort_nightly==1.15.0.dev20230502003'
+        ONNXRT_PATH: 'onnxruntime==1.15.1'
         COREML_PATH: NONE
+        lightgbm.version: '>=4.0'
         xgboost.version: '>=1.7.5'
         numpy.version: ''
+        scipy.version: ''
+
+      Python310-1140-RT1151-xgb175:
+        python.version: '3.10'
+        ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNXRT_PATH: 'onnxruntime==1.15.1'
+        COREML_PATH: NONE
+        lightgbm.version: '<4.0'
+        xgboost.version: '>=1.7.5'
+        numpy.version: ''
+        scipy.version: ''
 
       Python310-1140-RT1140-xgb175:
         python.version: '3.10'
         ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
         ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
         COREML_PATH: NONE
+        lightgbm.version: '<4.0'
         xgboost.version: '>=1.7.5'
         numpy.version: ''
-      # Python310-1130-RT1140-xgb173:
-      #   python.version: '3.10'
-      #   ONNX_PATH: 'onnx==1.13.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-      #   ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: NONE
-      #   xgboost.version: '>=1.7.3'
-      #   numpy.version: ''
-      # Python310-1130-RT1131-xgb173:
-      #   python.version: '3.10'
-      #   ONNX_PATH: 'onnx==1.13.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-      #   ONNXRT_PATH: onnxruntime==1.13.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: NONE
-      #   xgboost.version: '>=1.7.3'
-      #   numpy.version: ''
-      # Python310-1120-RT1121-xgb161:
-      #   python.version: '3.10'
-      #   ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-      #   ONNXRT_PATH: onnxruntime==1.12.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: NONE
-      #   xgboost.version: '==1.6.1'
-      #   numpy.version: ''
-      # Python39-1120-RT1110-xgb161:
-      #   python.version: '3.9'
-      #   ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-      #   ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: coremltools==6.3 # git+https://github.com/apple/coremltools@3.1
-      #   xgboost.version: '>=1.6.1'
-      #   numpy.version: ''
-      # Python39-1120-RT1110-xgb160:
-      #   python.version: '3.9'
-      #   ONNX_PATH: 'onnx==1.12.0' #'-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-      #   ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: git+https://github.com/apple/coremltools@3.1
-      #   xgboost.version: '==1.6.0'
-      #   numpy.version: ''
-      # Python39-1110-RT1110:
-      #   python.version: '3.9'
-      #   ONNX_PATH: onnx==1.11.0  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
-      #   ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-      #   COREML_PATH: git+https://github.com/apple/coremltools@3.1
-      #   numpy.version: ''
-      # Python39-1110-RT1100-xgb120:
-      #   python.version: '3.9'
-      #   ONNX_PATH: onnx==1.11.0  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
-      #   ONNXRT_PATH: onnxruntime==1.10.0
-      #   COREML_PATH: git+https://github.com/apple/coremltools@3.1
-      #   xgboost.version: '>=1.2'
-      #   numpy.version: ''
-      # Python39-1101-RT190-xgb120:
-      #   python.version: '3.9'
-      #   ONNX_PATH: onnx==1.10.1
-      #   ONNXRT_PATH: onnxruntime==1.9.0
-      #   COREML_PATH: coremltools==4.0 # git+https://github.com/apple/coremltools@3.1
-      #   xgboost.version: '>=1.2'
-      #   numpy.version: '<=1.23.5'
-      # Python39-190-RT180-xgb120:
-      #   python.version: '3.9'
-      #   ONNX_PATH: onnx==1.9.0
-      #   ONNXRT_PATH: onnxruntime==1.8.0
-      #   COREML_PATH: coremltools==4.0 # git+https://github.com/apple/coremltools@3.1
-      #   xgboost.version: '>=1.2'
-      #   numpy.version: '<=1.23.5'
-      # Python38-181-RT170-xgb120:
-      #   python.version: '3.8'
-      #   ONNX_PATH: onnx==1.8.1
-      #   ONNXRT_PATH: onnxruntime==1.7.0
-      #   COREML_PATH: coremltools==4.0 # git+https://github.com/apple/coremltools@3.1
-      #   xgboost.version: '>=1.2'
-      #   numpy.version: '<=1.23.5'
+        scipy.version: ''
+
+      Python39-1140-RT1151-xgb175-scipy180:
+        python.version: '3.9'
+        ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNXRT_PATH: 'onnxruntime==1.15.1'
+        COREML_PATH: NONE
+        lightgbm.version: '>=4.0'
+        xgboost.version: '>=1.7.5'
+        numpy.version: ''
+        scipy.version: '==1.8.0'
+
 
     maxParallel: 3
 
@@ -120,16 +76,18 @@ jobs:
 
   - script: |
       python -m pip install --upgrade pip
-      pip install xgboost$(xgboost.version)
+      pip install "xgboost$(xgboost.version)"
+      pip install "lightgbm$(lightgbm.version)"
       pip install $(ONNX_PATH)
       pip install $(ONNXRT_PATH)
       pip install "numpy$(numpy.version)"
+      pip install "scipy$(scipy.version)"
     displayName: 'Install xgboost, onnxruntime'
 
   - script: |
       python -m pip install coloredlogs flatbuffers packaging sympy numpy protobuf
       python -m pip install $(ONNXRT_PATH)
-    displayName: 'Install ort-nightly'
+    displayName: 'Install onnxruntime'
 
   - script: |
       pip install flake8
@@ -172,11 +130,6 @@ jobs:
 
   - script: |
       export PYTHONPATH=.
-      pytest tests/svmlib --durations=0
-    displayName: 'pytest - svmlib'
-
-  - script: |
-      export PYTHONPATH=.
       pytest tests/utils --durations=0
     displayName: 'pytest - utils'
 
@@ -190,6 +143,11 @@ jobs:
       pip install h2o
       pytest tests/h2o --durations=0
     displayName: 'pytest - h2o'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/svmlib --durations=0
+    displayName: 'pytest - svmlib'
 
   - script: |
       pip install torch --extra-index-url https://download.pytorch.org/whl/cpu

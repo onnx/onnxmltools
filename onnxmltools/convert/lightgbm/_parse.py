@@ -34,7 +34,10 @@ class WrappedBooster:
         else:
             raise NotImplementedError(
                 'Unsupported LightGbm objective: %r.' % self.objective_)
-        average_output = self.booster_.attr('average_output')
+        try:
+            average_output = self.booster_.attr('average_output')
+        except AttributeError:
+            average_output = self.booster_.params.get("average_output", None)
         if average_output:
             self.boosting_type = 'rf'
         else:
@@ -47,7 +50,10 @@ class WrappedBooster:
         if isinstance(booster, dict):
             num_class = booster['num_class']
         else:
-            num_class = booster.attr('num_class')
+            try:
+                num_class = booster.attr('num_class')
+            except AttributeError:
+                num_class = booster.params.get('num_class', None)
         if num_class is None:
             dp = booster.dump_model(num_iteration=1)
             num_class = dp['num_class']
@@ -59,7 +65,10 @@ class WrappedBooster:
         "Returns the objective."
         if hasattr(self, 'objective_') and self.objective_ is not None:
             return self.objective_
-        objective = self.booster_.attr('objective')
+        try:
+            objective = self.booster_.attr('objective')
+        except AttributeError:
+            objective = self.booster_.params.get("objective", None)
         if objective is not None:
             return objective
         dp = self.booster_.dump_model(num_iteration=1)
