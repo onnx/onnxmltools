@@ -12,7 +12,8 @@ def convert_embedding(scope, operator, container):
     gather_op_name = scope.get_unique_operator_name("Gather")
     gather_attrs = {"name": gather_op_name}
 
-    # Reshape the indexes we want to embed to 1-D tensor. Otherwise, ONNX Gather's output may get wrong shape.
+    # Reshape the indexes we want to embed to 1-D tensor.
+    # Otherwise, ONNX Gather's output may get wrong shape.
     reshaped_input_name = scope.get_unique_variable_name(
         gather_op_name + "input_reshaped"
     )  # 2nd input of Gather
@@ -24,7 +25,8 @@ def convert_embedding(scope, operator, container):
         desired_shape=[-1],
     )
 
-    # ONNX Gather accepts integers so we add a Cast to enforce this before feeding input into ONNX Gather.
+    # ONNX Gather accepts integers so we add a Cast to enforce
+    # this before feeding input into ONNX Gather.
     casted_input_name = scope.get_unique_variable_name(
         gather_op_name + "input_casted"
     )  # 2nd input of Gather
@@ -69,7 +71,8 @@ def convert_embedding(scope, operator, container):
         container.add_initializer(
             bias_name, onnx_proto.TensorProto.FLOAT, bias_shape, params.bias.floatValue
         )
-        # Create an addition operator to add bias (shape: [C]) into Gather's tensor (shape: [N, C])
+        # Create an addition operator to add bias (shape: [C])
+        # into Gather's tensor (shape: [N, C])
         apply_add(
             scope,
             [gather_output_name, bias_name],

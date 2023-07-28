@@ -10,7 +10,8 @@ def convert_inner_product(scope, operator, container):
 
     # Apply pre-processing step if needed
     if len(operator.inputs[0].type.shape) == 4:
-        # Input shape is [N, C, 1, 1]. Adjust input shape because Gemm in ONNX only takes 2-D input
+        # Input shape is [N, C, 1, 1]. Adjust input shape
+        # because Gemm in ONNX only takes 2-D input
         reshaped_tensor_name = scope.get_unique_variable_name(
             operator.inputs[0].full_name + "_reshaped"
         )
@@ -45,7 +46,8 @@ def convert_inner_product(scope, operator, container):
             name_c, onnx_proto.TensorProto.FLOAT, shape_c, [0.0] * shape_b[0]
         )
 
-    # Set up attributes for ONNX Gemm which is the counterpart of CoreML inner product layer in ONNX.
+    # Set up attributes for ONNX Gemm which is the counterpart
+    # of CoreML inner product layer in ONNX.
     attrs = {"name": operator.full_name}
     attrs["alpha"] = 1.0
     attrs["beta"] = 1.0
@@ -66,7 +68,8 @@ def convert_inner_product(scope, operator, container):
     else:
         op_version = 11
 
-    # Create the major ONNX operator, Gemm, to do CoreML inner product and possibly add shape adjustment
+    # Create the major ONNX operator, Gemm, to do CoreML
+    # inner product and possibly add shape adjustment
     if len(operator.inputs[0].type.shape) == 4:
         # Input shape is [N, C, 1, 1] so we expect output is also 4-D, [N, C', 1, 1].
         buffer_tensor_name = scope.get_unique_variable_name(

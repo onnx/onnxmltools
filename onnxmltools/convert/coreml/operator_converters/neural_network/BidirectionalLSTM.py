@@ -265,7 +265,8 @@ def convert_bidirectional_lstm(scope, operator, container):
     else:
         lstm_inputs.append("")
 
-    # Due to the position sensitivity in ONNX argument parsing, we add an empty string for the non-existing
+    # Due to the position sensitivity in ONNX argument parsing,
+    # we add an empty string for the non-existing
     # sequence length
     lstm_inputs.append("")
 
@@ -291,7 +292,8 @@ def convert_bidirectional_lstm(scope, operator, container):
             desired_shape=[2, 1, hidden_size],
         )
 
-        # Add zero initializers to forward and backward initial hidden states so that they become optional
+        # Add zero initializers to forward and backward initial
+        # hidden states so that they become optional
         container.add_initializer(
             operator.inputs[1].full_name,
             onnx_proto.TensorProto.FLOAT,
@@ -332,7 +334,8 @@ def convert_bidirectional_lstm(scope, operator, container):
         )
         lstm_inputs.append(lstm_c_init_reshape_name)
 
-        # Add zero initializers to forward and backward initial cell states so that they become optional
+        # Add zero initializers to forward and backward initial
+        # cell states so that they become optional
         container.add_initializer(
             operator.inputs[2].full_name,
             onnx_proto.TensorProto.FLOAT,
@@ -412,8 +415,10 @@ def convert_bidirectional_lstm(scope, operator, container):
     else:
         op_version = 7
 
-    # Create the major ONNX LSTM operator. We assign a tensor name to each output of LSTM. However, variables can be
-    # undefined in some cases. For example, when output_sequence=False, the first output is not meaningful.
+    # Create the major ONNX LSTM operator. We assign a tensor name
+    # to each output of LSTM. However, variables can be
+    # undefined in some cases. For example, when output_sequence=False,
+    # the first output is not meaningful.
     lstm_y_name = scope.get_unique_variable_name(lstm_op_name + "_Y")
     lstm_y_h_name = scope.get_unique_variable_name(lstm_op_name + "_Y_h")
     lstm_y_c_name = scope.get_unique_variable_name(lstm_op_name + "_Y_c")
@@ -453,7 +458,8 @@ def convert_bidirectional_lstm(scope, operator, container):
                 axis=0,
             )
     else:
-        # Here we ignore ONNX RNN's first output because it's useless. The second output of ONNX LSTM will be used to
+        # Here we ignore ONNX RNN's first output because it's useless.
+        # The second output of ONNX LSTM will be used to
         # generate the first and the second outputs of CoreML LSTM.
 
         # Directly reshape ONNX LSTM's 2nd output to CoreML LSTM's 1st output.

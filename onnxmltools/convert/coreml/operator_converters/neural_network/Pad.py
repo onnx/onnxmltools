@@ -13,11 +13,15 @@ def convert_padding(scope, operator, container):
         raise ValueError("Unsupported padding mode: {}".format(pad_type))
     mode = pad_table[pad_type]
 
-    # CoreML only pads for their H- and W-axes. Here we assume the shape of the tensor to be padded
+    # CoreML only pads for their H- and W-axes.
+    # Here we assume the shape of the tensor to be padded
     # is [N, C, H, W], so we have 8 padding amounts
-    #     pads = [N_begin_index, C_begin_index, H_begin_index, W_begin_index,
-    #             N_end_index,   C_end_index,   H_end_index,   W_end_index]
-    # Because only H- and W-axes are padded in CoreML, we leave padding amounts of N- and C-axes zeros.
+    #     pads = [N_begin_index, C_begin_index,
+    #             H_begin_index, W_begin_index,
+    #             N_end_index,   C_end_index,
+    #             H_end_index,   W_end_index]
+    # Because only H- and W-axes are padded in CoreML,
+    # we leave padding amounts of N- and C-axes zeros.
     pads = [0, 0, 0, 0, 0, 0, 0, 0]
     if len(params.paddingAmounts.borderAmounts) > 0:
         # Set H_begin_index

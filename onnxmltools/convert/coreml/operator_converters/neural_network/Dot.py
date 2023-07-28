@@ -5,9 +5,12 @@ from ....common._registration import register_converter
 
 
 def convert_dot(scope, operator, container):
-    # To calculate cosine similarity, we first use LpNormalization to make the two input vectors unit-length.
-    # Then, we calculate element-wise product of the two unit-length vectors. Finally, the similarity is the
-    # sum of all the product's elements. Notice that we carefully specify the axis of the subsequent operators,
+    # To calculate cosine similarity, we first use
+    # LpNormalization to make the two input vectors unit-length.
+    # Then, we calculate element-wise product of the two
+    # unit-length vectors. Finally, the similarity is the
+    # sum of all the product's elements. Notice that
+    # we carefully specify the axis of the subsequent operators,
     # so they can work properly with a batch of vectors.
 
     if operator.raw_operator.dot.cosineSimilarity:

@@ -12,7 +12,8 @@ def convert_feature_vectorizer(scope, operator, container):
     input_dims = []
     for variable in operator.inputs:
         if type(variable.type) in [Int64TensorType, Int64Type]:
-            # We use scaler to convert integers into floats because output is a single tensor and all tensor elements
+            # We use scaler to convert integers into floats
+            # because output is a single tensor and all tensor elements
             # should be in the same type.
             scaler_name = scope.get_unique_operator_name("Scaler")
             scaled_name = scope.get_unique_variable_name(variable.full_name + "_scaled")

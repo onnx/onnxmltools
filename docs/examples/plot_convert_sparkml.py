@@ -18,8 +18,11 @@ Train a model
 +++++++++++++
 
 """
+
 import os
 import numpy
+import matplotlib.pyplot as plt
+from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
 from pandas import DataFrame
 import onnx
 import sklearn
@@ -29,8 +32,6 @@ from sklearn.model_selection import train_test_split
 import onnxruntime as rt
 import pyspark
 from pyspark.sql import SparkSession
-from pyspark.ml.classification import LogisticRegression
-from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import VectorAssembler, StringIndexer
 import onnxmltools
 from onnxconverter_common.data_types import FloatTensorType
@@ -114,9 +115,6 @@ print(pred_onx)
 # ++++++++++++++++++++++
 #
 # Finally, let's see the graph converted with *onnxmltools*.
-import os
-import matplotlib.pyplot as plt
-from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
 
 pydot_graph = GetPydotGraph(
     onx.graph,

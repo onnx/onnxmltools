@@ -22,21 +22,30 @@ def convert(
     custom_shape_calculators=None,
 ):
     """
-    This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
+    This function converts the specified CoreML model into its
+    ONNX counterpart. Some information such as the produced
     ONNX model name can be specified.
 
-    :param model: A `CoreML model <https://apple.github.io/coremltools/coremlspecification/sections/Model.html#model>`_ or
-        a CoreML MLModel object
-    :param initial_types: A list providing some types for some root variables. Each element is a tuple of a variable
+    :param model: A `CoreML model
+        <https://apple.github.io/coremltools/coremlspecification/sections/Model.html#model>`_
+        or a CoreML MLModel object
+    :param initial_types: A list providing some types
+        for some root variables. Each element is a tuple of a variable
         name and a type defined in *data_types.py*.
-    :param name: The name of the graph (type: GraphProto) in the produced ONNX model (type: ModelProto)
+    :param name: The name of the graph (type: GraphProto)
+        in the produced ONNX model (type: ModelProto)
     :param doc_string: A string attached onto the produced ONNX model
     :param target_opset: number, for example, 7 for ONNX 1.2, and 8 for ONNX 1.3.
-    :param targeted_onnx: A string (for example, '1.1.2' and '1.2') used to specify the targeted ONNX version of the
-        produced model. If ONNXMLTools cannot find a compatible ONNX python package, an error may be thrown.
-    :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
-    :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
-    :return: An ONNX model (type: ModelProto) which is equivalent to the input CoreML model
+    :param targeted_onnx: A string (for example, '1.1.2' and '1.2')
+        used to specify the targeted ONNX version of the
+        produced model. If ONNXMLTools
+        cannot find a compatible ONNX python package, an error may be thrown.
+    :param custom_conversion_functions: a dictionary
+        for specifying the user customized conversion function
+    :param custom_shape_calculators: a dictionary
+        for specifying the user customized shape calculator
+    :return: An ONNX model (type: ModelProto)
+        which is equivalent to the input CoreML model
 
     Example of initial types:
     Assume that 'A' and 'B' are two root variable names used in the CoreML
@@ -66,7 +75,8 @@ def convert(
         custom_shape_calculators,
     )
 
-    # Parse CoreML description, author, and license. Those information will be attached to the final ONNX model.
+    # Parse CoreML description, author, and license.
+    # Those information will be attached to the final ONNX model.
     metadata = spec.description.metadata
     metadata_props = []
     if metadata:

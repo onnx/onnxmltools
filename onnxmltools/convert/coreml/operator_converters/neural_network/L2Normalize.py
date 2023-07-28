@@ -4,7 +4,8 @@ from ....common._registration import register_converter
 
 
 def convert_l2_normalization(scope, operator, container):
-    # The first dimension is batch size, so the normalization is done along the 2nd axis (indexed by 1).
+    # The first dimension is batch size, so the
+    # normalization is done along the 2nd axis (indexed by 1).
     attrs = {
         "name": operator.full_name,
         "axis": 1,

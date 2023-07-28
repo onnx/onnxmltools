@@ -18,8 +18,10 @@ Train a model
 +++++++++++++
 
 """
-
+import os
 import numpy
+import matplotlib.pyplot as plt
+from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
 import onnx
 import sklearn
 from sklearn.datasets import load_iris
@@ -84,9 +86,6 @@ print(pred_onx)
 # ++++++++++++++++++++++
 #
 # Finally, let's see the graph converted with *onnxmltools*.
-import os
-import matplotlib.pyplot as plt
-from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
 
 pydot_graph = GetPydotGraph(
     onx.graph,

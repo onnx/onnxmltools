@@ -211,9 +211,11 @@ def convert_gru(scope, operator, container):
         "GRU", gru_inputs, gru_outputs, op_version=op_version, **gru_attrs
     )
 
-    # To simulate CoreML LSTM, we add post-processing operators to adjust ONNX LSTM outputs
+    # To simulate CoreML LSTM, we add post-processing
+    # operators to adjust ONNX LSTM outputs
     if params.sequenceOutput:
-        # Again, the output shapes in ONNX's GRU is not consistent with that in CoreML, so we need
+        # Again, the output shapes in ONNX's GRU
+        # is not consistent with that in CoreML, so we need
         # to adjust the result produced by ONNX according to CoreML format.
         apply_reshape(
             scope,

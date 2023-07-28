@@ -8,14 +8,21 @@ from .SimpleRNN import extract_rnn_activation_info
 
 
 def convert_unidirectional_lstm(scope, operator, container):
-    # The LSTM inputs are feature vector, X, initial hidden state, h_init, and initial cell state, c_init.
-    # In CorML, their shapes respectively are [S, C_in], [1, C_out], and [1, C_out], where C_in is input feature
-    # length, # C_out is output dimension, and S is sequence length. Note that S-axis is also known as time axis.
-    # In ONNX, those shapes become [S, N, C_in] (X), [D, N, C_out] (h_init), and [D, N, C_out]. To simulate
-    # CoreML LSTM under ONNX, we need some extra operators in addition to LSTM itself.
+    # The LSTM inputs are feature vector, X, initial hidden state,
+    # h_init, and initial cell state, c_init.
+    # In CorML, their shapes respectively are [S, C_in], [1, C_out],
+    # and [1, C_out], where C_in is input feature
+    # length, # C_out is output dimension, and S is sequence length.
+    # Note that S-axis is also known as time axis.
+    # In ONNX, those shapes become [S, N, C_in] (X), [D, N, C_out]
+    # (h_init), and [D, N, C_out]. To simulate
+    # CoreML LSTM under ONNX, we need some extra operators
+    # in addition to LSTM itself.
     #
-    # Note that N=1 and D=1 are always true in ONNX if we are considering LSTM in CoreML because there is no
-    # batch size in CoreML spec and CoreML LSTM is always uni-directional.
+    # Note that N=1 and D=1 are always true in ONNX
+    # if we are considering LSTM in CoreML because there is no
+    # batch size in CoreML spec and CoreML LSTM
+    # is always uni-directional.
     #
     # Below we provide a visualization of our conversion for CoreML LSTM.
     #
@@ -24,7 +31,8 @@ def convert_unidirectional_lstm(scope, operator, container):
     #  X: input features of CoreML LSTM
     #  h_init: initial LSTM hidden state in CoreML
     #  c_init: initial LSTM cell state in CoreML
-    #  Y: CoreML LSTM's output. It can be [S, C_out] (if sequence_output is on) or [1, C_out] (if sequence_output is off)
+    #  Y: CoreML LSTM's output. It can be [S, C_out]
+    # (if sequence_output is on) or [1, C_out] (if sequence_output is off)
     #  Y_h: CoreML LSTM's last hidden state
     #  Y_c: CoreML LSTM's last cell state
     #
@@ -211,7 +219,8 @@ def convert_unidirectional_lstm(scope, operator, container):
 
     # Provide ONNX LSTM the initial hidden state when necessary
     if len(operator.inputs) > 1:
-        # Assign a Reshape to adjust CoreML hidden state's shape [1, C]/[1, C, 1, 1] into its ONNX counterpart [1, 1, C]
+        # Assign a Reshape to adjust CoreML hidden state's shape
+        # [1, C]/[1, C, 1, 1] into its ONNX counterpart [1, 1, C]
         lstm_h_init_reshape_name = scope.get_unique_variable_name(
             lstm_op_name + "_h_init_reshape"
         )
@@ -278,7 +287,8 @@ def convert_unidirectional_lstm(scope, operator, container):
     else:
         lstm_inputs.append("")
 
-    # Parse activation functions' information and add them into ONNX LSTM's attribute dictionary
+    # Parse activation functions' information and add
+    # them into ONNX LSTM's attribute dictionary
     activation_types = []
     alphas = []
     betas = []
@@ -338,7 +348,8 @@ def convert_unidirectional_lstm(scope, operator, container):
                 desired_shape=[1, hidden_size],
             )
     else:
-        # Here we ingore ONNX LSTM's first output because it's useless and use the second output of ONNX LSTM to produce
+        # Here we ingore ONNX LSTM's first output because
+        # it's useless and use the second output of ONNX LSTM to produce
         # the first output of CoreML LSTM
         apply_reshape(
             scope,

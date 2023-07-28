@@ -30,7 +30,9 @@ Train a model
 A very basic example using random forest and
 the iris dataset.
 """
-
+import os
+import matplotlib.pyplot as plt
+from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
 import numpy
 import onnx
 import sklearn
@@ -93,9 +95,6 @@ print(pred_onx)
 # ++++++++++++++++++++++
 #
 # Finally, let's see the graph converted with *onnxmltools*.
-import os
-import matplotlib.pyplot as plt
-from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
 
 pydot_graph = GetPydotGraph(
     onx.graph,

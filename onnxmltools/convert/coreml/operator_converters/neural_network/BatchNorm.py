@@ -10,7 +10,8 @@ def convert_batch_normalization(scope, operator, container):
 
     if params.instanceNormalization and not params.computeMeanVar:
         raise ValueError(
-            "It is impossible to do instance normalization without re-computing mean and variance"
+            "It is impossible to do instance normalization "
+            "without re-computing mean and variance"
         )
 
     if params.instanceNormalization and params.computeMeanVar:
@@ -60,21 +61,27 @@ def convert_batch_normalization(scope, operator, container):
         spatial = 1  # True
 
         if not params.instanceNormalization and params.computeMeanVar:
-            # In this case, we apply batch normalization and adjust the statistics stored according the the batch
+            # In this case, we apply batch normalization and adjust
+            # the statistics stored according the the batch
             # being processed.
 
-            # To update "mean" and "var," we put their updated results back to the associated input tensors.
+            # To update "mean" and "var," we put their updated results
+            # back to the associated input tensors.
             outputs += inputs[1:3]
-            # We also allocate two extra output buffers to store some intermediate results, but they are not used
+            # We also allocate two extra output buffers to store some
+            # intermediate results, but they are not used
             # in CoreML model.
             outputs.append(scope.get_unique_variable_name("saved_mean"))
             outputs.append(scope.get_unique_variable_name("saved_var"))
             # We choose "training" mode because some variables need to be updated.
             is_test = 0  # False
         elif not params.instanceNormalization and not params.computeMeanVar:
-            # In this case, batch normalization is applied without updating mean, variance, etc. according to
-            # the batches being processed. It means this operator works under testing model. Because there is no
-            # variable update, we don't need to specify extra inputs and outputs like in previous code block.
+            # In this case, batch normalization is applied without
+            # updating mean, variance, etc. according to
+            # the batches being processed. It means this operator
+            # works under testing model. Because there is no
+            # variable update, we don't need to specify extra
+            # inputs and outputs like in previous code block.
             is_test = 1  # True
         else:
             raise ValueError("Unsupported operation mode")

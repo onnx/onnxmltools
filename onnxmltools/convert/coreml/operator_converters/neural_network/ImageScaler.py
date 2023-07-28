@@ -7,7 +7,8 @@ from ....common._apply_operation import apply_add, apply_mul
 
 def convert_preprocessing_scaler(scope, operator, container):
     params = operator.raw_operator.scaler
-    # Specify some of this operator's attribute. The scale parameter in CoreML is always a scalar.
+    # Specify some of this operator's attribute.
+    # The scale parameter in CoreML is always a scalar.
     # We just copy it and let ONNX scaler to broadcast it to all channels.
 
     color_space = operator.inputs[0].type.color_space
@@ -32,7 +33,8 @@ def convert_preprocessing_scaler(scope, operator, container):
             **attrs
         )
     else:
-        # In comments below, assume input tensor is X, the scale scalar is a, the bias vector is b.
+        # In comments below, assume input tensor is X,
+        # the scale scalar is a, the bias vector is b.
 
         # Store the scalar, a, used to scale all elements in the input tensor.
         aName = scope.get_unique_variable_name(operator.full_name + "_scale")

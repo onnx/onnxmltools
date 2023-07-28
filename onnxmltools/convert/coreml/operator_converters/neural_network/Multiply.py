@@ -61,7 +61,8 @@ def convert_multiply(scope, operator, container):
                 broadcast=1,
             )
 
-            # Accumulate other inputs onto intermediate tensors. Note that we may use the original operator's output as
+            # Accumulate other inputs onto intermediate tensors.
+            # Note that we may use the original operator's output as
             # the last intermediate tensor.
             for i in range(2, len(inputs)):
                 left_tensor = intermediate_tensor_name

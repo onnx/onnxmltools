@@ -126,10 +126,14 @@ def convert_glm_classifier(scope, operator, container):
             **attrs
         )
 
-        # Add a normalizer to make sure that the sum of all classes' probabilities is 1. It doesn't affect binary
-        # classification. For multi-class clssifiers, if one applies sigmoid function independently to all raw scores,
-        # we have to add a normalization so that the sum of all probabilities remains 1. Of course, if softmax is used
-        # to convert raw scores into probabilities, this normalization doesn't change anything.
+        # Add a normalizer to make sure that the sum of all
+        # classes' probabilities is 1. It doesn't affect binary
+        # classification. For multi-class clssifiers,
+        # if one applies sigmoid function independently to all raw scores,
+        # we have to add a normalization so that the sum of
+        # all probabilities remains 1. Of course, if softmax is used
+        # to convert raw scores into probabilities,
+        # this normalization doesn't change anything.
         if len(class_labels) > 2:
             normalized_proba_tensor_name = scope.get_unique_variable_name(
                 proba_tensor_name + "_normalized"
@@ -143,10 +147,12 @@ def convert_glm_classifier(scope, operator, container):
                 norm="L1",
             )
         else:
-            # If we don't need a normalization, we just pass the original probability tensor to the following ZipMap
+            # If we don't need a normalization, we just pass the
+            # original probability tensor to the following ZipMap
             normalized_proba_tensor_name = proba_tensor_name
 
-        # Add ZipMap to convert normalized probability tensor into probability map
+        # Add ZipMap to convert normalized probability tensor
+        # into probability map
         container.add_node(
             "ZipMap",
             [normalized_proba_tensor_name],
@@ -155,7 +161,8 @@ def convert_glm_classifier(scope, operator, container):
             **zipmap_attrs
         )
     else:
-        # Add linear classifier with isolated probability output, which means that the probability
+        # Add linear classifier with isolated probability
+        # output, which means that the probability
         # tensor won't be accessed by any others.
         container.add_node(
             op_type,

@@ -101,11 +101,13 @@ def convert_svm_classifier(scope, operator, container):
     else:
         raise ValueError("Unknown class label type")
 
-    # For classifiers, due to the different representation of classes' probabilities, we need to add some
-    # operators for type conversion. It turns out that we have the following topology.
+    # For classifiers, due to the different representation
+    # of classes' probabilities, we need to add some
+    # operators for type conversion. It turns out that we
+    # have the following topology.
     # input features ---> SupportVectorClassifier ---> label (must present)
     #                               |
-    #                               '--> probability tensor ---> ZipMap ---> probability map (optional)
+    #                               '--> probability tensor
 
     raw_model = operator.raw_operator
     # Find label name and probability name
