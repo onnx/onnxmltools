@@ -311,7 +311,7 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
             # lightgbm < 4.0
             handle = self.handle
         _safe_call(_LIB.LGBM_BoosterDumpModel(
-            self.handle,
+            handle,
             ctypes.c_int(start_iteration),
             ctypes.c_int(num_iteration),
             ctypes.c_int(importance_type_int),
