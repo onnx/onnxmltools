@@ -264,20 +264,34 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
     """
     if getattr(self, 'is_mock', False):
         return self.dump_model(), None
-    from lightgbm.basic import (
-        _LIB, FEATURE_IMPORTANCE_TYPE_MAPPER, _safe_call,
-        json_default_with_numpy)
+    from lightgbm.basic import _LIB, _safe_call
+    try:
+        # lightgbm >= 4.0
+        from lightgbm.basic import (
+            _FEATURE_IMPORTANCE_TYPE_MAPPER as FITM,
+            _json_default_with_numpy as jdwn,
+        )
+    except ImportError:
+        # lightgbm < 4.0
+        from lightgbm.basic import (
+            FEATURE_IMPORTANCE_TYPE_MAPPER as FITM,
+            json_default_with_numpy as jdwn,
+        )
     if num_iteration is None:
         num_iteration = self.best_iteration
-    importance_type_int = FEATURE_IMPORTANCE_TYPE_MAPPER[importance_type]
+    importance_type_int = FITM[importance_type]
     buffer_len = 1 << 20
     tmp_out_len = ctypes.c_int64(0)
     string_buffer = ctypes.create_string_buffer(buffer_len)
     ptr_string_buffer = ctypes.c_char_p(*[ctypes.addressof(string_buffer)])
     if verbose >= 2:
         print("[dump_booster_model] call CAPI: LGBM_BoosterDumpModel")
+    try:
+        handle = self._handle
+    except AttributeError:
+        handle = self.handle
     _safe_call(_LIB.LGBM_BoosterDumpModel(
-        self.handle,
+        handle,
         ctypes.c_int(start_iteration),
         ctypes.c_int(num_iteration),
         ctypes.c_int(importance_type_int),
@@ -359,7 +373,7 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
                      info=info, n_trees=self.num_trees(), verbose=verbose)
     ret['pandas_categorical'] = json.loads(
         json.dumps(self.pandas_categorical,
-                   default=json_default_with_numpy))
+                   default=jdwn))
     if verbose >= 2:
         print("[dump_booster_model] end.")
     return ret, info
