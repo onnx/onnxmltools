@@ -7,7 +7,6 @@ import os
 import re
 import unittest
 from onnx.defs import onnx_opset_version
-from onnxmltools.convert import convert_coreml
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 
 try:
@@ -25,10 +24,10 @@ class TestBaseLine(unittest.TestCase):
         return self.normalize_diff(diff)
 
     def get_diff(self, input_file, ref_file):
+        from onnxmltools.convert import convert_coreml
+
         this = os.path.dirname(__file__)
         coreml_file = os.path.join(this, "models", input_file)
-        if coremltools is None:
-            return []
         cml = coremltools.utils.load_spec(coreml_file)
         onnx_model = convert_coreml(cml, target_opset=TARGET_OPSET)
         output_dir = os.path.join(this, "outmodels")
@@ -58,6 +57,7 @@ class TestBaseLine(unittest.TestCase):
             valid_diff.add(line)
         return valid_diff
 
+    @unittest.skipIf(coremltools is None, reason="not installed")
     def test_keras2coreml_Dense_ImageNet_small(self):
         """
         Converting keras2coreml_Dense_ImageNet_small using
