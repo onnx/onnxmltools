@@ -130,11 +130,6 @@ jobs:
 
   - script: |
       export PYTHONPATH=.
-      pytest tests/svmlib --durations=0
-    displayName: 'pytest - svmlib'
-
-  - script: |
-      export PYTHONPATH=.
       pytest tests/utils --durations=0
     displayName: 'pytest - utils'
 
@@ -148,6 +143,11 @@ jobs:
       pip install h2o
       pytest tests/h2o --durations=0
     displayName: 'pytest - h2o'
+
+  - script: |
+      export PYTHONPATH=.
+      pytest tests/svmlib --durations=0
+    displayName: 'pytest - svmlib'
 
   - script: |
       pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
