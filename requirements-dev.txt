@@ -1,7 +1,7 @@
+black
 catboost
 cython
 dill
-flake8
 flatbuffers
 libsvm
 lightgbm
@@ -9,13 +9,13 @@ mleap
 numpy
 openpyxl
 pandas
-protobuf<4.0
 psutil
 pyspark
 pytest
 pytest-cov
 pytest-spark
-scikit-learn==1.1.0
-scipy==1.8.0
+ruff
+scikit-learn
+scipy
 wheel
 xgboost==1.7.5

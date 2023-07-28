@@ -133,11 +133,6 @@ jobs:
 
   - script: |
       call activate py$(python.version)
-      python -m flake8 ./onnxmltools
-    displayName: 'run flake8 check'
-
-  - script: |
-      call activate py$(python.version)
       python -m pip install -e .
       export PYTHONPATH=.
       python -c "import onnxconverter_common;print(onnxconverter_common.__version__)"
