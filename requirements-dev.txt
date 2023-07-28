@@ -2,7 +2,6 @@ black
 catboost
 cython
 dill
-flatbuffers
 libsvm
 lightgbm
 mleap
@@ -14,7 +13,7 @@ pytest
 pytest-cov
 pytest-spark
 ruff
-scikit-learn
+scikit-learn>=1.2.0
 scipy
 wheel
 xgboost==1.7.5
