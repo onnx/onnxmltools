@@ -379,9 +379,13 @@ def dump_booster_model(
     if actual_len > buffer_len:
         string_buffer = ctypes.create_string_buffer(actual_len)
         ptr_string_buffer = ctypes.c_char_p(*[ctypes.addressof(string_buffer)])
+        try:
+            handle = self._handle
+        except AttributeError:
+            handle = self.handle
         _safe_call(
             _LIB.LGBM_BoosterDumpModel(
-                self.handle,
+                handle,
                 ctypes.c_int(start_iteration),
                 ctypes.c_int(num_iteration),
                 ctypes.c_int(importance_type_int),
