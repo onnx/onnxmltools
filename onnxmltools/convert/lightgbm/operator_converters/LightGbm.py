@@ -304,6 +304,12 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
         string_buffer = ctypes.create_string_buffer(actual_len)
         ptr_string_buffer = ctypes.c_char_p(
             *[ctypes.addressof(string_buffer)])
+        try:
+            # lightgbm >= 4.0
+            handle = self._handle
+        except AttributeError:
+            # lightgbm < 4.0
+            handle = self.handle
         _safe_call(_LIB.LGBM_BoosterDumpModel(
             self.handle,
             ctypes.c_int(start_iteration),
