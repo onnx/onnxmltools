@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: psf/black@stable
+      - uses: psf/black@193ee766ca496871f93621d6b58d57a6564ff81b  # stable 23.7.0
         with:
           options: "--diff --check"
           src: "."
@@ -13,4 +13,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: chartboost/ruff-action@v1
+      - uses: chartboost/ruff-action@v1.0.0
