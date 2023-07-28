@@ -23,6 +23,7 @@ jobs:
         lightgbm.version: '>=4.0'
         xgboost.version: '>=1.7.5'
         numpy.version: ''
+        scipy.version: ''
 
       Python310-1140-RT1151-xgb175:
         python.version: '3.10'
@@ -32,6 +33,7 @@ jobs:
         lightgbm.version: '<4.0'
         xgboost.version: '>=1.7.5'
         numpy.version: ''
+        scipy.version: ''
 
       Python310-1140-RT1140-xgb175:
         python.version: '3.10'
@@ -41,6 +43,18 @@ jobs:
         lightgbm.version: '<4.0'
         xgboost.version: '>=1.7.5'
         numpy.version: ''
+        scipy.version: ''
+
+      Python39-1140-RT1151-xgb175-scipy180:
+        python.version: '3.9'
+        ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNXRT_PATH: 'onnxruntime==1.15.1'
+        COREML_PATH: NONE
+        lightgbm.version: '>=4.0'
+        xgboost.version: '>=1.7.5'
+        numpy.version: ''
+        scipy.version: '==1.8.0'
+
 
     maxParallel: 3
 
@@ -67,6 +81,7 @@ jobs:
       pip install $(ONNX_PATH)
       pip install $(ONNXRT_PATH)
       pip install "numpy$(numpy.version)"
+      pip install "scipy$(scipy.version)"
     displayName: 'Install xgboost, onnxruntime'
 
   - script: |
