@@ -116,7 +116,7 @@ class SkAPICl(SkAPI):
 
 class TestSvmLibSVM(unittest.TestCase):
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_svmc_linear(self):
         iris = load_iris()
@@ -143,7 +143,7 @@ class TestSvmLibSVM(unittest.TestCase):
                             basename="LibSvmSvmcLinear-Dec2",
                             allow_failure=pv.Version(onnxruntime.__version__) < pv.Version('0.5.0'))
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_svmc(self):
         iris = load_iris()
@@ -169,7 +169,7 @@ class TestSvmLibSVM(unittest.TestCase):
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
                             basename="LibSvmSvmc-Dec2")
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_svmr_linear(self):
         iris = load_iris()
@@ -192,7 +192,7 @@ class TestSvmLibSVM(unittest.TestCase):
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIReg(libsvm_model), node,
                             basename="LibSvmSvmrLinear-Dec3")
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_svmr(self):
         iris = load_iris()
@@ -216,7 +216,7 @@ class TestSvmLibSVM(unittest.TestCase):
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIReg(libsvm_model), node,
                             basename="LibSvmSvmr")
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_nusvmr(self):
         iris = load_iris()
@@ -240,7 +240,7 @@ class TestSvmLibSVM(unittest.TestCase):
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIReg(libsvm_model), node,
                             basename="LibSvmNuSvmr")
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_nusvmc(self):
         iris = load_iris()
@@ -268,7 +268,7 @@ class TestSvmLibSVM(unittest.TestCase):
                             basename="LibSvmNuSvmc-Dec2",
                             allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_svmc_linear_raw(self):
         iris = load_iris()
@@ -297,7 +297,7 @@ class TestSvmLibSVM(unittest.TestCase):
                             basename="LibSvmSvmcLinearRaw-Dec3", verbose=False,
                             allow_failure=pv.Version(onnxruntime.__version__) < pv.Version('0.5.0'))
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_svmc_raw(self):
         iris = load_iris()
@@ -327,7 +327,7 @@ class TestSvmLibSVM(unittest.TestCase):
                             allow_failure=pv.Version(onnxruntime.__version__) < pv.Version('0.5.0'))
 
     @unittest.skip(reason="libsvm crashes.")
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_nusvmc_linear_raw(self):
         iris = load_iris()
@@ -356,7 +356,7 @@ class TestSvmLibSVM(unittest.TestCase):
                             basename="LibSvmNuSvmcRaw", verbose=False,
                             allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_svmc_rbf_raw_multi(self):
         iris = load_iris()
@@ -385,7 +385,7 @@ class TestSvmLibSVM(unittest.TestCase):
                             basename="LibSvmNuSvmcRaw", verbose=False,
                             allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
 
-    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.9.0"),
+    @unittest.skipIf(pv.Version(scipy.__version__) <= pv.Version("1.8.0"),
                      reason="svmlib not really maintained")
     def test_convert_svmc_linear_raw_multi(self):
         iris = load_iris()
