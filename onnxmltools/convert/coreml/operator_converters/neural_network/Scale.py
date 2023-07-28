@@ -6,12 +6,18 @@ from ....common._registration import register_converter
 
 
 def deduce_broadcast_axis_and_shape(target_opset, shape):
-    # This function is used to calculate the first axis aligned with the scalar and the scalar's ONNX shape for reduce-
-    # like operators. Assuming input variable is always a 4-D tensor, we provide a few of examples. If scalar's shape
-    # is [1, 2, 3] and input shape is [5, 2, 3, 8], the aligned axis is the [2] (indexed by 1 because indexes are 0-based)
-    # in [5, 2, 3, 8], and the desired scalar shape in ONNX is [2, 3] # (the [1] in [1, 2, 3] is redundant and can cause
-    # errors in ONNX's boardcasting). If the scaler's shape is [1], no matter what shape the input is, we leave the axis
-    # "None" because ONNX operator may automatically handle it. After ONNX-1.2, we adopt Numpy-style broadcasting rule.
+    # This function is used to calculate the first axis aligned
+    # with the scalar and the scalar's ONNX shape for reduce-
+    # like operators. Assuming input variable is always a 4-D tensor,
+    # we provide a few of examples. If scalar's shape
+    # is [1, 2, 3] and input shape is [5, 2, 3, 8], the aligned axis
+    # is the [2] (indexed by 1 because indexes are 0-based)
+    # in [5, 2, 3, 8], and the desired scalar shape in ONNX is [2, 3]
+    # (the [1] in [1, 2, 3] is redundant and can cause
+    # errors in ONNX's boardcasting). If the scaler's shape is [1],
+    # no matter what shape the input is, we leave the axis
+    # "None" because ONNX operator may automatically handle it.
+    # After ONNX-1.2, we adopt Numpy-style broadcasting rule.
 
     if target_opset < 7:
         # Input shape is [N, C, H, W]
@@ -48,7 +54,8 @@ def deduce_broadcast_axis_and_shape(target_opset, shape):
 
 
 def convert_scale(scope, operator, container):
-    # In CoreML's ScaleLayer, the input is first scaled by their "scale" attribute and then a "bias" can be added.
+    # In CoreML's ScaleLayer, the input is first scaled by their
+    # "scale" attribute and then a "bias" can be added.
     # Symbols:
     #  a: scale attribute in CoreML's ScaleLayer
     #  b: bias attribute in CoreML's ScaleLayer
@@ -56,40 +63,74 @@ def convert_scale(scope, operator, container):
     #  y: output
     # The math formulation of ScaleLayer should be
     #  y = a * x + b
-    # Therefore, our strategy of composing ScaleLayer is to have one multiplication followed by an addition.
+    # Therefore, our strategy of composing ScaleLayer is to
+    # have one multiplication followed by an addition.
     params = operator.raw_operator.scale
-    op1_type = 'Mul'
-    scale_axis, scale_shape = deduce_broadcast_axis_and_shape(container.target_opset, params.shapeScale)
-    scale_name = scope.get_unique_variable_name(op1_type + '_B')
-    container.add_initializer(scale_name, onnx_proto.TensorProto.FLOAT, scale_shape, params.scale.floatValue)
+    op1_type = "Mul"
+    scale_axis, scale_shape = deduce_broadcast_axis_and_shape(
+        container.target_opset, params.shapeScale
+    )
+    scale_name = scope.get_unique_variable_name(op1_type + "_B")
+    container.add_initializer(
+        scale_name, onnx_proto.TensorProto.FLOAT, scale_shape, params.scale.floatValue
+    )
 
     # CoreML is at most 3-D, so we always turn broadcasting on.
     scale_broadcast = 1
 
     if not params.hasBias:
-        # Create a element-wise multiplication and use it to scale the input. The first input is the variable we want
+        # Create a element-wise multiplication and use it to scale
+        # the input. The first input is the variable we want
         # to scale while the second input is their multipliers.
-        apply_mul(scope, [operator.inputs[0].full_name, scale_name], operator.output_full_names, container,
-                  operator_name=operator.full_name, axis=scale_axis, broadcast=scale_broadcast)
+        apply_mul(
+            scope,
+            [operator.inputs[0].full_name, scale_name],
+            operator.output_full_names,
+            container,
+            operator_name=operator.full_name,
+            axis=scale_axis,
+            broadcast=scale_broadcast,
+        )
     else:
         # Declare a temporal variable to store the scaled input
-        intra_variable_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_scaled')
-        # Create a element-wise multiplication and use it to scale the input and save the result to a temporal variable
-        apply_mul(scope, [operator.inputs[0].full_name, scale_name], intra_variable_name, container,
-                  operator_name=operator.full_name, axis=scale_axis, broadcast=scale_broadcast)
+        intra_variable_name = scope.get_unique_variable_name(
+            operator.inputs[0].full_name + "_scaled"
+        )
+        # Create a element-wise multiplication and use it to
+        # scale the input and save the result to a temporal variable
+        apply_mul(
+            scope,
+            [operator.inputs[0].full_name, scale_name],
+            intra_variable_name,
+            container,
+            operator_name=operator.full_name,
+            axis=scale_axis,
+            broadcast=scale_broadcast,
+        )
 
         # Prepare materials to build an Add operator for adding bias
-        bias_axis, bias_shape = deduce_broadcast_axis_and_shape(container.target_opset, params.shapeBias)
+        bias_axis, bias_shape = deduce_broadcast_axis_and_shape(
+            container.target_opset, params.shapeBias
+        )
 
         # CoreML is at most 3-D, so we always turn broadcasting on.
         bias_broadcast = 1
 
-        bias_name = scope.get_unique_variable_name(operator.full_name + '_B')
-        container.add_initializer(bias_name, onnx_proto.TensorProto.FLOAT, bias_shape, params.bias.floatValue)
-        # As bias exists, we add the bias into the output of the multiplication and then use the output of addition
+        bias_name = scope.get_unique_variable_name(operator.full_name + "_B")
+        container.add_initializer(
+            bias_name, onnx_proto.TensorProto.FLOAT, bias_shape, params.bias.floatValue
+        )
+        # As bias exists, we add the bias into the output of
+        # the multiplication and then use the output of addition
         # as the final output of this conversion.
-        apply_add(scope, [intra_variable_name, bias_name], operator.output_full_names, container,
-                  axis=bias_axis, broadcast=bias_broadcast)
+        apply_add(
+            scope,
+            [intra_variable_name, bias_name],
+            operator.output_full_names,
+            container,
+            axis=bias_axis,
+            broadcast=bias_broadcast,
+        )
 
 
-register_converter('scale', convert_scale)
+register_converter("scale", convert_scale)

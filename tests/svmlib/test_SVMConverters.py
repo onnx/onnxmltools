@@ -6,17 +6,20 @@ Tests scikit-linear converter.
 import tempfile
 import numpy
 import os
+
 try:
-    from libsvm.svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
-    import libsvm.svm as svm    
+    from libsvm.svm import (
+        C_SVC as SVC,
+        EPSILON_SVR as SVR,
+        NU_SVC as NuSVC,
+        NU_SVR as NuSVR,
+    )
     import libsvm.svmutil as svmutil
 except ImportError:
-    import svm
     from svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
     import svmutil
 
 import onnxruntime
-import numpy as np
 import unittest
 import packaging.version as pv
 from onnx.defs import onnx_opset_version
@@ -28,6 +31,7 @@ from onnxmltools.utils import dump_data_and_model
 
 try:
     from libsvm.svm import PRINT_STRING_FUN, print_null
+
     noprint = PRINT_STRING_FUN(print_null)
 except ImportError:
     # This was recently added.
@@ -42,7 +46,7 @@ class SkAPI:
         self.model = model
 
     def predict(self, X, options=""):
-        if hasattr(X, 'shape'):
+        if hasattr(X, "shape"):
             X = X.tolist()
         res = svmutil.svm_predict([0 for i in X], list(X), self.model, options=options)
         return res
@@ -51,13 +55,13 @@ class SkAPI:
         f = tempfile.NamedTemporaryFile(delete=False)
         svmutil.svm_save_model(f.name, self.model)
         with open(f.name, "rb") as h:
-            return {'data': h.read()}
+            return {"data": h.read()}
         os.remove(f)
 
     def __setstate__(self, data):
         f = tempfile.NamedTemporaryFile(delete=False)
         with open(f.name, "wb") as h:
-            h.write(data['by'])
+            h.write(data["by"])
         self.model = svmutil.svm_load_model(f.name)
         os.remove(f)
 
@@ -70,7 +74,6 @@ class SkAPIReg(SkAPI):
 
 
 class SkAPIClProba2(SkAPI):
-
     def predict(self, X):
         res = SkAPI.predict(self, X)
         ret = numpy.array(res[0]).ravel()
@@ -84,7 +87,6 @@ class SkAPIClProba2(SkAPI):
 
 
 class SkAPICl(SkAPI):
-
     def predict(self, X):
         res = SkAPI.predict(self, X)
         ret = numpy.array(res[0]).ravel()
@@ -97,7 +99,6 @@ class SkAPICl(SkAPI):
         if pro.shape[1] == 1:
             pro = numpy.hstack([-pro, pro])
         elif pro.shape[1] > 2:
-
             # see from sklearn.utils.multiclass import _ovr_decision_function
             if False:
                 conf = pro.copy()
@@ -113,7 +114,6 @@ class SkAPICl(SkAPI):
 
 
 class TestSvmLibSVM(unittest.TestCase):
-
     def test_convert_svmc_linear(self):
         iris = load_iris()
 
@@ -133,11 +133,20 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmSvmcLinear", [('input', FloatTensorType())], target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmSvmcLinear",
+            [("input", FloatTensorType())],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmSvmcLinear-Dec2",
-                            allow_failure=pv.Version(onnxruntime.__version__) < pv.Version('0.5.0'))
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPIClProba2(libsvm_model),
+            node,
+            basename="LibSvmSvmcLinear-Dec2",
+            allow_failure=pv.Version(onnxruntime.__version__) < pv.Version("0.5.0"),
+        )
 
     def test_convert_svmc(self):
         iris = load_iris()
@@ -158,10 +167,19 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmSvmc", [('input', FloatTensorType())], target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmSvmc",
+            [("input", FloatTensorType())],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmSvmc-Dec2")
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPIClProba2(libsvm_model),
+            node,
+            basename="LibSvmSvmc-Dec2",
+        )
 
     def test_convert_svmr_linear(self):
         iris = load_iris()
@@ -179,10 +197,19 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmSvmrLinear", [('input', FloatTensorType())], target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmSvmrLinear",
+            [("input", FloatTensorType())],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPIReg(libsvm_model), node,
-                            basename="LibSvmSvmrLinear-Dec3")
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPIReg(libsvm_model),
+            node,
+            basename="LibSvmSvmrLinear-Dec3",
+        )
 
     def test_convert_svmr(self):
         iris = load_iris()
@@ -201,10 +228,19 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmSvmr", [('input', FloatTensorType())], target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmSvmr",
+            [("input", FloatTensorType())],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPIReg(libsvm_model), node,
-                            basename="LibSvmSvmr")
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPIReg(libsvm_model),
+            node,
+            basename="LibSvmSvmr",
+        )
 
     def test_convert_nusvmr(self):
         iris = load_iris()
@@ -223,10 +259,19 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmNuSvmr", [('input', FloatTensorType())], target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmNuSvmr",
+            [("input", FloatTensorType())],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPIReg(libsvm_model), node,
-                            basename="LibSvmNuSvmr")
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPIReg(libsvm_model),
+            node,
+            basename="LibSvmNuSvmr",
+        )
 
     def test_convert_nusvmc(self):
         iris = load_iris()
@@ -247,12 +292,20 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmNuSvmc", [('input', FloatTensorType(shape=['None', 'None']))],
-                       target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmNuSvmc",
+            [("input", FloatTensorType(shape=["None", "None"]))],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmNuSvmc-Dec2",
-                            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPIClProba2(libsvm_model),
+            node,
+            basename="LibSvmNuSvmc-Dec2",
+            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version("0.1.3"),
+        )
 
     def test_convert_svmc_linear_raw(self):
         iris = load_iris()
@@ -273,13 +326,22 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmSvmcLinearRaw", [('input', FloatTensorType(shape=['None', 'None']))],
-                       target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmSvmcLinearRaw",
+            [("input", FloatTensorType(shape=["None", "None"]))],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
         # known svm runtime dimension error in ONNX Runtime
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcLinearRaw-Dec3", verbose=False,
-                            allow_failure=pv.Version(onnxruntime.__version__) < pv.Version('0.5.0'))
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmSvmcLinearRaw-Dec3",
+            verbose=False,
+            allow_failure=pv.Version(onnxruntime.__version__) < pv.Version("0.5.0"),
+        )
 
     def test_convert_svmc_raw(self):
         iris = load_iris()
@@ -301,12 +363,20 @@ class TestSvmLibSVM(unittest.TestCase):
         libsvm_model = svmutil.svm_train(prob, param)
 
         # known svm runtime dimension error in ONNX Runtime
-        node = convert(libsvm_model, "LibSvmSvmcRaw", [('input', FloatTensorType(shape=['None', 'None']))],
-                       target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmSvmcRaw",
+            [("input", FloatTensorType(shape=["None", "None"]))],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcRaw",
-                            allow_failure=pv.Version(onnxruntime.__version__) < pv.Version('0.5.0'))
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmSvmcRaw",
+            allow_failure=pv.Version(onnxruntime.__version__) < pv.Version("0.5.0"),
+        )
 
     @unittest.skip(reason="libsvm crashes.")
     def test_convert_nusvmc_linear_raw(self):
@@ -328,13 +398,22 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmNuSvmcRaw", [('input', FloatTensorType(shape=['None', 'None']))],
-                       target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmNuSvmcRaw",
+            [("input", FloatTensorType(shape=["None", "None"]))],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:5], X[60:65]])  # 5x0, 5x1
-        dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmNuSvmcRaw", verbose=False,
-                            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
+        dump_data_and_model(
+            X2.astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmNuSvmcRaw",
+            verbose=False,
+            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version("0.1.3"),
+        )
 
     def test_convert_svmc_rbf_raw_multi(self):
         iris = load_iris()
@@ -355,13 +434,22 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmNuSvmcMultiRbfRaw", [('input', FloatTensorType(shape=['None', 'None']))],
-                       target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmNuSvmcMultiRbfRaw",
+            [("input", FloatTensorType(shape=["None", "None"]))],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
-        dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmNuSvmcRaw", verbose=False,
-                            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
+        dump_data_and_model(
+            X2.astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmNuSvmcRaw",
+            verbose=False,
+            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version("0.1.3"),
+        )
 
     def test_convert_svmc_linear_raw_multi(self):
         iris = load_iris()
@@ -382,13 +470,22 @@ class TestSvmLibSVM(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
 
-        node = convert(libsvm_model, "LibSvmNuSvmcMultiRaw", [('input', FloatTensorType(shape=['None', 2]))],
-                       target_opset=TARGET_OPSET)
+        node = convert(
+            libsvm_model,
+            "LibSvmNuSvmcMultiRaw",
+            [("input", FloatTensorType(shape=["None", 2]))],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
-        dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcRaw-Dec3", verbose=False,
-                            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
+        dump_data_and_model(
+            X2.astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmSvmcRaw-Dec3",
+            verbose=False,
+            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version("0.1.3"),
+        )
 
 
 if __name__ == "__main__":

@@ -6,25 +6,27 @@ from ..common._topology import Topology
 
 
 def _parse_libsvm_simple_model(scope, model, inputs):
-    '''
+    """
     This function handles all non-pipeline models.
 
     :param scope: Scope object
     :param model: A libsvm object (e.g., OneHotEncoder and LogisticRegression)
     :param inputs: A list of variables
     :return: A list of output variables which will be passed to next stage
-    '''
+    """
 
     if model.get_svm_type() in (0, 1):
-        label_variable = scope.declare_local_variable('label', FloatTensorType())
-        probability_map_variable = scope.declare_local_variable('probabilities', FloatTensorType())
+        label_variable = scope.declare_local_variable("label", FloatTensorType())
+        probability_map_variable = scope.declare_local_variable(
+            "probabilities", FloatTensorType()
+        )
         this_operator = scope.declare_local_operator("LibSvmSVC", model)
         this_operator.inputs = inputs
         this_operator.outputs.append(label_variable)
         this_operator.outputs.append(probability_map_variable)
     elif model.get_svm_type() in (4, 3):
         # We assume that all scikit-learn operator can only produce a single float tensor.
-        variable = scope.declare_local_variable('variable', FloatTensorType())
+        variable = scope.declare_local_variable("variable", FloatTensorType())
         this_operator = scope.declare_local_operator("LibSvmSVR", model)
         this_operator.inputs = inputs
         this_operator.outputs.append(variable)
@@ -34,20 +36,26 @@ def _parse_libsvm_simple_model(scope, model, inputs):
 
 
 def _parse_libsvm(scope, model, inputs):
-    '''
-    This is a delegate function. It doesn't nothing but invoke the correct parsing function according to the input
+    """
+    This is a delegate function. It doesn't nothing but invoke
+    the correct parsing function according to the input
     model's type.
+
     :param scope: Scope object
     :param model: A scikit-learn object (e.g., OneHotEncoder and LogisticRegression)
     :param inputs: A list of variables
     :return: The output variables produced by the input model
-    '''
+    """
     return _parse_libsvm_simple_model(scope, model, inputs)
 
 
-def parse_libsvm(model, initial_types=None, target_opset=None,
-                 custom_conversion_functions=None,
-                 custom_shape_calculators=None):
+def parse_libsvm(
+    model,
+    initial_types=None,
+    target_opset=None,
+    custom_conversion_functions=None,
+    custom_shape_calculators=None,
+):
     # Put svmlib object into an abstract container so that our framework
     # can work seamlessly on models created
     # with different machine learning tools.
@@ -55,16 +63,19 @@ def parse_libsvm(model, initial_types=None, target_opset=None,
 
     # Declare a computational graph. It will become a representation of
     # the input scikit-learn model after parsing.
-    topology = Topology(raw_model_container, default_batch_size='None',
-                        initial_types=initial_types,
-                        target_opset=target_opset,
-                        custom_conversion_functions=custom_conversion_functions,
-                        custom_shape_calculators=custom_shape_calculators)
+    topology = Topology(
+        raw_model_container,
+        default_batch_size="None",
+        initial_types=initial_types,
+        target_opset=target_opset,
+        custom_conversion_functions=custom_conversion_functions,
+        custom_shape_calculators=custom_shape_calculators,
+    )
 
     # Declare an object to provide variables' and operators' naming mechanism.
     # In contrast to CoreML, one global scope
     # is enough for parsing scikit-learn models.
-    scope = topology.declare_scope('__root__')
+    scope = topology.declare_scope("__root__")
 
     # Declare input variables. They should be the inputs of the scikit-learn model
     # you want to convert into ONNX.

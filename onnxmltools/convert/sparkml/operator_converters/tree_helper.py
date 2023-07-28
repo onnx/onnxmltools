@@ -4,7 +4,6 @@ import numpy as np
 
 
 class Node:
-
     _names_classifier = [
         "class_ids",
         "class_nodeids",
@@ -90,7 +89,7 @@ class Node:
                             zip(attrs["target_treeids"], attrs["target_nodeids"])
                         )
                         if t == tid and c == nid
-                    ]                    
+                    ]
                 for k, v in attrs.items():
                     if k in {"post_transform", "name", "domain", "n_targets"}:
                         continue
@@ -173,7 +172,6 @@ class Node:
         return None
 
     def unfold_rule_or(self):
-        cond = True
         nodes = []
         for node in self:
             if node.nodes_modes == "||":
@@ -251,18 +249,26 @@ class Node:
 
         # update numbers
         new_numbers = {}
-        for tid, nid, md in sorted(zip(attrs["nodes_treeids"], attrs["nodes_nodeids"], attrs["nodes_modes"])):
+        for tid, nid, md in sorted(
+            zip(attrs["nodes_treeids"], attrs["nodes_nodeids"], attrs["nodes_modes"])
+        ):
             new_numbers[tid, nid] = len(new_numbers)
-        for k in ["nodes_truenodeids", "nodes_falsenodeids", "nodes_nodeids", "class_nodeids", "target_nodeids"]:
+        for k in [
+            "nodes_truenodeids",
+            "nodes_falsenodeids",
+            "nodes_nodeids",
+            "class_nodeids",
+            "target_nodeids",
+        ]:
             if k not in attrs:
                 continue
             if "class_" in k or "target_" in k:
-                field = k.split('_')[0] + "_treeids"
+                field = k.split("_")[0] + "_treeids"
             else:
                 field = "nodes_treeids"
             for i in range(len(attrs[k])):
                 nid = attrs[k][i]
-                if nid == 0 and k in {'nodes_truenodeids', 'nodes_falsenodeids'}:
+                if nid == 0 and k in {"nodes_truenodeids", "nodes_falsenodeids"}:
                     continue
                 tid = attrs[field][i]
                 new_id = new_numbers[tid, nid]
@@ -276,7 +282,10 @@ def rewrite_ids_and_process(attrs, logger):
         if isinstance(value, (np.ndarray, list)):
             in_sets_rules.append(i)
 
-    logger.info("[convert_decision_tree_classifier] in_set_rules has %d elements", len(in_sets_rules))
+    logger.info(
+        "[convert_decision_tree_classifier] in_set_rules has %d elements",
+        len(in_sets_rules),
+    )
     for i in in_sets_rules:
         attrs["nodes_modes"][i] = "||"
     logger.info("[convert_decision_tree_classifier] Node.create")
@@ -286,21 +295,27 @@ def rewrite_ids_and_process(attrs, logger):
     logger.info("[convert_decision_tree_classifier] to_attrs")
     if "class_nodeids" in attrs:
         new_attrs = root.to_attrs(
-                post_transform=attrs['post_transform'],
-                classlabels_int64s=attrs["classlabels_int64s"],
-                name=attrs['name'])
+            post_transform=attrs["post_transform"],
+            classlabels_int64s=attrs["classlabels_int64s"],
+            name=attrs["name"],
+        )
     else:
         new_attrs = root.to_attrs(
-                post_transform=attrs['post_transform'],
-                n_targets=attrs['n_targets'],
-                name=attrs['name'])
-    if len(attrs['nodes_nodeids']) > len(new_attrs['nodes_nodeids']):
+            post_transform=attrs["post_transform"],
+            n_targets=attrs["n_targets"],
+            name=attrs["name"],
+        )
+    if len(attrs["nodes_nodeids"]) > len(new_attrs["nodes_nodeids"]):
         raise RuntimeError(
             f"The replacement fails as there are less nodes in the new tree, "
             f"{len(attrs['nodes_nodeids'])} > {len(new_attrs['nodes_nodeids'])}."
         )
     if set(attrs) != set(new_attrs):
-        raise RuntimeError(f"Missing key: {list(sorted(attrs))} != {list(sorted(new_attrs))}.")
-    logger.info("[convert_decision_tree_classifier] n_nodes=%d", len(attrs['nodes_nodeids']))
+        raise RuntimeError(
+            f"Missing key: {list(sorted(attrs))} != {list(sorted(new_attrs))}."
+        )
+    logger.info(
+        "[convert_decision_tree_classifier] n_nodes=%d", len(attrs["nodes_nodeids"])
+    )
     logger.info("[convert_decision_tree_classifier] end")
     return new_attrs

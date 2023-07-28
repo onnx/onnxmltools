@@ -11,7 +11,9 @@ from typing import List
 import numpy as np
 
 
-def convert_sparkml_mlp_classifier(scope: Scope, operator: Operator, container: ModelComponentContainer):
+def convert_sparkml_mlp_classifier(
+    scope: Scope, operator: Operator, container: ModelComponentContainer
+):
     op: MultilayerPerceptronClassificationModel = operator.raw_operator
     layers: List[int] = op.getLayers()
     weights: np.ndarray = op.weights.toArray()
@@ -20,7 +22,9 @@ def convert_sparkml_mlp_classifier(scope: Scope, operator: Operator, container: 
 
     input: str
     for i in range(len(layers) - 1):
-        weight_matrix = weights[offset : offset + layers[i] * layers[i + 1]].reshape([layers[i], layers[i + 1]])
+        weight_matrix = weights[offset : offset + layers[i] * layers[i + 1]].reshape(
+            [layers[i], layers[i + 1]]
+        )
         offset += layers[i] * layers[i + 1]
         bias_vector = weights[offset : offset + layers[i + 1]]
         offset += layers[i + 1]
@@ -38,7 +42,10 @@ def convert_sparkml_mlp_classifier(scope: Scope, operator: Operator, container: 
 
         bias_variable = scope.get_unique_variable_name("b")
         container.add_initializer(
-            bias_variable, onnx_proto.TensorProto.FLOAT, bias_vector.shape, bias_vector.astype(np.float32),
+            bias_variable,
+            onnx_proto.TensorProto.FLOAT,
+            bias_vector.shape,
+            bias_vector.astype(np.float32),
         )
 
         gemm_output_variable = scope.get_unique_variable_name("gemm_output")
@@ -74,18 +81,25 @@ def convert_sparkml_mlp_classifier(scope: Scope, operator: Operator, container: 
         [operator.outputs[0].full_name],
         name=scope.get_unique_operator_name("ArgMax"),
         axis=1,
-        keepdims = 0,
+        keepdims=0,
     )
 
 
-register_converter("pyspark.ml.classification.MultilayerPerceptronClassificationModel", convert_sparkml_mlp_classifier)
+register_converter(
+    "pyspark.ml.classification.MultilayerPerceptronClassificationModel",
+    convert_sparkml_mlp_classifier,
+)
 
 
 def calculate_mlp_classifier_output_shapes(operator: Operator):
     op: MultilayerPerceptronClassificationModel = operator.raw_operator
 
-    check_input_and_output_numbers(operator, input_count_range=1, output_count_range=[1, 2])
-    check_input_and_output_types(operator, good_input_types=[FloatTensorType, Int64TensorType])
+    check_input_and_output_numbers(
+        operator, input_count_range=1, output_count_range=[1, 2]
+    )
+    check_input_and_output_types(
+        operator, good_input_types=[FloatTensorType, Int64TensorType]
+    )
 
     if len(operator.inputs[0].type.shape) != 2:
         raise RuntimeError("Input must be a [N, C]-tensor")
@@ -97,5 +111,6 @@ def calculate_mlp_classifier_output_shapes(operator: Operator):
 
 
 register_shape_calculator(
-    "pyspark.ml.classification.MultilayerPerceptronClassificationModel", calculate_mlp_classifier_output_shapes
+    "pyspark.ml.classification.MultilayerPerceptronClassificationModel",
+    calculate_mlp_classifier_output_shapes,
 )

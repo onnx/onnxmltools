@@ -1,0 +1,18 @@
+[tool.ruff]
+
+exclude = [
+    ".eggs",
+    ".git",
+    "build",
+    "dist",
+]
+
+# Same as Black.
+line-length = 95
+
+[tool.ruff.mccabe]
+max-complexity = 10
+
+[tool.ruff.per-file-ignores]
+"**/__init__.py" = ["F401"]
+"onnxmltools/convert/coreml/operator_converters/neural_network/SimpleRNN.py" = ["E501"]

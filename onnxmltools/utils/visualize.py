@@ -7,7 +7,15 @@ from webbrowser import open_new_tab
 
 
 def get_set_node(node, i="0"):
-    return "g.setNode(" + str(i) + ", { label: '" + node + "', class: 'type-" + node + "' });"
+    return (
+        "g.setNode("
+        + str(i)
+        + ", { label: '"
+        + node
+        + "', class: 'type-"
+        + node
+        + "' });"
+    )
 
 
 def get_set_edge(start, end):
@@ -16,10 +24,12 @@ def get_set_edge(start, end):
 
 def get_nodes(graph):
     graph_nodes = [(i, node.op_type) for i, node in enumerate(graph.node, 0)]
-    graph_nodes.extend([(i, node.name)
-                        for i, node in enumerate(graph.input, len(graph_nodes))])
-    graph_nodes.extend([(i, node.name)
-                        for i, node in enumerate(graph.output, len(graph_nodes) + 1)])
+    graph_nodes.extend(
+        [(i, node.name) for i, node in enumerate(graph.input, len(graph_nodes))]
+    )
+    graph_nodes.extend(
+        [(i, node.name) for i, node in enumerate(graph.output, len(graph_nodes) + 1)]
+    )
     return graph_nodes
 
 
@@ -44,16 +54,15 @@ def get_edges(graph):
     for i, node in enumerate(nodes, 0):
         for input in node.input:
             if input in output_node_hash.keys():
-                edge_list.extend([(node_id, i)
-                                  for node_id in output_node_hash[input]])
+                edge_list.extend([(node_id, i) for node_id in output_node_hash[input]])
             else:
-                if not input in initializer_names:
-                    print(
-                        "No corresponding output found for {0}.".format(input))
+                if input not in initializer_names:
+                    print("No corresponding output found for {0}.".format(input))
     for i, output in enumerate(graph.output, len(nodes) + len(graph.input) + 1):
         if output.name in output_node_hash.keys():
-            edge_list.extend([(node_id, i)
-                              for node_id in output_node_hash[output.name]])
+            edge_list.extend(
+                [(node_id, i) for node_id in output_node_hash[output.name]]
+            )
         else:
             pass
     return edge_list
@@ -76,8 +85,13 @@ def visualize_model(onnx_model, open_browser=True, dest="index.html"):
         visualize_model(model)
     """
     graph = onnx_model.graph
-    model_info = "Model produced by: " + onnx_model.producer_name + \
-        " version(" + onnx_model.producer_version + ")"
+    model_info = (
+        "Model produced by: "
+        + onnx_model.producer_name
+        + " version("
+        + onnx_model.producer_version
+        + ")"
+    )
 
     html_str = """
     <!doctype html>
@@ -123,11 +137,14 @@ def visualize_model(onnx_model, open_browser=True, dest="index.html"):
     </script>
     """
 
-    html_str = html_str.replace("[nodes_html]", "\n".join(
-        get_nodes_builder(get_nodes(graph))))
+    html_str = html_str.replace(
+        "[nodes_html]", "\n".join(get_nodes_builder(get_nodes(graph)))
+    )
 
-    html_str = html_str.replace("[edges_html]", "\n".join(
-        [get_set_edge(edge[0], edge[1]) for edge in get_edges(graph)]))
+    html_str = html_str.replace(
+        "[edges_html]",
+        "\n".join([get_set_edge(edge[0], edge[1]) for edge in get_edges(graph)]),
+    )
 
     html_str = html_str.replace("[model_info]", model_info)
 
@@ -135,7 +152,7 @@ def visualize_model(onnx_model, open_browser=True, dest="index.html"):
     Html_file.write(html_str)
     Html_file.close()
 
-    pkgdir = sys.modules['onnxmltools'].__path__[0]
+    pkgdir = sys.modules["onnxmltools"].__path__[0]
     fullpath = os.path.join(pkgdir, "utils", "styles.css")
     shutil.copy(fullpath, os.getcwd())
     fullpath = os.path.join(pkgdir, "utils", "dagre-d3.min.js")

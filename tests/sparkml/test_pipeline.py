@@ -13,7 +13,11 @@ from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
-from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
+from tests.sparkml.sparkml_test_utils import (
+    save_data_models,
+    run_onnx_model,
+    compare_results,
+)
 from tests.sparkml import SparkMlTestCase
 
 
@@ -21,141 +25,237 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlPipeline(SparkMlTestCase):
-
-    @unittest.skipIf(sys.version_info < (3, 8),
-                     reason="pickle fails on python 3.7")
+    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_pipeline_4_stage(self):
-        this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")
-        full_data = self.spark.read.format('csv')\
-            .options(header='true', inferschema='true').load(input_path)
-        cols = ['workclass', 'education', 'marital_status']
-        training_data, test_data = full_data.select('income', *cols).limit(1000).randomSplit([0.9, 0.1],seed=1)
+        this_script_dir = os.path.dirname(
+            os.path.abspath(inspect.getfile(inspect.currentframe()))
+        )
+        input_path = os.path.join(
+            this_script_dir, "data", "AdultCensusIncomeOriginal.csv"
+        )
+        full_data = (
+            self.spark.read.format("csv")
+            .options(header="true", inferschema="true")
+            .load(input_path)
+        )
+        cols = ["workclass", "education", "marital_status"]
+        training_data, test_data = (
+            full_data.select("income", *cols)
+            .limit(1000)
+            .randomSplit([0.9, 0.1], seed=1)
+        )
 
         stages = []
         for col in cols:
-            stages.append(StringIndexer(inputCol=col, outputCol=col+'_index', handleInvalid='skip'))
-            stages.append(OneHotEncoder(inputCols=[col+'_index'], outputCols=[col+'_vec'], dropLast=False))
+            stages.append(
+                StringIndexer(
+                    inputCol=col, outputCol=col + "_index", handleInvalid="skip"
+                )
+            )
+            stages.append(
+                OneHotEncoder(
+                    inputCols=[col + "_index"],
+                    outputCols=[col + "_vec"],
+                    dropLast=False,
+                )
+            )
 
-        stages.append(VectorAssembler(inputCols=[c+'_vec' for c in cols], outputCol='features'))
-        stages.append(StringIndexer(inputCol='income', outputCol='label', handleInvalid='skip'))
+        stages.append(
+            VectorAssembler(inputCols=[c + "_vec" for c in cols], outputCol="features")
+        )
+        stages.append(
+            StringIndexer(inputCol="income", outputCol="label", handleInvalid="skip")
+        )
         stages.append(LogisticRegression(maxIter=100, tol=0.0001))
         pipeline = Pipeline(stages=stages)
 
         model = pipeline.fit(training_data)
-        model_onnx = convert_sparkml(model, 'Sparkml Pipeline', [
-            ('income', StringTensorType([None, 1])),
-            ('workclass', StringTensorType([None, 1])),
-            ('education', StringTensorType([None, 1])),
-            ('marital_status', StringTensorType([None, 1]))
-        ], target_opset=TARGET_OPSET)
+        model_onnx = convert_sparkml(
+            model,
+            "Sparkml Pipeline",
+            [
+                ("income", StringTensorType([None, 1])),
+                ("workclass", StringTensorType([None, 1])),
+                ("education", StringTensorType([None, 1])),
+                ("marital_status", StringTensorType([None, 1])),
+            ],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
         # run the model
         predicted = model.transform(test_data)
         data_np = {
-            'income': test_data.select('income').toPandas().values,
-            'workclass': test_data.select('workclass').toPandas().values,
-            'education': test_data.select('education').toPandas().values,
-            'marital_status': test_data.select('marital_status').toPandas().values
+            "income": test_data.select("income").toPandas().values,
+            "workclass": test_data.select("workclass").toPandas().values,
+            "education": test_data.select("education").toPandas().values,
+            "marital_status": test_data.select("marital_status").toPandas().values,
         }
         expected = [
             predicted.toPandas().label.values.astype(numpy.float32),
             predicted.toPandas().prediction.values.astype(numpy.float32),
-            predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
+            predicted.toPandas()
+            .probability.apply(lambda x: pandas.Series(x.toArray()))
+            .values.astype(numpy.float32),
         ]
-        paths = save_data_models(data_np, expected, model, model_onnx,
-                                basename="SparkmlPipeline_4Stage")
+        paths = save_data_models(
+            data_np, expected, model, model_onnx, basename="SparkmlPipeline_4Stage"
+        )
         onnx_model_path = paths[-1]
-        output, output_shapes = run_onnx_model(['label', 'prediction', 'probability'], data_np, onnx_model_path)
+        output, output_shapes = run_onnx_model(
+            ["label", "prediction", "probability"], data_np, onnx_model_path
+        )
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8),
-                     reason="pickle fails on python 3.7")
+    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_pipeline_3_stage(self):
-        this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")
-        full_data = self.spark.read.format('csv')\
-            .options(header='true', inferschema='true').load(input_path)
-        cols = ['workclass', 'education', 'marital_status']
-        training_data, test_data = full_data.select(*cols).limit(1000).randomSplit([0.9, 0.1], seed=1)
+        this_script_dir = os.path.dirname(
+            os.path.abspath(inspect.getfile(inspect.currentframe()))
+        )
+        input_path = os.path.join(
+            this_script_dir, "data", "AdultCensusIncomeOriginal.csv"
+        )
+        full_data = (
+            self.spark.read.format("csv")
+            .options(header="true", inferschema="true")
+            .load(input_path)
+        )
+        cols = ["workclass", "education", "marital_status"]
+        training_data, test_data = (
+            full_data.select(*cols).limit(1000).randomSplit([0.9, 0.1], seed=1)
+        )
 
         stages = []
         for col in cols:
-            stages.append(StringIndexer(inputCol=col, outputCol=col+'_index', handleInvalid='skip'))
+            stages.append(
+                StringIndexer(
+                    inputCol=col, outputCol=col + "_index", handleInvalid="skip"
+                )
+            )
             # we need the dropLast option otherwise when assembled together (below)
             # we won't be able to expand the features without difficulties
-            stages.append(OneHotEncoder(inputCols=[col+'_index'], outputCols=[col+'_vec'], dropLast=False))
+            stages.append(
+                OneHotEncoder(
+                    inputCols=[col + "_index"],
+                    outputCols=[col + "_vec"],
+                    dropLast=False,
+                )
+            )
 
-        stages.append(VectorAssembler(inputCols=[c+'_vec' for c in cols], outputCol='features'))
+        stages.append(
+            VectorAssembler(inputCols=[c + "_vec" for c in cols], outputCol="features")
+        )
         pipeline = Pipeline(stages=stages)
 
         model = pipeline.fit(training_data)
-        model_onnx = convert_sparkml(model, 'Sparkml Pipeline', [
-            ('workclass', StringTensorType([None, 1])),
-            ('education', StringTensorType([None, 1])),
-            ('marital_status', StringTensorType([None, 1]))
-        ], target_opset=TARGET_OPSET)
+        model_onnx = convert_sparkml(
+            model,
+            "Sparkml Pipeline",
+            [
+                ("workclass", StringTensorType([None, 1])),
+                ("education", StringTensorType([None, 1])),
+                ("marital_status", StringTensorType([None, 1])),
+            ],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
         # run the model
         predicted = model.transform(test_data)
         data_np = {
-            'workclass': test_data.select('workclass').toPandas().values,
-            'education': test_data.select('education').toPandas().values,
-            'marital_status': test_data.select('marital_status').toPandas().values
+            "workclass": test_data.select("workclass").toPandas().values,
+            "education": test_data.select("education").toPandas().values,
+            "marital_status": test_data.select("marital_status").toPandas().values,
         }
-        expected = predicted.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values
-        paths = save_data_models(data_np, expected, model, model_onnx,
-                                basename="SparkmlPipeline_3Stage")
+        expected = (
+            predicted.toPandas()
+            .features.apply(lambda x: pandas.Series(x.toArray()))
+            .values
+        )
+        paths = save_data_models(
+            data_np, expected, model, model_onnx, basename="SparkmlPipeline_3Stage"
+        )
         onnx_model_path = paths[-1]
-        output, output_shapes = run_onnx_model(['features'], data_np, onnx_model_path)
+        output, output_shapes = run_onnx_model(["features"], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8),
-                     reason="pickle fails on python 3.7")
+    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_pipeline_2_stage(self):
-        this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        input_path = os.path.join(this_script_dir, "data", "AdultCensusIncomeOriginal.csv")
-        full_data = self.spark.read.format('csv')\
-            .options(header='true', inferschema='true').load(input_path)
-        cols = ['workclass', 'education', 'marital_status']
-        training_data, test_data = full_data.select(*cols).limit(1000).randomSplit([0.9, 0.1], seed=1)
+        this_script_dir = os.path.dirname(
+            os.path.abspath(inspect.getfile(inspect.currentframe()))
+        )
+        input_path = os.path.join(
+            this_script_dir, "data", "AdultCensusIncomeOriginal.csv"
+        )
+        full_data = (
+            self.spark.read.format("csv")
+            .options(header="true", inferschema="true")
+            .load(input_path)
+        )
+        cols = ["workclass", "education", "marital_status"]
+        training_data, test_data = (
+            full_data.select(*cols).limit(1000).randomSplit([0.9, 0.1], seed=1)
+        )
 
         stages = []
         for col in cols:
-            stages.append(StringIndexer(inputCol=col, outputCol=col+'_index', handleInvalid='skip'))
-            stages.append(OneHotEncoder(inputCols=[col+'_index'], outputCols=[col+'_vec'], dropLast=False))
+            stages.append(
+                StringIndexer(
+                    inputCol=col, outputCol=col + "_index", handleInvalid="skip"
+                )
+            )
+            stages.append(
+                OneHotEncoder(
+                    inputCols=[col + "_index"],
+                    outputCols=[col + "_vec"],
+                    dropLast=False,
+                )
+            )
 
         pipeline = Pipeline(stages=stages)
 
         model = pipeline.fit(training_data)
-        model_onnx = convert_sparkml(model, 'Sparkml Pipeline', [
-            ('workclass', StringTensorType([None, 1])),
-            ('education', StringTensorType([None, 1])),
-            ('marital_status', StringTensorType([None, 1]))
-        ], target_opset=TARGET_OPSET)
+        model_onnx = convert_sparkml(
+            model,
+            "Sparkml Pipeline",
+            [
+                ("workclass", StringTensorType([None, 1])),
+                ("education", StringTensorType([None, 1])),
+                ("marital_status", StringTensorType([None, 1])),
+            ],
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(model_onnx is not None)
         self.assertTrue(model_onnx.graph.node is not None)
         # run the model
         predicted = model.transform(test_data)
         data_np = {
-            'workclass': test_data.select('workclass').toPandas().values,
-            'education': test_data.select('education').toPandas().values,
-            'marital_status': test_data.select('marital_status').toPandas().values
+            "workclass": test_data.select("workclass").toPandas().values,
+            "education": test_data.select("education").toPandas().values,
+            "marital_status": test_data.select("marital_status").toPandas().values,
         }
         predicted_np = [
-            predicted.toPandas().workclass_vec.apply(lambda x: pandas.Series(x.toArray())).values,
-            predicted.toPandas().education_vec.apply(lambda x: pandas.Series(x.toArray())).values,
-            predicted.toPandas().marital_status_vec.apply(lambda x: pandas.Series(x.toArray())).values
-            ]
-            
+            predicted.toPandas()
+            .workclass_vec.apply(lambda x: pandas.Series(x.toArray()))
+            .values,
+            predicted.toPandas()
+            .education_vec.apply(lambda x: pandas.Series(x.toArray()))
+            .values,
+            predicted.toPandas()
+            .marital_status_vec.apply(lambda x: pandas.Series(x.toArray()))
+            .values,
+        ]
+
         expected = [numpy.asarray(row) for row in predicted_np]
-        paths = save_data_models(data_np, expected, model, model_onnx,
-                                 basename="SparkmlPipeline_2Stage")
+        paths = save_data_models(
+            data_np, expected, model, model_onnx, basename="SparkmlPipeline_2Stage"
+        )
         onnx_model_path = paths[-1]
-        output, output_shapes = run_onnx_model(['workclass_vec', 'education_vec', 'marital_status_vec'],
-                                               data_np, onnx_model_path)
+        output, output_shapes = run_onnx_model(
+            ["workclass_vec", "education_vec", "marital_status_vec"],
+            data_np,
+            onnx_model_path,
+        )
         compare_results(expected, output, decimal=5)
 
 
