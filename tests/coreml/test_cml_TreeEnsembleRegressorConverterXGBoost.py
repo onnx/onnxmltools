@@ -48,8 +48,7 @@ class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
         if sys.version_info[0] >= 3:
             # python 2.7 returns TypeError: can't pickle instancemethod objects
             dump_data_and_model(X.astype(numpy.float32), model, model_onnx,
-                                         basename="CmlXGBoostRegressor-OneOff-Reshape",
-                                         allow_failure=True)
+                                         basename="CmlXGBoostRegressor-OneOff-Reshape")
 
 
 if __name__ == "__main__":

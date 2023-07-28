@@ -26,11 +26,11 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
 
     def test_lightgbm_classifier_binary(self):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1, num_thread=1)
-        dump_binary_classification(model, allow_failure=pv.Version(onnx.__version__) < pv.Version('1.3.0'))
+        dump_binary_classification(model)
 
     def test_lightgbm_classifier_multiple(self):
         model = LGBMClassifier(n_estimators=3, min_child_samples=1, num_thread=1)
-        dump_multiple_classification(model, allow_failure=pv.Version(onnx.__version__) < pv.Version('1.3.0'))
+        dump_multiple_classification(model)
 
     def test_lightgbm_classifier_zipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
@@ -111,7 +111,6 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                            [('input', FloatTensorType([None, 2]))],
                                            target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure=pv.Version(onnx.__version__) < pv.Version('1.3.0'),
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     def test_lightgbm_booster_classifier_nozipmap(self):
@@ -127,7 +126,6 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                            zipmap=False, target_opset=TARGET_OPSET)
         assert "zipmap" not in str(model_onnx).lower()
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure=pv.Version(onnx.__version__) < pv.Version('1.3.0'),
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     def test_lightgbm_booster_classifier_zipmap(self):
@@ -143,7 +141,6 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                            target_opset=TARGET_OPSET)
         assert "zipmap" in str(model_onnx).lower()
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure=pv.Version(onnx.__version__) < pv.Version('1.3.0'),
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
 
     def test_lightgbm_booster_multi_classifier(self):
@@ -158,7 +155,6 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                                            [('input', FloatTensorType([None, 2]))],
                                            target_opset=TARGET_OPSET)
         dump_data_and_model(X, model, model_onnx,
-                            allow_failure=pv.Version(onnx.__version__) < pv.Version('1.3.0'),
                             basename=prefix + "BoosterBin" + model.__class__.__name__)
         try:
             from onnxruntime import InferenceSession

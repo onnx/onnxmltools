@@ -77,8 +77,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         nodes = svm_onnx.graph.node
         self.assertEqual(len(nodes), 1)
         self._check_model_outputs(svm_onnx, ['classLabel'])
-        dump_data_and_model(X, svm, svm_onnx, basename="CmlBinSVC-Out0",
-                            allow_failure=True)
+        dump_data_and_model(X, svm, svm_onnx, basename="CmlBinSVC-Out0")
 
     @unittest.skipIf(
         pv.Version(coremltools.__version__) > pv.Version("3.1"),

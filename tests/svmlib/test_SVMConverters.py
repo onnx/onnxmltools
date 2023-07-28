@@ -151,8 +151,7 @@ class TestSvmLibSVM(unittest.TestCase):
         node = convert(libsvm_model, "LibSvmSvmcLinear", [('input', FloatTensorType())], target_opset=TARGET_OPSET)
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmSvmcLinear-Dec2",
-                            allow_failure=pv.Version(onnxruntime.__version__) < pv.Version('0.5.0'))
+                            basename="LibSvmSvmcLinear-Dec2")
 
     @unittest.skipIf(DISABLED,
                      reason="svmlib not really maintained")
@@ -276,8 +275,7 @@ class TestSvmLibSVM(unittest.TestCase):
                        target_opset=TARGET_OPSET)
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmNuSvmc-Dec2",
-                            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
+                            basename="LibSvmNuSvmc-Dec2")
 
     @unittest.skipIf(DISABLED,
                      reason="svmlib not really maintained")
@@ -305,8 +303,7 @@ class TestSvmLibSVM(unittest.TestCase):
         self.assertTrue(node is not None)
         # known svm runtime dimension error in ONNX Runtime
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcLinearRaw-Dec3", verbose=False,
-                            allow_failure=pv.Version(onnxruntime.__version__) < pv.Version('0.5.0'))
+                            basename="LibSvmSvmcLinearRaw-Dec3", verbose=False)
 
     @unittest.skipIf(DISABLED,
                      reason="svmlib not really maintained")
@@ -334,8 +331,7 @@ class TestSvmLibSVM(unittest.TestCase):
                        target_opset=TARGET_OPSET)
         self.assertTrue(node is not None)
         dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcRaw",
-                            allow_failure=pv.Version(onnxruntime.__version__) < pv.Version('0.5.0'))
+                            basename="LibSvmSvmcRaw")
 
     @unittest.skip(reason="libsvm crashes.")
     @unittest.skipIf(DISABLED,
@@ -364,8 +360,7 @@ class TestSvmLibSVM(unittest.TestCase):
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:5], X[60:65]])  # 5x0, 5x1
         dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmNuSvmcRaw", verbose=False,
-                            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
+                            basename="LibSvmNuSvmcRaw", verbose=False)
 
     @unittest.skipIf(DISABLED,
                      reason="svmlib not really maintained")
@@ -393,8 +388,7 @@ class TestSvmLibSVM(unittest.TestCase):
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
         dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmNuSvmcRaw", verbose=False,
-                            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
+                            basename="LibSvmNuSvmcRaw", verbose=False)
 
     @unittest.skipIf(DISABLED,
                      reason="svmlib not really maintained")
@@ -422,8 +416,7 @@ class TestSvmLibSVM(unittest.TestCase):
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
         dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcRaw-Dec3", verbose=False,
-                            allow_failure=pv.Version(onnxruntime.__version__) <= pv.Version('0.1.3'))
+                            basename="LibSvmSvmcRaw-Dec3", verbose=False)
 
 
 if __name__ == "__main__":

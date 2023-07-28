@@ -46,8 +46,7 @@ class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
         model_onnx = convert(model_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         self.validate_zipmap(model_onnx)
-        dump_data_and_model(X, model, model_onnx, basename="CmlBinRandomForestClassifier",
-                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')")
+        dump_data_and_model(X, model, model_onnx, basename="CmlBinRandomForestClassifier")
 
 
 if __name__ == "__main__":
