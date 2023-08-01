@@ -58,10 +58,14 @@ def convert_scale(scope, operator, container):
     #  y = a * x + b
     # Therefore, our strategy of composing ScaleLayer is to have one multiplication followed by an addition.
     params = operator.raw_operator.scale
-    op1_type = 'Mul'
-    scale_axis, scale_shape = deduce_broadcast_axis_and_shape(container.target_opset, params.shapeScale)
-    scale_name = scope.get_unique_variable_name(op1_type + '_B')
-    container.add_initializer(scale_name, onnx_proto.TensorProto.FLOAT, scale_shape, params.scale.floatValue)
+    op1_type = "Mul"
+    scale_axis, scale_shape = deduce_broadcast_axis_and_shape(
+        container.target_opset, params.shapeScale
+    )
+    scale_name = scope.get_unique_variable_name(op1_type + "_B")
+    container.add_initializer(
+        scale_name, onnx_proto.TensorProto.FLOAT, scale_shape, params.scale.floatValue
+    )
 
     # CoreML is at most 3-D, so we always turn broadcasting on.
     scale_broadcast = 1
@@ -69,27 +73,53 @@ def convert_scale(scope, operator, container):
     if not params.hasBias:
         # Create a element-wise multiplication and use it to scale the input. The first input is the variable we want
         # to scale while the second input is their multipliers.
-        apply_mul(scope, [operator.inputs[0].full_name, scale_name], operator.output_full_names, container,
-                  operator_name=operator.full_name, axis=scale_axis, broadcast=scale_broadcast)
+        apply_mul(
+            scope,
+            [operator.inputs[0].full_name, scale_name],
+            operator.output_full_names,
+            container,
+            operator_name=operator.full_name,
+            axis=scale_axis,
+            broadcast=scale_broadcast,
+        )
     else:
         # Declare a temporal variable to store the scaled input
-        intra_variable_name = scope.get_unique_variable_name(operator.inputs[0].full_name + '_scaled')
+        intra_variable_name = scope.get_unique_variable_name(
+            operator.inputs[0].full_name + "_scaled"
+        )
         # Create a element-wise multiplication and use it to scale the input and save the result to a temporal variable
-        apply_mul(scope, [operator.inputs[0].full_name, scale_name], intra_variable_name, container,
-                  operator_name=operator.full_name, axis=scale_axis, broadcast=scale_broadcast)
+        apply_mul(
+            scope,
+            [operator.inputs[0].full_name, scale_name],
+            intra_variable_name,
+            container,
+            operator_name=operator.full_name,
+            axis=scale_axis,
+            broadcast=scale_broadcast,
+        )
 
         # Prepare materials to build an Add operator for adding bias
-        bias_axis, bias_shape = deduce_broadcast_axis_and_shape(container.target_opset, params.shapeBias)
+        bias_axis, bias_shape = deduce_broadcast_axis_and_shape(
+            container.target_opset, params.shapeBias
+        )
 
         # CoreML is at most 3-D, so we always turn broadcasting on.
         bias_broadcast = 1
 
-        bias_name = scope.get_unique_variable_name(operator.full_name + '_B')
-        container.add_initializer(bias_name, onnx_proto.TensorProto.FLOAT, bias_shape, params.bias.floatValue)
+        bias_name = scope.get_unique_variable_name(operator.full_name + "_B")
+        container.add_initializer(
+            bias_name, onnx_proto.TensorProto.FLOAT, bias_shape, params.bias.floatValue
+        )
         # As bias exists, we add the bias into the output of the multiplication and then use the output of addition
         # as the final output of this conversion.
-        apply_add(scope, [intra_variable_name, bias_name], operator.output_full_names, container,
-                  axis=bias_axis, broadcast=bias_broadcast)
+        apply_add(
+            scope,
+            [intra_variable_name, bias_name],
+            operator.output_full_names,
+            container,
+            axis=bias_axis,
+            broadcast=bias_broadcast,
+        )
 
 
-register_converter('scale', convert_scale)
+register_converter("scale", convert_scale)

@@ -7,10 +7,10 @@ from ....common._registration import register_converter
 def convert_padding(scope, operator, container):
     params = operator.raw_operator.padding
 
-    pad_table = {'constant': 'constant', 'reflection': 'reflect', 'replication': 'edge'}
-    pad_type = params.WhichOneof('PaddingType')
+    pad_table = {"constant": "constant", "reflection": "reflect", "replication": "edge"}
+    pad_type = params.WhichOneof("PaddingType")
     if pad_type not in pad_table:
-        raise ValueError('Unsupported padding mode: {}'.format(pad_type))
+        raise ValueError("Unsupported padding mode: {}".format(pad_type))
     mode = pad_table[pad_type]
 
     # CoreML only pads for their H- and W-axes. Here we assume the shape of the tensor to be padded
@@ -29,13 +29,21 @@ def convert_padding(scope, operator, container):
         # Set W_end_index
         pads[7] = params.paddingAmounts.borderAmounts[1].endEdgeSize
 
-    if pad_type == 'constant':
+    if pad_type == "constant":
         value = params.constant.value
     else:
         value = None
 
-    apply_pad(scope, operator.input_full_names, operator.output_full_names, container, operator_name=operator.full_name,
-              mode=mode, pads=pads, value=value)
+    apply_pad(
+        scope,
+        operator.input_full_names,
+        operator.output_full_names,
+        container,
+        operator_name=operator.full_name,
+        mode=mode,
+        pads=pads,
+        value=value,
+    )
 
 
-register_converter('padding', convert_padding)
+register_converter("padding", convert_padding)

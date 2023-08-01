@@ -15,10 +15,17 @@ from ._parse import parse_h2o
 from . import operator_converters, shape_calculators  # noqa
 
 
-def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
-            targeted_onnx=onnx.__version__, custom_conversion_functions=None,
-            custom_shape_calculators=None):
-    '''
+def convert(
+    model,
+    name=None,
+    initial_types=None,
+    doc_string="",
+    target_opset=None,
+    targeted_onnx=onnx.__version__,
+    custom_conversion_functions=None,
+    custom_shape_calculators=None,
+):
+    """
     This function produces an equivalent ONNX model of the given H2O MOJO model.
     Supported model types:
     - GBM, with limitations:
@@ -46,11 +53,11 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     >>> mojo_content = file.read()
     >>> file.close()
     >>> h2o_onnx_model = convert_h2o(mojo_content)
-    '''
+    """
     if name is None:
         name = str(uuid4().hex)
     if initial_types is None:
-        initial_types = [('input', FloatTensorType(shape=['None', 'None']))]
+        initial_types = [("input", FloatTensorType(shape=["None", "None"]))]
 
     if isinstance(model, str):
         model_path = model
@@ -63,10 +70,20 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     mojo_model = json.loads(mojo_str)
     if mojo_model["params"]["algo"] != "gbm":
         raise ValueError(
-            "Model type not supported (algo=%s). Only GBM Mojo supported for now." % mojo_model["params"]["algo"])
+            "Model type not supported (algo=%s). Only GBM Mojo supported for now."
+            % mojo_model["params"]["algo"]
+        )
 
     target_opset = target_opset if target_opset else get_maximum_opset_supported()
-    topology = parse_h2o(mojo_model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_h2o(
+        mojo_model,
+        initial_types,
+        target_opset,
+        custom_conversion_functions,
+        custom_shape_calculators,
+    )
     topology.compile()
-    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
+    onnx_model = convert_topology(
+        topology, name, doc_string, target_opset, targeted_onnx
+    )
     return onnx_model

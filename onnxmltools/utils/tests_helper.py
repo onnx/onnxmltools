@@ -7,15 +7,29 @@ import numpy
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from ..convert.common.data_types import FloatTensorType
-from .utils_backend import compare_backend, extract_options, evaluate_condition, is_backend_enabled
+from .utils_backend import (
+    compare_backend,
+    extract_options,
+    evaluate_condition,
+    is_backend_enabled,
+)
 
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
-def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
-                        inputs=None, backend="onnxruntime", context=None,
-                        allow_failure=None, verbose=False):
+def dump_data_and_model(
+    data,
+    model,
+    onnx=None,
+    basename="model",
+    folder=None,
+    inputs=None,
+    backend="onnxruntime",
+    context=None,
+    allow_failure=None,
+    verbose=False,
+):
     """
     Saves data with pickle, saves the model with pickle and *onnx*,
     runs and saves the predictions for the given model.
@@ -72,23 +86,24 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     runtime_test = dict(model=model, data=data)
 
     if folder is None:
-        folder = os.environ.get('ONNXTESTDUMP', 'tests/temp')
+        folder = os.environ.get("ONNXTESTDUMP", "tests/temp")
     if not os.path.exists(folder):
         os.makedirs(folder)
 
     if hasattr(model, "predict"):
         import lightgbm
         import xgboost
+
         if isinstance(model, lightgbm.Booster):
             # LightGBM Booster
             model_dict = model.dump_model()
-            if model_dict['objective'].startswith('binary'):
+            if model_dict["objective"].startswith("binary"):
                 score = model.predict(data)
                 if len(score.shape) < 2 or score.shape[1] == 1:
                     score = score.ravel()
-                    score = numpy.vstack([1-score, score]).T
+                    score = numpy.vstack([1 - score, score]).T
                 prediction = [score[:, 1] > 0.5, score]
-            elif model_dict['objective'].startswith('multiclass'):
+            elif model_dict["objective"].startswith("multiclass"):
                 score = model.predict(data)
                 prediction = [score.argmax(axis=1), score]
             else:
@@ -97,15 +112,16 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
             # XGBoost Booster
             from ..convert.xgboost._parse import _get_attributes
             from xgboost import DMatrix
+
             datax = DMatrix(data)
             model_dict = _get_attributes(model)
-            if model_dict['objective'].startswith('binary'):
+            if model_dict["objective"].startswith("binary"):
                 score = model.predict(datax)
-                prediction = [score > 0.5, numpy.vstack([1-score, score]).T]
-            elif model_dict['objective'].startswith('multi:softprob'):
+                prediction = [score > 0.5, numpy.vstack([1 - score, score]).T]
+            elif model_dict["objective"].startswith("multi:softprob"):
                 score = model.predict(datax)
                 prediction = [score.argmax(axis=1), score]
-            elif model_dict['objective'].startswith('multi:softmax'):
+            elif model_dict["objective"].startswith("multi:softmax"):
                 score = model.predict(datax, output_margin=True)
                 prediction = [score.argmax(axis=1), score]
             else:
@@ -130,9 +146,11 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     elif hasattr(model, "transform"):
         prediction = model.transform(data)
     else:
-        raise TypeError("Model has not predict or transform method: {0}".format(type(model)))
+        raise TypeError(
+            "Model has not predict or transform method: {0}".format(type(model))
+        )
 
-    runtime_test['expected'] = prediction
+    runtime_test["expected"] = prediction
 
     names = []
     dest = os.path.join(folder, basename + ".expected.pkl")
@@ -153,7 +171,7 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
     if onnx is None:
         array = numpy.array(data)
         if inputs is None:
-            inputs = [('input', FloatTensorType(list(array.shape)))]
+            inputs = [("input", FloatTensorType(list(array.shape)))]
         onnx, _ = convert_model(model, basename, inputs)
 
     dest = os.path.join(folder, basename + ".model.onnx")
@@ -175,12 +193,22 @@ def dump_data_and_model(data, model, onnx=None, basename="model", folder=None,
             else:
                 allow = allow_failure
             if allow is None:
-                output = compare_backend(b, runtime_test, options=extract_options(basename),
-                                         context=context, verbose=verbose)
+                output = compare_backend(
+                    b,
+                    runtime_test,
+                    options=extract_options(basename),
+                    context=context,
+                    verbose=verbose,
+                )
             else:
                 try:
-                    output = compare_backend(b, runtime_test, options=extract_options(basename),
-                                             context=context, verbose=verbose)
+                    output = compare_backend(
+                        b,
+                        runtime_test,
+                        options=extract_options(basename),
+                        context=context,
+                        verbose=verbose,
+                    )
                 except AssertionError as e:
                     if isinstance(allow, bool) and allow:
                         warnings.warn("Issue with '{0}' due to {1}".format(basename, e))
@@ -204,27 +232,47 @@ def convert_model(model, name, input_types, without_onnx_ml=False, **kwargs):
     :return: *onnx* model
     """
     from sklearn.base import BaseEstimator
+
     if model.__class__.__name__.startswith("LGBM"):
         from onnxmltools.convert import convert_lightgbm
-        model, prefix = convert_lightgbm(model, name, input_types, without_onnx_ml=without_onnx_ml, **kwargs), "LightGbm"
+
+        model, prefix = (
+            convert_lightgbm(
+                model, name, input_types, without_onnx_ml=without_onnx_ml, **kwargs
+            ),
+            "LightGbm",
+        )
     elif model.__class__.__name__.startswith("XGB"):
         from onnxmltools.convert import convert_xgboost
+
         model, prefix = convert_xgboost(model, name, input_types, **kwargs), "XGB"
-    elif model.__class__.__name__ == 'Booster':
+    elif model.__class__.__name__ == "Booster":
         import lightgbm
+
         if isinstance(model, lightgbm.Booster):
             from onnxmltools.convert import convert_lightgbm
-            model, prefix = convert_lightgbm(model, name, input_types, without_onnx_ml=without_onnx_ml, **kwargs), "LightGbm"
+
+            model, prefix = (
+                convert_lightgbm(
+                    model, name, input_types, without_onnx_ml=without_onnx_ml, **kwargs
+                ),
+                "LightGbm",
+            )
         else:
-            raise RuntimeError("Unable to convert model of type '{0}'.".format(type(model)))
+            raise RuntimeError(
+                "Unable to convert model of type '{0}'.".format(type(model))
+            )
     elif model.__class__.__name__.startswith("CatBoost"):
         from onnxmltools.convert import convert_catboost
+
         model, prefix = convert_catboost(model, name, input_types, **kwargs), "CatBoost"
     elif isinstance(model, BaseEstimator):
         from onnxmltools.convert import convert_sklearn
+
         model, prefix = convert_sklearn(model, name, input_types, **kwargs), "Sklearn"
     else:
         from onnxmltools.convert import convert_coreml
+
         model, prefix = convert_coreml(model, name, input_types, **kwargs), "Cml"
     if model is None:
         raise RuntimeError("Unable to convert model of type '{0}'.".format(type(model)))
@@ -249,17 +297,29 @@ def dump_one_class_classification(model, suffix="", folder=None, allow_failure=N
     Every created filename will follow the pattern:
     ``<folder>/<prefix><task><classifier-name><suffix>.<data|expected|model|onnx>.<pkl|onnx>``.
     """
-    X = [[0., 1.], [1., 1.], [2., 0.]]
+    X = [[0.0, 1.0], [1.0, 1.0], [2.0, 0.0]]
     X = numpy.array(X, dtype=numpy.float32)
     y = [1, 1, 1]
     model.fit(X, y)
-    model_onnx, prefix = convert_model(model, 'one_class', [('input', FloatTensorType([None, 2]))],
-                                       target_opset=TARGET_OPSET)
-    return dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
-                               basename=prefix + "One" + model.__class__.__name__ + suffix)
+    model_onnx, prefix = convert_model(
+        model,
+        "one_class",
+        [("input", FloatTensorType([None, 2]))],
+        target_opset=TARGET_OPSET,
+    )
+    return dump_data_and_model(
+        X,
+        model,
+        model_onnx,
+        folder=folder,
+        allow_failure=allow_failure,
+        basename=prefix + "One" + model.__class__.__name__ + suffix,
+    )
 
 
-def dump_binary_classification(model, suffix="", folder=None, allow_failure=None, verbose=False):
+def dump_binary_classification(
+    model, suffix="", folder=None, allow_failure=None, verbose=False
+):
     """
     Trains and dumps a model for a binary classification problem.
 
@@ -280,11 +340,22 @@ def dump_binary_classification(model, suffix="", folder=None, allow_failure=None
     X = numpy.array(X, dtype=numpy.float32)
     y = [0, 1, 0]
     model.fit(X, y)
-    model_onnx, prefix = convert_model(model, 'tree-based binary classifier', [('input', FloatTensorType([None, 2]))],
-                                       target_opset=TARGET_OPSET)
-    dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
-                        basename=prefix + "Bin" + model.__class__.__name__ + suffix,
-                        verbose=verbose)
+    model_onnx, prefix = convert_model(
+        model,
+        "tree-based binary classifier",
+        [("input", FloatTensorType([None, 2]))],
+        target_opset=TARGET_OPSET,
+    )
+    dump_data_and_model(
+        X,
+        model,
+        model_onnx,
+        folder=folder,
+        allow_failure=allow_failure,
+        basename=prefix + "Bin" + model.__class__.__name__ + suffix,
+        verbose=verbose,
+    )
+
 
 def dump_multiple_classification(model, suffix="", folder=None, allow_failure=None):
     """
@@ -306,10 +377,20 @@ def dump_multiple_classification(model, suffix="", folder=None, allow_failure=No
     X = numpy.array(X, dtype=numpy.float32)
     y = [0, 1, 2, 1, 1, 2]
     model.fit(X, y)
-    model_onnx, prefix = convert_model(model, 'tree-based multi-output regressor', [('input', FloatTensorType([None, 2]))],
-                                       target_opset=TARGET_OPSET)
-    dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
-                        basename=prefix + "Mcl" + model.__class__.__name__ + suffix)
+    model_onnx, prefix = convert_model(
+        model,
+        "tree-based multi-output regressor",
+        [("input", FloatTensorType([None, 2]))],
+        target_opset=TARGET_OPSET,
+    )
+    dump_data_and_model(
+        X,
+        model,
+        model_onnx,
+        folder=folder,
+        allow_failure=allow_failure,
+        basename=prefix + "Mcl" + model.__class__.__name__ + suffix,
+    )
 
 
 def dump_multiple_regression(model, suffix="", folder=None, allow_failure=None):
@@ -332,10 +413,20 @@ def dump_multiple_regression(model, suffix="", folder=None, allow_failure=None):
     X = numpy.array(X, dtype=numpy.float32)
     y = numpy.array([[100, 50], [100, 49], [100, 99]], dtype=numpy.float32)
     model.fit(X, y)
-    model_onnx, prefix = convert_model(model, 'tree-based multi-output regressor', [('input', FloatTensorType([None, 2]))],
-                                       target_opset=TARGET_OPSET)
-    dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
-                        basename=prefix + "MRg" + model.__class__.__name__ + suffix)
+    model_onnx, prefix = convert_model(
+        model,
+        "tree-based multi-output regressor",
+        [("input", FloatTensorType([None, 2]))],
+        target_opset=TARGET_OPSET,
+    )
+    dump_data_and_model(
+        X,
+        model,
+        model_onnx,
+        folder=folder,
+        allow_failure=allow_failure,
+        basename=prefix + "MRg" + model.__class__.__name__ + suffix,
+    )
 
 
 def dump_single_regression(model, suffix="", folder=None, allow_failure=None):
@@ -359,10 +450,20 @@ def dump_single_regression(model, suffix="", folder=None, allow_failure=None):
     X = numpy.array(X, dtype=numpy.float32)
     y = numpy.array([100, -10, 50], dtype=numpy.float32)
     model.fit(X, y)
-    model_onnx, prefix = convert_model(model, 'tree-based regressor', [('input', FloatTensorType([None, 2]))],
-                                       target_opset=TARGET_OPSET)
-    dump_data_and_model(X, model, model_onnx, folder=folder, allow_failure=allow_failure,
-                        basename=prefix + "Reg" + model.__class__.__name__ + suffix)
+    model_onnx, prefix = convert_model(
+        model,
+        "tree-based regressor",
+        [("input", FloatTensorType([None, 2]))],
+        target_opset=TARGET_OPSET,
+    )
+    dump_data_and_model(
+        X,
+        model,
+        model_onnx,
+        folder=folder,
+        allow_failure=allow_failure,
+        basename=prefix + "Reg" + model.__class__.__name__ + suffix,
+    )
 
 
 def make_report_backend(folder):
@@ -378,7 +479,7 @@ def make_report_backend(folder):
             if model not in res:
                 res[model] = {}
             res[model]["_tested"] = True
-        elif '.backend.' in name:
+        elif ".backend." in name:
             bk = name.split(".backend.")[-1].split(".")[0]
             model = name.split(".")[0]
             if model not in res:

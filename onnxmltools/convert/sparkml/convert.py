@@ -8,10 +8,18 @@ from ._parse import parse_sparkml
 from . import operator_converters
 
 
-def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
-            targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None,
-            spark_session=None):
-    '''
+def convert(
+    model,
+    name=None,
+    initial_types=None,
+    doc_string="",
+    target_opset=None,
+    targeted_onnx=onnx.__version__,
+    custom_conversion_functions=None,
+    custom_shape_calculators=None,
+    spark_session=None,
+):
+    """
     This function produces an equivalent ONNX model of the given spark-ml model. The supported spark-ml
     modules are listed below.
 
@@ -52,22 +60,33 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     the batch size here is 1.
     >>> from onnxmltools.convert.common.data_types import FloatTensorType, Int64TensorType
     >>> initial_type = [('float_input', FloatTensorType([1, 5])), ('int64_input', Int64TensorType([1, 10]))]
-    '''
+    """
     if initial_types is None:
-        raise ValueError('Initial types are required. See usage of convert(...) in \
-                         onnxmltools.convert.sparkml.convert for details')
+        raise ValueError(
+            "Initial types are required. See usage of convert(...) in \
+                         onnxmltools.convert.sparkml.convert for details"
+        )
 
     if name is None:
         name = str(uuid4().hex)
 
     target_opset = target_opset if target_opset else get_maximum_opset_supported()
     # Parse spark-ml model as our internal data structure (i.e., Topology)
-    topology = parse_sparkml(spark_session, model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
+    topology = parse_sparkml(
+        spark_session,
+        model,
+        initial_types,
+        target_opset,
+        custom_conversion_functions,
+        custom_shape_calculators,
+    )
 
     # Infer variable shapes
     topology.compile()
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
-    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
+    onnx_model = convert_topology(
+        topology, name, doc_string, target_opset, targeted_onnx
+    )
 
     return onnx_model

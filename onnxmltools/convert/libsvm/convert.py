@@ -11,8 +11,16 @@ from . import shape_calculators
 from . import operator_converters
 
 
-def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
-            targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+def convert(
+    model,
+    name=None,
+    initial_types=None,
+    doc_string="",
+    target_opset=None,
+    targeted_onnx=onnx.__version__,
+    custom_conversion_functions=None,
+    custom_shape_calculators=None,
+):
     """
     :param model: a libsvm model
     :param initial_types: a python list. Each element is a tuple of a variable name and a type defined in data_types.py
@@ -26,21 +34,26 @@ def convert(model, name=None, initial_types=None, doc_string='', target_opset=No
     :return: An ONNX model (type: ModelProto) which is equivalent to the input scikit-learn model
     """
     if initial_types is None:
-        raise ValueError('Initial types are required. See usage of convert(...) in \
-                         onnxmltools.convert.libsvm.convert for details')
+        raise ValueError(
+            "Initial types are required. See usage of convert(...) in \
+                         onnxmltools.convert.libsvm.convert for details"
+        )
 
     if name is None:
         name = str(uuid4().hex)
     target_opset = target_opset if target_opset else get_maximum_opset_supported()
 
     # Parse scikit-learn model as our internal data structure (i.e., Topology)
-    topology = parse_libsvm(model, initial_types, custom_conversion_functions,
-                            custom_shape_calculators)
+    topology = parse_libsvm(
+        model, initial_types, custom_conversion_functions, custom_shape_calculators
+    )
 
     # Infer variable shapes
     topology.compile()
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
-    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
+    onnx_model = convert_topology(
+        topology, name, doc_string, target_opset, targeted_onnx
+    )
 
     return onnx_model
