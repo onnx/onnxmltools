@@ -8,12 +8,9 @@ from ...common.utils import check_input_and_output_numbers
 def calculate_regressor_output_shapes(operator):
     check_input_and_output_numbers(operator, input_count_range=1, output_count_range=1)
 
-    N = (
-        operator.inputs[0].type.shape[0]
-        if len(operator.inputs[0].type.shape) > 0
-        else None
-    )
+    N = (operator.inputs[0].type.shape[0]
+         if len(operator.inputs[0].type.shape) > 0 else None)
     operator.outputs[0].type = FloatTensorType([N, 1])
 
 
-register_shape_calculator("LibSvmSVR", calculate_regressor_output_shapes)
+register_shape_calculator('LibSvmSVR', calculate_regressor_output_shapes)

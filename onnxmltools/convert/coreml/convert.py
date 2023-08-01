@@ -15,17 +15,9 @@ from .operator_converters import neural_network as nn_converters
 from .shape_calculators import neural_network as nn_shape_calculators
 
 
-def convert(
-    model,
-    name=None,
-    initial_types=None,
-    doc_string="",
-    target_opset=None,
-    targeted_onnx=onnx.__version__,
-    custom_conversion_functions=None,
-    custom_shape_calculators=None,
-):
-    """
+def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
+            targeted_onnx=onnx.__version__, custom_conversion_functions=None, custom_shape_calculators=None):
+    '''
     This function converts the specified CoreML model into its ONNX counterpart. Some information such as the produced
     ONNX model name can be specified.
 
@@ -51,7 +43,7 @@ def convert(
         from onnxmltools.convert.common.data_types import FloatTensorType
         initial_type = [('A', FloatTensorType([40, 12, 1, 1])),
                         ('B', FloatTensorType([1, 32, 1, 1]))]
-    """
+    '''
     if isinstance(model, coremltools.models.MLModel):
         spec = model.get_spec()
     else:
@@ -62,37 +54,27 @@ def convert(
 
     target_opset = target_opset if target_opset else get_maximum_opset_supported()
     # Parse CoreML model as our internal data structure (i.e., Topology)
-    topology = parse_coreml(
-        spec,
-        initial_types,
-        target_opset,
-        custom_conversion_functions,
-        custom_shape_calculators,
-    )
+    topology = parse_coreml(spec, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
 
     # Parse CoreML description, author, and license. Those information will be attached to the final ONNX model.
     metadata = spec.description.metadata
     metadata_props = []
     if metadata:
         if not doc_string and metadata.shortDescription:
-            doc_string = (
-                metadata.shortDescription
-            )  # If doc_string is not specified, we use description from CoreML
+            doc_string = metadata.shortDescription  # If doc_string is not specified, we use description from CoreML
         if metadata.author:
             entry = onnx_proto.StringStringEntryProto()
-            entry.key = "author"
+            entry.key = 'author'
             entry.value = metadata.author
             metadata_props.append(entry)
         if metadata.license:
             entry = onnx_proto.StringStringEntryProto()
-            entry.key = "license"
+            entry.key = 'license'
             entry.value = metadata.license
             metadata_props.append(entry)
 
     # Convert our Topology object into ONNX. The outcome is an ONNX model.
-    onnx_model = convert_topology(
-        topology, name, doc_string, target_opset, targeted_onnx
-    )
+    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
 
     # Edit ONNX model's attributes related to CoreML's meta information
     if len(metadata_props) > 0:

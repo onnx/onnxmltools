@@ -18,20 +18,11 @@ def convert_bias(scope, operator, container):
     broadcast = 1  # True
 
     # Create bias vector as an ONNX tensor
-    bias_tensor_name = scope.get_unique_variable_name(operator.full_name + "_B")
-    container.add_initializer(
-        bias_tensor_name, onnx_proto.TensorProto.FLOAT, shape, params.bias.floatValue
-    )
+    bias_tensor_name = scope.get_unique_variable_name(operator.full_name + '_B')
+    container.add_initializer(bias_tensor_name, onnx_proto.TensorProto.FLOAT, shape, params.bias.floatValue)
 
-    apply_add(
-        scope,
-        [operator.inputs[0].full_name, bias_tensor_name],
-        operator.output_full_names,
-        container,
-        operator_name=operator.full_name,
-        axis=axis,
-        broadcast=broadcast,
-    )
+    apply_add(scope, [operator.inputs[0].full_name, bias_tensor_name], operator.output_full_names, container,
+              operator_name=operator.full_name, axis=axis, broadcast=broadcast)
 
 
-register_converter("bias", convert_bias)
+register_converter('bias', convert_bias)

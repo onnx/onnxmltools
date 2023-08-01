@@ -2,7 +2,7 @@
 
 from onnxconverter_common.container import (
     RawModelContainer,
-    CommonSklearnModelContainer,
+    CommonSklearnModelContainer
 )
 
 
@@ -19,6 +19,7 @@ class H2OModelContainer(CommonSklearnModelContainer):
 
 
 class SparkmlModelContainer(RawModelContainer):
+
     def __init__(self, sparkml_model):
         super(SparkmlModelContainer, self).__init__(sparkml_model)
         # Sparkml models have no input and output specified, so we create them and store them in this container.
@@ -45,6 +46,7 @@ class SparkmlModelContainer(RawModelContainer):
 
 
 class CoremlModelContainer(RawModelContainer):
+
     def __init__(self, coreml_model):
         super(CoremlModelContainer, self).__init__(coreml_model)
 

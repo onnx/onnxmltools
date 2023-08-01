@@ -3,7 +3,6 @@
 try:
     from onnxconverter_common.utils import hummingbird_installed  # noqa
 except ImportError:
-
     def hummingbird_installed():
         """
         Checks that *Hummingbird* is available.
@@ -22,7 +21,6 @@ def tf2onnx_installed():
     """
     try:
         import tf2onnx  # noqa F401
-
         return True
     except ImportError:
         return False

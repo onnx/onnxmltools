@@ -8,16 +8,10 @@ import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
-from sklearn.datasets import load_diabetes, load_iris, make_classification, load_digits
+from sklearn.datasets import (
+    load_diabetes, load_iris, make_classification, load_digits)
 from sklearn.model_selection import train_test_split
-from xgboost import (
-    XGBRegressor,
-    XGBClassifier,
-    train,
-    DMatrix,
-    Booster,
-    train as train_xgb,
-)
+from xgboost import XGBRegressor, XGBClassifier, train, DMatrix, Booster, train as train_xgb
 from sklearn.preprocessing import StandardScaler
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
@@ -31,15 +25,12 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 def _fit_classification_model(model, n_classes, is_str=False, dtype=None):
-    x, y = make_classification(
-        n_classes=n_classes,
-        n_features=100,
-        n_samples=1000,
-        random_state=42,
-        n_informative=7,
-    )
+    x, y = make_classification(n_classes=n_classes, n_features=100,
+                               n_samples=1000,
+                               random_state=42, n_informative=7)
     y = y.astype(np.str) if is_str else y.astype(np.int64)
-    x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5, random_state=42)
+    x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
+                                                   random_state=42)
     if dtype is not None:
         y_train = y_train.astype(dtype)
     model.fit(x_train, y_train)
@@ -47,20 +38,18 @@ def _fit_classification_model(model, n_classes, is_str=False, dtype=None):
 
 
 class TestXGBoostModels(unittest.TestCase):
+
     def test_xgb_regressor(self):
         iris = load_diabetes()
         x = iris.data
         y = iris.target
-        x_train, x_test, y_train, _ = train_test_split(
-            x, y, test_size=0.5, random_state=42
-        )
+        x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
+                                                       random_state=42)
         xgb = XGBRegressor()
         xgb.fit(x_train, y_train)
         conv_model = convert_xgboost(
-            xgb,
-            initial_types=[("input", FloatTensorType(shape=[None, None]))],
-            target_opset=TARGET_OPSET,
-        )
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test.astype("float32"),
@@ -75,10 +64,8 @@ class TestXGBoostModels(unittest.TestCase):
     def test_xgb_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
         conv_model = convert_xgboost(
-            xgb,
-            initial_types=[("input", FloatTensorType(shape=[None, None]))],
-            target_opset=TARGET_OPSET,
-        )
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -91,12 +78,11 @@ class TestXGBoostModels(unittest.TestCase):
         )
 
     def test_xgb_classifier_uint8(self):
-        xgb, x_test = _fit_classification_model(XGBClassifier(), 2, dtype=np.uint8)
+        xgb, x_test = _fit_classification_model(
+            XGBClassifier(), 2, dtype=np.uint8)
         conv_model = convert_xgboost(
-            xgb,
-            initial_types=[("input", FloatTensorType(shape=["None", "None"]))],
-            target_opset=TARGET_OPSET,
-        )
+            xgb, initial_types=[('input', FloatTensorType(shape=['None', 'None']))],
+            target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -111,10 +97,8 @@ class TestXGBoostModels(unittest.TestCase):
     def test_xgb_classifier_multi(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 3)
         conv_model = convert_xgboost(
-            xgb,
-            initial_types=[("input", FloatTensorType(shape=[None, None]))],
-            target_opset=TARGET_OPSET,
-        )
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -128,13 +112,10 @@ class TestXGBoostModels(unittest.TestCase):
 
     def test_xgb_classifier_multi_reglog(self):
         xgb, x_test = _fit_classification_model(
-            XGBClassifier(objective="reg:logistic"), 4
-        )
+            XGBClassifier(objective='reg:logistic'), 4)
         conv_model = convert_xgboost(
-            xgb,
-            initial_types=[("input", FloatTensorType(shape=[None, None]))],
-            target_opset=TARGET_OPSET,
-        )
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -148,13 +129,10 @@ class TestXGBoostModels(unittest.TestCase):
 
     def test_xgb_classifier_reglog(self):
         xgb, x_test = _fit_classification_model(
-            XGBClassifier(objective="reg:logistic"), 2
-        )
+            XGBClassifier(objective='reg:logistic'), 2)
         conv_model = convert_xgboost(
-            xgb,
-            initial_types=[("input", FloatTensorType(shape=[None, None]))],
-            target_opset=TARGET_OPSET,
-        )
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -168,13 +146,10 @@ class TestXGBoostModels(unittest.TestCase):
 
     def test_xgb_classifier_multi_str_labels(self):
         xgb, x_test = _fit_classification_model(
-            XGBClassifier(n_estimators=4), 5, is_str=True
-        )
+            XGBClassifier(n_estimators=4), 5, is_str=True)
         conv_model = convert_xgboost(
-            xgb,
-            initial_types=[("input", FloatTensorType(shape=[None, None]))],
-            target_opset=TARGET_OPSET,
-        )
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test,
@@ -193,16 +168,15 @@ class TestXGBoostModels(unittest.TestCase):
         y[y == 0] = 10
         y[y == 1] = 20
         y[y == 2] = -30
-        x_train, x_test, y_train, _ = train_test_split(
-            x, y, test_size=0.5, random_state=42
-        )
+        x_train, x_test, y_train, _ = train_test_split(x,
+                                                       y,
+                                                       test_size=0.5,
+                                                       random_state=42)
         xgb = XGBClassifier(n_estimators=3)
         xgb.fit(x_train, y_train)
         conv_model = convert_xgboost(
-            xgb,
-            initial_types=[("input", FloatTensorType(shape=[None, None]))],
-            target_opset=TARGET_OPSET,
-        )
+            xgb, initial_types=[('input', FloatTensorType(shape=[None, None]))],
+            target_opset=TARGET_OPSET)
         self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test.astype("float32"),
@@ -215,127 +189,79 @@ class TestXGBoostModels(unittest.TestCase):
         )
 
     def test_xgboost_booster_classifier_bin(self):
-        x, y = make_classification(
-            n_classes=2, n_features=5, n_samples=100, random_state=42, n_informative=3
-        )
-        x_train, x_test, y_train, _ = train_test_split(
-            x, y, test_size=0.5, random_state=42
-        )
+        x, y = make_classification(n_classes=2, n_features=5,
+                                   n_samples=100,
+                                   random_state=42, n_informative=3)
+        x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
+                                                       random_state=42)
 
         data = DMatrix(x_train, label=y_train)
-        model = train(
-            {"objective": "binary:logistic", "n_estimators": 3, "min_child_samples": 1},
-            data,
-        )
-        model_onnx = convert_xgboost(
-            model,
-            "tree-based classifier",
-            [("input", FloatTensorType([None, x.shape[1]]))],
-            target_opset=TARGET_OPSET,
-        )
-        dump_data_and_model(
-            x_test.astype(np.float32),
-            model,
-            model_onnx,
-            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-            basename="XGBBoosterMCl",
-        )
+        model = train({'objective': 'binary:logistic',
+                       'n_estimators': 3, 'min_child_samples': 1}, data)
+        model_onnx = convert_xgboost(model, 'tree-based classifier',
+                                     [('input', FloatTensorType([None, x.shape[1]]))],
+                                     target_opset=TARGET_OPSET)
+        dump_data_and_model(x_test.astype(np.float32),
+                            model, model_onnx,
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            basename="XGBBoosterMCl")
 
     def test_xgboost_booster_classifier_multiclass_softprob(self):
-        x, y = make_classification(
-            n_classes=3, n_features=5, n_samples=100, random_state=42, n_informative=3
-        )
-        x_train, x_test, y_train, _ = train_test_split(
-            x, y, test_size=0.5, random_state=42
-        )
+        x, y = make_classification(n_classes=3, n_features=5,
+                                   n_samples=100,
+                                   random_state=42, n_informative=3)
+        x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
+                                                       random_state=42)
 
         data = DMatrix(x_train, label=y_train)
-        model = train(
-            {
-                "objective": "multi:softprob",
-                "n_estimators": 3,
-                "min_child_samples": 1,
-                "num_class": 3,
-            },
-            data,
-        )
-        model_onnx = convert_xgboost(
-            model,
-            "tree-based classifier",
-            [("input", FloatTensorType([None, x.shape[1]]))],
-            target_opset=TARGET_OPSET,
-        )
-        dump_data_and_model(
-            x_test.astype(np.float32),
-            model,
-            model_onnx,
-            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-            basename="XGBBoosterMClSoftProb",
-        )
+        model = train({'objective': 'multi:softprob',
+                       'n_estimators': 3, 'min_child_samples': 1,
+                       'num_class': 3}, data)
+        model_onnx = convert_xgboost(model, 'tree-based classifier',
+                                     [('input', FloatTensorType([None, x.shape[1]]))],
+                                     target_opset=TARGET_OPSET)
+        dump_data_and_model(x_test.astype(np.float32),
+                            model, model_onnx,
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            basename="XGBBoosterMClSoftProb")
 
     def test_xgboost_booster_classifier_multiclass_softmax(self):
-        x, y = make_classification(
-            n_classes=3, n_features=5, n_samples=100, random_state=42, n_informative=3
-        )
-        x_train, x_test, y_train, _ = train_test_split(
-            x, y, test_size=0.5, random_state=42
-        )
-
+        x, y = make_classification(n_classes=3, n_features=5,
+                                   n_samples=100,
+                                   random_state=42, n_informative=3)
+        x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
+                                                       random_state=42)
+        
         data = DMatrix(x_train, label=y_train)
-        model = train(
-            {
-                "objective": "multi:softmax",
-                "n_estimators": 3,
-                "min_child_samples": 1,
-                "num_class": 3,
-            },
-            data,
-        )
-        model_onnx = convert_xgboost(
-            model,
-            "tree-based classifier",
-            [("input", FloatTensorType([None, x.shape[1]]))],
-            target_opset=TARGET_OPSET,
-        )
-        dump_data_and_model(
-            x_test.astype(np.float32),
-            model,
-            model_onnx,
-            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-            basename="XGBBoosterMClSoftMax",
-        )
+        model = train({'objective': 'multi:softmax',
+                       'n_estimators': 3, 'min_child_samples': 1,
+                       'num_class': 3}, data)
+        model_onnx = convert_xgboost(model, 'tree-based classifier',
+                                     [('input', FloatTensorType([None, x.shape[1]]))],
+                                     target_opset=TARGET_OPSET)
+        dump_data_and_model(x_test.astype(np.float32),
+                            model, model_onnx,
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            basename="XGBBoosterMClSoftMax")
 
     def test_xgboost_booster_classifier_reg(self):
-        x, y = make_classification(
-            n_classes=2, n_features=5, n_samples=100, random_state=42, n_informative=3
-        )
+        x, y = make_classification(n_classes=2, n_features=5,
+                                   n_samples=100,
+                                   random_state=42, n_informative=3)
         y = y.astype(np.float32) + 0.567
-        x_train, x_test, y_train, _ = train_test_split(
-            x, y, test_size=0.5, random_state=42
-        )
+        x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.5,
+                                                       random_state=42)
 
         data = DMatrix(x_train, label=y_train)
-        model = train(
-            {
-                "objective": "reg:squarederror",
-                "n_estimators": 3,
-                "min_child_samples": 1,
-            },
-            data,
-        )
-        model_onnx = convert_xgboost(
-            model,
-            "tree-based classifier",
-            [("input", FloatTensorType([None, x.shape[1]]))],
-            target_opset=TARGET_OPSET,
-        )
-        dump_data_and_model(
-            x_test.astype(np.float32),
-            model,
-            model_onnx,
-            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-            basename="XGBBoosterReg",
-        )
+        model = train({'objective': 'reg:squarederror',
+                       'n_estimators': 3, 'min_child_samples': 1}, data)
+        model_onnx = convert_xgboost(model, 'tree-based classifier',
+                                     [('input', FloatTensorType([None, x.shape[1]]))],
+                                     target_opset=TARGET_OPSET)
+        dump_data_and_model(x_test.astype(np.float32),
+                            model, model_onnx,
+                            allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
+                            basename="XGBBoosterReg")
 
     def test_xgboost_10(self):
         this = os.path.abspath(os.path.dirname(__file__))
@@ -345,40 +271,31 @@ class TestXGBoostModels(unittest.TestCase):
         param_distributions = {
             "colsample_bytree": 0.5,
             "gamma": 0.2,
-            "learning_rate": 0.3,
-            "max_depth": 2,
-            "min_child_weight": 1.0,
-            "n_estimators": 1,
-            "missing": np.nan,
+            'learning_rate': 0.3,
+            'max_depth': 2,
+            'min_child_weight': 1.,
+            'n_estimators': 1,
+            'missing': np.nan,
         }
 
         train_df = pandas.read_csv(train)
-        X_train, y_train = (
-            train_df.drop("label", axis=1).values,
-            train_df["label"].values,
-        )
+        X_train, y_train = train_df.drop('label', axis=1).values, train_df['label'].values
         test_df = pandas.read_csv(test)
-        X_test, y_test = test_df.drop("label", axis=1).values, test_df["label"].values
+        X_test, y_test = test_df.drop('label', axis=1).values, test_df['label'].values
 
-        regressor = XGBRegressor(
-            verbose=0, objective="reg:squarederror", **param_distributions
-        )
+        regressor = XGBRegressor(verbose=0, objective='reg:squarederror', **param_distributions)
         regressor.fit(X_train, y_train)
 
         model_onnx = convert_xgboost(
-            regressor,
-            "bug",
-            [("input", FloatTensorType([None, X_train.shape[1]]))],
-            target_opset=TARGET_OPSET,
-        )
+            regressor, 'bug',
+            [('input', FloatTensorType([None, X_train.shape[1]]))],
+            target_opset=TARGET_OPSET)
 
         dump_data_and_model(
             X_test.astype(np.float32),
-            regressor,
-            model_onnx,
+            regressor, model_onnx,
             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-            basename="XGBBoosterRegBug",
-        )
+            basename="XGBBoosterRegBug")
 
     def test_xgboost_classifier_i5450(self):
         iris = load_iris()
@@ -386,26 +303,22 @@ class TestXGBoostModels(unittest.TestCase):
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=10)
         clr = XGBClassifier(objective="multi:softmax", max_depth=1, n_estimators=2)
         clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
-        initial_type = [("float_input", FloatTensorType([None, 4]))]
-        onx = convert_xgboost(
-            clr, initial_types=initial_type, target_opset=TARGET_OPSET
-        )
+        initial_type = [('float_input', FloatTensorType([None, 4]))]
+        onx = convert_xgboost(clr, initial_types=initial_type, target_opset=TARGET_OPSET)
         sess = InferenceSession(onx.SerializeToString())
         input_name = sess.get_inputs()[0].name
         label_name = sess.get_outputs()[1].name
-        predict_list = [1.0, 20.0, 466.0, 0.0]
-        predict_array = np.array(predict_list).reshape((1, -1)).astype(np.float32)
+        predict_list = [1.,  20., 466.,   0.]
+        predict_array = np.array(predict_list).reshape((1,-1)).astype(np.float32)
         pred_onx = sess.run([label_name], {input_name: predict_array})[0]
-        pred_xgboost = sessresults = clr.predict_proba(predict_array)
+        pred_xgboost = sessresults=clr.predict_proba(predict_array)
         bst = clr.get_booster()
-        bst.dump_model("dump.raw.txt")
+        bst.dump_model('dump.raw.txt')
         dump_data_and_model(
             X_test.astype(np.float32) + 1e-5,
-            clr,
-            onx,
+            clr, onx,
             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-            basename="XGBClassifierIris",
-        )
+            basename="XGBClassifierIris")
 
     def test_xgboost_example_mnist(self):
         """
@@ -424,18 +337,13 @@ class TestXGBoostModels(unittest.TestCase):
 
         sh = [None, X_train.shape[1]]
         onnx_model = convert_xgboost(
-            clf,
-            initial_types=[("input", FloatTensorType(sh))],
-            target_opset=TARGET_OPSET,
-        )
+            clf, initial_types=[('input', FloatTensorType(sh))],
+            target_opset=TARGET_OPSET)
 
         dump_data_and_model(
-            X_test.astype(np.float32),
-            clf,
-            onnx_model,
+            X_test.astype(np.float32), clf, onnx_model,
             allow_failure="StrictVersion(onnx.__version__) < StrictVersion('1.3.0')",
-            basename="XGBoostExample",
-        )
+            basename="XGBoostExample")
 
     def test_xgb_empty_tree(self):
         xgb = XGBClassifier(n_estimators=2, max_depth=2)
@@ -446,57 +354,50 @@ class TestXGBoostModels(unittest.TestCase):
         y = [0, 1, 0]
         xgb.fit(X, y)
         conv_model = convert_xgboost(
-            xgb,
-            initial_types=[("input", FloatTensorType(shape=[None, X.shape[1]]))],
-            target_opset=TARGET_OPSET,
-        )
+            xgb, initial_types=[
+                ('input', FloatTensorType(shape=[None, X.shape[1]]))],
+                target_opset=TARGET_OPSET)
         sess = InferenceSession(conv_model.SerializeToString())
-        res = sess.run(None, {"input": X.astype(np.float32)})
+        res = sess.run(None, {'input': X.astype(np.float32)})
         assert_almost_equal(xgb.predict_proba(X), res[1])
         assert_almost_equal(xgb.predict(X), res[0])
 
     def test_xgb_best_tree_limit(self):
+
         # Train
         iris = load_iris()
         X, y = iris.data, iris.target
         X_train, X_test, y_train, y_test = train_test_split(X, y)
         dtrain = DMatrix(X_train, label=y_train)
         dtest = DMatrix(X_test)
-        param = {"objective": "multi:softmax", "num_class": 3}
+        param = {'objective': 'multi:softmax', 'num_class': 3}
         bst_original = train_xgb(param, dtrain, 10)
-        initial_type = [("float_input", FloatTensorType([None, 4]))]
-        bst_original.save_model("model.json")
+        initial_type = [('float_input', FloatTensorType([None, 4]))]
+        bst_original.save_model('model.json')
 
         onx_loaded = convert_xgboost(bst_original, initial_types=initial_type)
         # with open("model.onnx", "wb") as f:
         #     f.write(onx_loaded.SerializeToString())
         sess = InferenceSession(onx_loaded.SerializeToString())
-        res = sess.run(None, {"float_input": X_test.astype(np.float32)})
-        assert_almost_equal(
-            bst_original.predict(dtest, output_margin=True), res[1], decimal=5
-        )
+        res = sess.run(None, {'float_input': X_test.astype(np.float32)})
+        assert_almost_equal(bst_original.predict(dtest, output_margin=True), res[1], decimal=5)
         assert_almost_equal(bst_original.predict(dtest), res[0])
 
         # After being restored, the loaded booster is not exactly the same
         # in memory and the conversion fails to find the objective.
         bst_loaded = Booster()
-        bst_loaded.load_model("model.json")
-        bst_loaded.save_model("model2.json")
-        assert_almost_equal(
-            bst_loaded.predict(dtest, output_margin=True),
-            bst_original.predict(dtest, output_margin=True),
-            decimal=5,
-        )
+        bst_loaded.load_model('model.json')
+        bst_loaded.save_model('model2.json')
+        assert_almost_equal(bst_loaded.predict(dtest, output_margin=True),
+                            bst_original.predict(dtest, output_margin=True), decimal=5)
         assert_almost_equal(bst_loaded.predict(dtest), bst_original.predict(dtest))
 
         onx_loaded = convert_xgboost(bst_loaded, initial_types=initial_type)
         # with open("model2.onnx", "wb") as f:
         #     f.write(onx_loaded.SerializeToString())
         sess = InferenceSession(onx_loaded.SerializeToString())
-        res = sess.run(None, {"float_input": X_test.astype(np.float32)})
-        assert_almost_equal(
-            bst_loaded.predict(dtest, output_margin=True), res[1], decimal=5
-        )
+        res = sess.run(None, {'float_input': X_test.astype(np.float32)})
+        assert_almost_equal(bst_loaded.predict(dtest, output_margin=True), res[1], decimal=5)
         assert_almost_equal(bst_loaded.predict(dtest), res[0])
 
 

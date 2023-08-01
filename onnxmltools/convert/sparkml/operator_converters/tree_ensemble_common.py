@@ -16,11 +16,7 @@ def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
     tree_pandas = tree_df.toPandas()
     children_left = tree_pandas.leftChild.values.tolist()
     children_right = tree_pandas.rightChild.values.tolist()
-    value = (
-        tree_pandas.impurityStats.values.tolist()
-        if is_classifier
-        else tree_pandas.prediction.values.tolist()
-    )
+    value = tree_pandas.impurityStats.values.tolist() if is_classifier else tree_pandas.prediction.values.tolist()
     split = tree_pandas.split.apply(tuple).values
     for item in split:
         feature.append(item[0])
@@ -42,9 +38,8 @@ def save_read_sparkml_model_data(spark, model):
     if tdir is None:
         raise FileNotFoundError(
             "Unable to create a temporary directory for model '{}'"
-            ".".format(type(model).__name__)
-        )
+            ".".format(type(model).__name__))
     path = os.path.join(tdir, type(model).__name__ + "_" + str(time.time()))
     model.write().overwrite().save(path)
-    df = spark.read.parquet(os.path.join(path, "data"))
+    df = spark.read.parquet(os.path.join(path, 'data'))
     return df

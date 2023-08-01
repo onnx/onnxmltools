@@ -12,17 +12,10 @@ from ._parse import parse_xgboost, WrappedBooster
 from . import operator_converters, shape_calculators
 
 
-def convert(
-    model,
-    name=None,
-    initial_types=None,
-    doc_string="",
-    target_opset=None,
-    targeted_onnx=onnx.__version__,
-    custom_conversion_functions=None,
-    custom_shape_calculators=None,
-):
-    """
+def convert(model, name=None, initial_types=None, doc_string='', target_opset=None,
+            targeted_onnx=onnx.__version__, custom_conversion_functions=None,
+            custom_shape_calculators=None):
+    '''
     This function produces an equivalent ONNX model of the given xgboost model.
 
     :param model: A xgboost model
@@ -35,27 +28,17 @@ def convert(
     :param custom_conversion_functions: a dictionary for specifying the user customized conversion function
     :param custom_shape_calculators: a dictionary for specifying the user customized shape calculator
     :return: An ONNX model (type: ModelProto) which is equivalent to the input xgboost model
-    """
+    '''
     if initial_types is None:
-        raise ValueError(
-            "Initial types are required. See usage of convert(...) in \
-                           onnxmltools.convert.xgboost.convert for details"
-        )
+        raise ValueError('Initial types are required. See usage of convert(...) in \
+                           onnxmltools.convert.xgboost.convert for details')
     if name is None:
         name = str(uuid4().hex)
 
     if isinstance(model, xgboost.Booster):
         model = WrappedBooster(model)
     target_opset = target_opset if target_opset else get_maximum_opset_supported()
-    topology = parse_xgboost(
-        model,
-        initial_types,
-        target_opset,
-        custom_conversion_functions,
-        custom_shape_calculators,
-    )
+    topology = parse_xgboost(model, initial_types, target_opset, custom_conversion_functions, custom_shape_calculators)
     topology.compile()
-    onnx_model = convert_topology(
-        topology, name, doc_string, target_opset, targeted_onnx
-    )
+    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
     return onnx_model

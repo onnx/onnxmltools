@@ -56,7 +56,7 @@ pth = glm_logistic.download_mojo(path="model")
 # Convert a model into ONNX
 # +++++++++++++++++++++++++
 
-initial_type = [("float_input", FloatTensorType([None, 4]))]
+initial_type = [('float_input', FloatTensorType([None, 4]))]
 onx = convert_h2o(pth, initial_types=initial_type)
 
 h2o.cluster().shutdown()
@@ -68,7 +68,8 @@ h2o.cluster().shutdown()
 sess = rt.InferenceSession(onx.SerializeToString())
 input_name = sess.get_inputs()[0].name
 label_name = sess.get_outputs()[0].name
-pred_onx = sess.run([label_name], {input_name: X_test.astype(numpy.float32)})[0]
+pred_onx = sess.run(
+    [label_name], {input_name: X_test.astype(numpy.float32)})[0]
 print(pred_onx)
 
 ##################################
@@ -81,21 +82,17 @@ import matplotlib.pyplot as plt
 from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
 
 pydot_graph = GetPydotGraph(
-    onx.graph,
-    name=onx.graph.name,
-    rankdir="TB",
+    onx.graph, name=onx.graph.name, rankdir="TB",
     node_producer=GetOpNodeProducer(
-        "docstring", color="yellow", fillcolor="yellow", style="filled"
-    ),
-)
+        "docstring", color="yellow", fillcolor="yellow", style="filled"))
 pydot_graph.write_dot("model.dot")
 
-os.system("dot -O -Gdpi=300 -Tpng model.dot")
+os.system('dot -O -Gdpi=300 -Tpng model.dot')
 
 image = plt.imread("model.dot.png")
 fig, ax = plt.subplots(figsize=(40, 20))
 ax.imshow(image)
-ax.axis("off")
+ax.axis('off')
 
 
 #################################

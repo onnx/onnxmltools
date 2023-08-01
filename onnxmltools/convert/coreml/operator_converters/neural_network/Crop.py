@@ -5,7 +5,6 @@ from .....proto import onnx_proto
 from ....common._apply_operation import apply_crop_height_width
 from ....common._registration import register_converter
 
-
 def convert_crop(scope, operator, container):
     # Extract number of pixels cropped in CoreML operator.
     border = operator.raw_operator.crop.cropAmounts.borderAmounts
@@ -28,17 +27,12 @@ def convert_crop(scope, operator, container):
         bottom_border = in_shape[2] - top_border - out_shape[2]
 
     # Delegate the selection of ONNX operator to a version-dependent function.
-    apply_crop_height_width(
-        scope,
-        operator.input_full_names[0],
-        operator.output_full_names[0],
-        container,
-        operator_name=operator.full_name,
-        top_border=top_border,
-        bottom_border=bottom_border,
-        left_border=left_border,
-        right_border=right_border,
-    )
+    apply_crop_height_width(scope,
+        operator.input_full_names[0], operator.output_full_names[0],
+        container, operator_name=operator.full_name,
+        top_border=top_border, bottom_border=bottom_border,
+        left_border=left_border, right_border=right_border)
 
 
-register_converter("crop", convert_crop)
+
+register_converter('crop', convert_crop)

@@ -42,9 +42,11 @@ y_multi[:, y] = 1
 X_train, X_test, y_train, y_test = train_test_split(X, y_multi)
 
 model = Sequential()
-model.add(Dense(units=10, activation="relu", input_dim=4))
-model.add(Dense(units=3, activation="softmax"))
-model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["accuracy"])
+model.add(Dense(units=10, activation='relu', input_dim=4))
+model.add(Dense(units=3, activation='softmax'))
+model.compile(loss='categorical_crossentropy',
+              optimizer='sgd',
+              metrics=['accuracy'])
 model.fit(X_train, y_train, epochs=5, batch_size=16)
 print("keras prediction")
 print(model.predict(X_test.astype(numpy.float32)))
@@ -53,7 +55,7 @@ print(model.predict(X_test.astype(numpy.float32)))
 # Convert a model into ONNX
 # +++++++++++++++++++++++++
 
-initial_type = [("float_input", FloatTensorType([None, 4]))]
+initial_type = [('float_input', FloatTensorType([None, 4]))]
 onx = convert_keras(model, initial_types=initial_type)
 
 ###################################
@@ -63,7 +65,8 @@ onx = convert_keras(model, initial_types=initial_type)
 sess = rt.InferenceSession(onx.SerializeToString())
 input_name = sess.get_inputs()[0].name
 output_name = sess.get_outputs()[0].name
-pred_onx = sess.run([output_name], {input_name: X_test.astype(numpy.float32)})[0]
+pred_onx = sess.run(
+    [output_name], {input_name: X_test.astype(numpy.float32)})[0]
 print("ONNX prediction")
 print(pred_onx)
 
@@ -77,21 +80,17 @@ import matplotlib.pyplot as plt
 from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
 
 pydot_graph = GetPydotGraph(
-    onx.graph,
-    name=onx.graph.name,
-    rankdir="TB",
+    onx.graph, name=onx.graph.name, rankdir="TB",
     node_producer=GetOpNodeProducer(
-        "docstring", color="yellow", fillcolor="yellow", style="filled"
-    ),
-)
+        "docstring", color="yellow", fillcolor="yellow", style="filled"))
 pydot_graph.write_dot("model.dot")
 
-os.system("dot -O -Gdpi=300 -Tpng model.dot")
+os.system('dot -O -Gdpi=300 -Tpng model.dot')
 
 image = plt.imread("model.dot.png")
 fig, ax = plt.subplots(figsize=(40, 20))
 ax.imshow(image)
-ax.axis("off")
+ax.axis('off')
 
 
 #################################
