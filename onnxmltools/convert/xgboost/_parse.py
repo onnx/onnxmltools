@@ -105,6 +105,8 @@ def _get_attributes(booster):
 
     if "base_score" not in kwargs:
         kwargs["base_score"] = 0.5
+    elif isinstance(kwargs["base_score"], str):
+        kwargs["base_score"] = float(kwargs["base_score"])
     return kwargs
 
 
