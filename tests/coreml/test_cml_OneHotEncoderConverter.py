@@ -3,19 +3,19 @@
 """
 Main functions to convert machine learned model from *Core ML* model to *ONNX*.
 """
-import sys
 import os
 import unittest
 import warnings
 import packaging.version as pv
 import numpy
-import onnx
+
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
-    if not hasattr(sklearn.preprocessing, 'Imputer'):
+
+    if not hasattr(sklearn.preprocessing, "Imputer"):
         # coremltools 3.1 does not work with scikit-learn 0.22
-        setattr(sklearn.preprocessing, 'Imputer', Imputer)
+        setattr(sklearn.preprocessing, "Imputer", Imputer)
 except ImportError:
     from sklearn.preprocessing import Imputer
 import coremltools
@@ -30,10 +30,9 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoremlOneHotEncoderConverter(unittest.TestCase):
-
     @unittest.skipIf(
-        pv.Version(coremltools.__version__) > pv.Version("3.1"),
-        reason="untested")
+        pv.Version(coremltools.__version__) > pv.Version("3.1"), reason="untested"
+    )
     def test_one_hot_encoder(self):
         script_dir = os.path.dirname(__file__)
         relative_path = "../data/onehot_simple.mlmodel"
@@ -42,27 +41,31 @@ class TestCoremlOneHotEncoderConverter(unittest.TestCase):
         model_onnx = convert(model_coreml, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
-    @unittest.skip('broken with the dump_data_and_model change.')
+    @unittest.skip("broken with the dump_data_and_model change.")
     def test_conversion_one_column(self):
         scikit_data = [[0], [1], [2], [4], [3], [2], [4], [5], [6], [7]]
-        scikit_data = numpy.asarray(scikit_data, dtype='d')
-        scikit_data_multiple_cols = [[0, 1],  [1, 0], [2, 2], [3, 3], [4, 4]]
-        scikit_data_multiple_cols = numpy.asarray(scikit_data_multiple_cols, dtype='d')
+        scikit_data = numpy.asarray(scikit_data, dtype="d")
+        scikit_data_multiple_cols = [[0, 1], [1, 0], [2, 2], [3, 3], [4, 4]]
+        scikit_data_multiple_cols = numpy.asarray(scikit_data_multiple_cols, dtype="d")
         scikit_model = OneHotEncoder()
 
         # scikit_model.fit(scikit_data)
-        # model_coreml = coremltools.converters.sklearn.convert(scikit_model, 'single_feature', 'out')
+        # model_coreml = coremltools.converters.sklearn.convert(
+        #   scikit_model, 'single_feature', 'out')
 
         scikit_model.fit(scikit_data_multiple_cols)
         try:
-            model_coreml = coremltools.converters.sklearn.convert(scikit_model, ['feature_1', 'feature_2'], 'out')
-        except Exception as e:
-            warnings.warn("Unable to run convert OneHotEncoder with coreml.")
+            model_coreml = coremltools.converters.sklearn.convert(
+                scikit_model, ["feature_1", "feature_2"], "out"
+            )
+        except Exception:
+            warnings.warn("Unable to run convert OneHotEncoder with coreml due to {e}.")
             return
         model_onnx = convert(model_coreml, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
-        dump_data_and_model(scikit_data, scikit_model, model_onnx, basename="CmlOneHotEncoder-SkipDim1")
-
+        dump_data_and_model(
+            scikit_data, scikit_model, model_onnx, basename="CmlOneHotEncoder-SkipDim1"
+        )
 
 
 if __name__ == "__main__":

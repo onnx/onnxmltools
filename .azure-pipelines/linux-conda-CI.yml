@@ -90,11 +90,6 @@ jobs:
     displayName: 'Install onnxruntime'
 
   - script: |
-      pip install flake8
-      python -m flake8 ./onnxmltools
-    displayName: 'run flake8 check'
-
-  - script: |
       pip install -e .
     displayName: 'local installation'
 

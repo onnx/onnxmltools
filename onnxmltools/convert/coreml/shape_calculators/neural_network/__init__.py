@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
-# To register shape calculators for Core ML neural network operators, import associated modules here.
+# To register shape calculators for Core ML neural
+# network operators, import associated modules here.
 from . import BatchNorm
 from . import BidirectionalLSTM
 from . import Concat
