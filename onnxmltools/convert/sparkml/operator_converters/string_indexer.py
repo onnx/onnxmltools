@@ -12,7 +12,9 @@ from ...common.data_types import Int64TensorType, StringTensorType
 from ...common.utils import check_input_and_output_types
 
 
-def convert_sparkml_string_indexer(scope: Scope, operator: Operator, container: ModelComponentContainer):
+def convert_sparkml_string_indexer(
+    scope: Scope, operator: Operator, container: ModelComponentContainer
+):
     op: StringIndexerModel = operator.raw_operator
     op_domain = "ai.onnx.ml"
     op_version = 2
@@ -42,20 +44,28 @@ def convert_sparkml_string_indexer(scope: Scope, operator: Operator, container: 
         )
 
 
-register_converter("pyspark.ml.feature.StringIndexerModel", convert_sparkml_string_indexer)
+register_converter(
+    "pyspark.ml.feature.StringIndexerModel", convert_sparkml_string_indexer
+)
 
 
 def calculate_sparkml_string_indexer_output_shapes(operator: Operator):
     """
-    This function just copy the input shape to the output because label encoder only alters input features' values, not
+    This function just copy the input shape to the output
+    because label encoder only alters input features' values, not
     their shape.
     """
-    check_input_and_output_types(operator, good_input_types=[Int64TensorType, StringTensorType])
+    check_input_and_output_types(
+        operator, good_input_types=[Int64TensorType, StringTensorType]
+    )
     input: Variable
     output: Variable
-    for (input, output) in zip(operator.inputs, operator.outputs):
+    for input, output in zip(operator.inputs, operator.outputs):
         input_shape = copy.deepcopy(input.type.shape)
         output.type = Int64TensorType(input_shape)
 
 
-register_shape_calculator("pyspark.ml.feature.StringIndexerModel", calculate_sparkml_string_indexer_output_shapes)
+register_shape_calculator(
+    "pyspark.ml.feature.StringIndexerModel",
+    calculate_sparkml_string_indexer_output_shapes,
+)

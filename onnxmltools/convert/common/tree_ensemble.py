@@ -22,6 +22,8 @@ def _process_process_tree_attributes(attrs):
             continue
         wrong_types.append(f"Unexpected type {type(v)} for attribute {k!r}.")
     if len(wrong_types) > 0:
-        raise TypeError("Unexpected type for one or several attributes:\n" + "\n".join(wrong_types))
+        raise TypeError(
+            "Unexpected type for one or several attributes:\n" + "\n".join(wrong_types)
+        )
     if update:
         attrs.update(update)

@@ -13,23 +13,38 @@ def convert_aft_survival_regression(scope, operator, container):
     op = operator.raw_operator
 
     coefficients = op.coefficients.toArray().astype(float)
-    coefficients_tensor = scope.get_unique_variable_name('coefficients_tensor')
-    container.add_initializer(coefficients_tensor, onnx_proto.TensorProto.FLOAT, [1, len(coefficients)], coefficients)
+    coefficients_tensor = scope.get_unique_variable_name("coefficients_tensor")
+    container.add_initializer(
+        coefficients_tensor,
+        onnx_proto.TensorProto.FLOAT,
+        [1, len(coefficients)],
+        coefficients,
+    )
     intercepts = (
         op.intercept.astype(float)
         if isinstance(op.intercept, collections.abc.Iterable)
-        else [float(op.intercept)])
-    intercepts_tensor = scope.get_unique_variable_name('intercepts_tensor')
-    container.add_initializer(intercepts_tensor, onnx_proto.TensorProto.FLOAT, [len(intercepts)], intercepts)
+        else [float(op.intercept)]
+    )
+    intercepts_tensor = scope.get_unique_variable_name("intercepts_tensor")
+    container.add_initializer(
+        intercepts_tensor, onnx_proto.TensorProto.FLOAT, [len(intercepts)], intercepts
+    )
 
-    matmul_result = scope.get_unique_variable_name('matmul_result_tensor')
-    apply_matmul(scope, [operator.input_full_names[0], coefficients_tensor], matmul_result, container)
-    add_result = scope.get_unique_variable_name('intercept_added_tensor')
+    matmul_result = scope.get_unique_variable_name("matmul_result_tensor")
+    apply_matmul(
+        scope,
+        [operator.input_full_names[0], coefficients_tensor],
+        matmul_result,
+        container,
+    )
+    add_result = scope.get_unique_variable_name("intercept_added_tensor")
     apply_add(scope, [matmul_result, intercepts_tensor], add_result, container)
     apply_exp(scope, add_result, operator.output_full_names, container)
 
 
-register_converter('pyspark.ml.regression.AFTSurvivalRegressionModel', convert_aft_survival_regression)
+register_converter(
+    "pyspark.ml.regression.AFTSurvivalRegressionModel", convert_aft_survival_regression
+)
 
 
 def calculate_aft_survival_regression_output_shapes(operator):
@@ -39,5 +54,7 @@ def calculate_aft_survival_regression_output_shapes(operator):
     operator.outputs[0].type = FloatTensorType([N, 1])
 
 
-register_shape_calculator('pyspark.ml.regression.AFTSurvivalRegressionModel',
-                          calculate_aft_survival_regression_output_shapes)
+register_shape_calculator(
+    "pyspark.ml.regression.AFTSurvivalRegressionModel",
+    calculate_aft_survival_regression_output_shapes,
+)

@@ -7,25 +7,37 @@ from ...common._topology import Operator, Scope, ModelComponentContainer
 from pyspark.ml.feature import CountVectorizerModel
 
 
-def convert_count_vectorizer(scope: Scope, operator: Operator, container: ModelComponentContainer):
+def convert_count_vectorizer(
+    scope: Scope, operator: Operator, container: ModelComponentContainer
+):
     op: CountVectorizerModel = operator.raw_operator
-    vocab, minTF, binary = op.vocabulary, op.getOrDefault("minTF"), op.getOrDefault("binary")
+    vocab, minTF, binary = (
+        op.vocabulary,
+        op.getOrDefault("minTF"),
+        op.getOrDefault("binary"),
+    )
 
     if minTF < 1.0:
-        raise NotImplementedError("Converting to ONNX for CountVectorizerModel is not supported when minTF < 1.0")
+        raise NotImplementedError(
+            "Converting to ONNX for CountVectorizerModel is not supported when minTF < 1.0"
+        )
 
     min_opset = 9
     if not binary:
-        # If binary is False, then we need the ThresholdedRelu operator which is only available since opset 10.
+        # If binary is False, then we need the ThresholdedRelu
+        # operator which is only available since opset 10.
         min_opset = 10
 
     if container.target_opset < min_opset:
         raise NotImplementedError(
-            f"Converting to ONNX for CountVectorizerModel is not supported in opset < {min_opset}"
+            f"Converting to ONNX for CountVectorizerModel "
+            f"is not supported in opset < {min_opset}"
         )
 
     # Create a TfIdfVectorizer node with gram length set to 1 and mode set to "TF".
-    vectorizer_output_variable_name = scope.get_unique_variable_name("vectorizer_output")
+    vectorizer_output_variable_name = scope.get_unique_variable_name(
+        "vectorizer_output"
+    )
     tfIdfVectorizer_attrs = {
         "name": scope.get_unique_operator_name("tfIdfVectorizer"),
         "min_gram_length": 1,
@@ -45,9 +57,12 @@ def convert_count_vectorizer(scope: Scope, operator: Operator, container: ModelC
         **tfIdfVectorizer_attrs,
     )
 
-    # In Spark's CountVectorizerModel, the comparison with minTF is inclusive,
-    # but in ThresholdedRelu (or Binarizer) node, the comparison with `alpha` (or `threshold`) is exclusive.
-    # So, we need to subtract epsilon from minTF to make the comparison with `alpha` (or `threshold`) effectively inclusive.
+    # In Spark's CountVectorizerModel, the comparison
+    # with minTF is inclusive,
+    # but in ThresholdedRelu (or Binarizer) node, the comparison
+    # with `alpha` (or `threshold`) is exclusive.
+    # So, we need to subtract epsilon from minTF to make the comparison
+    # with `alpha` (or `threshold`) effectively inclusive.
     epsilon = 1e-6
     if binary:
         # Create a Binarizer node with threshold set to minTF - epsilon.
@@ -82,4 +97,6 @@ def calculate_count_vectorizer_output_shapes(operator):
     operator.outputs[0].type = FloatTensorType([N, C])
 
 
-register_shape_calculator("pyspark.ml.feature.CountVectorizerModel", calculate_count_vectorizer_output_shapes)
+register_shape_calculator(
+    "pyspark.ml.feature.CountVectorizerModel", calculate_count_vectorizer_output_shapes
+)
