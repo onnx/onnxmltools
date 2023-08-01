@@ -1,11 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Tests h2o's tree-based methods' converters.
-"""
 import unittest
 import os
-import sys
 import numpy as np
 import pandas as pd
 from onnx.defs import onnx_opset_version
@@ -16,7 +12,6 @@ from sklearn.preprocessing import OneHotEncoder
 import h2o
 from h2o import H2OFrame
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
-from h2o.exceptions import H2OConnectionError
 from h2o.estimators.random_forest import H2ORandomForestEstimator
 from onnxmltools.convert import convert_h2o
 from onnxmltools.utils import dump_data_and_model
@@ -33,7 +28,7 @@ def _make_mojo(model, train, y=-1, force_y_numeric=False):
     x = list(range(0, train.ncol))
     x.remove(y)
     model.train(x=x, y=y, training_frame=train)
-    folder = os.environ.get('ONNXTESTDUMP', 'tests/temp')
+    folder = os.environ.get("ONNXTESTDUMP", "tests/temp")
     if not os.path.exists(folder):
         os.makedirs(folder)
     return model.download_mojo(path=folder)
@@ -65,7 +60,7 @@ def _prepare_one_hot(file, y, exclude_cols=None):
     train_frame = train.as_data_frame()
     train_encode = train_frame.loc[:, cols_to_encode]
     train_other = train_frame.loc[:, other_cols + [y]]
-    enc = OneHotEncoder(categories='auto', handle_unknown='ignore')
+    enc = OneHotEncoder(categories="auto", handle_unknown="ignore")
     enc.fit(train_encode)
     colnames = []
     for cidx in range(len(cols_to_encode)):
@@ -91,7 +86,7 @@ def _prepare_one_hot(file, y, exclude_cols=None):
 
 
 def _train_test_split_as_frames(x, y, is_str=False, is_classifier=False):
-    y = y.astype(np.str) if is_str else y.astype(np.int64)
+    y = y.astype(np.str_) if is_str else y.astype(np.int64)
     x_train, x_test, y_train, _ = train_test_split(x, y, test_size=0.3, random_state=42)
     f_train_x = H2OFrame(x_train)
     f_train_y = H2OFrame(y_train)
@@ -103,8 +98,11 @@ def _train_test_split_as_frames(x, y, is_str=False, is_classifier=False):
 
 def _train_classifier(model, n_classes, is_str=False, force_y_numeric=False):
     x, y = make_classification(
-        n_classes=n_classes, n_features=100, n_samples=1000,
-        random_state=42, n_informative=7
+        n_classes=n_classes,
+        n_features=100,
+        n_samples=1000,
+        random_state=42,
+        n_informative=7,
     )
     train, test = _train_test_split_as_frames(x, y, is_str, is_classifier=True)
     mojo_path = _make_mojo(model, train, force_y_numeric=force_y_numeric)
@@ -112,16 +110,13 @@ def _train_classifier(model, n_classes, is_str=False, force_y_numeric=False):
 
 
 class H2OMojoWrapper:
-
     def __init__(self, mojo_path, column_names=None):
         self._mojo_path = mojo_path
         self._mojo_model = h2o.upload_mojo(mojo_path)
         self._column_names = column_names
 
     def __getstate__(self):
-        return {
-            "path": self._mojo_path,
-            "colnames": self._column_names}
+        return {"path": self._mojo_path, "colnames": self._column_names}
 
     def __setstate__(self, state):
         self._mojo_path = state.path
@@ -138,13 +133,12 @@ class H2OMojoWrapper:
             return [preds.to_numpy()]
         else:
             return [
-                preds.iloc[:, 0].to_numpy().astype(np.str),
-                preds.iloc[:, 1:].to_numpy()
+                preds.iloc[:, 0].to_numpy().astype(np.str_),
+                preds.iloc[:, 1:].to_numpy(),
             ]
 
 
 class TestH2OModels(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         h2o.init(port=54440)
@@ -158,7 +152,7 @@ class TestH2OModels(unittest.TestCase):
         mojo_path, test_data = _train_classifier(gbm, 2, is_str=True)
         with self.assertRaises(ValueError) as err:
             _convert_mojo(mojo_path)
-        self.assertRegexpMatches(err.exception.args[0], "not supported")
+        self.assertRegex(err.exception.args[0], "not supported")
 
     def test_h2o_regressor_unsupported_dists(self):
         diabetes = load_diabetes()
@@ -169,7 +163,7 @@ class TestH2OModels(unittest.TestCase):
             mojo_path = _make_mojo(gbm, train)
             with self.assertRaises(ValueError) as err:
                 _convert_mojo(mojo_path)
-            self.assertRegexpMatches(err.exception.args[0], "not supported")
+            self.assertRegex(err.exception.args[0], "not supported")
 
     def test_h2o_regressor(self):
         diabetes = load_diabetes()
@@ -181,13 +175,15 @@ class TestH2OModels(unittest.TestCase):
             onnx_model = _convert_mojo(mojo_path)
             self.assertIsNot(onnx_model, None)
             dump_data_and_model(
-                test, H2OMojoWrapper(mojo_path),
-                onnx_model, basename="H2OReg-Dec4")
+                test, H2OMojoWrapper(mojo_path), onnx_model, basename="H2OReg-Dec4"
+            )
 
     @unittest.skipIf(True, reason="Failure with latest version of h2o")
     def test_h2o_regressor_cat(self):
         y = "IsDepDelayed"
-        train, test = _prepare_one_hot("airlines.csv", y, exclude_cols=["IsDepDelayed_REC"])
+        train, test = _prepare_one_hot(
+            "airlines.csv", y, exclude_cols=["IsDepDelayed_REC"]
+        )
         gbm = H2OGradientBoostingEstimator(ntrees=8, max_depth=5)
         mojo_path = _make_mojo(gbm, train, y=train.columns.index(y))
         onnx_model = _convert_mojo(mojo_path)
@@ -195,14 +191,18 @@ class TestH2OModels(unittest.TestCase):
         dump_data_and_model(
             test.values.astype(np.float32),
             H2OMojoWrapper(mojo_path, list(test.columns)),
-            onnx_model, basename="H2ORegCat-Dec4")
+            onnx_model,
+            basename="H2ORegCat-Dec4",
+        )
 
     def test_h2o_classifier_multi_2class(self):
-        gbm = H2OGradientBoostingEstimator(ntrees=7, max_depth=5, distribution="multinomial")
+        gbm = H2OGradientBoostingEstimator(
+            ntrees=7, max_depth=5, distribution="multinomial"
+        )
         mojo_path, test_data = _train_classifier(gbm, 2, is_str=True)
         with self.assertRaises(ValueError) as err:
             _convert_mojo(mojo_path)
-        self.assertRegexpMatches(err.exception.args[0], "not supported")
+        self.assertRegex(err.exception.args[0], "not supported")
 
     def test_h2o_classifier_bin_cat(self):
         y = "IsDepDelayed_REC"
@@ -214,7 +214,9 @@ class TestH2OModels(unittest.TestCase):
         dump_data_and_model(
             test.values.astype(np.float32),
             H2OMojoWrapper(mojo_path, list(test.columns)),
-            onnx_model, basename="H2OClassBinCat")
+            onnx_model,
+            basename="H2OClassBinCat",
+        )
 
     def test_h2o_classifier_multi_cat(self):
         y = "fYear"
@@ -227,7 +229,9 @@ class TestH2OModels(unittest.TestCase):
         dump_data_and_model(
             test.values.astype(np.float32),
             H2OMojoWrapper(mojo_path, list(test.columns)),
-            onnx_model, basename="H2OClassMultiCat")
+            onnx_model,
+            basename="H2OClassMultiCat",
+        )
 
     @unittest.skipIf(True, reason="Failure with latest version of h2o")
     def test_h2o_classifier_bin_str(self):
@@ -236,17 +240,19 @@ class TestH2OModels(unittest.TestCase):
         onnx_model = _convert_mojo(mojo_path)
         self.assertIsNot(onnx_model, None)
         dump_data_and_model(
-            test_data, H2OMojoWrapper(mojo_path), onnx_model,
-            basename="H2OClassBinStr")
+            test_data, H2OMojoWrapper(mojo_path), onnx_model, basename="H2OClassBinStr"
+        )
 
     def test_h2o_classifier_bin_int(self):
         gbm = H2OGradientBoostingEstimator(ntrees=8, max_depth=5)
-        mojo_path, test_data = _train_classifier(gbm, 2, is_str=False, force_y_numeric=True)
+        mojo_path, test_data = _train_classifier(
+            gbm, 2, is_str=False, force_y_numeric=True
+        )
         onnx_model = _convert_mojo(mojo_path)
         self.assertIsNot(onnx_model, None)
         dump_data_and_model(
-            test_data, H2OMojoWrapper(mojo_path), onnx_model,
-            basename="H2OClassBinInt")
+            test_data, H2OMojoWrapper(mojo_path), onnx_model, basename="H2OClassBinInt"
+        )
 
     def test_h2o_classifier_multi_str(self):
         gbm = H2OGradientBoostingEstimator(ntrees=10, max_depth=5)
@@ -254,8 +260,11 @@ class TestH2OModels(unittest.TestCase):
         onnx_model = _convert_mojo(mojo_path)
         self.assertIsNot(onnx_model, None)
         dump_data_and_model(
-            test_data, H2OMojoWrapper(mojo_path), onnx_model,
-            basename="H2OClassMultiStr")
+            test_data,
+            H2OMojoWrapper(mojo_path),
+            onnx_model,
+            basename="H2OClassMultiStr",
+        )
 
     def test_h2o_classifier_multi_int(self):
         gbm = H2OGradientBoostingEstimator(ntrees=9, max_depth=5)
@@ -263,8 +272,11 @@ class TestH2OModels(unittest.TestCase):
         onnx_model = _convert_mojo(mojo_path)
         self.assertIsNot(onnx_model, None)
         dump_data_and_model(
-            test_data, H2OMojoWrapper(mojo_path), onnx_model,
-            basename="H2OClassMultiBin")
+            test_data,
+            H2OMojoWrapper(mojo_path),
+            onnx_model,
+            basename="H2OClassMultiBin",
+        )
 
     def test_h2o_classifier_multi_discrete_int_labels(self):
         iris = load_iris()
@@ -273,14 +285,16 @@ class TestH2OModels(unittest.TestCase):
         y[y == 0] = 10
         y[y == 1] = 20
         y[y == 2] = -30
-        train, test = _train_test_split_as_frames(x, y, is_str=False, is_classifier=True)
+        train, test = _train_test_split_as_frames(
+            x, y, is_str=False, is_classifier=True
+        )
         gbm = H2OGradientBoostingEstimator(ntrees=7, max_depth=5)
         mojo_path = _make_mojo(gbm, train)
         onnx_model = _convert_mojo(mojo_path)
         self.assertIsNot(onnx_model, None)
         dump_data_and_model(
-            test, H2OMojoWrapper(mojo_path), onnx_model,
-            basename="H2OClassMultiDiscInt")
+            test, H2OMojoWrapper(mojo_path), onnx_model, basename="H2OClassMultiDiscInt"
+        )
 
 
 if __name__ == "__main__":
