@@ -6,12 +6,14 @@ Tests CoreML TreeEnsembleClassifier converter.
 import unittest
 import packaging.version as pv
 import numpy
+
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
-    if not hasattr(sklearn.preprocessing, 'Imputer'):
+
+    if not hasattr(sklearn.preprocessing, "Imputer"):
         # coremltools 3.1 does not work with scikit-learn 0.22
-        setattr(sklearn.preprocessing, 'Imputer', Imputer)
+        setattr(sklearn.preprocessing, "Imputer", Imputer)
 except ImportError:
     from sklearn.preprocessing import Imputer
 import coremltools
@@ -26,18 +28,17 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
-
     def validate_zipmap(self, model):
         # Validate that it contains a ZipMap
         nodes = model.graph.node
-        node = next((n for n in nodes if n.op_type == 'ZipMap'), None)
+        node = next((n for n in nodes if n.op_type == "ZipMap"), None)
         self.assertIsNotNone(node)
         self.assertEqual(len(node.output), 1)
-        self.assertTrue('classProbability' in node.output)
+        self.assertTrue("classProbability" in node.output)
 
     @unittest.skipIf(
-        pv.Version(coremltools.__version__) > pv.Version("3.1"),
-        reason="untested")
+        pv.Version(coremltools.__version__) > pv.Version("3.1"), reason="untested"
+    )
     def test_tree_ensemble_classifier(self):
         X = numpy.array([[0, 1], [1, 1], [2, 0]], dtype=numpy.float32)
         y = [1, 0, 1]
@@ -46,8 +47,9 @@ class TestCoreMLTreeEnsembleClassifierConverter(unittest.TestCase):
         model_onnx = convert(model_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         self.validate_zipmap(model_onnx)
-        dump_data_and_model(X, model, model_onnx, basename="CmlBinRandomForestClassifier",
-                            allow_failure="pv.Version(onnx.__version__) < pv.Version('1.3.0')")
+        dump_data_and_model(
+            X, model, model_onnx, basename="CmlBinRandomForestClassifier"
+        )
 
 
 if __name__ == "__main__":

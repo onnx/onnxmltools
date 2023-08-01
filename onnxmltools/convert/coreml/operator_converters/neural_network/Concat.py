@@ -10,8 +10,14 @@ def convert_concat(scope, operator, container):
     else:
         axis = 1
 
-    apply_concat(scope, operator.input_full_names, operator.output_full_names, container,
-                 operator_name=operator.full_name, axis=axis)
+    apply_concat(
+        scope,
+        operator.input_full_names,
+        operator.output_full_names,
+        container,
+        operator_name=operator.full_name,
+        axis=axis,
+    )
 
 
-register_converter('concat', convert_concat)
+register_converter("concat", convert_concat)

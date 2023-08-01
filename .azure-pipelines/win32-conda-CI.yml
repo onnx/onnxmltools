@@ -15,68 +15,26 @@ jobs:
   strategy:
     matrix:
 
-      Python310-1130-RT1140:
+      Python311-1140-RT1151:
+        python.version: '3.11'
+        ONNX_PATH: 'onnx==1.14.0' # '-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNXRT_PATH: 'onnxruntime==1.15.1'
+        COREML_PATH: NONE
+        numpy.version: ''
+
+      Python310-1140-RT1151:
         python.version: '3.10'
-        ONNX_PATH: 'onnx==1.13.0' # '-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
+        ONNX_PATH: 'onnx==1.14.0' # '-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNXRT_PATH: 'onnxruntime==1.15.1'
+        COREML_PATH: NONE
+        numpy.version: ''
+
+      Python310-1140-RT1140:
+        python.version: '3.10'
+        ONNX_PATH: 'onnx==1.14.0' # '-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
         ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
         COREML_PATH: NONE
         numpy.version: ''
-
-      Python310-1130-RT1131:
-        python.version: '3.10'
-        ONNX_PATH: 'onnx==1.13.0' # '-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-        ONNXRT_PATH: onnxruntime==1.13.1 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-        COREML_PATH: NONE
-        numpy.version: ''
-
-      Python39-1120-RT1110:
-        python.version: '3.9'
-        ONNX_PATH: 'onnx==1.12.0' # '-i https://test.pypi.org/simple/ onnx==1.12.0rc4'
-        ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        numpy.version: ''
-
-      Python39-1110-RT1110:
-        python.version: '3.9'
-        ONNX_PATH: onnx==1.11.0  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
-        ONNXRT_PATH: onnxruntime==1.11.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        numpy.version: ''
-
-      Python39-1110-RT190:
-        python.version: '3.9'
-        ONNX_PATH: 'onnx==1.11.0'  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
-        ONNXRT_PATH: onnxruntime==1.10.0
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        numpy.version: ''
-
-      Python39-1102-RT190:
-        python.version: '3.9'
-        ONNX_PATH: 'onnx==1.10.2'  # '-i https://test.pypi.org/simple/ onnx==1.9.101'
-        ONNXRT_PATH: onnxruntime==1.9.0
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        numpy.version: '<=1.23.5'
-
-      Python39-190-RT181:
-        python.version: '3.9'
-        ONNX_PATH: 'onnx==1.9.0'
-        ONNXRT_PATH: onnxruntime==1.8.1
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        numpy.version: '<=1.23.5'
-
-      Python39-190-RT180:
-        python.version: '3.9'
-        ONNX_PATH: onnx==1.9.0
-        ONNXRT_PATH: onnxruntime==1.8.0
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        numpy.version: '<=1.23.5'
-
-      Python38-181-RT170:
-        python.version: '3.8'
-        ONNX_PATH: onnx==1.8.1
-        ONNXRT_PATH: onnxruntime==1.7.0
-        COREML_PATH: git+https://github.com/apple/coremltools@3.1
-        numpy.version: '<=1.23.5'
 
     maxParallel: 3
 
@@ -113,8 +71,9 @@ jobs:
 
   - script: |
       call activate py$(python.version)
-      python -m flake8 ./onnxmltools
-    displayName: 'run flake8 check'
+      python -m pip install coloredlogs flatbuffers packaging sympy numpy protobuf
+      python -m pip install $(ONNXRT_PATH)
+    displayName: 'Install ort-nightly'
 
   - script: |
       call activate py$(python.version)

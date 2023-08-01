@@ -2,20 +2,20 @@
 
 import pickle
 import os
-import warnings
 import sys
 import numpy
 import onnxruntime
 from onnxruntime.capi.onnxruntime_pybind11_state import InvalidArgument, Fail
 import pyspark
-from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.ml.linalg import VectorUDT
-from pyspark.sql.types import ArrayType, FloatType, DoubleType
 from onnxmltools.utils.utils_backend import (
-    compare_backend, extract_options, evaluate_condition, is_backend_enabled,
-    OnnxRuntimeAssertionError, compare_outputs, ExpectedAssertionError)
-from onnxmltools.utils.utils_backend_onnxruntime import _create_column
+    compare_backend,
+    extract_options,
+    is_backend_enabled,
+    OnnxRuntimeAssertionError,
+    compare_outputs,
+    ExpectedAssertionError,
+)
 
 
 def start_spark(options):
@@ -26,7 +26,7 @@ def start_spark(options):
 
     builder = SparkSession.builder.appName("pyspark-unittesting").master("local[1]")
     if options:
-        for k,v in options.items():
+        for k, v in options.items():
             builder.config(k, v)
     spark = builder.getOrCreate()
     # spark.sparkContext.setLogLevel("ALL")
@@ -37,10 +37,19 @@ def stop_spark(spark):
     spark.sparkContext.stop()
 
 
-def save_data_models(input, expected, model, onnx_model, basename="model", folder=None,
-                     save_spark_model=False, pickle_spark_model=False, pickle_data=False):
+def save_data_models(
+    input,
+    expected,
+    model,
+    onnx_model,
+    basename="model",
+    folder=None,
+    save_spark_model=False,
+    pickle_spark_model=False,
+    pickle_data=False,
+):
     if folder is None:
-        folder = os.environ.get('ONNXTESTDUMP', 'tests_dump')
+        folder = os.environ.get("ONNXTESTDUMP", "tests_dump")
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -71,7 +80,7 @@ def save_data_models(input, expected, model, onnx_model, basename="model", folde
 
 
 def run_onnx_model(output_names, input, onnx_model):
-    sess = onnxruntime.InferenceSession(onnx_model, providers=['CPUExecutionProvider'])
+    sess = onnxruntime.InferenceSession(onnx_model, providers=["CPUExecutionProvider"])
     if isinstance(input, dict):
         inputs = input
     elif isinstance(input, list):
@@ -83,11 +92,13 @@ def run_onnx_model(output_names, input, onnx_model):
             inputs = {inp[0].name: input}
         else:
             raise OnnxRuntimeAssertionError(
-                "Wrong number of inputs onnx {0} != original shape {1}, onnx='{2}'".format(
-                    len(inp), input.shape, onnx_model))
+                "Wrong number of inputs onnx {0} != original shape "
+                "{1}, onnx='{2}'".format(len(inp), input.shape, onnx_model)
+            )
     else:
         raise OnnxRuntimeAssertionError(
-            "Dict or list is expected, not {0}".format(type(input)))
+            "Dict or list is expected, not {0}".format(type(input))
+        )
 
     for k in inputs:
         if isinstance(inputs[k], list):
@@ -102,13 +113,14 @@ def run_onnx_model(output_names, input, onnx_model):
             rows.append("output: {} - {} - {}".format(inp.name, inp.type, inp.shape))
         rows.append("REQUIRED: {}".format(output_names))
         for k, v in sorted(inputs.items()):
-            if hasattr(v, 'shape'):
+            if hasattr(v, "shape"):
                 rows.append("{}={}-{}-{}".format(k, v.shape, v.dtype, v))
             else:
                 rows.append("{}={}".format(k, v))
         raise AssertionError(
-            "Unable to run onnxruntime\n{}".format("\n".join(rows))) from e
-        
+            "Unable to run onnxruntime\n{}".format("\n".join(rows))
+        ) from e
+
     output_shapes = [_.shape for _ in sess.get_outputs()]
     return output, output_shapes
 
@@ -119,13 +131,17 @@ def compare_results(expected, output, decimal=5):
         if isinstance(output, list):
             if len(expected) != len(output):
                 raise OnnxRuntimeAssertionError(
-                    "Unexpected number of outputs: expected={0}, got={1}".format(len(expected), len(output)))
+                    "Unexpected number of outputs: expected={0}, got={1}".format(
+                        len(expected), len(output)
+                    )
+                )
             for exp, out in zip(expected, output):
                 compare_results(exp, out, decimal=decimal)
                 tested += 1
         else:
             raise OnnxRuntimeAssertionError(
-                "Type mismatch: output type is {0}".format(type(output)))
+                "Type mismatch: output type is {0}".format(type(output))
+            )
     elif isinstance(expected, dict):
         if not isinstance(output, dict):
             raise OnnxRuntimeAssertionError("Type mismatch fo")
@@ -134,12 +150,15 @@ def compare_results(expected, output, decimal=5):
                 continue
             msg = compare_outputs(expected[k], v, decimal=decimal)
             if msg:
-                raise OnnxRuntimeAssertionError("Unexpected output '{0}': \n{2}".format(k, msg))
+                raise OnnxRuntimeAssertionError(
+                    "Unexpected output '{0}': \n{1}".format(k, msg)
+                )
             tested += 1
     elif isinstance(expected, numpy.ndarray):
         if isinstance(output, list):
             if expected.shape[0] == len(output) and isinstance(output[0], dict):
                 import pandas
+
                 output = pandas.DataFrame(output)
                 output = output[list(sorted(output.columns))]
                 output = output.values
@@ -149,37 +168,49 @@ def compare_results(expected, output, decimal=5):
                 if len(ex) > 70:
                     ex = ex[:70] + "..."
                 raise OnnxRuntimeAssertionError(
-                    "More than one output when 1 is expected\n{0}".format(ex))
+                    "More than one output when 1 is expected\n{0}".format(ex)
+                )
             output = output[-1]
         if not isinstance(output, numpy.ndarray):
             raise OnnxRuntimeAssertionError(
-                "output must be an array not {0}".format(type(output)))
+                "output must be an array not {0}".format(type(output))
+            )
         msg = compare_outputs(expected, output, decimal=decimal)
         if isinstance(msg, ExpectedAssertionError):
             raise msg
         if msg:
-            raise OnnxRuntimeAssertionError(
-                "Unexpected output\n{}".format(msg))
+            raise OnnxRuntimeAssertionError("Unexpected output\n{}".format(msg))
         tested += 1
     else:
         from scipy.sparse.csr import csr_matrix
+
         if isinstance(expected, csr_matrix):
             # DictVectorizer
             one_array = numpy.array(output)
             msg = compare_outputs(expected.todense(), one_array, decimal=decimal)
             if msg:
-                raise OnnxRuntimeAssertionError("Unexpected output\n{1}".format(msg))
+                raise OnnxRuntimeAssertionError("Unexpected output\n{0}".format(msg))
             tested += 1
         else:
             raise OnnxRuntimeAssertionError(
-                "Unexpected type for expected output ({0})".format(type(expected)))
+                "Unexpected type for expected output ({0})".format(type(expected))
+            )
     if tested == 0:
         raise OnnxRuntimeAssertionError("No test for model")
 
 
-def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="model", folder=None,
-                        backend="onnxruntime", context=None,
-                        allow_failure=None, verbose=False):
+def dump_data_and_sparkml_model(
+    input,
+    expected,
+    model,
+    onnx=None,
+    basename="model",
+    folder=None,
+    backend="onnxruntime",
+    context=None,
+    allow_failure=None,
+    verbose=False,
+):
     """
     Saves data with pickle, saves the model with pickle and *onnx*,
     runs and saves the predictions for the given model.
@@ -218,14 +249,17 @@ def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="mod
     * ``-CannotLoad``: the model can be converted but the runtime cannot load it
     * ``-Dec3``: compares expected and computed outputs up to 3 decimals (5 by default)
     * ``-Dec4``: compares expected and computed outputs up to 4 decimals (5 by default)
-    * ``-NoProb``: The original models computed probabilites for two classes *size=(N, 2)*
-      but the runtime produces a vector of size *N*, the test will compare the second column
+    * ``-NoProb``: The original models computed probabilites
+      for two classes *size=(N, 2)*
+      but the runtime produces a vector of size *N*,
+      the test will compare the second column
       to the column
     * ``-OneOff``: the ONNX runtime cannot computed the prediction for several inputs,
       it must be called for each of them
       and computed output.
     * ``-Out0``: only compares the first output on both sides
-    * ``-Reshape``: merges all outputs into one single vector and resizes it before comparing
+    * ``-Reshape``: merges all outputs into one single vector
+      and resizes it before comparing
     * ``-SkipDim1``: before comparing expected and computed output,
       arrays with a shape like *(2, 1, 2)* becomes *(2, 2)*
 
@@ -236,11 +270,11 @@ def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="mod
     runtime_test = dict(model=model, data=input)
 
     if folder is None:
-        folder = os.environ.get('ONNXTESTDUMP', 'tests_dump')
+        folder = os.environ.get("ONNXTESTDUMP", "tests_dump")
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    runtime_test['expected'] = expected
+    runtime_test["expected"] = expected
 
     names = []
     dest = os.path.join(folder, basename + ".expected.pkl")
@@ -272,22 +306,14 @@ def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="mod
             if not is_backend_enabled(b):
                 continue
             if isinstance(allow_failure, str):
-                allow = evaluate_condition(b, allow_failure)
-            else:
-                allow = allow_failure
-            if allow is None:
-                output = compare_backend(b, runtime_test, options=extract_options(basename),
-                                         context=context, verbose=verbose)
-            else:
-                try:
-                    output = compare_backend(b, runtime_test, options=extract_options(basename),
-                                             context=context, verbose=verbose)
-                except AssertionError as e:
-                    if isinstance(allow, bool) and allow:
-                        warnings.warn("Issue with '{0}' due to {1}".format(basename, e))
-                        continue
-                    else:
-                        raise e
+                raise NotImplementedError("allow_failure is deprecated.")
+            output = compare_backend(
+                b,
+                runtime_test,
+                options=extract_options(basename),
+                context=context,
+                verbose=verbose,
+            )
             if output is not None:
                 dest = os.path.join(folder, basename + ".backend.{0}.pkl".format(b))
                 names.append(dest)
@@ -299,12 +325,18 @@ def dump_data_and_sparkml_model(input, expected, model, onnx=None, basename="mod
 
 def dataframe_to_nparray(df):
     from pyspark.ml.linalg import VectorUDT
+
     schema = df.schema
     npcols = []
     for i in range(0, len(df.columns)):
         if isinstance(schema.fields[i].dataType, VectorUDT):
-            npcols.append(df.select(df.columns[i]).toPandas().apply(
-                lambda x : numpy.array(x[0].toArray())).as_matrix().reshape(-1, 1))
+            npcols.append(
+                df.select(df.columns[i])
+                .toPandas()
+                .apply(lambda x: numpy.array(x[0].toArray()))
+                .as_matrix()
+                .reshape(-1, 1)
+            )
         else:
             npcols.append(df.select(df.columns[i]).collect())
     return numpy.array(npcols)

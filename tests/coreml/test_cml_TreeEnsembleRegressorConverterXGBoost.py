@@ -8,12 +8,14 @@ import sys
 import unittest
 import numpy
 import pandas
+
 try:
     from sklearn.impute import SimpleImputer as Imputer
     import sklearn.preprocessing
-    if not hasattr(sklearn.preprocessing, 'Imputer'):
+
+    if not hasattr(sklearn.preprocessing, "Imputer"):
         # coremltools 3.1 does not work with scikit-learn 0.22
-        setattr(sklearn.preprocessing, 'Imputer', Imputer)
+        setattr(sklearn.preprocessing, "Imputer", Imputer)
 except ImportError:
     from sklearn.preprocessing import Imputer
 from coremltools.converters.xgboost import convert as convert_xgb_to_coreml
@@ -28,12 +30,12 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
-
     @unittest.skipIf(True, reason="broken")
     def test_tree_ensemble_regressor_xgboost(self):
-
         this = os.path.dirname(__file__)
-        data_train = pandas.read_csv(os.path.join(this, "xgboost.model.xgb.n4.d3.train.txt"), header=None)
+        data_train = pandas.read_csv(
+            os.path.join(this, "xgboost.model.xgb.n4.d3.train.txt"), header=None
+        )
 
         X = data_train.iloc[:, 1:].values
         y = data_train.iloc[:, 0].values
@@ -47,9 +49,12 @@ class TestCoreMLTreeEnsembleRegressorConverterXGBoost(unittest.TestCase):
         assert model_onnx is not None
         if sys.version_info[0] >= 3:
             # python 2.7 returns TypeError: can't pickle instancemethod objects
-            dump_data_and_model(X.astype(numpy.float32), model, model_onnx,
-                                         basename="CmlXGBoostRegressor-OneOff-Reshape",
-                                         allow_failure=True)
+            dump_data_and_model(
+                X.astype(numpy.float32),
+                model,
+                model_onnx,
+                basename="CmlXGBoostRegressor-OneOff-Reshape",
+            )
 
 
 if __name__ == "__main__":

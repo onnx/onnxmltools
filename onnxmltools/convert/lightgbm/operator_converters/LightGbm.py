@@ -8,7 +8,12 @@ import json
 import numpy as np
 from onnx import TensorProto
 from ...common._apply_operation import (
-    apply_div, apply_reshape, apply_sub, apply_cast, apply_identity)
+    apply_div,
+    apply_reshape,
+    apply_sub,
+    apply_cast,
+    apply_identity,
+)
 from ...common._registration import register_converter
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
 from ....proto import onnx_proto
@@ -17,6 +22,7 @@ from ....proto import onnx_proto
 def has_tqdm():
     try:
         from tqdm import tqdm  # noqa
+
         return True
     except ImportError:
         return False
@@ -25,22 +31,22 @@ def has_tqdm():
 def _translate_split_criterion(criterion):
     # If the criterion is true, LightGBM use the left child.
     # Otherwise, right child is selected.
-    if criterion == '<=':
-        return 'BRANCH_LEQ'
-    elif criterion == '<':
-        return 'BRANCH_LT'
-    elif criterion == '>=':
-        return 'BRANCH_GTE'
-    elif criterion == '>':
-        return 'BRANCH_GT'
-    elif criterion == '==':
-        return 'BRANCH_EQ'
-    elif criterion == '!=':
-        return 'BRANCH_NEQ'
+    if criterion == "<=":
+        return "BRANCH_LEQ"
+    elif criterion == "<":
+        return "BRANCH_LT"
+    elif criterion == ">=":
+        return "BRANCH_GTE"
+    elif criterion == ">":
+        return "BRANCH_GT"
+    elif criterion == "==":
+        return "BRANCH_EQ"
+    elif criterion == "!=":
+        return "BRANCH_NEQ"
     else:
         raise ValueError(
-            'Unsupported splitting criterion: %s. Only <=, '
-            '<, >=, and > are allowed.')
+            "Unsupported splitting criterion: %s. Only <=, " "<, >=, and > are allowed."
+        )
 
 
 def _create_node_id(node_id_pool):
@@ -51,8 +57,7 @@ def _create_node_id(node_id_pool):
     return i
 
 
-def _parse_tree_structure(tree_id, class_id, learning_rate,
-                          tree_structure, attrs):
+def _parse_tree_structure(tree_id, class_id, learning_rate, tree_structure, attrs):
     """
     The pool of all nodes' indexes created when parsing a single tree.
     Different tree use different pools.
@@ -64,14 +69,21 @@ def _parse_tree_structure(tree_id, class_id, learning_rate,
     node_pyid_pool[id(tree_structure)] = node_id
 
     # The root node is a leaf node.
-    if ('left_child' not in tree_structure or
-            'right_child' not in tree_structure):
-        _parse_node(tree_id, class_id, node_id, node_id_pool, node_pyid_pool,
-                    learning_rate, tree_structure, attrs)
+    if "left_child" not in tree_structure or "right_child" not in tree_structure:
+        _parse_node(
+            tree_id,
+            class_id,
+            node_id,
+            node_id_pool,
+            node_pyid_pool,
+            learning_rate,
+            tree_structure,
+            attrs,
+        )
         return
 
-    left_pyid = id(tree_structure['left_child'])
-    right_pyid = id(tree_structure['right_child'])
+    left_pyid = id(tree_structure["left_child"])
+    right_pyid = id(tree_structure["right_child"])
 
     if left_pyid in node_pyid_pool:
         left_id = node_pyid_pool[left_pyid]
@@ -89,56 +101,78 @@ def _parse_tree_structure(tree_id, class_id, learning_rate,
         node_pyid_pool[right_pyid] = right_id
         right_parse = True
 
-    attrs['nodes_treeids'].append(tree_id)
-    attrs['nodes_nodeids'].append(node_id)
+    attrs["nodes_treeids"].append(tree_id)
+    attrs["nodes_nodeids"].append(node_id)
 
-    attrs['nodes_featureids'].append(tree_structure['split_feature'])
-    attrs['nodes_modes'].append(
-        _translate_split_criterion(tree_structure['decision_type']))
-    if isinstance(tree_structure['threshold'], str):
+    attrs["nodes_featureids"].append(tree_structure["split_feature"])
+    attrs["nodes_modes"].append(
+        _translate_split_criterion(tree_structure["decision_type"])
+    )
+    if isinstance(tree_structure["threshold"], str):
         try:
-            attrs['nodes_values'].append(float(tree_structure['threshold']))
+            attrs["nodes_values"].append(float(tree_structure["threshold"]))
         except ValueError:
             import pprint
+
             text = pprint.pformat(tree_structure)
             if len(text) > 100000:
                 text = text[:100000] + "\n..."
-            raise TypeError("threshold must be a number not '{}'"
-                            "\n{}".format(tree_structure['threshold'], text))
+            raise TypeError(
+                "threshold must be a number not '{}'"
+                "\n{}".format(tree_structure["threshold"], text)
+            )
     else:
-        attrs['nodes_values'].append(tree_structure['threshold'])
+        attrs["nodes_values"].append(tree_structure["threshold"])
 
     # Assume left is the true branch and right is the false branch
-    attrs['nodes_truenodeids'].append(left_id)
-    attrs['nodes_falsenodeids'].append(right_id)
-    if tree_structure['default_left']:
-        if tree_structure["missing_type"] == 'None' and float(tree_structure['threshold']) < 0.0:
-            attrs['nodes_missing_value_tracks_true'].append(0)
+    attrs["nodes_truenodeids"].append(left_id)
+    attrs["nodes_falsenodeids"].append(right_id)
+    if tree_structure["default_left"]:
+        if (
+            tree_structure["missing_type"] == "None"
+            and float(tree_structure["threshold"]) < 0.0
+        ):
+            attrs["nodes_missing_value_tracks_true"].append(0)
         else:
-            attrs['nodes_missing_value_tracks_true'].append(1)
+            attrs["nodes_missing_value_tracks_true"].append(1)
     else:
-        attrs['nodes_missing_value_tracks_true'].append(0)
-    attrs['nodes_hitrates'].append(1.)
+        attrs["nodes_missing_value_tracks_true"].append(0)
+    attrs["nodes_hitrates"].append(1.0)
     if left_parse:
         _parse_node(
-            tree_id, class_id, left_id, node_id_pool, node_pyid_pool,
-            learning_rate, tree_structure['left_child'], attrs)
+            tree_id,
+            class_id,
+            left_id,
+            node_id_pool,
+            node_pyid_pool,
+            learning_rate,
+            tree_structure["left_child"],
+            attrs,
+        )
     if right_parse:
         _parse_node(
-            tree_id, class_id, right_id, node_id_pool, node_pyid_pool,
-            learning_rate, tree_structure['right_child'], attrs)
+            tree_id,
+            class_id,
+            right_id,
+            node_id_pool,
+            node_pyid_pool,
+            learning_rate,
+            tree_structure["right_child"],
+            attrs,
+        )
 
 
-def _parse_node(tree_id, class_id, node_id, node_id_pool, node_pyid_pool,
-                learning_rate, node, attrs):
+def _parse_node(
+    tree_id, class_id, node_id, node_id_pool, node_pyid_pool, learning_rate, node, attrs
+):
     """
     Parses nodes.
     """
-    if ((hasattr(node, 'left_child') and hasattr(node, 'right_child')) or
-            ('left_child' in node and 'right_child' in node)):
-
-        left_pyid = id(node['left_child'])
-        right_pyid = id(node['right_child'])
+    if (hasattr(node, "left_child") and hasattr(node, "right_child")) or (
+        "left_child" in node and "right_child" in node
+    ):
+        left_pyid = id(node["left_child"])
+        right_pyid = id(node["right_child"])
 
         if left_pyid in node_pyid_pool:
             left_id = node_pyid_pool[left_pyid]
@@ -156,79 +190,95 @@ def _parse_node(tree_id, class_id, node_id, node_id_pool, node_pyid_pool,
             node_pyid_pool[right_pyid] = right_id
             right_parse = True
 
-        attrs['nodes_treeids'].append(tree_id)
-        attrs['nodes_nodeids'].append(node_id)
+        attrs["nodes_treeids"].append(tree_id)
+        attrs["nodes_nodeids"].append(node_id)
 
-        attrs['nodes_featureids'].append(node['split_feature'])
-        attrs['nodes_modes'].append(
-            _translate_split_criterion(node['decision_type']))
-        if isinstance(node['threshold'], str):
+        attrs["nodes_featureids"].append(node["split_feature"])
+        attrs["nodes_modes"].append(_translate_split_criterion(node["decision_type"]))
+        if isinstance(node["threshold"], str):
             try:
-                attrs['nodes_values'].append(float(node['threshold']))
+                attrs["nodes_values"].append(float(node["threshold"]))
             except ValueError:
                 import pprint
+
                 text = pprint.pformat(node)
                 if len(text) > 100000:
                     text = text[:100000] + "\n..."
-                raise TypeError("threshold must be a number not '{}'"
-                                "\n{}".format(node['threshold'], text))
+                raise TypeError(
+                    "threshold must be a number not '{}'"
+                    "\n{}".format(node["threshold"], text)
+                )
         else:
-            attrs['nodes_values'].append(node['threshold'])
+            attrs["nodes_values"].append(node["threshold"])
 
         # Assume left is the true branch
         # and right is the false branch
-        attrs['nodes_truenodeids'].append(left_id)
-        attrs['nodes_falsenodeids'].append(right_id)
-        if node['default_left']:
-            if node['missing_type'] == 'None' and float(node['threshold']) < 0.0:
-                attrs['nodes_missing_value_tracks_true'].append(0)
+        attrs["nodes_truenodeids"].append(left_id)
+        attrs["nodes_falsenodeids"].append(right_id)
+        if node["default_left"]:
+            if node["missing_type"] == "None" and float(node["threshold"]) < 0.0:
+                attrs["nodes_missing_value_tracks_true"].append(0)
             else:
-                attrs['nodes_missing_value_tracks_true'].append(1)
+                attrs["nodes_missing_value_tracks_true"].append(1)
         else:
-            attrs['nodes_missing_value_tracks_true'].append(0)
-        attrs['nodes_hitrates'].append(1.)
+            attrs["nodes_missing_value_tracks_true"].append(0)
+        attrs["nodes_hitrates"].append(1.0)
 
         # Recursively dive into the child nodes
         if left_parse:
             _parse_node(
-                tree_id, class_id, left_id, node_id_pool, node_pyid_pool,
-                learning_rate, node['left_child'], attrs)
+                tree_id,
+                class_id,
+                left_id,
+                node_id_pool,
+                node_pyid_pool,
+                learning_rate,
+                node["left_child"],
+                attrs,
+            )
         if right_parse:
             _parse_node(
-                tree_id, class_id, right_id, node_id_pool, node_pyid_pool,
-                learning_rate, node['right_child'], attrs)
-    elif hasattr(node, 'left_child') or hasattr(node, 'right_child'):
-        raise ValueError('Need two branches')
+                tree_id,
+                class_id,
+                right_id,
+                node_id_pool,
+                node_pyid_pool,
+                learning_rate,
+                node["right_child"],
+                attrs,
+            )
+    elif hasattr(node, "left_child") or hasattr(node, "right_child"):
+        raise ValueError("Need two branches")
     else:
         # Node attributes
-        attrs['nodes_treeids'].append(tree_id)
-        attrs['nodes_nodeids'].append(node_id)
-        attrs['nodes_featureids'].append(0)
-        attrs['nodes_modes'].append('LEAF')
+        attrs["nodes_treeids"].append(tree_id)
+        attrs["nodes_nodeids"].append(node_id)
+        attrs["nodes_featureids"].append(0)
+        attrs["nodes_modes"].append("LEAF")
         # Leaf node has no threshold.
         # A zero is appended but it will never be used.
-        attrs['nodes_values'].append(0.)
+        attrs["nodes_values"].append(0.0)
         # Leaf node has no child.
         # A zero is appended but it will never be used.
-        attrs['nodes_truenodeids'].append(0)
+        attrs["nodes_truenodeids"].append(0)
         # Leaf node has no child.
         # A zero is appended but it will never be used.
-        attrs['nodes_falsenodeids'].append(0)
+        attrs["nodes_falsenodeids"].append(0)
         # Leaf node has no split function.
         # A zero is appended but it will never be used.
-        attrs['nodes_missing_value_tracks_true'].append(0)
-        attrs['nodes_hitrates'].append(1.)
+        attrs["nodes_missing_value_tracks_true"].append(0)
+        attrs["nodes_hitrates"].append(1.0)
 
         # Leaf attributes
-        attrs['class_treeids'].append(tree_id)
-        attrs['class_nodeids'].append(node_id)
-        attrs['class_ids'].append(class_id)
-        attrs['class_weights'].append(
-            float(node['leaf_value']) * learning_rate)
+        attrs["class_treeids"].append(tree_id)
+        attrs["class_nodeids"].append(node_id)
+        attrs["class_ids"].append(class_id)
+        attrs["class_weights"].append(float(node["leaf_value"]) * learning_rate)
 
 
-def dump_booster_model(self, num_iteration=None, start_iteration=0,
-                       importance_type='split', verbose=0):
+def dump_booster_model(
+    self, num_iteration=None, start_iteration=0, importance_type="split", verbose=0
+):
     """
     Dumps Booster to JSON format.
 
@@ -262,42 +312,88 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
         into ONNX of such model. The function overwrites the
         `json.load` to fastly extract nodes.
     """
-    if getattr(self, 'is_mock', False):
+    if getattr(self, "is_mock", False):
         return self.dump_model(), None
-    from lightgbm.basic import (
-        _LIB, FEATURE_IMPORTANCE_TYPE_MAPPER, _safe_call,
-        json_default_with_numpy)
+    from lightgbm.basic import _LIB, _safe_call
+
+    try:
+        # lightgbm >= 4.0
+        from lightgbm.basic import (
+            _FEATURE_IMPORTANCE_TYPE_MAPPER as FITM,
+            _json_default_with_numpy as jdwn,
+        )
+    except ImportError:
+        # lightgbm < 4.0
+        from lightgbm.basic import (
+            FEATURE_IMPORTANCE_TYPE_MAPPER as FITM,
+            json_default_with_numpy as jdwn,
+        )
     if num_iteration is None:
         num_iteration = self.best_iteration
-    importance_type_int = FEATURE_IMPORTANCE_TYPE_MAPPER[importance_type]
+    importance_type_int = FITM[importance_type]
     buffer_len = 1 << 20
     tmp_out_len = ctypes.c_int64(0)
     string_buffer = ctypes.create_string_buffer(buffer_len)
     ptr_string_buffer = ctypes.c_char_p(*[ctypes.addressof(string_buffer)])
     if verbose >= 2:
         print("[dump_booster_model] call CAPI: LGBM_BoosterDumpModel")
-    _safe_call(_LIB.LGBM_BoosterDumpModel(
-        self.handle,
-        ctypes.c_int(start_iteration),
-        ctypes.c_int(num_iteration),
-        ctypes.c_int(importance_type_int),
-        ctypes.c_int64(buffer_len),
-        ctypes.byref(tmp_out_len),
-        ptr_string_buffer))
+    try:
+        handle = self._handle
+    except AttributeError:
+        handle = self.handle
+    _safe_call(
+        _LIB.LGBM_BoosterDumpModel(
+            handle,
+            ctypes.c_int(start_iteration),
+            ctypes.c_int(num_iteration),
+            ctypes.c_int(importance_type_int),
+            ctypes.c_int64(buffer_len),
+            ctypes.byref(tmp_out_len),
+            ptr_string_buffer,
+        )
+    )
     actual_len = tmp_out_len.value
     # if buffer length is not long enough, reallocate a buffer
     if actual_len > buffer_len:
         string_buffer = ctypes.create_string_buffer(actual_len)
-        ptr_string_buffer = ctypes.c_char_p(
-            *[ctypes.addressof(string_buffer)])
-        _safe_call(_LIB.LGBM_BoosterDumpModel(
-            self.handle,
-            ctypes.c_int(start_iteration),
-            ctypes.c_int(num_iteration),
-            ctypes.c_int(importance_type_int),
-            ctypes.c_int64(actual_len),
-            ctypes.byref(tmp_out_len),
-            ptr_string_buffer))
+        ptr_string_buffer = ctypes.c_char_p(*[ctypes.addressof(string_buffer)])
+        try:
+            # lightgbm >= 4.0
+            handle = self._handle
+        except AttributeError:
+            # lightgbm < 4.0
+            handle = self.handle
+        _safe_call(
+            _LIB.LGBM_BoosterDumpModel(
+                handle,
+                ctypes.c_int(start_iteration),
+                ctypes.c_int(num_iteration),
+                ctypes.c_int(importance_type_int),
+                ctypes.c_int64(buffer_len),
+                ctypes.byref(tmp_out_len),
+                ptr_string_buffer,
+            )
+        )
+    actual_len = tmp_out_len.value
+    # if buffer length is not long enough, reallocate a buffer
+    if actual_len > buffer_len:
+        string_buffer = ctypes.create_string_buffer(actual_len)
+        ptr_string_buffer = ctypes.c_char_p(*[ctypes.addressof(string_buffer)])
+        try:
+            handle = self._handle
+        except AttributeError:
+            handle = self.handle
+        _safe_call(
+            _LIB.LGBM_BoosterDumpModel(
+                handle,
+                ctypes.c_int(start_iteration),
+                ctypes.c_int(num_iteration),
+                ctypes.c_int(importance_type_int),
+                ctypes.c_int64(actual_len),
+                ctypes.byref(tmp_out_len),
+                ptr_string_buffer,
+            )
+        )
 
     class Hook(json.JSONDecoder):
         """
@@ -305,10 +401,9 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
         a decision into a different container in order to walk through
         all nodes in a much faster way than going through the architecture.
         """
-        def __init__(self, *args, info=None, n_trees=None, verbose=0,
-                     **kwargs):
-            json.JSONDecoder.__init__(
-                self, object_hook=self.hook, *args, **kwargs)
+
+        def __init__(self, *args, info=None, n_trees=None, verbose=0, **kwargs):
+            json.JSONDecoder.__init__(self, object_hook=self.hook, *args, **kwargs)
             self.nodes = []
             self.buffer = []
             self.info = info
@@ -317,6 +412,7 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
             self.stored = 0
             if verbose >= 2 and n_trees is not None and has_tqdm():
                 from tqdm import tqdm
+
                 self.loop = tqdm(total=n_trees)
                 self.loop.set_description("dump_booster")
             else:
@@ -329,23 +425,25 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
             a decision into a different container.
             """
             # Every obj goes through this function from the leaves to the root.
-            if 'tree_info' in obj:
-                self.info['decision_nodes'] = self.nodes
+            if "tree_info" in obj:
+                self.info["decision_nodes"] = self.nodes
                 if self.n_trees is not None and len(self.nodes) != self.n_trees:
                     raise RuntimeError(
-                        "Unexpected number of trees %d (expecting %d)." % (
-                            len(self.nodes), self.n_trees))
+                        "Unexpected number of trees %d (expecting %d)."
+                        % (len(self.nodes), self.n_trees)
+                    )
                 self.nodes = []
                 if self.loop is not None:
                     self.loop.close()
-            if 'tree_structure' in obj:
+            if "tree_structure" in obj:
                 self.nodes.append(self.buffer)
                 if self.loop is not None:
                     self.loop.update(len(self.nodes))
                     if len(self.nodes) % 10 == 0:
                         self.loop.set_description(
-                            "dump_booster: %d/%d trees, %d nodes" % (
-                                len(self.nodes), self.n_trees, self.stored))
+                            "dump_booster: %d/%d trees, %d nodes"
+                            % (len(self.nodes), self.n_trees, self.stored)
+                        )
                 self.buffer = []
             if "decision_type" in obj:
                 self.buffer.append(obj)
@@ -355,11 +453,16 @@ def dump_booster_model(self, num_iteration=None, start_iteration=0,
     if verbose >= 2:
         print("[dump_booster_model] to_json")
     info = {}
-    ret = json.loads(string_buffer.value.decode('utf-8'), cls=Hook,
-                     info=info, n_trees=self.num_trees(), verbose=verbose)
-    ret['pandas_categorical'] = json.loads(
-        json.dumps(self.pandas_categorical,
-                   default=json_default_with_numpy))
+    ret = json.loads(
+        string_buffer.value.decode("utf-8"),
+        cls=Hook,
+        info=info,
+        n_trees=self.num_trees(),
+        verbose=verbose,
+    )
+    ret["pandas_categorical"] = json.loads(
+        json.dumps(self.pandas_categorical, default=jdwn)
+    )
     if verbose >= 2:
         print("[dump_booster_model] end.")
     return ret, info
@@ -370,39 +473,47 @@ def _split_tree_ensemble_atts(attrs, split):
     Splits the attributes of a TreeEnsembleRegressor into
     multiple trees in order to do the summation in double instead of floats.
     """
-    trees_id = list(sorted(set(attrs['nodes_treeids'])))
+    trees_id = list(sorted(set(attrs["nodes_treeids"])))
     results = []
     index = 0
     while index < len(trees_id):
         index2 = min(index + split, len(trees_id))
-        subset = set(trees_id[index: index2])
+        subset = set(trees_id[index:index2])
 
         indices_node = []
         indices_target = []
-        for j, v in enumerate(attrs['nodes_treeids']):
+        for j, v in enumerate(attrs["nodes_treeids"]):
             if v in subset:
                 indices_node.append(j)
-        for j, v in enumerate(attrs['target_treeids']):
+        for j, v in enumerate(attrs["target_treeids"]):
             if v in subset:
                 indices_target.append(j)
 
-        if (len(indices_node) >= len(attrs['nodes_treeids']) or
-                len(indices_target) >= len(attrs['target_treeids'])):
+        if len(indices_node) >= len(attrs["nodes_treeids"]) or len(
+            indices_target
+        ) >= len(attrs["target_treeids"]):
             raise RuntimeError(  # pragma: no cover
                 "Initial attributes are not consistant."
                 "\nindex=%r index2=%r subset=%r"
                 "\nnodes_treeids=%r\ntarget_treeids=%r"
-                "\nindices_node=%r\nindices_target=%r" % (
-                    index, index2, subset,
-                    attrs['nodes_treeids'], attrs['target_treeids'],
-                    indices_node, indices_target))
+                "\nindices_node=%r\nindices_target=%r"
+                % (
+                    index,
+                    index2,
+                    subset,
+                    attrs["nodes_treeids"],
+                    attrs["target_treeids"],
+                    indices_node,
+                    indices_target,
+                )
+            )
 
         ats = {}
         for name, att in attrs.items():
-            if name == 'nodes_treeids':
+            if name == "nodes_treeids":
                 new_att = [att[i] for i in indices_node]
                 new_att = [i - att[0] for i in new_att]
-            elif name == 'target_treeids':
+            elif name == "target_treeids":
                 new_att = [att[i] for i in indices_target]
                 new_att = [i - att[0] for i in new_att]
             elif name.startswith("nodes_"):
@@ -411,7 +522,7 @@ def _split_tree_ensemble_atts(attrs, split):
             elif name.startswith("target_"):
                 new_att = [att[i] for i in indices_target]
                 assert len(new_att) == len(indices_target)
-            elif name == 'name':
+            elif name == "name":
                 new_att = "%s%d" % (att, len(results))
             else:
                 new_att = att
@@ -427,94 +538,96 @@ def convert_lightgbm(scope, operator, container):
     """
     Converters for *lightgbm*.
     """
-    verbose = getattr(container, 'verbose', 0)
+    verbose = getattr(container, "verbose", 0)
     gbm_model = operator.raw_operator
     gbm_text, info = dump_booster_model(gbm_model.booster_, verbose=verbose)
     modify_tree_for_rule_in_set(gbm_text, use_float=True, verbose=verbose, info=info)
 
     attrs = get_default_tree_classifier_attribute_pairs()
-    attrs['name'] = operator.full_name
+    attrs["name"] = operator.full_name
 
     # Create different attributes for classifier and
     # regressor, respectively
     post_transform = None
-    if gbm_text['objective'].startswith('binary'):
+    if gbm_text["objective"].startswith("binary"):
         n_classes = 1
-        attrs['post_transform'] = 'LOGISTIC'
-    elif gbm_text['objective'].startswith('multiclass'):
-        n_classes = gbm_text['num_class']
-        attrs['post_transform'] = 'SOFTMAX'
-    elif gbm_text['objective'].startswith(('regression', 'quantile')):
+        attrs["post_transform"] = "LOGISTIC"
+    elif gbm_text["objective"].startswith("multiclass"):
+        n_classes = gbm_text["num_class"]
+        attrs["post_transform"] = "SOFTMAX"
+    elif gbm_text["objective"].startswith(("regression", "quantile")):
         n_classes = 1  # Regressor has only one output variable
-        attrs['post_transform'] = 'NONE'
-        attrs['n_targets'] = n_classes
-    elif gbm_text['objective'].startswith(('poisson', 'gamma')):
+        attrs["post_transform"] = "NONE"
+        attrs["n_targets"] = n_classes
+    elif gbm_text["objective"].startswith(("poisson", "gamma")):
         n_classes = 1  # Regressor has only one output variable
-        attrs['n_targets'] = n_classes
+        attrs["n_targets"] = n_classes
         # 'Exp' is not a supported post_transform value in the ONNX spec yet,
         # so we need to add an 'Exp' post transform node to the model
-        attrs['post_transform'] = 'NONE'
+        attrs["post_transform"] = "NONE"
         post_transform = "Exp"
     else:
         raise RuntimeError(
             "LightGBM objective should be cleaned already not '{}'.".format(
-                gbm_text['objective']))
+                gbm_text["objective"]
+            )
+        )
 
     # Use the same algorithm to parse the tree
-    for i, tree in enumerate(gbm_text['tree_info']):
+    for i, tree in enumerate(gbm_text["tree_info"]):
         tree_id = i
         class_id = tree_id % n_classes
         # tree['shrinkage'] --> LightGbm provides figures with it already.
-        learning_rate = 1.
+        learning_rate = 1.0
         _parse_tree_structure(
-            tree_id, class_id, learning_rate, tree['tree_structure'], attrs)
+            tree_id, class_id, learning_rate, tree["tree_structure"], attrs
+        )
 
     # Sort nodes_* attributes. For one tree, its node indexes
     # should appear in an ascent order in nodes_nodeids. Nodes
     # from a tree with a smaller tree index should appear
     # before trees with larger indexes in nodes_nodeids.
-    node_numbers_per_tree = Counter(attrs['nodes_treeids'])
+    node_numbers_per_tree = Counter(attrs["nodes_treeids"])
     tree_number = len(node_numbers_per_tree.keys())
     accumulated_node_numbers = [0] * tree_number
     for i in range(1, tree_number):
         accumulated_node_numbers[i] = (
-            accumulated_node_numbers[i - 1] + node_numbers_per_tree[i - 1])
+            accumulated_node_numbers[i - 1] + node_numbers_per_tree[i - 1]
+        )
     global_node_indexes = []
-    for i in range(len(attrs['nodes_nodeids'])):
-        tree_id = attrs['nodes_treeids'][i]
-        node_id = attrs['nodes_nodeids'][i]
-        global_node_indexes.append(
-            accumulated_node_numbers[tree_id] + node_id)
+    for i in range(len(attrs["nodes_nodeids"])):
+        tree_id = attrs["nodes_treeids"][i]
+        node_id = attrs["nodes_nodeids"][i]
+        global_node_indexes.append(accumulated_node_numbers[tree_id] + node_id)
     for k, v in attrs.items():
-        if k.startswith('nodes_'):
-            merged_indexes = zip(
-                copy.deepcopy(global_node_indexes), v)
-            sorted_list = [pair[1]
-                           for pair in sorted(merged_indexes,
-                                              key=lambda x: x[0])]
+        if k.startswith("nodes_"):
+            merged_indexes = zip(copy.deepcopy(global_node_indexes), v)
+            sorted_list = [
+                pair[1] for pair in sorted(merged_indexes, key=lambda x: x[0])
+            ]
             attrs[k] = sorted_list
 
     # Create ONNX object
-    if (gbm_text['objective'].startswith('binary') or
-            gbm_text['objective'].startswith('multiclass')):
+    if gbm_text["objective"].startswith("binary") or gbm_text["objective"].startswith(
+        "multiclass"
+    ):
         # Prepare label information for both of TreeEnsembleClassifier
         class_type = onnx_proto.TensorProto.STRING
-        if all(isinstance(i, (numbers.Real, bool, np.bool_))
-               for i in gbm_model.classes_):
+        if all(
+            isinstance(i, (numbers.Real, bool, np.bool_)) for i in gbm_model.classes_
+        ):
             class_type = onnx_proto.TensorProto.INT64
             class_labels = [int(i) for i in gbm_model.classes_]
-            attrs['classlabels_int64s'] = class_labels
+            attrs["classlabels_int64s"] = class_labels
         elif all(isinstance(i, str) for i in gbm_model.classes_):
             class_labels = [str(i) for i in gbm_model.classes_]
-            attrs['classlabels_strings'] = class_labels
+            attrs["classlabels_strings"] = class_labels
         else:
-            raise ValueError(
-                'Only string and integer class labels are allowed')
+            raise ValueError("Only string and integer class labels are allowed")
 
         # Create tree classifier
-        probability_tensor_name = scope.get_unique_variable_name(
-            'probability_tensor')
-        label_tensor_name = scope.get_unique_variable_name('label_tensor')
+        probability_tensor_name = scope.get_unique_variable_name("probability_tensor")
+        label_tensor_name = scope.get_unique_variable_name("label_tensor")
 
         # onnx does not support int and float values for a float tensor
         update = {}
@@ -528,88 +641,116 @@ def convert_lightgbm(scope, operator, container):
         attrs.update(update)
 
         container.add_node(
-            'TreeEnsembleClassifier', operator.input_full_names,
+            "TreeEnsembleClassifier",
+            operator.input_full_names,
             [label_tensor_name, probability_tensor_name],
-            op_domain='ai.onnx.ml', **attrs)
+            op_domain="ai.onnx.ml",
+            **attrs
+        )
 
         prob_tensor = probability_tensor_name
 
-        if gbm_model.boosting_type == 'rf':
-            col_index_name = scope.get_unique_variable_name('col_index')
-            first_col_name = scope.get_unique_variable_name('first_col')
-            zeroth_col_name = scope.get_unique_variable_name('zeroth_col')
-            denominator_name = scope.get_unique_variable_name('denominator')
+        if gbm_model.boosting_type == "rf":
+            col_index_name = scope.get_unique_variable_name("col_index")
+            first_col_name = scope.get_unique_variable_name("first_col")
+            zeroth_col_name = scope.get_unique_variable_name("zeroth_col")
+            denominator_name = scope.get_unique_variable_name("denominator")
             modified_first_col_name = scope.get_unique_variable_name(
-                'modified_first_col')
-            unit_float_tensor_name = scope.get_unique_variable_name(
-                'unit_float_tensor')
-            merged_prob_name = scope.get_unique_variable_name('merged_prob')
-            predicted_label_name = scope.get_unique_variable_name(
-                'predicted_label')
-            classes_name = scope.get_unique_variable_name('classes')
-            final_label_name = scope.get_unique_variable_name('final_label')
+                "modified_first_col"
+            )
+            unit_float_tensor_name = scope.get_unique_variable_name("unit_float_tensor")
+            merged_prob_name = scope.get_unique_variable_name("merged_prob")
+            predicted_label_name = scope.get_unique_variable_name("predicted_label")
+            classes_name = scope.get_unique_variable_name("classes")
+            final_label_name = scope.get_unique_variable_name("final_label")
 
             container.add_initializer(
-                col_index_name, onnx_proto.TensorProto.INT64, [], [1])
+                col_index_name, onnx_proto.TensorProto.INT64, [], [1]
+            )
             container.add_initializer(
-                unit_float_tensor_name, onnx_proto.TensorProto.FLOAT,
-                [], [1.0])
+                unit_float_tensor_name, onnx_proto.TensorProto.FLOAT, [], [1.0]
+            )
             container.add_initializer(
-                denominator_name, onnx_proto.TensorProto.FLOAT, [],
-                [100.0])
-            container.add_initializer(classes_name, class_type,
-                                      [len(class_labels)], class_labels)
+                denominator_name, onnx_proto.TensorProto.FLOAT, [], [100.0]
+            )
+            container.add_initializer(
+                classes_name, class_type, [len(class_labels)], class_labels
+            )
 
             container.add_node(
-                'ArrayFeatureExtractor',
+                "ArrayFeatureExtractor",
                 [probability_tensor_name, col_index_name],
                 first_col_name,
-                name=scope.get_unique_operator_name(
-                    'ArrayFeatureExtractor'),
-                op_domain='ai.onnx.ml')
-            apply_div(scope, [first_col_name, denominator_name],
-                      modified_first_col_name, container, broadcast=1)
+                name=scope.get_unique_operator_name("ArrayFeatureExtractor"),
+                op_domain="ai.onnx.ml",
+            )
+            apply_div(
+                scope,
+                [first_col_name, denominator_name],
+                modified_first_col_name,
+                container,
+                broadcast=1,
+            )
             apply_sub(
-                scope, [unit_float_tensor_name, modified_first_col_name],
-                zeroth_col_name, container, broadcast=1)
+                scope,
+                [unit_float_tensor_name, modified_first_col_name],
+                zeroth_col_name,
+                container,
+                broadcast=1,
+            )
             container.add_node(
-                'Concat', [zeroth_col_name, modified_first_col_name],
+                "Concat",
+                [zeroth_col_name, modified_first_col_name],
                 merged_prob_name,
-                name=scope.get_unique_operator_name('Concat'), axis=1)
+                name=scope.get_unique_operator_name("Concat"),
+                axis=1,
+            )
             container.add_node(
-                'ArgMax', merged_prob_name,
+                "ArgMax",
+                merged_prob_name,
                 predicted_label_name,
-                name=scope.get_unique_operator_name('ArgMax'), axis=1)
+                name=scope.get_unique_operator_name("ArgMax"),
+                axis=1,
+            )
             container.add_node(
-                'ArrayFeatureExtractor', [classes_name, predicted_label_name],
+                "ArrayFeatureExtractor",
+                [classes_name, predicted_label_name],
                 final_label_name,
-                name=scope.get_unique_operator_name('ArrayFeatureExtractor'),
-                op_domain='ai.onnx.ml')
-            apply_reshape(scope, final_label_name,
-                          operator.outputs[0].full_name,
-                          container, desired_shape=[-1, ])
+                name=scope.get_unique_operator_name("ArrayFeatureExtractor"),
+                op_domain="ai.onnx.ml",
+            )
+            apply_reshape(
+                scope,
+                final_label_name,
+                operator.outputs[0].full_name,
+                container,
+                desired_shape=[
+                    -1,
+                ],
+            )
             prob_tensor = merged_prob_name
         else:
-            container.add_node('Identity', label_tensor_name,
-                               operator.outputs[0].full_name,
-                               name=scope.get_unique_operator_name('Identity'))
+            container.add_node(
+                "Identity",
+                label_tensor_name,
+                operator.outputs[0].full_name,
+                name=scope.get_unique_operator_name("Identity"),
+            )
 
         # Convert probability tensor to probability map
         # (keys are labels while values are the associated probabilities)
-        container.add_node('Identity', prob_tensor,
-                           operator.outputs[1].full_name)
+        container.add_node("Identity", prob_tensor, operator.outputs[1].full_name)
     else:
         # Create tree regressor
-        output_name = scope.get_unique_variable_name('output')
+        output_name = scope.get_unique_variable_name("output")
 
-        keys_to_be_renamed = list(
-            k for k in attrs if k.startswith('class_'))
+        keys_to_be_renamed = list(k for k in attrs if k.startswith("class_"))
 
         for k in keys_to_be_renamed:
             # Rename class_* attribute to target_*
             # because TreeEnsebmleClassifier
             # and TreeEnsembleClassifier have different ONNX attributes
-            attrs['target' + k[5:]] = copy.deepcopy(attrs[k])
+            attrs["target" + k[5:]] = copy.deepcopy(attrs[k])
             del attrs[k]
 
         # onnx does not support int and float values for a float tensor
@@ -623,55 +764,83 @@ def convert_lightgbm(scope, operator, container):
                     update[k] = [float(x) for x in v]
         attrs.update(update)
 
-        split = getattr(operator, 'split', None)
+        split = getattr(operator, "split", None)
         if split in (None, -1):
             container.add_node(
-                'TreeEnsembleRegressor', operator.input_full_names,
-                output_name, op_domain='ai.onnx.ml', **attrs)
+                "TreeEnsembleRegressor",
+                operator.input_full_names,
+                output_name,
+                op_domain="ai.onnx.ml",
+                **attrs
+            )
         else:
             tree_attrs = _split_tree_ensemble_atts(attrs, split)
             tree_nodes = []
             for i, ats in enumerate(tree_attrs):
-                tree_name = scope.get_unique_variable_name('tree%d' % i)
+                tree_name = scope.get_unique_variable_name("tree%d" % i)
                 container.add_node(
-                    'TreeEnsembleRegressor', operator.input_full_names,
-                    tree_name, op_domain='ai.onnx.ml', **ats)
-                cast_name = scope.get_unique_variable_name('dtree%d' % i)
+                    "TreeEnsembleRegressor",
+                    operator.input_full_names,
+                    tree_name,
+                    op_domain="ai.onnx.ml",
+                    **ats
+                )
+                cast_name = scope.get_unique_variable_name("dtree%d" % i)
                 container.add_node(
-                    'Cast', tree_name, cast_name, to=TensorProto.DOUBLE,  # pylint: disable=E1101
-                    name=scope.get_unique_operator_name("dtree%d" % i))
+                    "Cast",
+                    tree_name,
+                    cast_name,
+                    to=TensorProto.DOUBLE,  # pylint: disable=E1101
+                    name=scope.get_unique_operator_name("dtree%d" % i),
+                )
                 tree_nodes.append(cast_name)
-            cast_name = scope.get_unique_variable_name('ftrees')
+            cast_name = scope.get_unique_variable_name("ftrees")
             container.add_node(
-                'Sum', tree_nodes, cast_name,
-                name=scope.get_unique_operator_name("sumtree%d" % len(tree_nodes)))
+                "Sum",
+                tree_nodes,
+                cast_name,
+                name=scope.get_unique_operator_name("sumtree%d" % len(tree_nodes)),
+            )
             container.add_node(
-                'Cast', cast_name, output_name, to=TensorProto.FLOAT,  # pylint: disable=E1101
-                name=scope.get_unique_operator_name("dtree%d" % i))
-        if gbm_model.boosting_type == 'rf':
-            denominator_name = scope.get_unique_variable_name('denominator')
+                "Cast",
+                cast_name,
+                output_name,
+                to=TensorProto.FLOAT,  # pylint: disable=E1101
+                name=scope.get_unique_operator_name("dtree%d" % i),
+            )
+        if gbm_model.boosting_type == "rf":
+            denominator_name = scope.get_unique_variable_name("denominator")
 
             container.add_initializer(
-                denominator_name, onnx_proto.TensorProto.FLOAT, [], [100.0])
+                denominator_name, onnx_proto.TensorProto.FLOAT, [], [100.0]
+            )
 
-            apply_div(scope, [output_name, denominator_name],
-                      operator.output_full_names, container, broadcast=1)
+            apply_div(
+                scope,
+                [output_name, denominator_name],
+                operator.output_full_names,
+                container,
+                broadcast=1,
+            )
         elif post_transform:
             container.add_node(
                 post_transform,
                 output_name,
                 operator.output_full_names,
-                name=scope.get_unique_operator_name(
-                    post_transform),
+                name=scope.get_unique_operator_name(post_transform),
             )
         else:
-            container.add_node('Identity', output_name,
-                               operator.output_full_names,
-                               name=scope.get_unique_operator_name('Identity'))
+            container.add_node(
+                "Identity",
+                output_name,
+                operator.output_full_names,
+                name=scope.get_unique_operator_name("Identity"),
+            )
 
 
-def modify_tree_for_rule_in_set(gbm, use_float=False, verbose=0, count=0,  # pylint: disable=R1710
-                                info=None):
+def modify_tree_for_rule_in_set(
+    gbm, use_float=False, verbose=0, count=0, info=None  # pylint: disable=R1710
+):
     """
     LightGBM produces sometimes a tree with a node set
     to use rule ``==`` to a set of values (= in set),
@@ -686,32 +855,39 @@ def modify_tree_for_rule_in_set(gbm, use_float=False, verbose=0, count=0,  # pyl
     :param info: addition information to speed up this search
     :return: number of changed nodes (include *count*)
     """
-    if 'tree_info' in gbm:
+    if "tree_info" in gbm:
         if info is not None:
-            dec_nodes = info['decision_nodes']
+            dec_nodes = info["decision_nodes"]
         else:
             dec_nodes = None
         if verbose >= 2 and has_tqdm():
             from tqdm import tqdm
-            loop = tqdm(gbm['tree_info'])
+
+            loop = tqdm(gbm["tree_info"])
             for i, tree in enumerate(loop):
                 loop.set_description("rules tree %d c=%d" % (i, count))
                 count = modify_tree_for_rule_in_set(
-                    tree, use_float=use_float, count=count,
-                    info=None if dec_nodes is None else dec_nodes[i])
+                    tree,
+                    use_float=use_float,
+                    count=count,
+                    info=None if dec_nodes is None else dec_nodes[i],
+                )
         else:
-            for i, tree in enumerate(gbm['tree_info']):
+            for i, tree in enumerate(gbm["tree_info"]):
                 count = modify_tree_for_rule_in_set(
-                    tree, use_float=use_float, count=count,
-                    info=None if dec_nodes is None else dec_nodes[i])
+                    tree,
+                    use_float=use_float,
+                    count=count,
+                    info=None if dec_nodes is None else dec_nodes[i],
+                )
         return count
 
-    if 'tree_structure' in gbm:
+    if "tree_structure" in gbm:
         return modify_tree_for_rule_in_set(
-            gbm['tree_structure'], use_float=use_float, count=count,
-            info=info)
+            gbm["tree_structure"], use_float=use_float, count=count, info=info
+        )
 
-    if 'decision_type' not in gbm:
+    if "decision_type" not in gbm:
         return count
 
     def str2number(val):
@@ -726,34 +902,34 @@ def modify_tree_for_rule_in_set(gbm, use_float=False, verbose=0, count=0,  # pyl
     if info is None:
 
         def recursive_call(this, c):
-            if 'left_child' in this:
-                c = process_node(this['left_child'], count=c)
-            if 'right_child' in this:
-                c = process_node(this['right_child'], count=c)
+            if "left_child" in this:
+                c = process_node(this["left_child"], count=c)
+            if "right_child" in this:
+                c = process_node(this["right_child"], count=c)
             return c
 
         def process_node(node, count):
-            if 'decision_type' not in node:
+            if "decision_type" not in node:
                 return count
-            if node['decision_type'] != '==':
+            if node["decision_type"] != "==":
                 return recursive_call(node, count)
-            th = node['threshold']
+            th = node["threshold"]
             if not isinstance(th, str):
                 return recursive_call(node, count)
-            pos = th.find('||')
+            pos = th.find("||")
             if pos == -1:
                 return recursive_call(node, count)
             th1 = str2number(th[:pos])
 
             def doit():
-                rest = th[pos + 2:]
-                if '||' not in rest:
+                rest = th[pos + 2 :]
+                if "||" not in rest:
                     rest = str2number(rest)
 
-                node['threshold'] = th1
+                node["threshold"] = th1
                 new_node = node.copy()
-                node['right_child'] = new_node
-                new_node['threshold'] = rest
+                node["right_child"] = new_node
+                new_node["threshold"] = rest
 
             doit()
             return recursive_call(node, count + 1)
@@ -765,34 +941,34 @@ def modify_tree_for_rule_in_set(gbm, use_float=False, verbose=0, count=0,  # pyl
     def split_node(node, th, pos):
         th1 = str2number(th[:pos])
 
-        rest = th[pos + 2:]
-        if '||' not in rest:
+        rest = th[pos + 2 :]
+        if "||" not in rest:
             rest = str2number(rest)
             app = False
         else:
             app = True
 
-        node['threshold'] = th1
+        node["threshold"] = th1
         new_node = node.copy()
-        node['right_child'] = new_node
-        new_node['threshold'] = rest
+        node["right_child"] = new_node
+        new_node["threshold"] = rest
         return new_node, app
 
     stack = deque(info)
     while len(stack) > 0:
         node = stack.pop()
 
-        if 'decision_type' not in node:
+        if "decision_type" not in node:
             continue  # leave
 
-        if node['decision_type'] != '==':
+        if node["decision_type"] != "==":
             continue
 
-        th = node['threshold']
+        th = node["threshold"]
         if not isinstance(th, str):
             continue
 
-        pos = th.find('||')
+        pos = th.find("||")
         if pos == -1:
             continue
 
@@ -805,38 +981,50 @@ def modify_tree_for_rule_in_set(gbm, use_float=False, verbose=0, count=0,  # pyl
 
 
 def convert_lgbm_zipmap(scope, operator, container):
-    zipmap_attrs = {'name': scope.get_unique_operator_name('ZipMap')}
-    if hasattr(operator, 'classlabels_int64s'):
-        zipmap_attrs['classlabels_int64s'] = operator.classlabels_int64s
+    zipmap_attrs = {"name": scope.get_unique_operator_name("ZipMap")}
+    if hasattr(operator, "classlabels_int64s"):
+        zipmap_attrs["classlabels_int64s"] = operator.classlabels_int64s
         to_type = onnx_proto.TensorProto.INT64
-    elif hasattr(operator, 'classlabels_strings'):
-        zipmap_attrs['classlabels_strings'] = operator.classlabels_strings
+    elif hasattr(operator, "classlabels_strings"):
+        zipmap_attrs["classlabels_strings"] = operator.classlabels_strings
         to_type = onnx_proto.TensorProto.STRING
     else:
         raise RuntimeError("Unknown class type.")
     if to_type == onnx_proto.TensorProto.STRING:
-        apply_identity(scope, operator.inputs[0].full_name,
-                       operator.outputs[0].full_name, container)
+        apply_identity(
+            scope,
+            operator.inputs[0].full_name,
+            operator.outputs[0].full_name,
+            container,
+        )
     else:
-        apply_cast(scope, operator.inputs[0].full_name,
-                   operator.outputs[0].full_name, container, to=to_type)
+        apply_cast(
+            scope,
+            operator.inputs[0].full_name,
+            operator.outputs[0].full_name,
+            container,
+            to=to_type,
+        )
 
     if operator.zipmap:
-        container.add_node('ZipMap', operator.inputs[1].full_name,
-                           operator.outputs[1].full_name,
-                           op_domain='ai.onnx.ml', **zipmap_attrs)
+        container.add_node(
+            "ZipMap",
+            operator.inputs[1].full_name,
+            operator.outputs[1].full_name,
+            op_domain="ai.onnx.ml",
+            **zipmap_attrs
+        )
     else:
         # onnxconverter-common when trying to remove identity nodes
         # if node identity is used.
-        one = scope.get_unique_variable_name('one')
+        one = scope.get_unique_variable_name("one")
 
-        container.add_initializer(
-            one, onnx_proto.TensorProto.FLOAT, [], [1])
+        container.add_initializer(one, onnx_proto.TensorProto.FLOAT, [], [1])
         container.add_node(
-            'Mul', [operator.inputs[1].full_name, one],
-            operator.outputs[1].full_name)
+            "Mul", [operator.inputs[1].full_name, one], operator.outputs[1].full_name
+        )
 
 
-register_converter('LgbmClassifier', convert_lightgbm)
-register_converter('LgbmRegressor', convert_lightgbm)
-register_converter('LgbmZipMap', convert_lgbm_zipmap)
+register_converter("LgbmClassifier", convert_lightgbm)
+register_converter("LgbmRegressor", convert_lightgbm)
+register_converter("LgbmZipMap", convert_lgbm_zipmap)

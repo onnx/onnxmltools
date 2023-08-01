@@ -23,7 +23,7 @@ def load_model(file_path):
     if not path.exists(file_path):
         raise FileNotFoundError("{0} was not found.".format(file_path))
     model = onnx_proto.ModelProto()
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         model.ParseFromString(f.read())
     return model
 
@@ -46,7 +46,7 @@ def save_model(model, file_path):
     directory = os.path.dirname(os.path.abspath(file_path))
     if not path.exists(directory):
         raise FileNotFoundError("Directory does not exist {0}".format(directory))
-    with open(file_path, 'wb') as f:
+    with open(file_path, "wb") as f:
         f.write(model.SerializeToString())
 
 
@@ -113,5 +113,7 @@ def set_model_doc_string(model, doc, override=False):
         raise ValueError("Doc must be a string type.")
     if model.doc_string and not doc and override is False:
         raise ValueError(
-            "Failing to overwrite the doc string with a blank string, set override to True if intentional.")
+            "Failing to overwrite the doc string with a "
+            "blank string, set override to True if intentional."
+        )
     model.doc_string = doc
