@@ -50,6 +50,7 @@ def convert_keras(
     custom_conversion_functions=None,
     custom_shape_calculators=None,
     default_batch_size=1,
+    large_model=False,
 ):
     """
     .. versionchanged:: 1.9.0
@@ -137,7 +138,7 @@ def convert_keras(
             extra_opset=None,
             shape_override=None,
             target=None,
-            large_model=False,
+            large_model=large_model,
             output_path=None,
         )
         if external_tensor_storage is not None:
