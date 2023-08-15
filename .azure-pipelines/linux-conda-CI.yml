@@ -17,7 +17,7 @@ jobs:
 
       Python311-1140-RT1151-xgb175:
         python.version: '3.11'
-        ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNX_PATH: '-i https://test.pypi.org/simple/ onnx==1.14.1rc2'
         ONNXRT_PATH: 'onnxruntime==1.15.1'
         COREML_PATH: NONE
         lightgbm.version: '>=4.0'
@@ -27,7 +27,7 @@ jobs:
 
       Python310-1140-RT1151-xgb175:
         python.version: '3.10'
-        ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNX_PATH: '-i https://test.pypi.org/simple/ onnx==1.14.1rc2'
         ONNXRT_PATH: 'onnxruntime==1.15.1'
         COREML_PATH: NONE
         lightgbm.version: '<4.0'
@@ -37,7 +37,7 @@ jobs:
 
       Python310-1140-RT1140-xgb175:
         python.version: '3.10'
-        ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNX_PATH: '-i https://test.pypi.org/simple/ onnx==1.14.1rc2'
         ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
         COREML_PATH: NONE
         lightgbm.version: '<4.0'
@@ -47,7 +47,7 @@ jobs:
 
       Python39-1140-RT1151-xgb175-scipy180:
         python.version: '3.9'
-        ONNX_PATH: 'onnx==1.14.0' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNX_PATH: '-i https://test.pypi.org/simple/ onnx==1.14.1rc2'
         ONNXRT_PATH: 'onnxruntime==1.15.1'
         COREML_PATH: NONE
         lightgbm.version: '>=4.0'
