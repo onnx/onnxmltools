@@ -46,21 +46,51 @@ def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
     return tree
 
 
-def save_read_sparkml_model_data(spark: SparkSession, model):
-    tdir = tempfile.tempdir
-    if tdir is None:
-        local_dir = spark._jvm.org.apache.spark.util.Utils.getLocalDir(
-            spark._jsc.sc().conf()
-        )
-        tdir = spark._jvm.org.apache.spark.util.Utils.createTempDir(
-            local_dir, "onnx"
-        ).getAbsolutePath()
-    if tdir is None:
-        raise FileNotFoundError(
-            "Unable to create a temporary directory for model '{}'"
-            ".".format(type(model).__name__)
-        )
-    path = os.path.join(tdir, type(model).__name__ + "_" + str(time.time()))
+def save_read_sparkml_model_data(spark: SparkSession, model, dfsPath=None):
+    # Get the value of spark.master
+    spark_mode = spark.conf.get("spark.master")
+
+    # Check the value of spark.master using regular expression
+    if "spark://" in spark_mode and (
+        "localhost" not in spark_mode or "127.0.0.1" not in spark_mode
+    ):
+        if dfsPath is None:
+            # If dfsPath is not specified, throw an error message as arg is required for cluster mode
+            raise ValueError(
+                "Argument dfsPath is required for saving model '{}' in cluster mode".format(
+                    type(model).__name__
+                )
+            )
+        else:
+            # Check that the dfsPath is a valid distributed file system path
+            # This can be hdfs, wabs, s3, etc.
+            if re.match(r"^[a-zA-Z]+://", dfsPath) is None:
+                raise ValueError(
+                    "Argument dfsPath '{}' is not a valid distributed file system path".format(
+                        dfsPath
+                    )
+                )
+            else:
+                # If dfsPath is specified, save the model to a tmp directory created in that dfsPath
+                # The dfsPath will be the root of the /tmp
+                tdir = os.path.join(dfsPath, "tmp/onnx")
+                path = dfsPath
+    else:
+        # If spark.master is not set or set to local, save the model to a local path.
+        tdir = tempfile.tempdir
+        if tdir is None:
+            local_dir = spark._jvm.org.apache.spark.util.Utils.getLocalDir(
+                spark._jsc.sc().conf()
+            )
+            tdir = spark._jvm.org.apache.spark.util.Utils.createTempDir(
+                local_dir, "onnx"
+            ).getAbsolutePath()
+        if tdir is None:
+            raise FileNotFoundError(
+                "Unable to create a temporary directory for model '{}'"
+                ".".format(type(model).__name__)
+            )
+        path = os.path.join(tdir, type(model).__name__ + "_" + str(time.time()))
     model.write().overwrite().save(path)
     df = spark.read.parquet(os.path.join(path, "data"))
     return df
