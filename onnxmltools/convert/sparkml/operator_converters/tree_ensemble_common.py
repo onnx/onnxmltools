@@ -4,6 +4,7 @@ import tempfile
 import os
 import time
 import numpy
+import re
 from pyspark.sql import SparkSession
 
 
@@ -46,7 +47,7 @@ def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
     return tree
 
 
-def save_read_sparkml_model_data(spark: SparkSession, model, dfsPath=None):
+def save_read_sparkml_model_data(spark: SparkSession, model):
     # Get the value of spark.master
     spark_mode = spark.conf.get("spark.master")
 
@@ -54,27 +55,32 @@ def save_read_sparkml_model_data(spark: SparkSession, model, dfsPath=None):
     if "spark://" in spark_mode and (
         "localhost" not in spark_mode or "127.0.0.1" not in spark_mode
     ):
-        if dfsPath is None:
-            # If dfsPath is not specified, throw an error message as arg is required for cluster mode
+        dfs_key = "ONNX_DFS_PATH"
+        try:
+            dfs_path = spark.conf.get("ONNX_DFS_PATH")
+        except:
+            raise ValueError("Configuration property '{}' does not exist for SparkSession. Please set this variable to a root distributed file system path to allow for saving and reading of spark models in cluster mode. You can set this in your SparkConfig by setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(dfs_key))
+        if dfs_path is None:
+            # If dfs_path is not specified, throw an error message as arg is required for cluster mode
             raise ValueError(
-                "Argument dfsPath is required for saving model '{}' in cluster mode".format(
+                "Argument dfs_path is required for saving model '{}' in cluster mode. You can set this in your SparkConfig by setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(
                     type(model).__name__
                 )
             )
         else:
-            # Check that the dfsPath is a valid distributed file system path
+            # Check that the dfs_path is a valid distributed file system path
             # This can be hdfs, wabs, s3, etc.
-            if re.match(r"^[a-zA-Z]+://", dfsPath) is None:
+            if re.match(r"^[a-zA-Z]+://", dfs_path) is None:
                 raise ValueError(
-                    "Argument dfsPath '{}' is not a valid distributed file system path".format(
-                        dfsPath
+                    "Argument dfs_path '{}' is not a valid distributed file system path".format(
+                        dfs_path
                     )
                 )
             else:
-                # If dfsPath is specified, save the model to a tmp directory created in that dfsPath
-                # The dfsPath will be the root of the /tmp
-                tdir = os.path.join(dfsPath, "tmp/onnx")
-                path = dfsPath
+                # If dfs_path is specified, save the model to a tmp directory created in that dfs_path
+                # The dfs_path will be the root of the /tmp
+                tdir = os.path.join(dfs_path, "tmp/onnx")
+                path = dfs_path
     else:
         # If spark.master is not set or set to local, save the model to a local path.
         tdir = tempfile.tempdir
