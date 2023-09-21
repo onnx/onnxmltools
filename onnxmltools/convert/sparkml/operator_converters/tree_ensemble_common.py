@@ -59,7 +59,11 @@ def save_read_sparkml_model_data(spark: SparkSession, model):
         try:
             dfs_path = spark.conf.get("ONNX_DFS_PATH")
         except:
-            raise ValueError("Configuration property '{}' does not exist for SparkSession. Please set this variable to a root distributed file system path to allow for saving and reading of spark models in cluster mode. You can set this in your SparkConfig by setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(dfs_key))
+            raise ValueError(
+                "Configuration property '{}' does not exist for SparkSession. Please set this variable to a root distributed file system path to allow for saving and reading of spark models in cluster mode. You can set this in your SparkConfig by setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(
+                    dfs_key
+                )
+            )
         if dfs_path is None:
             # If dfs_path is not specified, throw an error message as arg is required for cluster mode
             raise ValueError(
@@ -95,7 +99,7 @@ def save_read_sparkml_model_data(spark: SparkSession, model):
                 "Unable to create a temporary directory for model '{}'"
                 ".".format(type(model).__name__)
             )
-    
+
     path = os.path.join(tdir, type(model).__name__ + "_" + str(time.time()))
     model.write().overwrite().save(path)
     df = spark.read.parquet(os.path.join(path, "data"))
