@@ -80,7 +80,6 @@ def save_read_sparkml_model_data(spark: SparkSession, model):
                 # If dfs_path is specified, save the model to a tmp directory created in that dfs_path
                 # The dfs_path will be the root of the /tmp
                 tdir = os.path.join(dfs_path, "tmp/onnx")
-                path = dfs_path
     else:
         # If spark.master is not set or set to local, save the model to a local path.
         tdir = tempfile.tempdir
@@ -96,7 +95,8 @@ def save_read_sparkml_model_data(spark: SparkSession, model):
                 "Unable to create a temporary directory for model '{}'"
                 ".".format(type(model).__name__)
             )
-        path = os.path.join(tdir, type(model).__name__ + "_" + str(time.time()))
+    
+    path = os.path.join(tdir, type(model).__name__ + "_" + str(time.time()))
     model.write().overwrite().save(path)
     df = spark.read.parquet(os.path.join(path, "data"))
     return df
