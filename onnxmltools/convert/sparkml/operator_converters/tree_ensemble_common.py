@@ -58,16 +58,23 @@ def save_read_sparkml_model_data(spark: SparkSession, model):
         dfs_key = "ONNX_DFS_PATH"
         try:
             dfs_path = spark.conf.get("ONNX_DFS_PATH")
-        except:
+        except Exception:
             raise ValueError(
-                "Configuration property '{}' does not exist for SparkSession. Please set this variable to a root distributed file system path to allow for saving and reading of spark models in cluster mode. You can set this in your SparkConfig by setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(
+                "Configuration property '{}' does not exist for SparkSession. \
+                Please set this variable to a root distributed file system path to allow \
+                for saving and reading of spark models in cluster mode. \
+                You can set this in your SparkConfig \
+                by setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(
                     dfs_key
                 )
             )
         if dfs_path is None:
-            # If dfs_path is not specified, throw an error message as arg is required for cluster mode
+            # If dfs_path is not specified, throw an error message
+            # dfs_path arg is required for cluster mode
             raise ValueError(
-                "Argument dfs_path is required for saving model '{}' in cluster mode. You can set this in your SparkConfig by setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(
+                "Argument dfs_path is required for saving model '{}' in cluster mode. \
+                You can set this in your SparkConfig by \
+                setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(
                     type(model).__name__
                 )
             )
@@ -76,12 +83,12 @@ def save_read_sparkml_model_data(spark: SparkSession, model):
             # This can be hdfs, wabs, s3, etc.
             if re.match(r"^[a-zA-Z]+://", dfs_path) is None:
                 raise ValueError(
-                    "Argument dfs_path '{}' is not a valid distributed file system path".format(
+                    "Argument dfs_path '{}' is not a valid distributed path".format(
                         dfs_path
                     )
                 )
             else:
-                # If dfs_path is specified, save the model to a tmp directory created in that dfs_path
+                # If dfs_path is specified, save the model to a tmp directory
                 # The dfs_path will be the root of the /tmp
                 tdir = os.path.join(dfs_path, "tmp/onnx")
     else:
