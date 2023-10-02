@@ -5,7 +5,6 @@ Tests utilities.
 """
 import os
 import unittest
-import warnings
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 import onnxmltools
@@ -17,23 +16,28 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestUtils(unittest.TestCase):
-
     @staticmethod
     def _parseEOL(file):
-        with open(file, 'r') as f:
+        with open(file, "r") as f:
             content = f.read()
         return content.replace("\r\n", "\n")
 
     def test_load_model(self):
         this = os.path.dirname(__file__)
-        onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
+        onnx_file = os.path.join(
+            this, "models", "coreml_OneHotEncoder_BikeSharing.onnx"
+        )
         onnx_model = load_model(onnx_file)
         self.assertTrue(onnx_model is not None)
 
     def test_save_model(self):
         this = os.path.dirname(__file__)
-        onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
-        new_onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing2.onnx")
+        onnx_file = os.path.join(
+            this, "models", "coreml_OneHotEncoder_BikeSharing.onnx"
+        )
+        new_onnx_file = os.path.join(
+            this, "models", "coreml_OneHotEncoder_BikeSharing2.onnx"
+        )
         onnx_model = load_model(onnx_file)
 
         save_model(onnx_model, new_onnx_file)
@@ -42,7 +46,9 @@ class TestUtils(unittest.TestCase):
 
     def test_model_setters(self):
         this = os.path.dirname(__file__)
-        onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
+        onnx_file = os.path.join(
+            this, "models", "coreml_OneHotEncoder_BikeSharing.onnx"
+        )
         onnx_model = load_model(onnx_file)
         set_model_version(onnx_model, 2)
         set_model_domain(onnx_model, "com.sample")
@@ -54,22 +60,30 @@ class TestUtils(unittest.TestCase):
 
     def test_set_docstring_blank(self):
         this = os.path.dirname(__file__)
-        onnx_file = os.path.join(this, "models", "coreml_OneHotEncoder_BikeSharing.onnx")
+        onnx_file = os.path.join(
+            this, "models", "coreml_OneHotEncoder_BikeSharing.onnx"
+        )
         onnx_model = load_model(onnx_file)
         set_model_doc_string(onnx_model, "sample")
-        self.assertRaises(ValueError, set_model_doc_string, onnx_model.doc_string, "sample")
+        self.assertRaises(
+            ValueError, set_model_doc_string, onnx_model.doc_string, "sample"
+        )
         set_model_doc_string(onnx_model, "", True)
         self.assertEqual(onnx_model.doc_string, "")
 
 
 class TestWrapper(unittest.TestCase):
-
-    @unittest.skipIf(True, reason="Needs this PR: https://github.com/onnx/tensorflow-onnx/pull/1563")
+    @unittest.skipIf(
+        True, reason="Needs this PR: https://github.com/onnx/tensorflow-onnx/pull/1563"
+    )
     def test_keras_with_tf2onnx(self):
         import tensorflow.keras as keras
+
         model = keras.Sequential()
-        model.add(keras.layers.Dense(units=4, input_shape=(10,), activation='relu'))
-        model.compile(loss='binary_crossentropy', optimizer='Adam', metrics=['binary_accuracy'])
+        model.add(keras.layers.Dense(units=4, input_shape=(10,), activation="relu"))
+        model.compile(
+            loss="binary_crossentropy", optimizer="Adam", metrics=["binary_accuracy"]
+        )
         onnx_model = onnxmltools.convert_tensorflow(model, target_opset=TARGET_OPSET)
         self.assertTrue(len(onnx_model.graph.node) > 0)
 

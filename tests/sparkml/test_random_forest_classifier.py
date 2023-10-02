@@ -15,7 +15,11 @@ from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType, FloatTensorType
-from tests.sparkml.sparkml_test_utils import save_data_models, run_onnx_model, compare_results
+from tests.sparkml.sparkml_test_utils import (
+    save_data_models,
+    run_onnx_model,
+    compare_results,
+)
 from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import StringIndexer, VectorIndexer
 
@@ -24,52 +28,81 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmRandomForestClassifier(SparkMlTestCase):
-
-    @unittest.skipIf(sys.platform == 'win32',
-                     reason="UnsatisfiedLinkError")
-    @unittest.skipIf(sys.version_info < (3, 8),
-                     reason="pickle fails on python 3.7")
-    @unittest.skipIf(pv.Version(onnx.__version__) <= pv.Version('1.3'),
-                     'Need Greater Opset 9')
+    @unittest.skipIf(sys.platform == "win32", reason="UnsatisfiedLinkError")
+    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
+    @unittest.skipIf(
+        pv.Version(onnx.__version__) <= pv.Version("1.3"), "Need Greater Opset 9"
+    )
     def test_random_forest_classification(self):
-        this_script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        this_script_dir = os.path.dirname(
+            os.path.abspath(inspect.getfile(inspect.currentframe()))
+        )
         input_path = os.path.join(this_script_dir, "data", "sample_libsvm_data.txt")
         original_data = self.spark.read.format("libsvm").load(input_path)
         #
         # truncate the features
         #
         feature_count = 5
-        self.spark.udf.register("truncateFeatures",
-                                lambda x: SparseVector(feature_count, range(0,feature_count), x.toArray()[125:130]),
-                                VectorUDT())
-        data = original_data.selectExpr("cast(label as string) as label", "truncateFeatures(features) as features")
+        self.spark.udf.register(
+            "truncateFeatures",
+            lambda x: SparseVector(
+                feature_count, range(0, feature_count), x.toArray()[125:130]
+            ),
+            VectorUDT(),
+        )
+        data = original_data.selectExpr(
+            "cast(label as string) as label", "truncateFeatures(features) as features"
+        )
         label_indexer = StringIndexer(inputCol="label", outputCol="indexedLabel")
-        feature_indexer = VectorIndexer(inputCol="features", outputCol="indexedFeatures",
-                                        maxCategories=10, handleInvalid='keep')
+        feature_indexer = VectorIndexer(
+            inputCol="features",
+            outputCol="indexedFeatures",
+            maxCategories=10,
+            handleInvalid="keep",
+        )
 
-        rf = RandomForestClassifier(labelCol="indexedLabel", featuresCol="indexedFeatures", numTrees=10)
+        rf = RandomForestClassifier(
+            labelCol="indexedLabel", featuresCol="indexedFeatures", numTrees=10
+        )
         pipeline = Pipeline(stages=[label_indexer, feature_indexer, rf])
         model = pipeline.fit(data)
-        model_onnx = convert_sparkml(model, 'Sparkml RandomForest Classifier', [
-            ('label', StringTensorType([None, 1])),
-            ('features', FloatTensorType([None, feature_count]))
-        ], spark_session=self.spark, target_opset=TARGET_OPSET)
+        model_onnx = convert_sparkml(
+            model,
+            "Sparkml RandomForest Classifier",
+            [
+                ("label", StringTensorType([None, 1])),
+                ("features", FloatTensorType([None, feature_count])),
+            ],
+            spark_session=self.spark,
+            target_opset=TARGET_OPSET,
+        )
         self.assertTrue(model_onnx is not None)
         # run the model
         predicted = model.transform(data)
         data_np = {
-            'label': data.toPandas().label.values.reshape((-1, 1)),
-            'features': data.toPandas().features.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
+            "label": data.toPandas().label.values.reshape((-1, 1)),
+            "features": data.toPandas()
+            .features.apply(lambda x: pandas.Series(x.toArray()))
+            .values.astype(numpy.float32),
         }
         expected = [
             predicted.toPandas().indexedLabel.values.astype(numpy.int64),
             predicted.toPandas().prediction.values.astype(numpy.float32),
-            predicted.toPandas().probability.apply(lambda x: pandas.Series(x.toArray())).values.astype(numpy.float32)
+            predicted.toPandas()
+            .probability.apply(lambda x: pandas.Series(x.toArray()))
+            .values.astype(numpy.float32),
         ]
-        paths = save_data_models(data_np, expected, model, model_onnx,
-                                    basename="SparkmlRandomForestClassifier")
+        paths = save_data_models(
+            data_np,
+            expected,
+            model,
+            model_onnx,
+            basename="SparkmlRandomForestClassifier",
+        )
         onnx_model_path = paths[-1]
-        output, output_shapes = run_onnx_model(['indexedLabel', 'prediction', 'probability'], data_np, onnx_model_path)
+        output, output_shapes = run_onnx_model(
+            ["indexedLabel", "prediction", "probability"], data_np, onnx_model_path
+        )
         compare_results(expected, output, decimal=5)
 
 

@@ -71,7 +71,10 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.NaiveBayesModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.feature.VectorSlicer": (
             lambda model: [model.getOrDefault("inputCol")],
@@ -95,11 +98,17 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.RandomForestClassificationModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.classification.MultilayerPerceptronClassificationModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.regression.DecisionTreeRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],
@@ -107,7 +116,10 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.DecisionTreeClassificationModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.feature.VectorIndexerModel": (
             lambda model: [model.getOrDefault("inputCol")],
@@ -159,7 +171,10 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.LogisticRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.feature.OneHotEncoderModel": (
             lambda model: model.getOrDefault("inputCols")
