@@ -1,24 +1,9 @@
-# SPDX-License-Identifier: Apache-2.0
-
 """
 Tests scikit-linear converter.
 """
 import tempfile
 import numpy
-import scipy
 import os
-try:
-    from libsvm.svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
-    import libsvm.svm as svm    
-    import libsvm.svmutil as svmutil
-    DISABLED = False
-except ImportError:
-    try:
-        import svm
-        from svm import C_SVC as SVC, EPSILON_SVR as SVR, NU_SVC as NuSVC, NU_SVR as NuSVR
-        import svmutil
-    except ImportError:
-        DISABLED = True
 
 try:
     from libsvm.svm import (
@@ -60,12 +45,14 @@ except ImportError:
 if not DISABLED:
     try:
         from scipy import ctypeslib
+
+        DISABLED = ctypeslib is None
     except ImportError:
         DISABLED = True
 
 if not DISABLED:
     from onnxmltools.convert.libsvm import convert
-    
+
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
@@ -143,9 +130,7 @@ class SkAPICl(SkAPI):
 
 
 class TestSvmLibSVM(unittest.TestCase):
-
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_svmc_linear(self):
         iris = load_iris()
 
@@ -172,11 +157,14 @@ class TestSvmLibSVM(unittest.TestCase):
             target_opset=TARGET_OPSET,
         )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmSvmcLinear-Dec2")
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPIClProba2(libsvm_model),
+            node,
+            basename="LibSvmSvmcLinear-Dec2",
+        )
 
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_svmc(self):
         iris = load_iris()
 
@@ -210,8 +198,7 @@ class TestSvmLibSVM(unittest.TestCase):
             basename="LibSvmSvmc-Dec2",
         )
 
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_svmr_linear(self):
         iris = load_iris()
 
@@ -242,8 +229,7 @@ class TestSvmLibSVM(unittest.TestCase):
             basename="LibSvmSvmrLinear-Dec3",
         )
 
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_svmr(self):
         iris = load_iris()
 
@@ -275,8 +261,7 @@ class TestSvmLibSVM(unittest.TestCase):
             basename="LibSvmSvmr",
         )
 
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_nusvmr(self):
         iris = load_iris()
 
@@ -308,8 +293,7 @@ class TestSvmLibSVM(unittest.TestCase):
             basename="LibSvmNuSvmr",
         )
 
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_nusvmc(self):
         iris = load_iris()
 
@@ -336,11 +320,14 @@ class TestSvmLibSVM(unittest.TestCase):
             target_opset=TARGET_OPSET,
         )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPIClProba2(libsvm_model), node,
-                            basename="LibSvmNuSvmc-Dec2")
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPIClProba2(libsvm_model),
+            node,
+            basename="LibSvmNuSvmc-Dec2",
+        )
 
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_svmc_linear_raw(self):
         iris = load_iris()
 
@@ -368,11 +355,15 @@ class TestSvmLibSVM(unittest.TestCase):
         )
         self.assertTrue(node is not None)
         # known svm runtime dimension error in ONNX Runtime
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcLinearRaw-Dec3", verbose=False)
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmSvmcLinearRaw-Dec3",
+            verbose=False,
+        )
 
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_svmc_raw(self):
         iris = load_iris()
 
@@ -400,12 +391,15 @@ class TestSvmLibSVM(unittest.TestCase):
             target_opset=TARGET_OPSET,
         )
         self.assertTrue(node is not None)
-        dump_data_and_model(X[:5].astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcRaw")
+        dump_data_and_model(
+            X[:5].astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmSvmcRaw",
+        )
 
     @unittest.skip(reason="libsvm crashes.")
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_nusvmc_linear_raw(self):
         iris = load_iris()
 
@@ -433,11 +427,15 @@ class TestSvmLibSVM(unittest.TestCase):
         )
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:5], X[60:65]])  # 5x0, 5x1
-        dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmNuSvmcRaw", verbose=False)
+        dump_data_and_model(
+            X2.astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmNuSvmcRaw",
+            verbose=False,
+        )
 
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_svmc_rbf_raw_multi(self):
         iris = load_iris()
 
@@ -465,11 +463,15 @@ class TestSvmLibSVM(unittest.TestCase):
         )
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
-        dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmNuSvmcRaw", verbose=False)
+        dump_data_and_model(
+            X2.astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmNuSvmcRaw",
+            verbose=False,
+        )
 
-    @unittest.skipIf(DISABLED,
-                     reason="svmlib not really maintained")
+    @unittest.skipIf(DISABLED, reason="svmlib not really maintained")
     def test_convert_svmc_linear_raw_multi(self):
         iris = load_iris()
 
@@ -497,8 +499,13 @@ class TestSvmLibSVM(unittest.TestCase):
         )
         self.assertTrue(node is not None)
         X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
-        dump_data_and_model(X2.astype(numpy.float32), SkAPICl(libsvm_model), node,
-                            basename="LibSvmSvmcRaw-Dec3", verbose=False)
+        dump_data_and_model(
+            X2.astype(numpy.float32),
+            SkAPICl(libsvm_model),
+            node,
+            basename="LibSvmSvmcRaw-Dec3",
+            verbose=False,
+        )
 
 
 if __name__ == "__main__":

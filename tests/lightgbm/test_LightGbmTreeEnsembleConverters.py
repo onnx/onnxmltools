@@ -61,7 +61,9 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         assert "zipmap" not in str(onx).lower()
         onxs = onx[0].SerializeToString()
         try:
-            sess = onnxruntime.InferenceSession(onxs, providers=["CPUExecutionProvider"])
+            sess = onnxruntime.InferenceSession(
+                onxs, providers=["CPUExecutionProvider"]
+            )
         except Exception as e:
             raise AssertionError(
                 "Model cannot be loaded by onnxruntime due to %r\n%s." % (e, onx[0])
@@ -89,11 +91,13 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         assert "zipmap" not in str(onx).lower()
         onxs = onx.SerializeToString()
         try:
-            sess = onnxruntime.InferenceSession(onxs, providers=["CPUExecutionProvider"])
+            sess = onnxruntime.InferenceSession(
+                onxs, providers=["CPUExecutionProvider"]
+            )
         except Exception as e:
             raise AssertionError(
-                "Model cannot be loaded by onnxruntime due to %r\n%s." % (
-                    e, onx))
+                "Model cannot be loaded by onnxruntime due to %r\n%s." % (e, onx)
+            )
         exp = model.predict(X), model.predict_proba(X)
         got = sess.run(None, {"X": X})
         assert_almost_equal(exp[0], got[0])
@@ -118,14 +122,28 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         X = numpy.array(X, dtype=numpy.float32)
         y = [0, 1, 0, 1]
         data = lightgbm.Dataset(X, label=y)
-        model = lightgbm.train({'boosting_type': 'gbdt', 'objective': 'binary',
-                                'n_estimators': 3, 'min_child_samples': 1, 'num_thread': 1},
-                               data)
-        model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))],
-                                           target_opset=TARGET_OPSET)
-        dump_data_and_model(X, model, model_onnx,
-                            basename=prefix + "BoosterBin" + model.__class__.__name__)
+        model = lightgbm.train(
+            {
+                "boosting_type": "gbdt",
+                "objective": "binary",
+                "n_estimators": 3,
+                "min_child_samples": 1,
+                "num_thread": 1,
+            },
+            data,
+        )
+        model_onnx, prefix = convert_model(
+            model,
+            "tree-based classifier",
+            [("input", FloatTensorType([None, 2]))],
+            target_opset=TARGET_OPSET,
+        )
+        dump_data_and_model(
+            X,
+            model,
+            model_onnx,
+            basename=prefix + "BoosterBin" + model.__class__.__name__,
+        )
 
     def test_lightgbm_booster_classifier_nozipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
@@ -150,8 +168,12 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
             target_opset=TARGET_OPSET,
         )
         assert "zipmap" not in str(model_onnx).lower()
-        dump_data_and_model(X, model, model_onnx,
-                            basename=prefix + "BoosterBin" + model.__class__.__name__)
+        dump_data_and_model(
+            X,
+            model,
+            model_onnx,
+            basename=prefix + "BoosterBin" + model.__class__.__name__,
+        )
 
     def test_lightgbm_booster_classifier_zipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
@@ -175,28 +197,49 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
             target_opset=TARGET_OPSET,
         )
         assert "zipmap" in str(model_onnx).lower()
-        dump_data_and_model(X, model, model_onnx,
-                            basename=prefix + "BoosterBin" + model.__class__.__name__)
+        dump_data_and_model(
+            X,
+            model,
+            model_onnx,
+            basename=prefix + "BoosterBin" + model.__class__.__name__,
+        )
 
     def test_lightgbm_booster_multi_classifier(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2], [-1, 2], [1, -2]]
         X = numpy.array(X, dtype=numpy.float32)
         y = [0, 1, 0, 1, 2, 2]
         data = lightgbm.Dataset(X, label=y)
-        model = lightgbm.train({'boosting_type': 'gbdt', 'objective': 'multiclass',
-                                'n_estimators': 3, 'min_child_samples': 1, 'num_class': 3, 'num_thread': 1},
-                               data)
-        model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))],
-                                           target_opset=TARGET_OPSET)
-        dump_data_and_model(X, model, model_onnx,
-                            basename=prefix + "BoosterBin" + model.__class__.__name__)
+        model = lightgbm.train(
+            {
+                "boosting_type": "gbdt",
+                "objective": "multiclass",
+                "n_estimators": 3,
+                "min_child_samples": 1,
+                "num_class": 3,
+                "num_thread": 1,
+            },
+            data,
+        )
+        model_onnx, prefix = convert_model(
+            model,
+            "tree-based classifier",
+            [("input", FloatTensorType([None, 2]))],
+            target_opset=TARGET_OPSET,
+        )
+        dump_data_and_model(
+            X,
+            model,
+            model_onnx,
+            basename=prefix + "BoosterBin" + model.__class__.__name__,
+        )
         try:
             from onnxruntime import InferenceSession
         except ImportError:
             # onnxruntime not installed (python 2.7)
             return
-        sess = InferenceSession(model_onnx.SerializeToString(), providers=["CPUExecutionProvider"])
+        sess = InferenceSession(
+            model_onnx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         out = sess.get_outputs()
         names = [o.name for o in out]
         assert names == ["label", "probabilities"]

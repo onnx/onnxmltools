@@ -315,10 +315,7 @@ def dump_booster_model(
     if getattr(self, "is_mock", False):
         return self.dump_model(), None
     from lightgbm.basic import _LIB, _safe_call
-<<<<<<< HEAD
-=======
 
->>>>>>> 79c34e377fe3a24d22eabac010e464de061d7adf
     try:
         # lightgbm >= 4.0
         from lightgbm.basic import (
@@ -344,34 +341,39 @@ def dump_booster_model(
         handle = self._handle
     except AttributeError:
         handle = self.handle
-    _safe_call(_LIB.LGBM_BoosterDumpModel(
-        handle,
-        ctypes.c_int(start_iteration),
-        ctypes.c_int(num_iteration),
-        ctypes.c_int(importance_type_int),
-        ctypes.c_int64(buffer_len),
-        ctypes.byref(tmp_out_len),
-        ptr_string_buffer))
+    _safe_call(
+        _LIB.LGBM_BoosterDumpModel(
+            handle,
+            ctypes.c_int(start_iteration),
+            ctypes.c_int(num_iteration),
+            ctypes.c_int(importance_type_int),
+            ctypes.c_int64(buffer_len),
+            ctypes.byref(tmp_out_len),
+            ptr_string_buffer,
+        )
+    )
     actual_len = tmp_out_len.value
     # if buffer length is not long enough, reallocate a buffer
     if actual_len > buffer_len:
         string_buffer = ctypes.create_string_buffer(actual_len)
-        ptr_string_buffer = ctypes.c_char_p(
-            *[ctypes.addressof(string_buffer)])
+        ptr_string_buffer = ctypes.c_char_p(*[ctypes.addressof(string_buffer)])
         try:
             # lightgbm >= 4.0
             handle = self._handle
         except AttributeError:
             # lightgbm < 4.0
             handle = self.handle
-        _safe_call(_LIB.LGBM_BoosterDumpModel(
-            handle,
-            ctypes.c_int(start_iteration),
-            ctypes.c_int(num_iteration),
-            ctypes.c_int(importance_type_int),
-            ctypes.c_int64(actual_len),
-            ctypes.byref(tmp_out_len),
-            ptr_string_buffer))
+        _safe_call(
+            _LIB.LGBM_BoosterDumpModel(
+                handle,
+                ctypes.c_int(start_iteration),
+                ctypes.c_int(num_iteration),
+                ctypes.c_int(importance_type_int),
+                ctypes.c_int64(actual_len),
+                ctypes.byref(tmp_out_len),
+                ptr_string_buffer,
+            )
+        )
 
     class Hook(json.JSONDecoder):
         """
@@ -431,11 +433,16 @@ def dump_booster_model(
     if verbose >= 2:
         print("[dump_booster_model] to_json")
     info = {}
-    ret = json.loads(string_buffer.value.decode('utf-8'), cls=Hook,
-                     info=info, n_trees=self.num_trees(), verbose=verbose)
-    ret['pandas_categorical'] = json.loads(
-        json.dumps(self.pandas_categorical,
-                   default=jdwn))
+    ret = json.loads(
+        string_buffer.value.decode("utf-8"),
+        cls=Hook,
+        info=info,
+        n_trees=self.num_trees(),
+        verbose=verbose,
+    )
+    ret["pandas_categorical"] = json.loads(
+        json.dumps(self.pandas_categorical, default=jdwn)
+    )
     if verbose >= 2:
         print("[dump_booster_model] end.")
     return ret, info

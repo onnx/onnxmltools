@@ -40,9 +40,10 @@ class WrappedBooster:
             self.operator_name = "LgbmRegressor"
         else:
             raise NotImplementedError(
-                'Unsupported LightGbm objective: %r.' % self.objective_)
+                "Unsupported LightGbm objective: %r." % self.objective_
+            )
         try:
-            average_output = self.booster_.attr('average_output')
+            average_output = self.booster_.attr("average_output")
         except AttributeError:
             average_output = self.booster_.params.get("average_output", None)
         if average_output:
@@ -58,9 +59,9 @@ class WrappedBooster:
             num_class = booster["num_class"]
         else:
             try:
-                num_class = booster.attr('num_class')
+                num_class = booster.attr("num_class")
             except AttributeError:
-                num_class = booster.params.get('num_class', None)
+                num_class = booster.params.get("num_class", None)
         if num_class is None:
             dp = booster.dump_model(num_iteration=1)
             num_class = dp["num_class"]
@@ -73,7 +74,7 @@ class WrappedBooster:
         if hasattr(self, "objective_") and self.objective_ is not None:
             return self.objective_
         try:
-            objective = self.booster_.attr('objective')
+            objective = self.booster_.attr("objective")
         except AttributeError:
             objective = self.booster_.params.get("objective", None)
         if objective is not None:

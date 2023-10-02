@@ -38,15 +38,30 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
         X = numpy.array(X, dtype=numpy.float32)
         y = [0, 1, 0, 1]
         data = lightgbm.Dataset(X, label=y)
-        model = lightgbm.train({'boosting_type': 'gbdt', 'objective': 'binary',
-                                'n_estimators': 3, 'min_child_samples': 1, 'num_thread': 1},
-                               data)
-        model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
-                                           target_opset=HUMMINGBIRD_TARGET_OPSET,
-                                           zipmap=False)
-        dump_data_and_model(X, model, model_onnx,
-                            basename=prefix + "BoosterBin" + model.__class__.__name__)
+        model = lightgbm.train(
+            {
+                "boosting_type": "gbdt",
+                "objective": "binary",
+                "n_estimators": 3,
+                "min_child_samples": 1,
+                "num_thread": 1,
+            },
+            data,
+        )
+        model_onnx, prefix = convert_model(
+            model,
+            "tree-based classifier",
+            [("input", FloatTensorType([None, 2]))],
+            without_onnx_ml=True,
+            target_opset=HUMMINGBIRD_TARGET_OPSET,
+            zipmap=False,
+        )
+        dump_data_and_model(
+            X,
+            model,
+            model_onnx,
+            basename=prefix + "BoosterBin" + model.__class__.__name__,
+        )
 
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
     def test_lightgbm_booster_classifier_zipmap(self):
@@ -81,11 +96,20 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                 target_opset=HUMMINGBIRD_TARGET_OPSET,
             )
 
-        model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
-                                           target_opset=HUMMINGBIRD_TARGET_OPSET, zipmap=False)
-        dump_data_and_model(X, model, model_onnx,
-                            basename=prefix + "BoosterBin" + model.__class__.__name__)
+        model_onnx, prefix = convert_model(
+            model,
+            "tree-based classifier",
+            [("input", FloatTensorType([None, 2]))],
+            without_onnx_ml=True,
+            target_opset=HUMMINGBIRD_TARGET_OPSET,
+            zipmap=False,
+        )
+        dump_data_and_model(
+            X,
+            model,
+            model_onnx,
+            basename=prefix + "BoosterBin" + model.__class__.__name__,
+        )
 
     @unittest.skipIf(not hummingbird_installed(), reason="Hummingbird is not installed")
     def test_lightgbm_booster_multi_classifier(self):
@@ -93,15 +117,34 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
         X = numpy.array(X, dtype=numpy.float32)
         y = [0, 1, 0, 1, 2, 2]
         data = lightgbm.Dataset(X, label=y)
-        model = lightgbm.train({'boosting_type': 'gbdt', 'objective': 'multiclass',
-                                'n_estimators': 3, 'min_child_samples': 1, 'num_class': 3, 'num_thread': 1},
-                               data)
-        model_onnx, prefix = convert_model(model, 'tree-based classifier',
-                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
-                                           target_opset=HUMMINGBIRD_TARGET_OPSET, zipmap=False)
-        dump_data_and_model(X, model, model_onnx,
-                            basename=prefix + "BoosterBin" + model.__class__.__name__)
-        sess = InferenceSession(model_onnx.SerializeToString(), providers=["CPUExecutionProvider"])
+        model = lightgbm.train(
+            {
+                "boosting_type": "gbdt",
+                "objective": "multiclass",
+                "n_estimators": 3,
+                "min_child_samples": 1,
+                "num_class": 3,
+                "num_thread": 1,
+            },
+            data,
+        )
+        model_onnx, prefix = convert_model(
+            model,
+            "tree-based classifier",
+            [("input", FloatTensorType([None, 2]))],
+            without_onnx_ml=True,
+            target_opset=HUMMINGBIRD_TARGET_OPSET,
+            zipmap=False,
+        )
+        dump_data_and_model(
+            X,
+            model,
+            model_onnx,
+            basename=prefix + "BoosterBin" + model.__class__.__name__,
+        )
+        sess = InferenceSession(
+            model_onnx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         out = sess.get_outputs()
         names = [o.name for o in out]
         assert names == ["label", "probabilities"]
@@ -112,14 +155,30 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
         X = numpy.array(X, dtype=numpy.float32)
         y = [0, 1, 1.1]
         data = lightgbm.Dataset(X, label=y)
-        model = lightgbm.train({'boosting_type': 'gbdt', 'objective': 'regression',
-                                'n_estimators': 3, 'min_child_samples': 1, 'max_depth': 1},
-                               data)
-        model_onnx, prefix = convert_model(model, 'tree-based binary regressor',
-                                           [('input', FloatTensorType([None, 2]))], without_onnx_ml=True,
-                                           target_opset=HUMMINGBIRD_TARGET_OPSET, zipmap=False)
-        dump_data_and_model(X, model, model_onnx,
-                            basename=prefix + "BoosterBin" + model.__class__.__name__)
+        model = lightgbm.train(
+            {
+                "boosting_type": "gbdt",
+                "objective": "regression",
+                "n_estimators": 3,
+                "min_child_samples": 1,
+                "max_depth": 1,
+            },
+            data,
+        )
+        model_onnx, prefix = convert_model(
+            model,
+            "tree-based binary regressor",
+            [("input", FloatTensorType([None, 2]))],
+            without_onnx_ml=True,
+            target_opset=HUMMINGBIRD_TARGET_OPSET,
+            zipmap=False,
+        )
+        dump_data_and_model(
+            X,
+            model,
+            model_onnx,
+            basename=prefix + "BoosterBin" + model.__class__.__name__,
+        )
 
     # Base test implementation comparing ONNXML and ONNX models.
     def _test_lgbm(self, X, model, extra_config={}):

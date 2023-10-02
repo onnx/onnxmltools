@@ -200,10 +200,6 @@ def dump_data_and_model(
                 continue
             if isinstance(allow_failure, str):
                 raise NotImplementedError("allow_failure is deprecated.")
-<<<<<<< HEAD
-            output = compare_backend(b, runtime_test, options=extract_options(basename),
-                                        context=context, verbose=verbose)
-=======
             output = compare_backend(
                 b,
                 runtime_test,
@@ -211,7 +207,6 @@ def dump_data_and_model(
                 context=context,
                 verbose=verbose,
             )
->>>>>>> 79c34e377fe3a24d22eabac010e464de061d7adf
             if output is not None:
                 dest = os.path.join(folder, basename + ".backend.{0}.pkl".format(b))
                 names.append(dest)

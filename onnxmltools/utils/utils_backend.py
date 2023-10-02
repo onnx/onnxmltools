@@ -20,10 +20,6 @@ class OnnxRuntimeAssertionError(AssertionError):
     """
     Expected failure.
     """
-<<<<<<< HEAD
-    pass
-=======
->>>>>>> 79c34e377fe3a24d22eabac010e464de061d7adf
 
 
 def is_backend_enabled(backend):
