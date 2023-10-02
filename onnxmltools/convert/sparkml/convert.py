@@ -5,7 +5,7 @@ import onnx
 from ..common.onnx_ex import get_maximum_opset_supported
 from ..common._topology import convert_topology
 from ._parse import parse_sparkml
-from . import operator_converters
+from . import operator_converters  # noqa: F401
 
 
 def convert(
