@@ -37,13 +37,17 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         init = [("X", FloatTensorType([None, X_train.shape[1]]))]
         onx = convert_lightgbm(reg, None, init, target_opset=TARGET_OPSET)
         self.assertNotIn('op_type: "Sum"', str(onx))
-        oinf = InferenceSession(onx.SerializeToString())
+        oinf = InferenceSession(
+            onx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         got1 = oinf.run(None, {"X": X_test})[0]
 
         # float split
         onx = convert_lightgbm(reg, None, init, split=2, target_opset=TARGET_OPSET)
         self.assertIn('op_type: "Sum"', str(onx))
-        oinf = InferenceSession(onx.SerializeToString())
+        oinf = InferenceSession(
+            onx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         got2 = oinf.run(None, {"X": X_test})[0]
 
         # final check
@@ -67,14 +71,18 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         init = [("X", FloatTensorType([None, X_train.shape[1]]))]
         onx = convert_lightgbm(reg, None, init, target_opset=TARGET_OPSET)
         self.assertNotIn('op_type: "Sum"', str(onx))
-        oinf = InferenceSession(onx.SerializeToString())
+        oinf = InferenceSession(
+            onx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         got1 = oinf.run(None, {"X": X_test})[0]
         assert_almost_equal(expected, got1.ravel(), decimal=5)
 
         # float split
         onx = convert_lightgbm(reg, None, init, split=10, target_opset=TARGET_OPSET)
         self.assertIn('op_type: "Sum"', str(onx))
-        oinf = InferenceSession(onx.SerializeToString())
+        oinf = InferenceSession(
+            onx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         got2 = oinf.run(None, {"X": X_test})[0]
         assert_almost_equal(expected, got2.ravel(), decimal=5)
 
@@ -115,12 +123,16 @@ class TestLightGbmTreeEnsembleModelsSplit(unittest.TestCase):
         )
 
         self.assertNotIn('op_type: "Sum"', str(onx))
-        oinf = InferenceSession(onx.SerializeToString())
+        oinf = InferenceSession(
+            onx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         got1 = oinf.run(None, {"X": X_test.astype(numpy.float32)})[0]
         assert_almost_equal(expected, got1.ravel(), decimal=5)
 
         self.assertIn('op_type: "Sum"', str(onx10))
-        oinf = InferenceSession(onx10.SerializeToString())
+        oinf = InferenceSession(
+            onx10.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         got2 = oinf.run(None, {"X": X_test.astype(numpy.float32)})[0]
         assert_almost_equal(expected, got2.ravel(), decimal=5)
 

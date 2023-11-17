@@ -200,7 +200,9 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
         )[0]
 
         # Get the predictions for the ONNX-ML model
-        session = InferenceSession(onnx_ml_model.SerializeToString())
+        session = InferenceSession(
+            onnx_ml_model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         output_names = [
             session.get_outputs()[i].name for i in range(len(session.get_outputs()))
         ]
@@ -214,7 +216,9 @@ class TestLightGbmTreeEnsembleModelsHummingBird(unittest.TestCase):
                 onnx_ml_pred[0] = pred[i]
 
         # Get the predictions for the ONNX model
-        session = InferenceSession(onnx_model.SerializeToString())
+        session = InferenceSession(
+            onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         onnx_pred = [[] for i in range(len(output_names))]
         pred = session.run(output_names, inputs)
         for i in range(len(output_names)):

@@ -51,7 +51,7 @@ onx = convert_lightgbm(clr, initial_types=initial_type)
 # Compute the predictions with onnxruntime
 # ++++++++++++++++++++++++++++++++++++++++
 
-sess = rt.InferenceSession(onx.SerializeToString())
+sess = rt.InferenceSession(onx.SerializeToString(), providers=["CPUExecutionProvider"])
 input_name = sess.get_inputs()[0].name
 label_name = sess.get_outputs()[0].name
 pred_onx = sess.run([label_name], {input_name: X_test.astype(numpy.float32)})[0]
@@ -73,7 +73,7 @@ bst = train_lgbm(param, dtrain, 10)
 initial_type = [("float_input", FloatTensorType([None, 4]))]
 onx = convert_lightgbm(bst, initial_types=initial_type)
 
-sess = rt.InferenceSession(onx.SerializeToString())
+sess = rt.InferenceSession(onx.SerializeToString(), providers=["CPUExecutionProvider"])
 input_name = sess.get_inputs()[0].name
 label_name = sess.get_outputs()[0].name
 pred_onx = sess.run([label_name], {input_name: X_test.astype(numpy.float32)})[0]
