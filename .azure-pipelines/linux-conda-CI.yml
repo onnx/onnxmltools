@@ -15,10 +15,10 @@ jobs:
   strategy:
     matrix:
 
-      Python311-1140-RT1151-xgb175:
+      Python311-1140-RT1160-xgb175-lgbm40:
         python.version: '3.11'
         ONNX_PATH: 'onnx==1.14.1' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
-        ONNXRT_PATH: 'onnxruntime==1.15.1'
+        ONNXRT_PATH: 'onnxruntime==1.16.0'
         COREML_PATH: NONE
         lightgbm.version: '>=4.0'
         xgboost.version: '>=1.7.5'

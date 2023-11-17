@@ -31,7 +31,9 @@ class TestSparkmRandomForestClassifierTree(SparkMlTestCase):
         FEATURE_LEN = 32
 
         def infer_from_onnx(model_onnx, input_list):
-            sess = InferenceSession(model_onnx.SerializeToString())
+            sess = InferenceSession(
+                model_onnx.SerializeToString(), providers=["CPUExecutionProvider"]
+            )
             input_name = sess.get_inputs()[0].name
             pred_onx = sess.run(
                 None, {input_name: numpy.array(input_list, numpy.float32)}
