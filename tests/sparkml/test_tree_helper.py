@@ -231,7 +231,9 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
         graph = make_graph([node], "n", [X], [L, Y])
         opset_imports = [make_opsetid("", 17), make_opsetid("ai.onnx.ml", 3)]
         model = make_model(graph, opset_imports=opset_imports)
-        sess = InferenceSession(model.SerializeToString(), providers=["CPUExecutionProvider"])
+        sess = InferenceSession(
+            model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         x = np.arange(20).reshape((-1, 2)).astype(np.float32)
         got = sess.run(None, {"X": x})
         self.assertEqual(len(got), 2)
@@ -460,7 +462,9 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
         graph = make_graph([node], "n", [X], [L, Y])
         opset_imports = [make_opsetid("", 17), make_opsetid("ai.onnx.ml", 3)]
         model = make_model(graph, opset_imports=opset_imports)
-        sess = InferenceSession(model.SerializeToString(), providers=["CPUExecutionProvider"])
+        sess = InferenceSession(
+            model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         x = np.arange(20).reshape((-1, 2)).astype(np.float32)
         got = sess.run(None, {"X": x})
         self.assertEqual(len(got), 2)
@@ -690,7 +694,9 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
         graph = make_graph([node], "n", [X], [L, Y])
         opset_imports = [make_opsetid("", 17), make_opsetid("ai.onnx.ml", 3)]
         model = make_model(graph, opset_imports=opset_imports)
-        sess = InferenceSession(model.SerializeToString(), providers=["CPUExecutionProvider"])
+        sess = InferenceSession(
+            model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
         x = np.arange(20).reshape((-1, 2)).astype(np.float32)
         got = sess.run(None, {"X": x})
         self.assertEqual(len(got), 2)
