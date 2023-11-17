@@ -47,7 +47,7 @@ class ObjectiveTest(unittest.TestCase):
 
     @staticmethod
     def _predict_with_onnx(model: ModelProto, X: DataFrame) -> np.array:
-        session = InferenceSession(model.SerializeToString())
+        session = InferenceSession(model.SerializeToString(), providers=["CPUExecutionProvider"])
         output_names = [s_output.name for s_output in session.get_outputs()]
         input_names = [s_input.name for s_input in session.get_inputs()]
         if len(input_names) > 1:

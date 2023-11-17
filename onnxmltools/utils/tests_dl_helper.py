@@ -59,7 +59,7 @@ def evaluate_deep_model(onnx_model, inputs, rt_type=None):
 def _evaluate_onnxruntime(onnx_model, inputs):
     import onnxruntime
 
-    runtime = onnxruntime.InferenceSession(onnx_model.SerializeToString())
+    runtime = onnxruntime.InferenceSession(onnx_model.SerializeToString(), providers=["CPUExecutionProvider"])
     result = None
     inputs = inputs if isinstance(inputs, list) else [inputs]
     for i_ in range(
