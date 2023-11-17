@@ -15,19 +15,29 @@ jobs:
   strategy:
     matrix:
 
-      Python311-1140-RT1160-xgb175-lgbm40:
+      Python311-1150-RT1160-xgb175-lgbm40:
         python.version: '3.11'
-        ONNX_PATH: 'onnx==1.14.1' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
-        ONNXRT_PATH: 'onnxruntime==1.16.0'
+        ONNX_PATH: 'onnx==1.15.0'
+        ONNXRT_PATH: 'onnxruntime==1.16.2'
         COREML_PATH: NONE
         lightgbm.version: '>=4.0'
         xgboost.version: '>=1.7.5'
         numpy.version: ''
         scipy.version: ''
 
-      Python310-1140-RT1151-xgb175:
+      Python311-1141-RT1162-xgb175-lgbm40:
+        python.version: '3.11'
+        ONNX_PATH: 'onnx==1.14.1'
+        ONNXRT_PATH: 'onnxruntime==1.16.2'
+        COREML_PATH: NONE
+        lightgbm.version: '>=4.0'
+        xgboost.version: '>=1.7.5'
+        numpy.version: ''
+        scipy.version: ''
+
+      Python310-1141-RT1151-xgb175:
         python.version: '3.10'
-        ONNX_PATH: 'onnx==1.14.1' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNX_PATH: 'onnx==1.14.1'
         ONNXRT_PATH: 'onnxruntime==1.15.1'
         COREML_PATH: NONE
         lightgbm.version: '<4.0'
@@ -35,19 +45,19 @@ jobs:
         numpy.version: ''
         scipy.version: ''
 
-      Python310-1140-RT1140-xgb175:
+      Python310-1141-RT1140-xgb175:
         python.version: '3.10'
-        ONNX_PATH: 'onnx==1.14.1' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
-        ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
+        ONNX_PATH: 'onnx==1.14.1'
+        ONNXRT_PATH: 'onnxruntime==1.14.0'
         COREML_PATH: NONE
         lightgbm.version: '<4.0'
         xgboost.version: '>=1.7.5'
         numpy.version: ''
         scipy.version: ''
 
-      Python39-1140-RT1151-xgb175-scipy180:
+      Python39-1141-RT1151-xgb175-scipy180:
         python.version: '3.9'
-        ONNX_PATH: 'onnx==1.14.1' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNX_PATH: 'onnx==1.14.1'
         ONNXRT_PATH: 'onnxruntime==1.15.1'
         COREML_PATH: NONE
         lightgbm.version: '>=4.0'
