@@ -60,7 +60,6 @@ class TestXGBoostRFModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
         dump_data_and_model(
             x_test.astype("float32"),
             xgb,
@@ -75,7 +74,6 @@ class TestXGBoostRFModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBRFClassifier")
 
 
