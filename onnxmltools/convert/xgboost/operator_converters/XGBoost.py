@@ -4,6 +4,11 @@ import json
 import numpy as np
 from onnx import TensorProto
 from xgboost import XGBClassifier
+
+try:
+    from xgboost import XGBRFClassifier
+except ImportError:
+    XGBRFClassifier = None
 from ...common._registration import register_converter
 from ..common import get_xgb_params
 
@@ -390,10 +395,9 @@ class XGBClassifierConverter(XGBConverter):
 
 def convert_xgboost(scope, operator, container):
     xgb_node = operator.raw_operator
-    if (
-        isinstance(xgb_node, XGBClassifier)
-        or getattr(xgb_node, "operator_name", None) == "XGBClassifier"
-    ):
+    if isinstance(xgb_node, (XGBClassifier, XGBRFClassifier)) or getattr(
+        xgb_node, "operator_name", None
+    ) in ("XGBClassifier", "XGBRFClassifier"):
         cls = XGBClassifierConverter
     else:
         cls = XGBRegressorConverter
@@ -402,4 +406,6 @@ def convert_xgboost(scope, operator, container):
 
 
 register_converter("XGBClassifier", convert_xgboost)
+register_converter("XGBRFClassifier", convert_xgboost)
 register_converter("XGBRegressor", convert_xgboost)
+register_converter("XGBRFRegressor", convert_xgboost)

@@ -15,24 +15,38 @@ jobs:
   strategy:
     matrix:
 
-      Python311-1141-RT1160:
+      Python311-1150-RT1162:
         python.version: '3.11'
-        ONNX_PATH: 'onnx==1.14.1' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
-        ONNXRT_PATH: 'onnxruntime==1.16.0'
+        ONNX_PATH: 'onnx==1.15.0'
+        ONNXRT_PATH: 'onnxruntime==1.16.2'
+        COREML_PATH: NONE
+        numpy.version: ''
+
+      Python311-1141-RT1162:
+        python.version: '3.11'
+        ONNX_PATH: 'onnx==1.14.1'
+        ONNXRT_PATH: 'onnxruntime==1.16.2'
         COREML_PATH: NONE
         numpy.version: ''
 
       Python310-1141-RT1151:
         python.version: '3.10'
-        ONNX_PATH: 'onnx==1.14.1' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
+        ONNX_PATH: 'onnx==1.14.1'
         ONNXRT_PATH: 'onnxruntime==1.15.1'
         COREML_PATH: NONE
         numpy.version: ''
 
       Python310-1141-RT1140:
         python.version: '3.10'
-        ONNX_PATH: 'onnx==1.14.1' #'-i https://test.pypi.org/simple/ onnx==1.14.0rc3'
-        ONNXRT_PATH: onnxruntime==1.14.0 #'-i https://test.pypi.org/simple/ ort-nightly==1.11.0.dev20220311003'
+        ONNX_PATH: 'onnx==1.14.1'
+        ONNXRT_PATH: onnxruntime==1.14.0
+        COREML_PATH: NONE
+        numpy.version: ''
+
+      Python39-1141-RT1140:
+        python.version: '3.9'
+        ONNX_PATH: 'onnx==1.14.1'
+        ONNXRT_PATH: onnxruntime==1.14.0
         COREML_PATH: NONE
         numpy.version: ''
 
