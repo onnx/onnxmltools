@@ -81,7 +81,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test.astype("float32"),
             xgb,
@@ -123,7 +123,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBClassifier")
 
     def test_xgb_classifier_uint8(self):
@@ -133,7 +133,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=["None", "None"]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBClassifier")
 
     def test_xgb_classifier_multi(self):
@@ -143,7 +143,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test, xgb, conv_model, basename="SklearnXGBClassifierMulti"
         )
@@ -157,7 +157,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test, xgb, conv_model, basename="SklearnXGBClassifierMultiRegLog"
         )
@@ -171,7 +171,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test, xgb, conv_model, basename="SklearnXGBClassifierRegLog"
         )
@@ -190,7 +190,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test.astype("float32"),
             xgb,
@@ -658,7 +658,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBClassifier601")
 
     def test_xgb_classifier_hinge(self):
