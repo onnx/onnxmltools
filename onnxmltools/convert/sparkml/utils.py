@@ -14,9 +14,9 @@ def buildInitialTypesSimple(dataframe):
 
 
 def getTensorTypeFromSpark(sparktype):
-    if sparktype == "StringType" or sparktype == "StringType()":
+    if sparktype in ("StringType", "StringType()"):
         return StringTensorType([1, 1])
-    elif (
+    if (
         sparktype == "DecimalType"
         or sparktype == "DecimalType()"
         or sparktype == "DoubleType"
@@ -34,9 +34,8 @@ def getTensorTypeFromSpark(sparktype):
         or sparktype == "BooleanType"
         or sparktype == "BooleanType()"
     ):
-        return FloatTensorType([1, 1])
-    else:
-        raise TypeError("Cannot map this type to Onnx types: " + sparktype)
+        return FloatTensorType([None, 1])
+    raise TypeError(f"Cannot map this type to Onnx types: {sparktype}.")
 
 
 def buildInputDictSimple(dataframe):
@@ -44,7 +43,7 @@ def buildInputDictSimple(dataframe):
 
     result = {}
     for field in dataframe.schema.fields:
-        if str(field.dataType) == "StringType":
+        if str(field.dataType) in ("StringType", "StringType()"):
             result[field.name] = dataframe.select(field.name).toPandas().values
         else:
             result[field.name] = (

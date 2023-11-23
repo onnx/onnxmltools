@@ -42,3 +42,4 @@ def calculate_xgboost_classifier_output_shapes(operator):
 
 
 register_shape_calculator("XGBClassifier", calculate_xgboost_classifier_output_shapes)
+register_shape_calculator("XGBRFClassifier", calculate_xgboost_classifier_output_shapes)

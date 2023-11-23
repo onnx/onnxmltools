@@ -81,13 +81,40 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test.astype("float32"),
             xgb,
             conv_model,
             basename="SklearnXGBRegressor-Dec3",
         )
+
+    def test_xgb_regressor_poisson(self):
+        iris = load_diabetes()
+        x = iris.data
+        y = iris.target
+        x_train, x_test, y_train, _ = train_test_split(
+            x, y, test_size=0.5, random_state=42
+        )
+        for nest in [5, 50]:
+            xgb = XGBRegressor(
+                objective="count:poisson",
+                random_state=0,
+                max_depth=3,
+                n_estimators=nest,
+            )
+            xgb.fit(x_train, y_train)
+            conv_model = convert_xgboost(
+                xgb,
+                initial_types=[("input", FloatTensorType(shape=[None, None]))],
+                target_opset=TARGET_OPSET,
+            )
+            dump_data_and_model(
+                x_test.astype("float32"),
+                xgb,
+                conv_model,
+                basename=f"SklearnXGBRegressorPoisson{nest}-Dec3",
+            )
 
     def test_xgb_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
@@ -96,7 +123,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBClassifier")
 
     def test_xgb_classifier_uint8(self):
@@ -106,7 +133,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=["None", "None"]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBClassifier")
 
     def test_xgb_classifier_multi(self):
@@ -116,7 +143,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test, xgb, conv_model, basename="SklearnXGBClassifierMulti"
         )
@@ -130,7 +157,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test, xgb, conv_model, basename="SklearnXGBClassifierMultiRegLog"
         )
@@ -144,7 +171,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test, xgb, conv_model, basename="SklearnXGBClassifierRegLog"
         )
@@ -163,7 +190,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(
             x_test.astype("float32"),
             xgb,
@@ -631,7 +658,7 @@ class TestXGBoostModels(unittest.TestCase):
             initial_types=[("input", FloatTensorType(shape=[None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(conv_model is not None)
+
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBClassifier601")
 
     def test_xgb_classifier_hinge(self):
@@ -650,5 +677,5 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # TestXGBoostModels().test_xgboost_booster_classifier_multiclass_softprob()
+    TestXGBoostModels().test_xgb_regressor_poisson()
     unittest.main(verbosity=2)
