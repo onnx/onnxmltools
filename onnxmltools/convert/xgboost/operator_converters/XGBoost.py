@@ -4,6 +4,11 @@ import json
 import numpy as np
 from onnx import TensorProto
 from xgboost import XGBClassifier
+
+try:
+    from xgboost import XGBRFClassifier
+except ImportError:
+    XGBRFClassifier = None
 from ...common._registration import register_converter
 from ..common import get_xgb_params
 
@@ -245,19 +250,26 @@ class XGBRegressorConverter(XGBConverter):
         )
 
         # add nodes
+        if objective == "count:poisson":
+            names = [scope.get_unique_variable_name("tree")]
+            del attr_pairs["base_values"]
+        else:
+            names = operator.output_full_names
         container.add_node(
             "TreeEnsembleRegressor",
             operator.input_full_names,
-            operator.output_full_names,
+            names,
             op_domain="ai.onnx.ml",
             name=scope.get_unique_operator_name("TreeEnsembleRegressor"),
             **attr_pairs,
         )
-        # try:
-        #    if len(inputs[0].type.tensor_type.shape.dim) > 0:
-        #        output_dim = [inputs[0].type.tensor_type.shape.dim[0].dim_value, 1]
-        # except Exception:
-        #    raise ValueError('Invalid/missing input dimension.')
+
+        if objective == "count:poisson":
+            cst = scope.get_unique_variable_name("half")
+            container.add_initializer(cst, TensorProto.FLOAT, [1], [0.5])
+            new_name = scope.get_unique_variable_name("exp")
+            container.add_node("Exp", names, [new_name])
+            container.add_node("Mul", [new_name, cst], operator.output_full_names)
 
 
 class XGBClassifierConverter(XGBConverter):
@@ -390,10 +402,9 @@ class XGBClassifierConverter(XGBConverter):
 
 def convert_xgboost(scope, operator, container):
     xgb_node = operator.raw_operator
-    if (
-        isinstance(xgb_node, XGBClassifier)
-        or getattr(xgb_node, "operator_name", None) == "XGBClassifier"
-    ):
+    if isinstance(xgb_node, (XGBClassifier, XGBRFClassifier)) or getattr(
+        xgb_node, "operator_name", None
+    ) in ("XGBClassifier", "XGBRFClassifier"):
         cls = XGBClassifierConverter
     else:
         cls = XGBRegressorConverter
@@ -402,4 +413,6 @@ def convert_xgboost(scope, operator, container):
 
 
 register_converter("XGBClassifier", convert_xgboost)
+register_converter("XGBRFClassifier", convert_xgboost)
 register_converter("XGBRegressor", convert_xgboost)
+register_converter("XGBRFRegressor", convert_xgboost)

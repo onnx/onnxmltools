@@ -6,6 +6,12 @@ import pprint
 from packaging.version import Version
 import numpy as np
 from xgboost import XGBRegressor, XGBClassifier, __version__
+
+try:
+    from xgboost import XGBRFRegressor, XGBRFClassifier
+except ImportError:
+    # old version of xgboost
+    XGBRFRegressor, XGBRFClassifier = None, None
 from onnxconverter_common.data_types import FloatTensorType
 from ..common._container import XGBoostModelContainer
 from ..common._topology import Topology
@@ -18,6 +24,15 @@ xgboost_operator_name_map = {
     XGBClassifier: "XGBClassifier",
     XGBRegressor: "XGBRegressor",
 }
+
+if XGBRFClassifier:
+    xgboost_operator_name_map.update(
+        {
+            XGBRFClassifier: "XGBRFClassifier",
+            XGBRFRegressor: "XGBRFRegressor",
+        }
+    )
+    xgboost_classifier_list.append(XGBRFClassifier)
 
 
 def _append_covers(node):
@@ -161,10 +176,9 @@ def _parse_xgboost_simple_model(scope, model, inputs):
     )
     this_operator.inputs = inputs
 
-    if (
-        type(model) in xgboost_classifier_list
-        or getattr(model, "operator_name", None) == "XGBClassifier"
-    ):
+    if type(model) in xgboost_classifier_list or getattr(
+        model, "operator_name", None
+    ) in ("XGBClassifier", "XGBRFClassifier"):
         # For classifiers, we may have two outputs, one for label and
         # the other one for probabilities of all classes.
         # Notice that their types here are not necessarily correct

@@ -62,7 +62,7 @@ onx = convert_keras(model, initial_types=initial_type)
 # Compute the predictions with onnxruntime
 # ++++++++++++++++++++++++++++++++++++++++
 
-sess = rt.InferenceSession(onx.SerializeToString())
+sess = rt.InferenceSession(onx.SerializeToString(), providers=["CPUExecutionProvider"])
 input_name = sess.get_inputs()[0].name
 output_name = sess.get_outputs()[0].name
 pred_onx = sess.run([output_name], {input_name: X_test.astype(numpy.float32)})[0]
