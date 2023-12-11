@@ -16,5 +16,5 @@ ruff
 scikit-learn>=1.2.0
 scipy
 wheel
-xgboost==1.7.5
+xgboost
 onnxruntime
