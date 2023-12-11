@@ -8,7 +8,7 @@ from ...common.data_types import (
     Int64TensorType,
     StringTensorType,
 )
-from ..common import get_xgb_params
+from ..common import get_xgb_params, get_n_estimators_classifier
 
 
 def calculate_xgboost_classifier_output_shapes(operator):
@@ -22,13 +22,15 @@ def calculate_xgboost_classifier_output_shapes(operator):
     params = get_xgb_params(xgb_node)
     booster = xgb_node.get_booster()
     booster.attributes()
-    ntrees = len(booster.get_dump(with_stats=True, dump_format="json"))
+    js_trees = booster.get_dump(with_stats=True, dump_format="json")
+    ntrees = len(js_trees)
     objective = params["objective"]
+    n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
 
     if objective == "binary:logistic":
         ncl = 2
     else:
-        ncl = ntrees // params["n_estimators"]
+        ncl = ntrees // n_estimators
         if objective == "reg:logistic" and ncl == 1:
             ncl = 2
     classes = xgb_node.classes_

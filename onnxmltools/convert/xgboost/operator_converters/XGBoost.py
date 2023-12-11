@@ -10,7 +10,7 @@ try:
 except ImportError:
     XGBRFClassifier = None
 from ...common._registration import register_converter
-from ..common import get_xgb_params
+from ..common import get_xgb_params, get_n_estimators_classifier
 
 
 class XGBConverter:
@@ -293,11 +293,13 @@ class XGBClassifierConverter(XGBConverter):
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
 
         params = XGBConverter.get_xgb_params(xgb_node)
+        n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
+
         attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(
             js_trees, attr_pairs, [1 for _ in js_trees], True
         )
-        ncl = (max(attr_pairs["class_treeids"]) + 1) // params["n_estimators"]
+        ncl = (max(attr_pairs["class_treeids"]) + 1) // n_estimators
 
         bst = xgb_node.get_booster()
         best_ntree_limit = getattr(bst, "best_ntree_limit", len(js_trees)) * ncl
@@ -373,7 +375,7 @@ class XGBClassifierConverter(XGBConverter):
                     "Where", [greater, one, zero], operator.output_full_names[1]
                 )
         elif objective in ("multi:softprob", "multi:softmax"):
-            ncl = len(js_trees) // params["n_estimators"]
+            ncl = len(js_trees) // n_estimators
             if objective == "multi:softmax":
                 attr_pairs["post_transform"] = "NONE"
             container.add_node(
@@ -385,7 +387,7 @@ class XGBClassifierConverter(XGBConverter):
                 **attr_pairs,
             )
         elif objective == "reg:logistic":
-            ncl = len(js_trees) // params["n_estimators"]
+            ncl = len(js_trees) // n_estimators
             if ncl == 1:
                 ncl = 2
             container.add_node(

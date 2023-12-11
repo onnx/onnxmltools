@@ -677,5 +677,4 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestXGBoostModels().test_xgb_regressor_poisson()
     unittest.main(verbosity=2)
