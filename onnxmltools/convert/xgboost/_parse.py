@@ -72,7 +72,8 @@ def _get_attributes(booster):
         config = json.loads(booster.save_config())["learner"]["learner_model_param"]
         if "num_class" in config:
             num_class = int(config["num_class"])
-            ntrees = len(res) // num_class
+            ntrees = len(res)
+            num_class = 1
         else:
             trees = len(res)
             if hasattr(booster, "best_ntree_limit"):

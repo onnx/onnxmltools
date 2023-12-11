@@ -677,4 +677,5 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    TestXGBoostModels().test_xgb_best_tree_limit()
     unittest.main(verbosity=2)

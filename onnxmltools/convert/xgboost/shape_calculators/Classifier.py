@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import numpy as np
 from ...common._registration import register_shape_calculator
 from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
@@ -26,8 +27,13 @@ def calculate_xgboost_classifier_output_shapes(operator):
     ntrees = len(js_trees)
     objective = params["objective"]
     n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
+    config = json.loads(xgb_node.get_booster().save_config())
+    num_class = int(config["learner"]["learner_model_param"]["num_class"])
 
-    if objective == "binary:logistic":
+    if num_class is not None:
+        ncl = num_class
+        n_estimators = ntrees // ncl
+    elif objective == "binary:logistic":
         ncl = 2
     else:
         ncl = ntrees // n_estimators

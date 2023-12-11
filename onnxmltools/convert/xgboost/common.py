@@ -16,18 +16,19 @@ def get_xgb_params(xgb_node):
     else:
         # XGBoost < 0.7
         params = xgb_node.__dict__
+    if hasattr("xgb_node", "save_config"):
+        config = json.loads(xgb_node.save_config())
+    else:
+        config = json.loads(xgb_node.get_booster().save_config())
+    num_class = int(config["learner"]["learner_model_param"]["num_class"])
     params = {k: v for k, v in params.items() if v is not None}
+    params["num_class"] = num_class
     if "n_estimators" not in params and hasattr(xgb_node, "n_estimators"):
         # xgboost >= 1.0.2
         if xgb_node.n_estimators is not None:
             params["n_estimators"] = xgb_node.n_estimators
     if params.get("base_score", None) is None:
         # xgboost >= 2.0
-        if hasattr("xgb_node", "save_config"):
-            config = json.loads(xgb_node.save_config())
-        else:
-            config = json.loads(xgb_node.get_booster().save_config())
-
         params["base_score"] = float(
             config["learner"]["learner_model_param"]["base_score"]
         )

@@ -299,7 +299,12 @@ class XGBClassifierConverter(XGBConverter):
         XGBConverter.fill_tree_attributes(
             js_trees, attr_pairs, [1 for _ in js_trees], True
         )
-        ncl = (max(attr_pairs["class_treeids"]) + 1) // n_estimators
+        if "num_class" in params:
+            ncl = params["num_class"]
+            n_estimators = len(js_trees) // ncl
+        else:
+            ncl = (max(attr_pairs["class_treeids"]) + 1) // n_estimators
+            print("**", params)
 
         bst = xgb_node.get_booster()
         best_ntree_limit = getattr(bst, "best_ntree_limit", len(js_trees)) * ncl
@@ -312,6 +317,7 @@ class XGBClassifierConverter(XGBConverter):
 
         if len(attr_pairs["class_treeids"]) == 0:
             raise RuntimeError("XGBoost model is empty.")
+
         if ncl <= 1:
             ncl = 2
             if objective != "binary:hinge":
@@ -332,8 +338,10 @@ class XGBClassifierConverter(XGBConverter):
             attr_pairs["class_ids"] = [v % ncl for v in attr_pairs["class_treeids"]]
 
         classes = xgb_node.classes_
-        if np.issubdtype(classes.dtype, np.floating) or np.issubdtype(
-            classes.dtype, np.integer
+        if (
+            np.issubdtype(classes.dtype, np.floating)
+            or np.issubdtype(classes.dtype, np.integer)
+            or np.issubdtype(classes.dtype, np.bool_)
         ):
             attr_pairs["classlabels_int64s"] = classes.astype("int")
         else:
