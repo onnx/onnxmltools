@@ -161,8 +161,7 @@ class XGBConverter:
                 false_child_id=remap[jsnode["no"]],  # ['children'][1]['nodeid'],
                 weights=None,
                 weight_id_bias=None,
-                missing=jsnode.get("missing", -1)
-                == jsnode["yes"],  # ['children'][0]['nodeid'],
+                missing=jsnode.get("missing", -1) == jsnode["yes"],
                 hitrate=jsnode.get("cover", 0),
             )
 
@@ -294,17 +293,17 @@ class XGBClassifierConverter(XGBConverter):
 
         params = XGBConverter.get_xgb_params(xgb_node)
         n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
+        num_class = params.get("num_class", None)
 
         attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(
             js_trees, attr_pairs, [1 for _ in js_trees], True
         )
-        if "num_class" in params:
-            ncl = params["num_class"]
+        if num_class is not None:
+            ncl = num_class
             n_estimators = len(js_trees) // ncl
         else:
             ncl = (max(attr_pairs["class_treeids"]) + 1) // n_estimators
-            print("**", params)
 
         bst = xgb_node.get_booster()
         best_ntree_limit = getattr(bst, "best_ntree_limit", len(js_trees)) * ncl
@@ -325,8 +324,9 @@ class XGBClassifierConverter(XGBConverter):
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
                 if js_trees[0].get("leaf", None) == 0:
-                    attr_pairs["base_values"] = [0.5]
+                    attr_pairs["base_values"] = [base_score]
                 elif base_score != 0.5:
+                    # 0.5 -> cst = 0
                     cst = -np.log(1 / np.float32(base_score) - 1.0)
                     attr_pairs["base_values"] = [cst]
             else:

@@ -1,3 +1,0 @@
-numpy
-onnx
-skl2onnx

@@ -69,24 +69,16 @@ def _get_attributes(booster):
         except AttributeError:
             ntrees = trees // num_class if num_class > 0 else trees
     else:
+        trees = len(res)
+        ntrees = getattr(booster, "best_ntree_limit", trees)
         config = json.loads(booster.save_config())["learner"]["learner_model_param"]
-        if "num_class" in config:
-            num_class = int(config["num_class"])
-            ntrees = len(res)
-            num_class = 1
-        else:
-            trees = len(res)
-            if hasattr(booster, "best_ntree_limit"):
-                ntrees = booster.best_ntree_limit
-            elif hasattr(booster, "best_iteration"):
-                ntrees = booster.best_iteration
-            else:
-                raise RuntimeError("Unable to guess the number of classes.")
+        num_class = int(config["num_class"]) if "num_class" in config else 0
+        if num_class == 0 and ntrees > 0:
             num_class = trees // ntrees
         if num_class == 0:
             raise RuntimeError(
-                "Unable to retrieve the number of classes, trees=%d, ntrees=%d."
-                % (trees, ntrees)
+                f"Unable to retrieve the number of classes, num_class={num_class}, "
+                f"trees={trees}, ntrees={ntrees}, config={config}."
             )
 
     kwargs = atts.copy()

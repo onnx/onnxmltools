@@ -20,25 +20,24 @@ def get_xgb_params(xgb_node):
         config = json.loads(xgb_node.save_config())
     else:
         config = json.loads(xgb_node.get_booster().save_config())
-    num_class = int(config["learner"]["learner_model_param"]["num_class"])
     params = {k: v for k, v in params.items() if v is not None}
-    params["num_class"] = num_class
+    num_class = int(config["learner"]["learner_model_param"]["num_class"])
+    if num_class > 0:
+        params["num_class"] = num_class
     if "n_estimators" not in params and hasattr(xgb_node, "n_estimators"):
         # xgboost >= 1.0.2
         if xgb_node.n_estimators is not None:
             params["n_estimators"] = xgb_node.n_estimators
     if params.get("base_score", None) is None:
+        bs = float(config["learner"]["learner_model_param"]["base_score"])
         # xgboost >= 2.0
-        params["base_score"] = float(
-            config["learner"]["learner_model_param"]["base_score"]
-        )
+        params["base_score"] = bs
     return params
 
 
 def get_n_estimators_classifier(xgb_node, params, js_trees):
     if "n_estimators" not in params:
-        config = json.loads(xgb_node.get_booster().save_config())
-        num_class = int(config["learner"]["learner_model_param"]["num_class"])
+        num_class = params.get("num_class", 0)
         if num_class == 0:
             return len(js_trees)
         return len(js_trees) // num_class
