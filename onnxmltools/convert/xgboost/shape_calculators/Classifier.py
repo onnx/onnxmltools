@@ -38,8 +38,10 @@ def calculate_xgboost_classifier_output_shapes(operator):
         if objective == "reg:logistic" and ncl == 1:
             ncl = 2
     classes = xgb_node.classes_
-    if np.issubdtype(classes.dtype, np.floating) or np.issubdtype(
-        classes.dtype, np.integer
+    if (
+        np.issubdtype(classes.dtype, np.floating)
+        or np.issubdtype(classes.dtype, np.integer)
+        or np.issubdtype(classes.dtype, np.bool_)
     ):
         operator.outputs[0].type = Int64TensorType(shape=[N])
     else:
