@@ -94,12 +94,12 @@ class TestXGBoostModels(unittest.TestCase):
         x = iris.data
         y = iris.target / 100
         x_train, x_test, y_train, _ = train_test_split(
-            x, y, test_size=0.5, random_state=42
+            x, y, test_size=0.5, random_state=17
         )
         for nest in [5, 50]:
             xgb = XGBRegressor(
                 objective="count:poisson",
-                random_state=0,
+                random_state=5,
                 max_depth=3,
                 n_estimators=nest,
             )
@@ -716,5 +716,4 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestXGBoostModels().test_xgb_regressor_poisson()
     unittest.main(verbosity=2)

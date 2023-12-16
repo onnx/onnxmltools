@@ -264,8 +264,8 @@ class XGBRegressorConverter(XGBConverter):
         )
 
         if objective == "count:poisson":
-            cst = scope.get_unique_variable_name("half")
-            container.add_initializer(cst, TensorProto.FLOAT, [1], [0.5])
+            cst = scope.get_unique_variable_name("poisson")
+            container.add_initializer(cst, TensorProto.FLOAT, [1], [base_score])
             new_name = scope.get_unique_variable_name("exp")
             container.add_node("Exp", names, [new_name])
             container.add_node("Mul", [new_name, cst], operator.output_full_names)
