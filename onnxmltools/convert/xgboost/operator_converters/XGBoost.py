@@ -40,7 +40,9 @@ class XGBConverter:
         params = XGBConverter.get_xgb_params(xgb_node)
         objective = params["objective"]
         base_score = params["base_score"]
-        if hasattr(xgb_node, "best_iteration"):
+        if hasattr(xgb_node, "best_ntree_limit"):
+            best_ntree_limit = xgb_node.best_ntree_limit
+        elif hasattr(xgb_node, "best_iteration"):
             best_ntree_limit = xgb_node.best_iteration + 1
         else:
             best_ntree_limit = params.get("best_ntree_limit", None)

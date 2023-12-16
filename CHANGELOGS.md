@@ -2,6 +2,8 @@
 
 ## 1.12.0
 
+* Fix early stopping for XGBClassifier and xgboost > 2
+  [#597](https://github.com/onnx/onnxmltools/pull/597)
 * Fix discrepancies with XGBRegressor and xgboost > 2
   [#670](https://github.com/onnx/onnxmltools/pull/670)
 * Support count:poisson for XGBRegressor
