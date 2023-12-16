@@ -288,7 +288,6 @@ class TestXGBoostModels(unittest.TestCase):
             n_classes=2, n_features=5, n_samples=100, random_state=42, n_informative=3
         )
         y = y.astype(np.float32) + 0.567
-        print(y)
         x_train, x_test, y_train, _ = train_test_split(
             x, y, test_size=0.5, random_state=42
         )
@@ -770,6 +769,8 @@ class TestXGBoostModels(unittest.TestCase):
 
         initial_types = [("float_input", FloatTensorType([None, x_train.shape[1]]))]
         onnx_model = convert_xgboost(model, initial_types=initial_types)
+        # with open("debug.onnx", "wb") as f:
+        #     f.write(onnx_model.SerializeToString())
 
         expected = model.predict(x_test), model.predict_proba(x_test)
         sess = InferenceSession(onnx_model.SerializeToString())
@@ -779,4 +780,5 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    TestXGBoostModels().test_xgb_classifier_13()
     unittest.main(verbosity=2)
