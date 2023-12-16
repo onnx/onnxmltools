@@ -188,6 +188,8 @@ def compare_outputs(expected, output, **kwargs):
     Disc = kwargs.pop("Disc", False)
     Mism = kwargs.pop("Mism", False)
     Opp = kwargs.pop("Opp", False)
+    if hasattr(expected, "dtype") and expected.dtype == numpy.bool_:
+        expected = expected.astype(numpy.int64)
     if Opp and not NoProb:
         raise ValueError("Opp is only available if NoProb is True")
 

@@ -21,6 +21,7 @@ jobs:
         ONNXRT_PATH: 'onnxruntime==1.16.2'
         COREML_PATH: NONE
         numpy.version: ''
+        xgboost.version: '2.0.2'
 
       Python311-1141-RT1162:
         python.version: '3.11'
@@ -28,6 +29,7 @@ jobs:
         ONNXRT_PATH: 'onnxruntime==1.16.2'
         COREML_PATH: NONE
         numpy.version: ''
+        xgboost.version: '1.7.5'
 
       Python310-1141-RT1151:
         python.version: '3.10'
@@ -35,6 +37,7 @@ jobs:
         ONNXRT_PATH: 'onnxruntime==1.15.1'
         COREML_PATH: NONE
         numpy.version: ''
+        xgboost.version: '1.7.5'
 
       Python310-1141-RT1140:
         python.version: '3.10'
@@ -42,6 +45,7 @@ jobs:
         ONNXRT_PATH: onnxruntime==1.14.0
         COREML_PATH: NONE
         numpy.version: ''
+        xgboost.version: '1.7.5'
 
       Python39-1141-RT1140:
         python.version: '3.9'
@@ -49,6 +53,7 @@ jobs:
         ONNXRT_PATH: onnxruntime==1.14.0
         COREML_PATH: NONE
         numpy.version: ''
+        xgboost.version: '1.7.5'
 
     maxParallel: 3
 
@@ -74,6 +79,8 @@ jobs:
   - script: |
       call activate py$(python.version)
       python -m pip install --upgrade scikit-learn
+      python -m pip install --upgrade lightgbm
+      python -m pip install "xgboost==$(xgboost.version)"
     displayName: 'Install scikit-learn'
 
   - script: |

@@ -2,6 +2,8 @@
 
 ## 1.12.0
 
+* Fix discrepancies with XGBRegressor and xgboost > 2
+  [#670](https://github.com/onnx/onnxmltools/pull/670)
 * Support count:poisson for XGBRegressor
   [#666](https://github.com/onnx/onnxmltools/pull/666)
 * Supports XGBRFClassifier and XGBRFRegressor

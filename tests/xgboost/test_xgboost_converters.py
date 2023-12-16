@@ -92,14 +92,14 @@ class TestXGBoostModels(unittest.TestCase):
     def test_xgb_regressor_poisson(self):
         iris = load_diabetes()
         x = iris.data
-        y = iris.target
+        y = iris.target / 100
         x_train, x_test, y_train, _ = train_test_split(
-            x, y, test_size=0.5, random_state=42
+            x, y, test_size=0.5, random_state=17
         )
         for nest in [5, 50]:
             xgb = XGBRegressor(
                 objective="count:poisson",
-                random_state=0,
+                random_state=5,
                 max_depth=3,
                 n_estimators=nest,
             )
@@ -116,7 +116,7 @@ class TestXGBoostModels(unittest.TestCase):
                 basename=f"SklearnXGBRegressorPoisson{nest}-Dec3",
             )
 
-    def test_xgb_classifier(self):
+    def test_xgb0_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
         conv_model = convert_xgboost(
             xgb,
@@ -198,7 +198,7 @@ class TestXGBoostModels(unittest.TestCase):
             basename="SklearnXGBClassifierMultiDiscreteIntLabels",
         )
 
-    def test_xgboost_booster_classifier_bin(self):
+    def test_xgb1_booster_classifier_bin(self):
         x, y = make_classification(
             n_classes=2, n_features=5, n_samples=100, random_state=42, n_informative=3
         )
@@ -221,7 +221,7 @@ class TestXGBoostModels(unittest.TestCase):
             x_test.astype(np.float32), model, model_onnx, basename="XGBBoosterMCl"
         )
 
-    def test_xgboost_booster_classifier_multiclass_softprob(self):
+    def test_xgb0_booster_classifier_multiclass_softprob(self):
         x, y = make_classification(
             n_classes=3, n_features=5, n_samples=100, random_state=42, n_informative=3
         )
@@ -283,11 +283,12 @@ class TestXGBoostModels(unittest.TestCase):
             basename="XGBBoosterMClSoftMax",
         )
 
-    def test_xgboost_booster_classifier_reg(self):
+    def test_xgboost_booster_reg(self):
         x, y = make_classification(
             n_classes=2, n_features=5, n_samples=100, random_state=42, n_informative=3
         )
         y = y.astype(np.float32) + 0.567
+        print(y)
         x_train, x_test, y_train, _ = train_test_split(
             x, y, test_size=0.5, random_state=42
         )
@@ -431,7 +432,7 @@ class TestXGBoostModels(unittest.TestCase):
             X_test.astype(np.float32), clf, onnx_model, basename="XGBoostExample"
         )
 
-    def test_xgb_empty_tree(self):
+    def test_xgb0_empty_tree_classifier(self):
         xgb = XGBClassifier(n_estimators=2, max_depth=2)
 
         # simple dataset
@@ -451,7 +452,7 @@ class TestXGBoostModels(unittest.TestCase):
         assert_almost_equal(xgb.predict_proba(X), res[1])
         assert_almost_equal(xgb.predict(X), res[0])
 
-    def test_xgb_best_tree_limit(self):
+    def test_xgb_best_tree_limit_classifier(self):
         # Train
         iris = load_iris()
         X, y = iris.data, iris.target
@@ -499,7 +500,7 @@ class TestXGBoostModels(unittest.TestCase):
         )
         assert_almost_equal(bst_loaded.predict(dtest), res[0])
 
-    def test_onnxrt_python_xgbclassifier(self):
+    def test_xgb_classifier(self):
         x = np.random.randn(100, 10).astype(np.float32)
         y = ((x.sum(axis=1) + np.random.randn(x.shape[0]) / 50 + 0.5) >= 0).astype(
             np.int64
@@ -675,7 +676,44 @@ class TestXGBoostModels(unittest.TestCase):
             x_test, xgb, conv_model, basename="SklearnXGBClassifierHinge"
         )
 
+    def test_xgb_classifier_13(self):
+        this = os.path.dirname(__file__)
+        df = pandas.read_csv(os.path.join(this, "data_fail_empty.csv"))
+        X, y = df.drop("y", axis=1), df["y"]
+        X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+        clr = XGBClassifier(
+            max_delta_step=0,
+            tree_method="hist",
+            n_estimators=100,
+            booster="gbtree",
+            objective="binary:logistic",
+            eval_metric="logloss",
+            learning_rate=0.1,
+            gamma=10,
+            max_depth=7,
+            min_child_weight=50,
+            subsample=0.75,
+            colsample_bytree=0.75,
+            random_state=42,
+            verbosity=0,
+        )
+
+        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
+
+        initial_type = [("float_input", FloatTensorType([None, 797]))]
+        onx = convert_xgboost(
+            clr, initial_types=initial_type, target_opset=TARGET_OPSET
+        )
+        expected = clr.predict(X_test), clr.predict_proba(X_test)
+        sess = InferenceSession(
+            onx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
+        X_test = X_test.values.astype(np.float32)
+        got = sess.run(None, {"float_input": X_test})
+        assert_almost_equal(expected[1], got[1])
+        assert_almost_equal(expected[0], got[0])
+
 
 if __name__ == "__main__":
-    TestXGBoostModels().test_xgb_regressor_poisson()
     unittest.main(verbosity=2)

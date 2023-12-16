@@ -70,12 +70,15 @@ def _get_attributes(booster):
             ntrees = trees // num_class if num_class > 0 else trees
     else:
         trees = len(res)
-        ntrees = booster.best_ntree_limit
-        num_class = trees // ntrees
+        ntrees = getattr(booster, "best_ntree_limit", trees)
+        config = json.loads(booster.save_config())["learner"]["learner_model_param"]
+        num_class = int(config["num_class"]) if "num_class" in config else 0
+        if num_class == 0 and ntrees > 0:
+            num_class = trees // ntrees
         if num_class == 0:
             raise RuntimeError(
-                "Unable to retrieve the number of classes, trees=%d, ntrees=%d."
-                % (trees, ntrees)
+                f"Unable to retrieve the number of classes, num_class={num_class}, "
+                f"trees={trees}, ntrees={ntrees}, config={config}."
             )
 
     kwargs = atts.copy()
@@ -137,7 +140,7 @@ class WrappedBooster:
             self.operator_name = "XGBRegressor"
 
     def get_xgb_params(self):
-        return self.kwargs
+        return {k: v for k, v in self.kwargs.items() if v is not None}
 
     def get_booster(self):
         return self.booster_

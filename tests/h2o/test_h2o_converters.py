@@ -223,7 +223,6 @@ class TestH2OModels(unittest.TestCase):
         train, test = _prepare_one_hot("airlines.csv", y)
         gbm = H2OGradientBoostingEstimator(ntrees=8, max_depth=5)
         mojo_path = _make_mojo(gbm, train, y=train.columns.index(y))
-        print("****", mojo_path)
         onnx_model = _convert_mojo(mojo_path)
         self.assertIsNot(onnx_model, None)
         dump_data_and_model(

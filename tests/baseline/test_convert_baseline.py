@@ -45,11 +45,11 @@ class TestBaseLine(unittest.TestCase):
     def normalize_diff(self, diff):
         invalid_comparisons = []
         invalid_comparisons.append(
-            re.compile('producer_version: "\d+\.\d+\.\d+\.\d+.*')
+            re.compile('producer_version: "\\d+\\.\\d+\\.\\d+\\.\\d+.*')
         )
-        invalid_comparisons.append(re.compile('\s+name: ".*'))
-        invalid_comparisons.append(re.compile("ir_version: \d+"))
-        invalid_comparisons.append(re.compile("\s+"))
+        invalid_comparisons.append(re.compile('\\s+name: ".*'))
+        invalid_comparisons.append(re.compile("ir_version: \\d+"))
+        invalid_comparisons.append(re.compile("\\s+"))
         valid_diff = set()
         for line in diff:
             if any(comparison.match(line) for comparison in invalid_comparisons):
