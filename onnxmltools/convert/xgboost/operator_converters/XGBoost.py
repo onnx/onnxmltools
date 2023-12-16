@@ -10,7 +10,7 @@ try:
 except ImportError:
     XGBRFClassifier = None
 from ...common._registration import register_converter
-from ..common import get_xgb_params
+from ..common import get_xgb_params, get_n_estimators_classifier
 
 
 class XGBConverter:
@@ -161,8 +161,7 @@ class XGBConverter:
                 false_child_id=remap[jsnode["no"]],  # ['children'][1]['nodeid'],
                 weights=None,
                 weight_id_bias=None,
-                missing=jsnode.get("missing", -1)
-                == jsnode["yes"],  # ['children'][0]['nodeid'],
+                missing=jsnode.get("missing", -1) == jsnode["yes"],
                 hitrate=jsnode.get("cover", 0),
             )
 
@@ -265,8 +264,8 @@ class XGBRegressorConverter(XGBConverter):
         )
 
         if objective == "count:poisson":
-            cst = scope.get_unique_variable_name("half")
-            container.add_initializer(cst, TensorProto.FLOAT, [1], [0.5])
+            cst = scope.get_unique_variable_name("poisson")
+            container.add_initializer(cst, TensorProto.FLOAT, [1], [base_score])
             new_name = scope.get_unique_variable_name("exp")
             container.add_node("Exp", names, [new_name])
             container.add_node("Mul", [new_name, cst], operator.output_full_names)
@@ -293,11 +292,18 @@ class XGBClassifierConverter(XGBConverter):
         objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
 
         params = XGBConverter.get_xgb_params(xgb_node)
+        n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
+        num_class = params.get("num_class", None)
+
         attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(
             js_trees, attr_pairs, [1 for _ in js_trees], True
         )
-        ncl = (max(attr_pairs["class_treeids"]) + 1) // params["n_estimators"]
+        if num_class is not None:
+            ncl = num_class
+            n_estimators = len(js_trees) // ncl
+        else:
+            ncl = (max(attr_pairs["class_treeids"]) + 1) // n_estimators
 
         bst = xgb_node.get_booster()
         best_ntree_limit = getattr(bst, "best_ntree_limit", len(js_trees)) * ncl
@@ -310,6 +316,7 @@ class XGBClassifierConverter(XGBConverter):
 
         if len(attr_pairs["class_treeids"]) == 0:
             raise RuntimeError("XGBoost model is empty.")
+
         if ncl <= 1:
             ncl = 2
             if objective != "binary:hinge":
@@ -317,8 +324,9 @@ class XGBClassifierConverter(XGBConverter):
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
                 if js_trees[0].get("leaf", None) == 0:
-                    attr_pairs["base_values"] = [0.5]
+                    attr_pairs["base_values"] = [base_score]
                 elif base_score != 0.5:
+                    # 0.5 -> cst = 0
                     cst = -np.log(1 / np.float32(base_score) - 1.0)
                     attr_pairs["base_values"] = [cst]
             else:
@@ -330,8 +338,10 @@ class XGBClassifierConverter(XGBConverter):
             attr_pairs["class_ids"] = [v % ncl for v in attr_pairs["class_treeids"]]
 
         classes = xgb_node.classes_
-        if np.issubdtype(classes.dtype, np.floating) or np.issubdtype(
-            classes.dtype, np.integer
+        if (
+            np.issubdtype(classes.dtype, np.floating)
+            or np.issubdtype(classes.dtype, np.integer)
+            or np.issubdtype(classes.dtype, np.bool_)
         ):
             attr_pairs["classlabels_int64s"] = classes.astype("int")
         else:
@@ -373,7 +383,7 @@ class XGBClassifierConverter(XGBConverter):
                     "Where", [greater, one, zero], operator.output_full_names[1]
                 )
         elif objective in ("multi:softprob", "multi:softmax"):
-            ncl = len(js_trees) // params["n_estimators"]
+            ncl = len(js_trees) // n_estimators
             if objective == "multi:softmax":
                 attr_pairs["post_transform"] = "NONE"
             container.add_node(
@@ -385,7 +395,7 @@ class XGBClassifierConverter(XGBConverter):
                 **attr_pairs,
             )
         elif objective == "reg:logistic":
-            ncl = len(js_trees) // params["n_estimators"]
+            ncl = len(js_trees) // n_estimators
             if ncl == 1:
                 ncl = 2
             container.add_node(
