@@ -92,7 +92,7 @@ class TestXGBoostModels(unittest.TestCase):
     def test_xgb_regressor_poisson(self):
         iris = load_diabetes()
         x = iris.data
-        y = iris.target
+        y = iris.target / 100
         x_train, x_test, y_train, _ = train_test_split(
             x, y, test_size=0.5, random_state=42
         )
@@ -218,7 +218,7 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET,
         )
         dump_data_and_model(
-            x_test.astype(np.float32)[:20], model, model_onnx, basename="XGBBoosterMCl"
+            x_test.astype(np.float32), model, model_onnx, basename="XGBBoosterMCl"
         )
 
     def test_xgb0_booster_classifier_multiclass_softprob(self):
@@ -283,11 +283,12 @@ class TestXGBoostModels(unittest.TestCase):
             basename="XGBBoosterMClSoftMax",
         )
 
-    def test_xgboost_booster_classifier_reg(self):
+    def test_xgboost_booster_reg(self):
         x, y = make_classification(
             n_classes=2, n_features=5, n_samples=100, random_state=42, n_informative=3
         )
         y = y.astype(np.float32) + 0.567
+        print(y)
         x_train, x_test, y_train, _ = train_test_split(
             x, y, test_size=0.5, random_state=42
         )
@@ -715,4 +716,5 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    TestXGBoostModels().test_xgb_regressor_poisson()
     unittest.main(verbosity=2)

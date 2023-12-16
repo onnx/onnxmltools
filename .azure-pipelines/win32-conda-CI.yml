@@ -80,7 +80,7 @@ jobs:
       call activate py$(python.version)
       python -m pip install --upgrade scikit-learn
       python -m pip install --upgrade lightgbm
-      python -m pip install "xgboost=$(xgboost.version)"
+      python -m pip install "xgboost==$(xgboost.version)"
     displayName: 'Install scikit-learn'
 
   - script: |

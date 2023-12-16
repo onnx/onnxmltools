@@ -28,7 +28,7 @@ def get_xgb_params(xgb_node):
         # xgboost >= 1.0.2
         if xgb_node.n_estimators is not None:
             params["n_estimators"] = xgb_node.n_estimators
-    if params.get("base_score", None) is None:
+    if "base_score" in config["learner"]["learner_model_param"]:
         bs = float(config["learner"]["learner_model_param"]["base_score"])
         # xgboost >= 2.0
         params["base_score"] = bs
