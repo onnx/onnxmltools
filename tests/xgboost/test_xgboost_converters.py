@@ -742,7 +742,7 @@ class TestXGBoostModels(unittest.TestCase):
         assert_almost_equal(expected[1], got[1])
         assert_almost_equal(expected[0], got[0])
 
-    def test_xgb_classifier_13(self):
+    def test_xgb_classifier_13_2(self):
         this = os.path.dirname(__file__)
         df = pandas.read_csv(os.path.join(this, "data_bug.csv"))
         X, y = df.drop("y", axis=1), df["y"]
@@ -753,7 +753,7 @@ class TestXGBoostModels(unittest.TestCase):
         model_param = {
             "objective": "binary:logistic",
             "n_estimators": 1000,
-            "early_stopping_rounds": 120,
+            "early_stopping_rounds": 113,
             "random_state": 42,
             "max_depth": 3,
         }
@@ -769,8 +769,15 @@ class TestXGBoostModels(unittest.TestCase):
 
         initial_types = [("float_input", FloatTensorType([None, x_train.shape[1]]))]
         onnx_model = convert_xgboost(model, initial_types=initial_types)
-        # with open("debug.onnx", "wb") as f:
-        #     f.write(onnx_model.SerializeToString())
+        for att in onnx_model.graph.node[0].attribute:
+            if att.name == "nodes_treeids":
+                self.assertLess(max(att.ints), 1000)
+            if att.name == "class_ids":
+                self.assertEqual(set(att.ints), {0})
+            if att.name == "base_values":
+                self.assertEqual(len(att.floats), 1)
+            if att.name == "post_transform":
+                self.assertEqual(att.s, b"LOGISTIC")
 
         expected = model.predict(x_test), model.predict_proba(x_test)
         sess = InferenceSession(onnx_model.SerializeToString())
@@ -780,5 +787,5 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestXGBoostModels().test_xgb_classifier_13()
+    TestXGBoostModels().test_xgb_classifier_13_2()
     unittest.main(verbosity=2)
