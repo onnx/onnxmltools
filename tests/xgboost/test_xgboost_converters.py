@@ -288,7 +288,6 @@ class TestXGBoostModels(unittest.TestCase):
             n_classes=2, n_features=5, n_samples=100, random_state=42, n_informative=3
         )
         y = y.astype(np.float32) + 0.567
-        print(y)
         x_train, x_test, y_train, _ = train_test_split(
             x, y, test_size=0.5, random_state=42
         )
@@ -676,6 +675,35 @@ class TestXGBoostModels(unittest.TestCase):
             x_test, xgb, conv_model, basename="SklearnXGBClassifierHinge"
         )
 
+    def test_doc_example(self):
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        X = X.astype(np.float32)
+        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        clr = XGBClassifier()
+        clr.fit(X_train, y_train)
+        expected_prob = clr.predict_proba(X_test)
+
+        initial_type = [("float_input", FloatTensorType([None, 4]))]
+        onx = convert_xgboost(clr, initial_types=initial_type)
+
+        sess = InferenceSession(onx.SerializeToString())
+        input_name = sess.get_inputs()[0].name
+        pred_onx = sess.run(None, {input_name: X_test.astype(np.float32)})
+        assert_almost_equal(expected_prob, pred_onx[1], decimal=5)
+
+        dtrain = DMatrix(X_train, label=y_train)
+        dtest = DMatrix(X_test)
+        param = {"objective": "multi:softmax", "num_class": 3}
+        bst = train_xgb(param, dtrain, 10)
+        expected_prob = bst.predict(dtest, output_margin=True)
+        initial_type = [("float_input", FloatTensorType([None, 4]))]
+        onx = convert_xgboost(bst, initial_types=initial_type)
+        sess = InferenceSession(onx.SerializeToString())
+        input_name = sess.get_inputs()[0].name
+        pred_onx = sess.run(None, {input_name: X_test.astype(np.float32)})
+        assert_almost_equal(expected_prob, pred_onx[1], decimal=5)
+
     def test_xgb_classifier_13(self):
         this = os.path.dirname(__file__)
         df = pandas.read_csv(os.path.join(this, "data_fail_empty.csv"))
@@ -714,6 +742,50 @@ class TestXGBoostModels(unittest.TestCase):
         assert_almost_equal(expected[1], got[1])
         assert_almost_equal(expected[0], got[0])
 
+    def test_xgb_classifier_13_2(self):
+        this = os.path.dirname(__file__)
+        df = pandas.read_csv(os.path.join(this, "data_bug.csv"))
+        X, y = df.drop("y", axis=1), df["y"]
+        x_train, x_test, y_train, y_test = train_test_split(
+            X.values.astype(np.float32), y.values.astype(np.float32), random_state=2022
+        )
+
+        model_param = {
+            "objective": "binary:logistic",
+            "n_estimators": 1000,
+            "early_stopping_rounds": 113,
+            "random_state": 42,
+            "max_depth": 3,
+        }
+        eval_metric = ["logloss", "auc", "error"]
+        model = XGBClassifier(**model_param)
+        model.fit(
+            X=x_train,
+            y=y_train,
+            eval_set=[(x_test, y_test)],
+            eval_metric=eval_metric,
+            verbose=False,
+        )
+
+        initial_types = [("float_input", FloatTensorType([None, x_train.shape[1]]))]
+        onnx_model = convert_xgboost(model, initial_types=initial_types)
+        for att in onnx_model.graph.node[0].attribute:
+            if att.name == "nodes_treeids":
+                self.assertLess(max(att.ints), 1000)
+            if att.name == "class_ids":
+                self.assertEqual(set(att.ints), {0})
+            if att.name == "base_values":
+                self.assertEqual(len(att.floats), 1)
+            if att.name == "post_transform":
+                self.assertEqual(att.s, b"LOGISTIC")
+
+        expected = model.predict(x_test), model.predict_proba(x_test)
+        sess = InferenceSession(onnx_model.SerializeToString())
+        got = sess.run(None, {"float_input": x_test})
+        assert_almost_equal(expected[1], got[1])
+        assert_almost_equal(expected[0], got[0])
+
 
 if __name__ == "__main__":
+    TestXGBoostModels().test_xgb_classifier_13_2()
     unittest.main(verbosity=2)

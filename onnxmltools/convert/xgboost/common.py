@@ -32,6 +32,14 @@ def get_xgb_params(xgb_node):
         bs = float(config["learner"]["learner_model_param"]["base_score"])
         # xgboost >= 2.0
         params["base_score"] = bs
+
+    bst = xgb_node.get_booster()
+    if hasattr(bst, "best_ntree_limit"):
+        params["best_ntree_limit"] = bst.best_ntree_limit
+    if "gradient_booster" in config["learner"]:
+        gbp = config["learner"]["gradient_booster"]["gbtree_model_param"]
+        if "num_trees" in gbp:
+            params["best_ntree_limit"] = int(gbp["num_trees"])
     return params
 
 

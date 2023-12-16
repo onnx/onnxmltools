@@ -46,7 +46,7 @@ def _fit_classification_model(model, n_classes, is_str=False, dtype=None):
 
 
 class TestXGBoostRFModels(unittest.TestCase):
-    def test_xgbrf_regressor(self):
+    def test_xgbrf_aregressor(self):
         iris = load_diabetes()
         x = iris.data
         y = iris.target

@@ -40,6 +40,12 @@ class XGBConverter:
         params = XGBConverter.get_xgb_params(xgb_node)
         objective = params["objective"]
         base_score = params["base_score"]
+        if hasattr(xgb_node, "best_ntree_limit"):
+            best_ntree_limit = xgb_node.best_ntree_limit
+        elif hasattr(xgb_node, "best_iteration"):
+            best_ntree_limit = xgb_node.best_iteration + 1
+        else:
+            best_ntree_limit = params.get("best_ntree_limit", None)
         if base_score is None:
             base_score = 0.5
         booster = xgb_node.get_booster()
@@ -47,7 +53,7 @@ class XGBConverter:
         # XGBoost 0.7 was the first version released with it.
         js_tree_list = booster.get_dump(with_stats=True, dump_format="json")
         js_trees = [json.loads(s) for s in js_tree_list]
-        return objective, base_score, js_trees
+        return objective, base_score, js_trees, best_ntree_limit
 
     @staticmethod
     def _get_default_tree_attribute_pairs(is_classifier):
@@ -231,7 +237,9 @@ class XGBRegressorConverter(XGBConverter):
     def convert(scope, operator, container):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
-        objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
+        objective, base_score, js_trees, best_ntree_limit = XGBConverter.common_members(
+            xgb_node, inputs
+        )
 
         if objective in ["reg:gamma", "reg:tweedie"]:
             raise RuntimeError("Objective '{}' not supported.".format(objective))
@@ -239,9 +247,7 @@ class XGBRegressorConverter(XGBConverter):
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
         attr_pairs["base_values"] = [base_score]
 
-        bst = xgb_node.get_booster()
-        best_ntree_limit = getattr(bst, "best_ntree_limit", len(js_trees))
-        if best_ntree_limit < len(js_trees):
+        if best_ntree_limit and best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
 
         XGBConverter.fill_tree_attributes(
@@ -289,7 +295,9 @@ class XGBClassifierConverter(XGBConverter):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
 
-        objective, base_score, js_trees = XGBConverter.common_members(xgb_node, inputs)
+        objective, base_score, js_trees, best_ntree_limit = XGBConverter.common_members(
+            xgb_node, inputs
+        )
 
         params = XGBConverter.get_xgb_params(xgb_node)
         n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
@@ -305,8 +313,9 @@ class XGBClassifierConverter(XGBConverter):
         else:
             ncl = (max(attr_pairs["class_treeids"]) + 1) // n_estimators
 
-        bst = xgb_node.get_booster()
-        best_ntree_limit = getattr(bst, "best_ntree_limit", len(js_trees)) * ncl
+        best_ntree_limit = best_ntree_limit or len(js_trees)
+        if ncl > 0:
+            best_ntree_limit *= ncl
         if 0 < best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
             attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
