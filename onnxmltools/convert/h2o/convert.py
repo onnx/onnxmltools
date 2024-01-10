@@ -77,9 +77,9 @@ def convert(
         f.close()
     mojo_str = h2o.print_mojo(model_path, format="json")
     mojo_model = json.loads(mojo_str)
-    if mojo_model["params"]["algo"] != "gbm":
+    if mojo_model["params"]["algo"] not in ("gbm", "xgboost"):
         raise ValueError(
-            "Model type not supported (algo=%s). Only GBM Mojo supported for now."
+            "Model type not supported (algo=%s). Only GBM and XGBOOST Mojo supported for now."
             % mojo_model["params"]["algo"]
         )
 
