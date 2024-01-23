@@ -18,7 +18,7 @@ jobs:
       Python311-1150-RT117dev-xgb2-lgbm40:
         python.version: '3.11'
         ONNX_PATH: 'onnx==1.15.0'
-        ONNXRT_PATH: 'onnxruntime==1.17.0.dev20240118001'
+        ONNXRT_PATH: '-i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ORT-Nightly/pypi/simple/ ort-nightly==1.17.0.dev20240118001'
         COREML_PATH: NONE
         lightgbm.version: '>=4.0'
         xgboost.version: '>=2'
