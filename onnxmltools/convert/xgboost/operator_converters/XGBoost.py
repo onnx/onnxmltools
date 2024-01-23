@@ -254,6 +254,9 @@ class XGBRegressorConverter(XGBConverter):
             js_trees, attr_pairs, [1 for _ in js_trees], False
         )
 
+        params = XGBConverter.get_xgb_params(xgb_node)
+        attr_pairs["n_targets"] = params["n_targets"]
+
         # add nodes
         if objective == "count:poisson":
             names = [scope.get_unique_variable_name("tree")]
