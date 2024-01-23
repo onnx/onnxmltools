@@ -5,6 +5,7 @@ import unittest
 
 class TestXGBoostIssues(unittest.TestCase):
     def test_issue_676(self):
+        import json
         import onnxruntime
         import xgboost
         import numpy as np
@@ -15,13 +16,15 @@ class TestXGBoostIssues(unittest.TestCase):
             convert_xgboost,
         )
 
-        def frozen_shape_calculator(operator):
-            operator.outputs[0].type.shape = [None, 2]
+        def xgbregressor_shape_calculator(operator):
+            config = json.loads(operator.raw_operator.get_booster().save_config())
+            n_targets = int(config["learner"]["learner_model_param"]["num_target"])
+            operator.outputs[0].type.shape = [None, n_targets]
 
         update_registered_converter(
             xgboost.XGBRegressor,
             "XGBoostXGBRegressor",
-            frozen_shape_calculator,
+            xgbregressor_shape_calculator,
             convert_xgboost,
         )
         # Your data and labels
