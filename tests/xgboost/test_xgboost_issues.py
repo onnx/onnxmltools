@@ -42,7 +42,7 @@ class TestXGBoostIssues(unittest.TestCase):
             onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
         )
         got = sess.run(None, {"float_input": X.astype(np.float32)})
-        self.assertEqual(got[0].shape, (100, 1))
+        self.assertEqual(got[0].shape, (100, 210))
 
 
 if __name__ == "__main__":
