@@ -134,12 +134,16 @@ def build_io_name_map():
             lambda model: [model.getOrDefault("predictionCol")],
         ),
         "pyspark.ml.feature.ImputerModel": (
-            lambda model: model.getOrDefault("inputCols")
-            if model.isSet("inputCols")
-            else [model.getOrDefault("inputCol")],
-            lambda model: model.getOrDefault("outputCols")
-            if model.isSet("outputCols")
-            else [model.getOrDefault("outputCol")],
+            lambda model: (
+                model.getOrDefault("inputCols")
+                if model.isSet("inputCols")
+                else [model.getOrDefault("inputCol")]
+            ),
+            lambda model: (
+                model.getOrDefault("outputCols")
+                if model.isSet("outputCols")
+                else [model.getOrDefault("outputCol")]
+            ),
         ),
         "pyspark.ml.feature.MaxAbsScalerModel": (
             lambda model: [model.getOrDefault("inputCol")],
@@ -177,20 +181,28 @@ def build_io_name_map():
             ],
         ),
         "pyspark.ml.feature.OneHotEncoderModel": (
-            lambda model: model.getOrDefault("inputCols")
-            if model.isSet("inputCols")
-            else [model.getOrDefault("inputCol")],
-            lambda model: model.getOrDefault("outputCols")
-            if model.isSet("outputCols")
-            else [model.getOrDefault("outputCol")],
+            lambda model: (
+                model.getOrDefault("inputCols")
+                if model.isSet("inputCols")
+                else [model.getOrDefault("inputCol")]
+            ),
+            lambda model: (
+                model.getOrDefault("outputCols")
+                if model.isSet("outputCols")
+                else [model.getOrDefault("outputCol")]
+            ),
         ),
         "pyspark.ml.feature.StringIndexerModel": (
-            lambda model: model.getOrDefault("inputCols")
-            if model.isSet("inputCols")
-            else [model.getOrDefault("inputCol")],
-            lambda model: model.getOrDefault("outputCols")
-            if model.isSet("outputCols")
-            else [model.getOrDefault("outputCol")],
+            lambda model: (
+                model.getOrDefault("inputCols")
+                if model.isSet("inputCols")
+                else [model.getOrDefault("inputCol")]
+            ),
+            lambda model: (
+                model.getOrDefault("outputCols")
+                if model.isSet("outputCols")
+                else [model.getOrDefault("outputCol")]
+            ),
         ),
         "pyspark.ml.feature.VectorAssembler": (
             lambda model: model.getOrDefault("inputCols"),

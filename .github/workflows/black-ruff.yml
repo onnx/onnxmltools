@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: psf/black@193ee766ca496871f93621d6b58d57a6564ff81b  # stable 23.7.0
+      - uses: psf/black@343b8137f4dd7d912662eae5021ad9a023cfc89c  # stable 24.1.1
         with:
           options: "--diff --check"
           src: "."
