@@ -15,7 +15,15 @@ jobs:
   strategy:
     matrix:
 
-      Python311-1150-RT1163:
+      Python312-1150-RT1170:
+        python.version: '3.12'
+        ONNX_PATH: 'onnx==1.15.0'
+        ONNXRT_PATH: 'onnxruntime==1.17.0'
+        COREML_PATH: NONE
+        numpy.version: ''
+        xgboost.version: ''
+
+      Python311-1150-RT1163-xgb202:
         python.version: '3.11'
         ONNX_PATH: 'onnx==1.15.0'
         ONNXRT_PATH: 'onnxruntime==1.16.3'
