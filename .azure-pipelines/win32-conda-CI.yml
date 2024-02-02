@@ -21,7 +21,7 @@ jobs:
         ONNXRT_PATH: 'onnxruntime==1.17.0'
         COREML_PATH: NONE
         numpy.version: ''
-        xgboost.version: ''
+        xgboost.version: '2.0.3'
 
       Python311-1150-RT1163-xgb202:
         python.version: '3.11'
