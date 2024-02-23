@@ -7,6 +7,7 @@ lightgbm
 mleap
 numpy
 openpyxl
+onnxconverter-common
 pandas
 pyspark
 pytest
