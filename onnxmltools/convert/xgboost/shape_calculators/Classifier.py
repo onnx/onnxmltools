@@ -27,7 +27,7 @@ def calculate_xgboost_classifier_output_shapes(operator):
     objective = params["objective"]
     n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
     num_class = params.get("num_class", None)
-    
+
     if objective == "binary:logistic":
         ncl = 2
     elif num_class is not None:

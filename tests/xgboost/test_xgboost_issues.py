@@ -41,7 +41,9 @@ class TestXGBoostIssues(unittest.TestCase):
         initial_type = [("float_input", FloatTensorType([None, X.shape[1]]))]
 
         # Convert XGBoost model to ONNX
-        onnx_model = convert_sklearn(model, initial_types=initial_type, target_opset=12)
+        onnx_model = convert_sklearn(
+            model, initial_types=initial_type, target_opset={"": 12, "ai.onnx.ml": 3}
+        )
         self.assertIn("dim_value: 2", str(onnx_model.graph.output))
 
         sess = onnxruntime.InferenceSession(

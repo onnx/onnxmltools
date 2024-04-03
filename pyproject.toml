@@ -10,10 +10,10 @@ exclude = [
 # Same as Black.
 line-length = 95
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 10
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["F401"]
 "onnxmltools/convert/coreml/operator_converters/GLMClassifier.py" = ["E501"]
 "onnxmltools/convert/coreml/operator_converters/SVC.py" = ["E501"]
