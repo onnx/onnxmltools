@@ -28,7 +28,7 @@ def sparkml_tree_dataset_to_sklearn(tree_df, is_classifier):
         if isinstance(item, dict):
             try:
                 feature.append(item["featureIndex"])
-                threshold.append(item["leftCategoriesOrThreshold"])
+                threshold.append(item["leftCategoriesOrThreshold"][0] if len(item["leftCategoriesOrThreshold"]) >= 1 else -1.0)
             except KeyError:
                 raise RuntimeError(f"Unable to process {item}.")
         else:
