@@ -15,6 +15,16 @@ jobs:
   strategy:
     matrix:
 
+      Python312-1160-RT1180-xgb2-lgbm40:
+        python.version: '3.12'
+        ONNX_PATH: 'onnx==1.16.0'
+        ONNXRT_PATH: 'onnxruntime==1.18.0'
+        COREML_PATH: NONE
+        lightgbm.version: '>=4.0'
+        xgboost.version: '>=2'
+        numpy.version: ''
+        scipy.version: ''
+
       Python311-1160-RT1171-xgb2-lgbm40:
         python.version: '3.11'
         ONNX_PATH: 'onnx==1.16.0'
