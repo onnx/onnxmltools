@@ -55,12 +55,6 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
-      - uses: tlylt/install-graphviz@v1
-
-      - name: Install pandoc
-        if: matrix.documentation == 1
-        run: sudo apt-get install -y pandoc
-
       - name: Install requirements
         run: python -m pip install -r requirements.txt
 
