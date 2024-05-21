@@ -93,7 +93,6 @@ jobs:
           python -c "from lightgbm import __version__;print('lightgbm', __version__)"
           python -c "from xgboost import __version__;print('xgboost', __version__)"
           python -c "from catboost import __version__;print('catboost', __version__)"
-          python -c "from h2o import __version__;print('h2o', __version__)"
           python -c "from hummingbirdml import __version__;print('hummingbirdml', __version__)"
           python -c "import onnx.defs;print('onnx_opset_version', onnx.defs.onnx_opset_version())"
   
@@ -116,7 +115,9 @@ jobs:
         run: pytest --maxfail=10 --durations=10 tests/svmlib
 
       - name: Run tests h2o
-        run: pytest --maxfail=10 --durations=10 tests/h2o
+        run: |
+          pip install h2o
+          pytest --maxfail=10 --durations=10 tests/h2o
 
       - name: Run tests pysparkml
         run: pytest --maxfail=10 --durations=10 tests/sparkml
