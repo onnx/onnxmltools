@@ -2,7 +2,7 @@ name: CI
 on: [push, pull_request]
 jobs:
   run:
-    name: Py==${{ matrix.python_version }} - sklearn${{ matrix.sklearn_version }} - ${{ matrix.onnxrt_version }}
+    name: ${{ matrix.os }} py==${{ matrix.python_version }} - sklearn${{ matrix.sklearn_version }} - ${{ matrix.onnxrt_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
