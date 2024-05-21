@@ -81,7 +81,7 @@ The shape mapping from Core ML to our IR obeys the following rules.
 Notice that the compiler can overwrite those rules at some stages like shape inference. An example is the label shape of a classifier. One may expect that its shape is `[1, 1].` Nevertheless, our shape inference may change it to `[1]`. The major reason is that the current definition of ZipMap, the operator used to generate the predicted probabilities, does not support batch size greater than one.
 
 Core ML's batch size, `N-axis`, is ignored because it is not related to graph structures. In fact, ONNX's batch size is rather equivalent to sequence axis in Core ML. By default, we use `N=1` for traditional machine learning models and `N='None'` for neural networks. To overwrite our default types, user can provide `initial_types` when calling `convert(...)` defined in `onnxmltools.convert.coreml.convert.py`. All Core ML's shape calculations are derived from [this document](https://apple.github.io/coremltools/coremlspecification/index.html) specifically for our type system.
-Some more details about Core ML neural network operator can be found at this [page](https://github.com/apple/coremltools/blob/master/mlmodel/format/NeuralNetwork.proto)
+Some more details about Core ML neural network operator can be found at this [page](https://github.com/apple/coremltools/blob/main/mlmodel/format/NeuralNetwork.proto)
 
 For scikit-learn, user may need to specify the input types for their models. In general, we expect `[1, C]` if the input is feature vector.
 
