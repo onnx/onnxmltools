@@ -3,9 +3,7 @@
 
 ![ONNXMLTools_logo_main](https://github.com/onnx/onnxmltools/blob/main/docs/ONNXMLTools_logo_main.png)
 
-| Linux                                                                                                                                                                                                                          | Windows                                                                                                                                                                                                                        |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=main)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=main) | [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-win32-conda-ci?branchName=main)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=main) |
+[![CI](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml/badge.svg)](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml)
 
 ## Introduction
 
