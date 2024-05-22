@@ -71,7 +71,11 @@ jobs:
             ${{ runner.os }}-
 
       - name: Install specific versions
-        run: pip install "${{ matrix.onnx_version }}" "${{ matrix.onnxrt_version }}" "numpy${{ matrix.numpy_version }}" "scikit-learn${{ matrix.sklearn_version}}" "scipy${{ matrix.scipy_version }}" "xgboost${{ matrix.xgboost_version }}" "lightgbm${{ matrix.lgbm_version }}"
+        run: pip install "${{ matrix.onnx_version }}" "${{ matrix.onnxrt_version }}" "numpy${{ matrix.numpy_version }}" "scikit-learn${{ matrix.sklearn_version}}" "scipy${{ matrix.scipy_version }}" "xgboost${{ matrix.xgboost_version }}"
+
+      - name: Install lightgbm
+        if: matrix.os != 'macos-latest'
+        run: pip install "lightgbm${{ matrix.lgbm_version }}"
 
       - name: Install
         run: pip install -e .
@@ -100,6 +104,7 @@ jobs:
         run: pytest --maxfail=10 --durations=10 tests/catboost
 
       - name: Run tests lightgbm
+        if: matrix.os != 'macos-latest'
         run: pytest --maxfail=10 --durations=10 tests/lightgbm
 
       - name: Run tests xgboost
