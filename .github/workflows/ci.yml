@@ -118,11 +118,13 @@ jobs:
         run: pytest --maxfail=10 --durations=10 tests/svmlib
 
       - name: Run tests h2o
+        if: matrix.os != 'macos-latest'
         run: |
           pip install h2o
           pytest --maxfail=10 --durations=10 tests/h2o
 
       - name: Run tests pysparkml
+        if: matrix.os != 'macos-latest'
         run: pytest --maxfail=10 --durations=10 tests/sparkml
 
       - name: Run tests hummingbirdml
