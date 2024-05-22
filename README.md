@@ -1,11 +1,9 @@
 <!--- SPDX-License-Identifier: Apache-2.0 -->
 #
 
-![ONNXMLTools_logo_main](docs/ONNXMLTools_logo_main.png)
+![ONNXMLTools_logo_main](https://github.com/onnx/onnxmltools/blob/main/docs/ONNXMLTools_logo_main.png)
 
-| Linux                                                                                                                                                                                                                          | Windows                                                                                                                                                                                                                        |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-linux-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master) | [![Build Status](https://dev.azure.com/onnxmltools/onnxmltools/_apis/build/status/onnxmltools-win32-conda-ci?branchName=master)](https://dev.azure.com/onnxmltools/onnxmltools/_build/latest?definitionId=3?branchName=master) |
+[![CI](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml/badge.svg)](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml)
 
 ## Introduction
 
@@ -58,7 +56,7 @@ ONNXMLTools is tested with Python **3.7+**.
 
 # Examples
 
-If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/master/docs/Versioning.md#released-versions).
+If you want the converted ONNX model to be compatible with a certain ONNX version, please specify the target_opset parameter upon invoking the convert function. The following Keras model conversion example demonstrates this below. You can identify the mapping from ONNX Operator Sets (referred to as opsets) to ONNX releases in the [versioning documentation](https://github.com/onnx/onnx/blob/main/docs/Versioning.md#released-versions).
 
 ## Keras to ONNX Conversion
 
@@ -142,7 +140,7 @@ opset_version = onnx_model.opset_import[0].version
 
 If the result from checking your ONNX model's opset is smaller than the `target_opset` number you specified in the onnxmltools.convert function, be assured that this is likely intended behavior. The ONNXMLTools converter works by converting each operator to the ONNX format individually and finding the corresponding opset version that it was most recently updated in. Once all of the operators are converted, the resultant ONNX model has the maximal opset version of all of its operators.
 
-To illustrate this concretely, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/master/docs/Operators.md#abs) was most recently updated in opset 6, and [Add](https://github.com/onnx/onnx/blob/master/docs/Operators.md#add) was most recently updated in opset 7. Therefore, the converted ONNX model's opset will always be 7, even if you request `target_opset=8`. The converter behavior was defined this way to ensure backwards compatibility.
+To illustrate this concretely, let's consider a model with two operators, Abs and Add. As of December 2018, [Abs](https://github.com/onnx/onnx/blob/main/docs/Operators.md#abs) was most recently updated in opset 6, and [Add](https://github.com/onnx/onnx/blob/main/docs/Operators.md#add) was most recently updated in opset 7. Therefore, the converted ONNX model's opset will always be 7, even if you request `target_opset=8`. The converter behavior was defined this way to ensure backwards compatibility.
 
 Documentation for the [ONNX Model format](https://github.com/onnx/onnx) and more examples for converting models from different frameworks can be found in the [ONNX tutorials](https://github.com/onnx/tutorials) repository.
 

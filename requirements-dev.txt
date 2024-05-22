@@ -3,13 +3,13 @@ catboost
 cython
 dill
 libsvm
-lightgbm
+lightgbm; sys_platform != 'darwin'
 mleap
 numpy
 openpyxl
 onnxconverter-common
 pandas
-pyspark
+pyspark; sys_platform == 'linux'
 pytest
 pytest-cov
 pytest-spark
