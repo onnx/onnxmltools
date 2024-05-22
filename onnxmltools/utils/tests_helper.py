@@ -88,10 +88,16 @@ def dump_data_and_model(
         os.makedirs(folder)
 
     if hasattr(model, "predict"):
-        import lightgbm
-        import xgboost
+        try:
+            import lightgbm
+        except ImportError:
+            lightgbm = None
+        try:
+            import xgboost
+        except ImportError:
+            xgboost = None
 
-        if isinstance(model, lightgbm.Booster):
+        if lightgbm is not None and isinstance(model, lightgbm.Booster):
             # LightGBM Booster
             model_dict = model.dump_model()
             if model_dict["objective"].startswith("binary"):
@@ -105,7 +111,7 @@ def dump_data_and_model(
                 prediction = [score.argmax(axis=1), score]
             else:
                 prediction = [model.predict(data)]
-        elif isinstance(model, xgboost.Booster):
+        elif xgboost is not None and isinstance(model, xgboost.Booster):
             # XGBoost Booster
             from ..convert.xgboost._parse import _get_attributes
             from xgboost import DMatrix

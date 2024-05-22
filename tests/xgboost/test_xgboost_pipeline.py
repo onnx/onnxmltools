@@ -50,7 +50,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
             if column.dtype in ["bool"]:
                 return "passthrough"
             if column.dtype in ["O"]:
-                return OneHotEncoder(sparse=False)
+                return OneHotEncoder(sparse_output=False)
             raise ValueError()
 
         return ColumnTransformer(

@@ -15,13 +15,9 @@ from onnx.helper import split_complex_to_pairs
 
 
 def _check_onnx_version():
-    import pkg_resources
+    from onnx import __version__
 
-    min_required_version = pkg_resources.parse_version("1.0.1")
-    current_version = pkg_resources.get_distribution("onnx").parsed_version
-    assert (
-        current_version >= min_required_version
-    ), "ONNXMLTools requires ONNX version 1.0.1 or a newer one"
+    return not __version__.startswith("0.")
 
 
 _check_onnx_version()

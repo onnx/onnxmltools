@@ -120,10 +120,10 @@ class XGBConverter:
 
         # Split condition for sklearn
         # * if X_ptr[X_sample_stride * i + X_fx_stride * node.feature] <= node.threshold:
-        # * https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/tree/_tree.pyx#L946
+        # * https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/tree/_tree.pyx#L946
         # Split condition for xgboost
         # * if (fvalue < split_value)
-        # * https://github.com/dmlc/xgboost/blob/master/include/xgboost/tree_model.h#L804
+        # * https://github.com/dmlc/xgboost/blob/main/include/xgboost/tree_model.h#L804
 
         attr_pairs["nodes_treeids"].append(tree_id)
         attr_pairs["nodes_nodeids"].append(node_id)
@@ -254,6 +254,9 @@ class XGBRegressorConverter(XGBConverter):
             js_trees, attr_pairs, [1 for _ in js_trees], False
         )
 
+        params = XGBConverter.get_xgb_params(xgb_node)
+        attr_pairs["n_targets"] = params["n_targets"]
+
         # add nodes
         if objective == "count:poisson":
             names = [scope.get_unique_variable_name("tree")]
@@ -329,7 +332,7 @@ class XGBClassifierConverter(XGBConverter):
         if ncl <= 1:
             ncl = 2
             if objective != "binary:hinge":
-                # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L23.
+                # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L23.
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
                 if js_trees[0].get("leaf", None) == 0:
@@ -341,7 +344,7 @@ class XGBClassifierConverter(XGBConverter):
             else:
                 attr_pairs["base_values"] = [base_score]
         else:
-            # See https://github.com/dmlc/xgboost/blob/master/src/common/math.h#L35.
+            # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L35.
             attr_pairs["post_transform"] = "SOFTMAX"
             attr_pairs["base_values"] = [base_score for n in range(ncl)]
             attr_pairs["class_ids"] = [v % ncl for v in attr_pairs["class_treeids"]]

@@ -1,5 +1,14 @@
 # Change Logs
 
+## 1.13.0 (development)
+
+* Handle issue with binary classifier setting output to [N,1] vs [N,2],
+  [#681](https://github.com/onnx/onnxmltools/pull/681)
+* Add missing dependency onnxconverter_common, fix multi regression with xgboost,
+  [#679](https://github.com/onnx/onnxmltools/pull/679),
+  fixes issues [No module named 'onnxconverter_common'](https://github.com/onnx/onnxmltools/issues/673),
+  [onnx converted : xgboostRegressor multioutput model predicts 1 dimension instead of original 210 dimensions.](https://github.com/onnx/onnxmltools/issues/676)
+
 ## 1.12.0
 
 * Fix early stopping for XGBClassifier and xgboost > 2

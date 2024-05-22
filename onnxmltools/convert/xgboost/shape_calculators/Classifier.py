@@ -28,11 +28,11 @@ def calculate_xgboost_classifier_output_shapes(operator):
     n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
     num_class = params.get("num_class", None)
 
-    if num_class is not None:
+    if objective == "binary:logistic":
+        ncl = 2
+    elif num_class is not None:
         ncl = num_class
         n_estimators = ntrees // ncl
-    elif objective == "binary:logistic":
-        ncl = 2
     else:
         ncl = ntrees // n_estimators
         if objective == "reg:logistic" and ncl == 1:
@@ -46,7 +46,7 @@ def calculate_xgboost_classifier_output_shapes(operator):
         operator.outputs[0].type = Int64TensorType(shape=[N])
     else:
         operator.outputs[0].type = StringTensorType(shape=[N])
-    operator.outputs[1].type = operator.outputs[1].type = FloatTensorType([N, ncl])
+    operator.outputs[1].type = FloatTensorType([N, ncl])
 
 
 register_shape_calculator("XGBClassifier", calculate_xgboost_classifier_output_shapes)

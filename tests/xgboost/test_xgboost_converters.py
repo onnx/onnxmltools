@@ -173,7 +173,7 @@ class TestXGBoostModels(unittest.TestCase):
         )
 
         dump_data_and_model(
-            x_test, xgb, conv_model, basename="SklearnXGBClassifierRegLog"
+            x_test, xgb, conv_model, basename="SklearnXGBClassifierRegLog-Dec4"
         )
 
     def test_xgb_classifier_multi_discrete_int_labels(self):
