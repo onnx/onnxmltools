@@ -23,6 +23,7 @@ build/
 *.bat
 
 # test generated files
+*.pkl
 .pytest_cache
 .cache
 tests/temp
