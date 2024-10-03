@@ -433,12 +433,12 @@ def convert_tensorflow(
     custom_op_conversions=None,
     **kwargs
 ):
-    import pkgutil
-
-    if not pkgutil.find_loader("tf2onnx"):
-        raise RuntimeError(
+    try:
+        import tf2onnx  # noqa: F401
+    except ImportError as e:
+        raise ImportError(
             "tf2onnx is not installed, please install it before calling this function."
-        )
+        ) from e
 
     return _convert_tf_wrapper(
         frozen_graph_def,

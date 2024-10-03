@@ -26,7 +26,10 @@ def calculate_one_hot_encoder_output_shapes(operator):
         operator.outputs[0].type = FloatTensorType(
             [N, len(int_categories)], doc_string=operator.outputs[0].type.doc_string
         )
-    elif len(str_categories) > 0 and type(operator.inputs[0].type) == StringTensorType:
+    elif (
+        len(str_categories) > 0
+        and type(operator.inputs[0].type) == StringTensorType  # noqa: E721
+    ):
         operator.outputs[0].type = FloatTensorType(
             [N, len(str_categories)], doc_string=operator.outputs[0].type.doc_string
         )
