@@ -13,26 +13,17 @@ jobs:
             documentation: 0
             numpy_version: '>=1.21.1'
             scipy_version: '>=1.7.0'
-            onnx_version: 'onnx==1.17.0'
+            onnx_version: 'onnx<1.18'
             onnxrt_version: 'onnxruntime==1.19.2'
             sklearn_version: '==1.5.2'
-            lgbm_version: ">=4"
-            xgboost_version: ">=2"
-          - python_version: '3.12'
-            documentation: 0
-            numpy_version: '>=1.21.1'
-            scipy_version: '>=1.7.0'
-            onnx_version: 'onnx==1.16.2'
-            onnxrt_version: 'onnxruntime==1.18.0'
-            sklearn_version: '==1.4.2'
             lgbm_version: ">=4"
             xgboost_version: ">=2"
           - python_version: '3.11'
             documentation: 1
             numpy_version: '>=1.21.1'
             scipy_version: '>=1.7.0'
-            onnx_version: 'onnx<1.16.0'
-            onnxrt_version: 'onnxruntime==1.17.3'
+            onnx_version: 'onnx<1.17.0'
+            onnxrt_version: 'onnxruntime==1.18.1'
             sklearn_version: '==1.4.2'
             lgbm_version: ">=4"
             xgboost_version: ">=2"
@@ -40,8 +31,8 @@ jobs:
             documentation: 0
             numpy_version: '>=1.21.1'
             scipy_version: '>=1.7.0'
-            onnx_version: 'onnx==1.14.1'
-            onnxrt_version: 'onnxruntime==1.16.3'
+            onnx_version: 'onnx<1.16'
+            onnxrt_version: 'onnxruntime==1.17.3'
             sklearn_version: '==1.4.2'
             lgbm_version: "<4"
             xgboost_version: "<2"
@@ -49,8 +40,8 @@ jobs:
             documentation: 0
             numpy_version: '>=1.21.1'
             scipy_version: '>=1.7.0'
-            onnx_version: 'onnx==1.13.0'
-            onnxrt_version: 'onnxruntime==1.14.1'
+            onnx_version: 'onnx<1.15'
+            onnxrt_version: 'onnxruntime==1.16.3'
             sklearn_version: '==1.4.2'
             lgbm_version: "<4"
             xgboost_version: "<2"
