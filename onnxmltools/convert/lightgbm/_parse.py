@@ -36,7 +36,7 @@ class WrappedBooster:
         elif self.objective_.startswith("multiclass"):
             self.operator_name = "LgbmClassifier"
             self.classes_ = self._generate_classes(booster)
-        elif self.objective_.startswith("regression"):
+        elif self.objective_.startswith(("regression", "poisson", "gamma", "quantile", "huber")):
             self.operator_name = "LgbmRegressor"
         else:
             raise NotImplementedError(
