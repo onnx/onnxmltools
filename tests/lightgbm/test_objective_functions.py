@@ -31,7 +31,13 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class ObjectiveTest(unittest.TestCase):
-    _regressor_objectives: Tuple[str] = ("regression", "poisson", "gamma", "quantile", "huber")
+    _regressor_objectives: Tuple[str] = (
+        "regression",
+        "poisson",
+        "gamma",
+        "quantile",
+        "huber",
+    )
 
     @staticmethod
     def _calc_initial_types(X: DataFrame) -> List[Tuple[str, TensorType]]:
