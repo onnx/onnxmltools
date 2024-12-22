@@ -22,9 +22,8 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestXGBoostUnpickle06(unittest.TestCase):
-    @unittest.skipIf(xgboost is None, "xgboost is not available")
     @unittest.skipIf(
-        pv.Version(xgboost.__version__) >= pv.Version("1.0"),
+        xgboost is None or pv.Version(xgboost.__version__) >= pv.Version("1.0"),
         reason="compatibility break with pickle in 1.0",
     )
     def test_xgboost_unpickle_06(self):
