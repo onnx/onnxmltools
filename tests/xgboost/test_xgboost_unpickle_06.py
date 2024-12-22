@@ -7,6 +7,7 @@ import pickle
 
 try:
     import xgboost
+    from xgboost import XGBClassifier  # noqa: F401
 except Exception:
     xgboost = None
 from onnx.defs import onnx_opset_version
