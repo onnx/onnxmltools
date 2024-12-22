@@ -380,8 +380,13 @@ class TestXGBoostModels(unittest.TestCase):
         iris = load_iris()
         X, y = iris.data, iris.target
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=10)
-        clr = XGBClassifier(objective="multi:softmax", max_depth=1, n_estimators=2)
-        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
+        clr = XGBClassifier(
+            objective="multi:softmax",
+            max_depth=1,
+            n_estimators=2,
+            early_stopping_rounds=40,
+        )
+        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)])
         initial_type = [("float_input", FloatTensorType([None, 4]))]
         onx = convert_xgboost(
             clr, initial_types=initial_type, target_opset=TARGET_OPSET
