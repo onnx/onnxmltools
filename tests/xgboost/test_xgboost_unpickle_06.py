@@ -4,7 +4,11 @@ import os
 import packaging.version as pv
 import unittest
 import pickle
-import xgboost
+
+try:
+    import xgboost
+except Exception:
+    xgboost = None
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.xgboost import convert as convert_xgboost
@@ -15,6 +19,7 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestXGBoostUnpickle06(unittest.TestCase):
+    @unittest.skipIf(xgboost is None, "xgboost is not available")
     @unittest.skipIf(
         pv.Version(xgboost.__version__) >= pv.Version("1.0"),
         reason="compatibility break with pickle in 1.0",

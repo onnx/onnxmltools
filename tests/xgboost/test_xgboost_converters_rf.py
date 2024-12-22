@@ -4,7 +4,12 @@ import unittest
 import numpy as np
 from sklearn.datasets import load_diabetes, make_classification
 from sklearn.model_selection import train_test_split
-from xgboost import XGBRFRegressor, XGBRFClassifier
+
+try:
+    from xgboost import XGBRFRegressor, XGBRFClassifier
+except Exception:
+    XGBRFRegressor = None
+
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert import convert_xgboost
@@ -46,6 +51,7 @@ def _fit_classification_model(model, n_classes, is_str=False, dtype=None):
 
 
 class TestXGBoostRFModels(unittest.TestCase):
+    @unittest.skipIf(XGBRFRegressor is None, "xgboost is not available")
     def test_xgbrf_aregressor(self):
         iris = load_diabetes()
         x = iris.data
@@ -67,6 +73,7 @@ class TestXGBoostRFModels(unittest.TestCase):
             basename="SklearnXGBRFRegressor-Dec3",
         )
 
+    @unittest.skipIf(XGBRFRegressor is None, "xgboost is not available")
     def test_xgbrf_classifier(self):
         xgb, x_test = _fit_classification_model(XGBRFClassifier(), 2)
         conv_model = convert_xgboost(

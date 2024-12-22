@@ -10,7 +10,11 @@ import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
 import onnxruntime as rt
-from xgboost import XGBRegressor
+
+try:
+    from xgboost import XGBRegressor
+except Exception:
+    XGBRegressor = None
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -73,15 +77,18 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         res = [(col, type_for_column(data[col])) for col in data.columns]
         return res
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgboost_10_skl_missing(self):
         self.common_test_xgboost_10_skl(np.nan)
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgboost_10_skl_zero(self):
         try:
             self.common_test_xgboost_10_skl(0.0, True)
         except RuntimeError as e:
             assert "Cannot convert a XGBoost model where missing values" in str(e)
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgboost_10_skl_zero_replace(self):
         self.common_test_xgboost_10_skl(np.nan, True)
 
