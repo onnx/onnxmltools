@@ -87,5 +87,4 @@ class TestXGBoostRFModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # TestXGBoostModels().test_xgboost_booster_classifier_multiclass_softprob()
     unittest.main(verbosity=2)

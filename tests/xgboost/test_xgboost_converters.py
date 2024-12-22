@@ -479,6 +479,7 @@ class TestXGBoostModels(unittest.TestCase):
         assert_almost_equal(xgb.predict_proba(X), res[1])
         assert_almost_equal(xgb.predict(X), res[0])
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_best_tree_limit_classifier(self):
         # Train
         iris = load_iris()
@@ -822,5 +823,4 @@ class TestXGBoostModels(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    TestXGBoostModels().test_xgb_classifier_13_2()
     unittest.main(verbosity=2)
