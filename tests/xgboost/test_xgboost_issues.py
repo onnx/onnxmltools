@@ -2,8 +2,14 @@
 
 import unittest
 
+try:
+    from xgboost import XGBRegressor
+except Exception:
+    XGBRegressor = None
+
 
 class TestXGBoostIssues(unittest.TestCase):
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_issue_676(self):
         import json
         import onnxruntime
