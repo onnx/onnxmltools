@@ -12,7 +12,9 @@ except Exception:
     XGBRegressor = None
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
-from onnxmltools.convert import convert_xgboost
+
+if XGBRegressor is not None:
+    from onnxmltools.convert import convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxruntime import InferenceSession
 

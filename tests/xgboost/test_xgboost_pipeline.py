@@ -24,9 +24,11 @@ from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxconverter_common import data_types as onnxtypes
 from onnxmltools.convert import convert_sklearn
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.convert.xgboost.operator_converters.XGBoost import (
-    convert_xgboost as convert_xgb,
-)
+
+if XGBRegressor is not None:
+    from onnxmltools.convert.xgboost.operator_converters.XGBoost import (
+        convert_xgboost as convert_xgb,
+    )
 
 try:
     from skl2onnx import update_registered_converter
