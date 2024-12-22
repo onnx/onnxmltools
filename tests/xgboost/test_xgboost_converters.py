@@ -386,8 +386,13 @@ class TestXGBoostModels(unittest.TestCase):
         iris = load_iris()
         X, y = iris.data, iris.target
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=10)
-        clr = XGBClassifier(objective="multi:softprob", max_depth=1, n_estimators=2)
-        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
+        clr = XGBClassifier(
+            objective="multi:softprob",
+            max_depth=1,
+            n_estimators=2,
+            early_stopping_rounds=40,
+        )
+        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)])
         initial_type = [("float_input", FloatTensorType([None, 4]))]
         onx = convert_xgboost(
             clr, initial_types=initial_type, target_opset=TARGET_OPSET
@@ -725,9 +730,10 @@ class TestXGBoostModels(unittest.TestCase):
             colsample_bytree=0.75,
             random_state=42,
             verbosity=0,
+            early_stopping_rounds=40,
         )
 
-        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
+        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)])
 
         initial_type = [("float_input", FloatTensorType([None, 797]))]
         onx = convert_xgboost(
@@ -756,14 +762,13 @@ class TestXGBoostModels(unittest.TestCase):
             "early_stopping_rounds": 113,
             "random_state": 42,
             "max_depth": 3,
+            "eval_metric": ["logloss", "auc", "error"],
         }
-        eval_metric = ["logloss", "auc", "error"]
         model = XGBClassifier(**model_param)
         model.fit(
             X=x_train,
             y=y_train,
             eval_set=[(x_test, y_test)],
-            eval_metric=eval_metric,
             verbose=False,
         )
 

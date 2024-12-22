@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import unittest
 import pickle
 import os
 import numpy
@@ -87,16 +88,22 @@ def dump_data_and_model(
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    if hasattr(model, "predict"):
+    if "LGBM" in model.__class__.__name__:
         try:
             import lightgbm
         except ImportError:
-            lightgbm = None
+            raise unittest.SkipTest("lightgbm cannot be imported.")
+    else:
+        lightgbm = None
+    if "XGB" in model.__class__.__name__ or "Booster" in model.__class__.__name__:
         try:
             import xgboost
         except ImportError:
-            xgboost = None
+            raise unittest.SkipTest("xgboost cannot be imported.")
+    else:
+        xgboost = None
 
+    if hasattr(model, "predict"):
         if lightgbm is not None and isinstance(model, lightgbm.Booster):
             # LightGBM Booster
             model_dict = model.dump_model()
