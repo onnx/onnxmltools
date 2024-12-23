@@ -10,6 +10,15 @@ jobs:
         python_version: ['3.12', '3.11', '3.10', '3.9']
         include:
           - python_version: '3.12'
+            documentation: 1
+            numpy_version: '>=1.21.1'
+            scipy_version: '>=1.7.0'
+            onnx_version: 'onnx==1.17.0'
+            onnxrt_version: 'onnxruntime==1.20.1'
+            sklearn_version: '==1.6.0'
+            lgbm_version: ">=4"
+            xgboost_version: ">=2"
+          - python_version: '3.12'
             documentation: 0
             numpy_version: '>=1.21.1'
             scipy_version: '>=1.7.0'
@@ -19,7 +28,7 @@ jobs:
             lgbm_version: ">=4"
             xgboost_version: ">=2"
           - python_version: '3.11'
-            documentation: 1
+            documentation: 0
             numpy_version: '>=1.21.1'
             scipy_version: '>=1.7.0'
             onnx_version: 'onnx<1.16.0'
@@ -82,13 +91,11 @@ jobs:
 
       - name: versions
         run: |
-          python -c "from numpy import __version__;print('numpy', __version__)"
           python -c "from pandas import __version__;print('pandas', __version__)"
           python -c "from scipy import __version__;print('scipy', __version__)"
           python -c "from sklearn import __version__;print('sklearn', __version__)"
           python -c "from onnxruntime import __version__;print('onnxruntime', __version__)"
           python -c "from onnx import __version__;print('onnx', __version__)"
-          python -c "from xgboost import __version__;print('xgboost', __version__)"
           python -c "from catboost import __version__;print('catboost', __version__)"
           python -c "import onnx.defs;print('onnx_opset_version', onnx.defs.onnx_opset_version())"
   
@@ -96,6 +103,7 @@ jobs:
         if: matrix.os != 'macos-latest'
         run: |
           python -c "from lightgbm import __version__;print('lightgbm', __version__)"
+          python -c "from xgboost import __version__;print('xgboost', __version__)"
   
       - name: Run tests baseline
         run: pytest --maxfail=10 --durations=10 tests/baseline
