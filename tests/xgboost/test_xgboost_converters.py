@@ -8,6 +8,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
+import packaging.version as pv
 from sklearn.datasets import (
     load_diabetes,
     load_iris,
@@ -28,6 +29,7 @@ try:
     )
 except Exception:
     XGBRegressor = None
+import sklearn
 from sklearn.preprocessing import StandardScaler
 from onnx.defs import onnx_opset_version
 from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
@@ -376,6 +378,10 @@ class TestXGBoostModels(unittest.TestCase):
         )
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(sklearn.__version__) < pv.Version("1.6.0"),
+        "move parameters from fit to the convstructor",
+    )
     def test_xgboost_classifier_i5450_softmax(self):
         iris = load_iris()
         X, y = iris.data, iris.target
