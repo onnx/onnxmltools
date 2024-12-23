@@ -12,7 +12,7 @@ from onnxmltools import convert_lightgbm
 from onnxruntime import InferenceSession
 from pandas.core.frame import DataFrame
 
-from lightgbm import LGBMRegressor
+from lightgbm import LGBMRegressor, Booster, Dataset
 
 _N_ROWS = 10_000
 _N_COLS = 10
@@ -31,7 +31,13 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class ObjectiveTest(unittest.TestCase):
-    _objectives: Tuple[str] = ("regression", "poisson", "gamma", "quantile")
+    _regressor_objectives: Tuple[str] = (
+        "regression",
+        "poisson",
+        "gamma",
+        "quantile",
+        "huber",
+    )
 
     @staticmethod
     def _calc_initial_types(X: DataFrame) -> List[Tuple[str, TensorType]]:
@@ -83,7 +89,7 @@ class ObjectiveTest(unittest.TestCase):
         tuple(int(ver) for ver in onnxruntime.__version__.split(".")[:2]) < (1, 3),
         "not supported in this library version",
     )
-    def test_objective(self):
+    def test_objective_LGBMRegressor(self):
         """
         Test if a LGBMRegressor a with certain objective (e.g. 'poisson')
         can be converted to ONNX
@@ -95,10 +101,44 @@ class ObjectiveTest(unittest.TestCase):
         and therefore sometimes fails randomly. In these cases,
         a retry should resolve the issue.
         """
-        for objective in self._objectives:
+        for objective in self._regressor_objectives:
             with self.subTest(X=_X, objective=objective):
                 regressor = LGBMRegressor(objective=objective, num_thread=1)
                 regressor.fit(_X, _Y)
+                regressor_onnx: ModelProto = convert_lightgbm(
+                    regressor,
+                    initial_types=self._calc_initial_types(_X),
+                    target_opset=TARGET_OPSET,
+                )
+                y_pred = regressor.predict(_X)
+                y_pred_onnx = self._predict_with_onnx(regressor_onnx, _X)
+                self._assert_almost_equal(
+                    y_pred,
+                    y_pred_onnx,
+                    decimal=_N_DECIMALS,
+                    frac=_FRAC,
+                )
+
+    def test_objective_Booster(self):
+        """
+        Test if a Booster a with certain objective (e.g. 'poisson')
+        can be converted to ONNX
+        and whether the ONNX graph and the original model produce
+        almost equal predictions.
+
+        Note that this tests is a bit flaky because of precision
+        differences with ONNX and LightGBM
+        and therefore sometimes fails randomly. In these cases,
+        a retry should resolve the issue.
+        """
+        for objective in self._regressor_objectives:
+            with self.subTest(X=_X, objective=objective):
+                ds = Dataset(_X, feature_name="auto").construct()
+                ds.set_label(_Y)
+                regressor = Booster(params={"objective": objective}, train_set=ds)
+                for k in range(10):
+                    regressor.update()
+
                 regressor_onnx: ModelProto = convert_lightgbm(
                     regressor,
                     initial_types=self._calc_initial_types(_X),
