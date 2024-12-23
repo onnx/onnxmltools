@@ -2,7 +2,7 @@ name: CI
 on: [push, pull_request]
 jobs:
   run:
-    name: ${{ matrix.os }} py==${{ matrix.python_version }} - sklearn${{ matrix.sklearn_version }} - ${{ matrix.onnxrt_version }}
+    name: ${{ matrix.os }} py==${{ matrix.python_version }} - sklearn${{ matrix.sklearn_version }} - ${{ matrix.onnxrt_version }} - xgboost${{ matrix.xgboost_version }} - lightgbm${{ matrix.lgbm_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -16,15 +16,6 @@ jobs:
             onnx_version: 'onnx==1.17.0'
             onnxrt_version: 'onnxruntime==1.20.1'
             sklearn_version: '==1.6.0'
-            lgbm_version: ">=4"
-            xgboost_version: ">=2"
-          - python_version: '3.12'
-            documentation: 0
-            numpy_version: '>=1.21.1'
-            scipy_version: '>=1.7.0'
-            onnx_version: 'onnx==1.16.0'
-            onnxrt_version: 'onnxruntime==1.18.0'
-            sklearn_version: '==1.4.2'
             lgbm_version: ">=4"
             xgboost_version: ">=2"
           - python_version: '3.11'
