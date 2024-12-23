@@ -87,14 +87,14 @@ jobs:
           python -c "from sklearn import __version__;print('sklearn', __version__)"
           python -c "from onnxruntime import __version__;print('onnxruntime', __version__)"
           python -c "from onnx import __version__;print('onnx', __version__)"
-          python -c "from catboost import __version__;print('catboost', __version__)"
           python -c "import onnx.defs;print('onnx_opset_version', onnx.defs.onnx_opset_version())"
   
-      - name: versions lightgbm
+      - name: versions lightgbm, xgboost, catboost
         if: matrix.os != 'macos-latest'
         run: |
           python -c "from lightgbm import __version__;print('lightgbm', __version__)"
           python -c "from xgboost import __version__;print('xgboost', __version__)"
+          python -c "from catboost import __version__;print('catboost', __version__)"
   
       - name: Run tests baseline
         run: pytest --maxfail=10 --durations=10 tests/baseline

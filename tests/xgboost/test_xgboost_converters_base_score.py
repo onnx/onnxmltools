@@ -37,7 +37,7 @@ class TestXGBoostModelsBaseScore(unittest.TestCase):
         expected = rf.predict(X).astype(np.float32).reshape((-1, 1))
         expected_sparse = rf.predict(X_sp).astype(np.float32).reshape((-1, 1))
         diff = np.abs(expected - expected_sparse)
-        self.assertNotEqual(diff.min(), diff.max())
+        self.assertNotEqual(diff.min(), diff.max(), atol=1e-5)
 
         onx = convert_xgboost(
             rf,
@@ -66,7 +66,7 @@ class TestXGBoostModelsBaseScore(unittest.TestCase):
         expected = rf.predict(X).astype(np.float32).reshape((-1, 1))
         expected_sparse = rf.predict(X_sp).astype(np.float32).reshape((-1, 1))
         diff = np.abs(expected - expected_sparse)
-        self.assertNotEqual(diff.min(), diff.max())
+        self.assertNotEqual(diff.min(), diff.max(), atol=1e-5)
 
         onx = convert_xgboost(
             rf,
@@ -96,7 +96,7 @@ class TestXGBoostModelsBaseScore(unittest.TestCase):
         expected = rf.predict_proba(X).astype(np.float32).reshape((-1, 1))
         expected_sparse = rf.predict_proba(X_sp).astype(np.float32).reshape((-1, 1))
         diff = np.abs(expected - expected_sparse)
-        self.assertNotEqual(diff.min(), diff.max())
+        self.assertNotEqual(diff.min(), diff.max(), atol=1e-5)
 
         onx = convert_xgboost(
             rf,
@@ -126,7 +126,7 @@ class TestXGBoostModelsBaseScore(unittest.TestCase):
         expected = rf.predict_proba(X).astype(np.float32).reshape((-1, 1))
         expected_sparse = rf.predict_proba(X_sp).astype(np.float32).reshape((-1, 1))
         diff = np.abs(expected - expected_sparse)
-        self.assertNotEqual(diff.min(), diff.max())
+        self.assertNotEqual(diff.min(), diff.max(), atol=1e-5)
 
         onx = convert_xgboost(
             rf,
