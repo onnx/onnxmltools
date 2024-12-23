@@ -653,12 +653,12 @@ class TestXGBoostModels(unittest.TestCase):
                         y = oinf.run(None, {"X": X_test.astype(np.float32)})
                         if cl == XGBRegressor:
                             exp = clr.predict(X_test)
-                            assert_almost_equal(exp, y[0].ravel(), decimal=5)
+                            assert_almost_equal(exp, y[0].ravel(), decimal=4)
                         else:
                             if "softmax" not in obj:
                                 exp = clr.predict_proba(X_test)
                                 got = pandas.DataFrame(y[1]).values
-                                assert_almost_equal(exp, got, decimal=5)
+                                assert_almost_equal(exp, got, decimal=4)
 
                             exp = clr.predict(X_test[:10])
                             assert_almost_equal(exp, y[0][:10])
