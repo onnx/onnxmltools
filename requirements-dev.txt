@@ -16,7 +16,7 @@ pytest-spark
 ruff
 scikit-learn>=1.2.0
 scipy
-skl2onnx
+skl2onnx>=1.19.0
 wheel
 xgboost
 onnxruntime
