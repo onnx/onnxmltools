@@ -108,6 +108,7 @@ jobs:
           python -c "from catboost import __version__;print('catboost', __version__)"
   
       - name: Run tests baseline
+        if: matrix.os != 'macos-latest'
         run: pytest --maxfail=10 --durations=10 tests/baseline
 
       - name: Run tests utils

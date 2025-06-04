@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from onnxmltools.convert.common.data_types.data_types import FloatTensorType
+from ..common.data_types.data_types import FloatTensorType
 from ..common._container import LibSvmModelContainer, Topology
 
 
