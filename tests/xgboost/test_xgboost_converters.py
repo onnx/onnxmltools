@@ -32,7 +32,7 @@ except Exception:
 import sklearn
 from sklearn.preprocessing import StandardScaler
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 
 if XGBRegressor is not None:
     from onnxmltools.convert import convert_xgboost

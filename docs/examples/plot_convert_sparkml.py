@@ -34,7 +34,7 @@ import pyspark
 from pyspark.sql import SparkSession
 from pyspark.ml.feature import VectorAssembler, StringIndexer
 import onnxmltools
-from onnxconverter_common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 from onnxmltools.convert import convert_sparkml
 
 

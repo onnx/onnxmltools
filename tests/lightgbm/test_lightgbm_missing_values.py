@@ -2,11 +2,11 @@ import unittest
 
 import numpy as np
 from onnx import ModelProto
-from onnxconverter_common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools import convert_lightgbm
 from onnxruntime import InferenceSession
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from lightgbm import LGBMRegressor
 
 _N_DECIMALS = 5

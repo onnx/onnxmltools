@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import onnx as onnx_proto
 from pyspark.ml.classification import MultilayerPerceptronClassificationModel
-
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import Int64TensorType, FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 from ...common._topology import Operator, Scope, ModelComponentContainer
-from ....proto import onnx_proto
 from typing import List
 import numpy as np
 

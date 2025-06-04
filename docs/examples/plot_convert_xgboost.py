@@ -31,7 +31,7 @@ from xgboost import XGBClassifier, DMatrix, train as train_xgb
 import onnxruntime as rt
 
 import onnxmltools
-from onnxconverter_common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 from onnxmltools.convert import convert_xgboost
 
 iris = load_iris()

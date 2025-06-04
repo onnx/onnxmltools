@@ -2,7 +2,10 @@
 
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import StringTensorType, FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 from ...common._topology import Operator, Scope, ModelComponentContainer
 from pyspark.ml.feature import CountVectorizerModel
 

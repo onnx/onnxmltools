@@ -2,7 +2,10 @@
 
 import logging
 from ...common.data_types import Int64TensorType, FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 from ...common._registration import register_converter, register_shape_calculator
 from .tree_ensemble_common import (
     save_read_sparkml_model_data,

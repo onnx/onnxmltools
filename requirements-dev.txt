@@ -7,7 +7,6 @@ lightgbm; sys_platform != 'darwin'
 mleap
 numpy
 openpyxl
-onnxconverter-common
 pandas
 pyspark; sys_platform == 'linux'
 pytest

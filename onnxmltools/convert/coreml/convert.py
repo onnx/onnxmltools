@@ -3,7 +3,7 @@
 import coremltools
 from uuid import uuid4
 import onnx
-from ...proto import onnx_proto
+import onnx as onnx_proto
 from ..common._topology import convert_topology
 from ..common.onnx_ex import get_maximum_opset_supported
 from ._parse import parse_coreml

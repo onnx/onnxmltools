@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import onnx as onnx_proto
 from ....common._registration import register_converter
-from .....proto import onnx_proto
 
 
 def convert_slice(scope, operator, container):

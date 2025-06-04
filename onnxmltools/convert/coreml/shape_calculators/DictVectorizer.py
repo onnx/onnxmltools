@@ -2,7 +2,10 @@
 
 from ...common._registration import register_shape_calculator
 from ...common.data_types import DictionaryType, SequenceType, FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 
 
 def calculate_dictionary_vectorizer_output_shapes(operator):

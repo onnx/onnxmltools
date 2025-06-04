@@ -4,7 +4,10 @@ from pyspark.ml.classification import LogisticRegressionModel, LinearSVCModel
 
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import Int64TensorType, FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 
 
 def convert_sparkml_linear_classifier(scope, operator, container):

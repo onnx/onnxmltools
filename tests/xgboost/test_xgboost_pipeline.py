@@ -20,8 +20,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
-from onnxconverter_common import data_types as onnxtypes
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common import data_types as onnxtypes
 from onnxmltools.convert import convert_sklearn
 from onnxmltools.convert.common.data_types import FloatTensorType
 

@@ -5,7 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from sklearn.datasets import load_diabetes, load_iris, make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder

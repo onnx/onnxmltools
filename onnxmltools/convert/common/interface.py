@@ -4,4 +4,4 @@
 # So the usage of the methods and properties list here
 # will not be affected among the different versions.
 
-from onnxconverter_common.interface import *  # noqa
+# from onnxconverter_common.interface import *  # noqa

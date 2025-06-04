@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from ....proto import helper
-from ....proto import onnx_proto
+import onnx as onnx_proto
+from onnx import helper
 from ...common._registration import register_converter
 from ...common._apply_operation import apply_constant
 

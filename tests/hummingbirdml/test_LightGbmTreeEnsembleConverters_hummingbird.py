@@ -5,7 +5,7 @@ import unittest
 import lightgbm
 import numpy
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from lightgbm import LGBMClassifier, LGBMRegressor
 from onnxruntime import InferenceSession
 from onnxmltools.convert.common.utils import hummingbird_installed

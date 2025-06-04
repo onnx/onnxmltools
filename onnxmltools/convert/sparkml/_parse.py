@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from onnxconverter_common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 from .ops_names import get_sparkml_operator_name
 from .ops_input_output import get_input_names, get_output_names
 
-from ..common._container import SparkmlModelContainer
-from ..common._topology import Topology
+from ..common._container import SparkmlModelContainer, Topology
 
 from pyspark.ml import PipelineModel
 
