@@ -3,7 +3,7 @@
 from ....proto import onnx_proto
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import FloatTensorType
-from ...common._topology import Operator, Scope
+from ...common._container import Operator, Scope
 from pyspark.ml.feature import OneHotEncoderModel
 from typing import List
 

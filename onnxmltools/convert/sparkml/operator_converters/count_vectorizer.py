@@ -6,7 +6,7 @@ from ...common.shape_calculator import (
     check_input_and_output_numbers,
     check_input_and_output_types,
 )
-from ...common._topology import Operator, Scope, ModelComponentContainer
+from ...common._container import Operator, Scope, ModelComponentContainer
 from pyspark.ml.feature import CountVectorizerModel
 
 

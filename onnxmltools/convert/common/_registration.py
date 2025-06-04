@@ -26,7 +26,7 @@ def register_converter(operator_name, conversion_function, overwrite=False):
 def get_converter(operator_name):
     """
     Given an Operator object (named operator) defined in topology.py, we can retrieve its conversion function.
-    >>> from onnxmltools.convert.common._topology import Operator
+    >>> from onnxmltools.convert.common._container import Operator
     >>> operator = Operator('dummy_name', 'dummy_scope', 'dummy_operator_type', None)
     >>> get_converter(operator.type)  # Use 'dummy_operator_type' for dictionary looking-up
 
@@ -53,7 +53,7 @@ def register_shape_calculator(operator_name, calculator_function, overwrite=Fals
 def get_shape_calculator(operator_name):
     """
     Given an Operator object (named operator) defined in topology.py, we can retrieve its shape calculation function.
-    >>> from onnxmltools.convert.common._topology import Operator
+    >>> from onnxmltools.convert.common._container import Operator
     >>> operator = Operator('dummy_name', 'dummy_scope', 'dummy_operator_type', None)
     >>> get_shape_calculator(operator.type)  # Use 'dummy_operator_type' for dictionary looking-up
 
