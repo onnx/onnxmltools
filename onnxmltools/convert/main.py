@@ -94,7 +94,7 @@ def convert_keras(
             )
 
         if initial_types is not None:
-            from onnxconverter_common import (
+            from onnxmltools.convert.common.data_types import (
                 FloatTensorType,
                 DoubleTensorType,
                 Int64TensorType,

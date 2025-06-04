@@ -6,7 +6,7 @@ from onnx import onnx_pb as onnx_proto
 from ...common._apply_operation import apply_matmul, apply_exp, apply_add
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import FloatTensorType
-from ...common.utils import check_input_and_output_numbers
+from ...common.shape_calculator import check_input_and_output_numbers
 
 
 def convert_aft_survival_regression(scope, operator, container):

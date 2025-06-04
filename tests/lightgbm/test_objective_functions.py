@@ -6,8 +6,8 @@ import onnxruntime
 import pandas as pd
 from onnx import ModelProto
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
-from onnxconverter_common.data_types import DoubleTensorType, TensorType
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.data_types import DoubleTensorType, TensorType
 from onnxmltools import convert_lightgbm
 from onnxruntime import InferenceSession
 from pandas.core.frame import DataFrame

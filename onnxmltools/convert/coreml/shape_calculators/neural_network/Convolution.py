@@ -3,7 +3,7 @@
 import math
 import numbers
 from ....common._registration import register_shape_calculator
-from ....common.utils import check_input_and_output_numbers
+from ....common.shape_calculator import check_input_and_output_numbers
 
 
 def calculate_convolution_and_pooling_1D_output_shape(

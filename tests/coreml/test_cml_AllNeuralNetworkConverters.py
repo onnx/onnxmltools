@@ -15,7 +15,7 @@ except ImportError:
     from sklearn.preprocessing import Imputer
 import onnx
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from coremltools.models import datatypes
 from coremltools.proto.FeatureTypes_pb2 import ImageFeatureType

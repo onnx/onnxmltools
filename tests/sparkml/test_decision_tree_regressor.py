@@ -11,7 +11,7 @@ from pyspark.ml.linalg import Vectors, SparseVector, VectorUDT
 from pyspark.ml.regression import DecisionTreeRegressor
 from pyspark.ml import Pipeline
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml.sparkml_test_utils import (

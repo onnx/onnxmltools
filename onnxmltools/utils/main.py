@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from ..proto import onnx_proto
+import onnx as onnx_proto
 from ..convert.common import utils as convert_utils
 from os import path
 

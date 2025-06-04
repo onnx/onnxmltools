@@ -1,3 +1,2 @@
 numpy
 onnx
-onnxconverter-common

@@ -12,9 +12,8 @@ try:
 except ImportError:
     # old version of xgboost
     XGBRFRegressor, XGBRFClassifier = None, None
-from onnxconverter_common.data_types import FloatTensorType
-from ..common._container import XGBoostModelContainer
-from ..common._topology import Topology
+from ..common.data_types import FloatTensorType
+from ..common._container import XGBoostModelContainer, Topology
 
 
 xgboost_classifier_list = [XGBClassifier]

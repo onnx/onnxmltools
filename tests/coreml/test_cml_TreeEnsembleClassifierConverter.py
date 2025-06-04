@@ -19,7 +19,7 @@ except ImportError:
 import coremltools
 from sklearn.ensemble import RandomForestClassifier
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
 

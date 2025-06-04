@@ -8,7 +8,10 @@ from ...common.data_types import (
     StringTensorType,
     StringType,
 )
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 
 
 def calculte_tensor_to_label_output_shapes(operator):

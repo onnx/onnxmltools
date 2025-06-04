@@ -32,7 +32,6 @@ pip install onnxmltools
 or install from source:
 
 ```bash
-pip install git+https://github.com/microsoft/onnxconverter-common
 pip install git+https://github.com/onnx/onnxmltools
 ```
 

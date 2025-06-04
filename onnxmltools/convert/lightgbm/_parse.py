@@ -2,8 +2,7 @@
 
 import numpy
 
-from ..common._container import LightGbmModelContainer
-from ..common._topology import Topology
+from ..common._container import LightGbmModelContainer, Topology
 from ..common.data_types import (
     FloatTensorType,
     SequenceType,

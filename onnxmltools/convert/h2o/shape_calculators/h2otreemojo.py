@@ -2,7 +2,10 @@
 
 from ...common._registration import register_shape_calculator
 from ...common.shape_calculator import calculate_linear_regressor_output_shapes
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 from ...common.data_types import FloatTensorType, StringTensorType, Int64TensorType
 
 
