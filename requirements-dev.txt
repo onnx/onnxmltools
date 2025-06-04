@@ -8,7 +8,7 @@ mleap
 numpy
 openpyxl
 pandas
-pyspark; sys_platform == 'linux'
+pyspark
 pytest
 pytest-cov
 pytest-spark
