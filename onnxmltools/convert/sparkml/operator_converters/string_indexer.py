@@ -7,7 +7,7 @@ from pyspark import SparkContext
 from pyspark.ml.feature import StringIndexerModel
 
 from ...common._registration import register_converter, register_shape_calculator
-from ...common._topology import ModelComponentContainer, Operator, Scope, Variable
+from ...common._container import ModelComponentContainer, Operator, Scope, Variable
 from ...common.data_types import Int64TensorType, StringTensorType
 from ...common.shape_calculator import check_input_and_output_types
 
