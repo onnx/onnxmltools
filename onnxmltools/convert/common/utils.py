@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import warnings
+import numpy as np
 
 
 def hummingbird_installed():
@@ -208,3 +209,22 @@ def get_model_version():
     from ... import __model_version__
 
     return __model_version__
+
+
+def is_numeric_type(item):
+    numeric_types = (int, float, complex)
+    types = numeric_types
+
+    if isinstance(item, list):
+        return all(isinstance(i, types) for i in item)
+    if isinstance(item, np.ndarray):
+        return np.issubdtype(item.dtype, np.number)
+    return isinstance(item, types)
+
+
+def is_string_type(item):
+    if isinstance(item, list):
+        return all(isinstance(i, str) for i in item)
+    if isinstance(item, np.ndarray):
+        return np.issubdtype(item.dtype, np.str_)
+    return isinstance(item, str)

@@ -1,8 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-# from onnxconverter_common.registration import *  # noqa
-
-
 # This dictionary defines the converters which can be invoked in the conversion framework defined in topology.py. A key
 # in this dictionary is an operator's unique ID (e.g., string and type) while the associated value is the callable
 # object used to convert the operator specified by the key.

@@ -2,8 +2,6 @@
 
 import numpy as np
 
-# from onnxconverter_common.tree_ensemble import *  # noqa
-
 
 def get_default_tree_classifier_attribute_pairs():
     attrs = {}
