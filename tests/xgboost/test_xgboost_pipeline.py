@@ -6,6 +6,7 @@ Tests scilit-learn's tree-based methods' converters.
 import os
 import sys
 import unittest
+import packaging.version as pv
 import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
@@ -20,6 +21,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from onnx.defs import onnx_opset_version
+import skl2onnx
 from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.common import data_types as onnxtypes
 from onnxmltools.convert import convert_sklearn
@@ -80,10 +82,18 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         return res
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(skl2onnx.__version__) <= pv.Version("1.19.1"),
+        reason="broken backward compatibility",
+    )
     def test_xgboost_10_skl_missing(self):
         self.common_test_xgboost_10_skl(np.nan)
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(skl2onnx.__version__) <= pv.Version("1.19.1"),
+        reason="broken backward compatibility",
+    )
     def test_xgboost_10_skl_zero(self):
         try:
             self.common_test_xgboost_10_skl(0.0, True)
@@ -91,6 +101,10 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
             assert "Cannot convert a XGBoost model where missing values" in str(e)
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(skl2onnx.__version__) <= pv.Version("1.19.1"),
+        reason="broken backward compatibility",
+    )
     def test_xgboost_10_skl_zero_replace(self):
         self.common_test_xgboost_10_skl(np.nan, True)
 
