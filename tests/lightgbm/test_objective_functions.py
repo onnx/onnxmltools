@@ -37,6 +37,7 @@ class ObjectiveTest(unittest.TestCase):
         "gamma",
         "quantile",
         "huber",
+        "tweedie",
     )
 
     @staticmethod
