@@ -14,6 +14,11 @@ from ..common import get_xgb_params, get_n_estimators_classifier
 
 
 class XGBConverter:
+    """
+    Base class for converting XGBoost models to ONNX format.
+    This class provides methods to validate the model, retrieve parameters,
+    and fill in the attributes for the ONNX TreeEnsemble node.
+    """
     @staticmethod
     def get_xgb_params(xgb_node):
         """
@@ -222,6 +227,13 @@ class XGBConverter:
 
 
 class XGBRegressorConverter(XGBConverter):
+    """
+    Converter for XGBoost Regressor models to ONNX format.
+    This class inherits from XGBConverter and implements the conversion
+    logic specific to regression tasks.
+    It handles the conversion of model parameters, tree structure,
+    and the creation of the ONNX TreeEnsembleRegressor node.
+    """
     @staticmethod
     def validate(xgb_node):
         return XGBConverter.validate(xgb_node)
@@ -423,6 +435,17 @@ class XGBClassifierConverter(XGBConverter):
 
 
 def convert_xgboost(scope, operator, container):
+    """
+    Converts an XGBoost model (XGBClassifier or XGBRegressor) into an ONNX TreeEnsemble node.
+
+    Parameters:
+        scope: Object for managing variable names in the ONNX graph.
+        operator: Wrapper for the XGBoost model and its input/output variables.
+        container: Object to which the ONNX nodes will be added.
+
+    This function dispatches the conversion to the appropriate internal converter
+    based on whether the model is a classifier or regressor.
+    """
     xgb_node = operator.raw_operator
     if isinstance(xgb_node, (XGBClassifier, XGBRFClassifier)) or getattr(
         xgb_node, "operator_name", None
