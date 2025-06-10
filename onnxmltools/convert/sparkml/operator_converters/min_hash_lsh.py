@@ -11,7 +11,10 @@ from ...common._apply_operation import (
 )
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import FloatTensorType, DoubleTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 from .tree_ensemble_common import save_read_sparkml_model_data
 
 MinHashLSH_HASH_PRIME = 2038074743

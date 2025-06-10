@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
-from .....proto import onnx_proto
+import onnx as onnx_proto
 from ....common._apply_operation import apply_concat, apply_split
 from ....common._registration import register_converter
 from .SimpleRNN import extract_rnn_activation_info

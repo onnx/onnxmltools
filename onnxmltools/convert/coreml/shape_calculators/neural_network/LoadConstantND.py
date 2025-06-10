@@ -2,7 +2,7 @@
 
 from ....common._registration import register_shape_calculator
 from ....common.data_types import TensorType, FloatTensorType
-from ....common.utils import check_input_and_output_numbers
+from ....common.shape_calculator import check_input_and_output_numbers
 
 
 def calculate_load_constant_nd_output_shapes(operator):

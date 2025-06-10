@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import copy
-from ....common.utils import check_input_and_output_numbers
+from ....common.shape_calculator import check_input_and_output_numbers
 from ....common._registration import register_shape_calculator
 
 

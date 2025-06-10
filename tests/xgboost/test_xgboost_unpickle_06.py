@@ -11,7 +11,7 @@ try:
 except Exception:
     xgboost = None
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 
 if xgboost is not None:
     from onnxmltools.convert.xgboost import convert as convert_xgboost

@@ -20,7 +20,7 @@ except ImportError:
     from sklearn.preprocessing import Imputer
 from coremltools.converters.xgboost import convert as convert_xgb_to_coreml
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml import convert as convert_cml
 from xgboost import XGBRegressor
 from onnxmltools.utils import dump_data_and_model

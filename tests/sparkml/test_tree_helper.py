@@ -11,7 +11,7 @@ from onnx.helper import (
     make_tensor_value_info,
     make_opsetid,
 )
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxruntime import InferenceSession
 from onnxmltools.convert.sparkml.operator_converters.tree_helper import Node
 

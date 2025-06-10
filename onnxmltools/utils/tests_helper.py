@@ -5,7 +5,7 @@ import pickle
 import os
 import numpy
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from ..convert.common.data_types import FloatTensorType
 from .utils_backend import compare_backend, extract_options, is_backend_enabled
 

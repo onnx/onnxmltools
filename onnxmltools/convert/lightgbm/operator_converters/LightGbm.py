@@ -7,6 +7,7 @@ import ctypes
 import json
 import numpy as np
 from onnx import TensorProto
+import onnx as onnx_proto
 from ...common._apply_operation import (
     apply_div,
     apply_reshape,
@@ -16,7 +17,6 @@ from ...common._apply_operation import (
 )
 from ...common._registration import register_converter
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
-from ....proto import onnx_proto
 
 
 def has_tqdm():
@@ -559,7 +559,7 @@ def convert_lightgbm(scope, operator, container):
         n_classes = 1  # Regressor has only one output variable
         attrs["post_transform"] = "NONE"
         attrs["n_targets"] = n_classes
-    elif gbm_text["objective"].startswith(("poisson", "gamma")):
+    elif gbm_text["objective"].startswith(("poisson", "gamma", "tweedie")):
         n_classes = 1  # Regressor has only one output variable
         attrs["n_targets"] = n_classes
         # 'Exp' is not a supported post_transform value in the ONNX spec yet,
@@ -1015,8 +1015,6 @@ def convert_lgbm_zipmap(scope, operator, container):
             **zipmap_attrs
         )
     else:
-        # onnxconverter-common when trying to remove identity nodes
-        # if node identity is used.
         one = scope.get_unique_variable_name("one")
 
         container.add_initializer(one, onnx_proto.TensorProto.FLOAT, [], [1])

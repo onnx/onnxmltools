@@ -2,8 +2,7 @@
 
 import numpy
 
-from ..common._container import LightGbmModelContainer
-from ..common._topology import Topology
+from ..common._container import LightGbmModelContainer, Topology
 from ..common.data_types import (
     FloatTensorType,
     SequenceType,
@@ -37,7 +36,7 @@ class WrappedBooster:
             self.operator_name = "LgbmClassifier"
             self.classes_ = self._generate_classes(booster)
         elif self.objective_.startswith(
-            ("regression", "poisson", "gamma", "quantile", "huber")
+            ("regression", "poisson", "gamma", "quantile", "huber", "tweedie")
         ):
             self.operator_name = "LgbmRegressor"
         else:

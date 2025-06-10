@@ -1,0 +1,35 @@
+name: Build Any Wheel
+
+on:
+  push:
+    branches:
+      - main
+      - 'releases/**'
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: build wheel
+        run: python -m pip wheel . -v
+
+      - name: install twine
+        run: python -m pip install twine
+
+      - name: check wheel
+        run: python -m twine check ./onnxmltools*.whl
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ./skl2onnx*.whl

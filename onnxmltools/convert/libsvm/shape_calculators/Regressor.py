@@ -2,7 +2,7 @@
 
 from ...common._registration import register_shape_calculator
 from ...common.data_types import FloatTensorType
-from ...common.utils import check_input_and_output_numbers
+from ...common.shape_calculator import check_input_and_output_numbers
 
 
 def calculate_regressor_output_shapes(operator):
