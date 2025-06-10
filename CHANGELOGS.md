@@ -1,9 +1,18 @@
 # Change Logs
 
-## 1.13.0 (development)
+## 1.14.0
 
+* Add tweedie objective to LightGBM options
+  [#722](https://github.com/onnx/onnxmltools/pull/722)
+* Support for "huber" objective in the LGBM Booster
+  [#705](https://github.com/onnx/onnxmltools/pull/705)
+* Remove import of split_complex_to_pairs and unused functions
+  [#714](https://github.com/onnx/onnxmltools/pull/714)
 * Removes dependency on onnxconveter-common
   [#718](https://github.com/onnx/onnxmltools/pull/718)
+
+## 1.13.0
+
 * Handle issue with binary classifier setting output to [N,1] vs [N,2],
   [#681](https://github.com/onnx/onnxmltools/pull/681)
 * Fix multi regression with xgboost,
