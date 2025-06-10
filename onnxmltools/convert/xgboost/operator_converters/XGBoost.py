@@ -19,6 +19,7 @@ class XGBConverter:
     This class provides methods to validate the model, retrieve parameters,
     and fill in the attributes for the ONNX TreeEnsemble node.
     """
+
     @staticmethod
     def get_xgb_params(xgb_node):
         """
@@ -234,6 +235,7 @@ class XGBRegressorConverter(XGBConverter):
     It handles the conversion of model parameters, tree structure,
     and the creation of the ONNX TreeEnsembleRegressor node.
     """
+
     @staticmethod
     def validate(xgb_node):
         return XGBConverter.validate(xgb_node)
