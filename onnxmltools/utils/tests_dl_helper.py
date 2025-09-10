@@ -20,15 +20,18 @@ def find_inference_engine():
         return _rt_installed
 
     try:
-        import onnxruntime
+        pass
+
         _rt_installed = rt_onnxruntime
     except ImportError:
         try:
-            import cntk
+            pass
+
             _rt_installed = rt_cntk
         except ImportError:
             try:
-                import caffe2
+                pass
+
                 _rt_installed = rt_caffe2
             except ImportError:
                 pass
@@ -50,16 +53,27 @@ def evaluate_deep_model(onnx_model, inputs, rt_type=None):
     elif rt_type == rt_caffe2:
         return _evaluate_caffe2(onnx_model, inputs)
     else:
-        raise ImportError('No runtime found. Need either CNTK or Caffe2')
+        raise ImportError("No runtime found. Need either CNTK or Caffe2")
 
 
 def _evaluate_onnxruntime(onnx_model, inputs):
     import onnxruntime
-    runtime = onnxruntime.InferenceSession(onnx_model.SerializeToString())
+
+    runtime = onnxruntime.InferenceSession(
+        onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+    )
     result = None
     inputs = inputs if isinstance(inputs, list) else [inputs]
-    for i_ in range(inputs[0].shape[0]):  # TODO: onnxruntime can't support batch_size > 1
-        out = runtime.run([], {x.name: inputs[n_][i_:i_ + 1] for n_, x in enumerate(runtime.get_inputs())})[0]
+    for i_ in range(
+        inputs[0].shape[0]
+    ):  # TODO: onnxruntime can't support batch_size > 1
+        out = runtime.run(
+            [],
+            {
+                x.name: inputs[n_][i_ : i_ + 1]
+                for n_, x in enumerate(runtime.get_inputs())
+            },
+        )[0]
         result = out if result is None else np.concatenate((result, out))
 
     return result[0] if isinstance(result, list) else result
@@ -82,6 +96,7 @@ def _evaluate_caffe2(onnx_model, inputs):
 
 def _evaluate_cntk(onnx_model, inputs):
     import cntk
+
     if not isinstance(inputs, list):
         inputs = [inputs]
 
@@ -89,11 +104,15 @@ def _evaluate_cntk(onnx_model, inputs):
 
     for i, x in enumerate(inputs):
         onnx_name = onnx_model.graph.input[i].name
-        adjusted_inputs[onnx_name] = [np.ascontiguousarray(np.squeeze(_, axis=0)) for _ in np.split(x, x.shape[0])]
+        adjusted_inputs[onnx_name] = [
+            np.ascontiguousarray(np.squeeze(_, axis=0)) for _ in np.split(x, x.shape[0])
+        ]
 
-    temporary_onnx_model_file_name = 'temp_' + onnx_model.graph.name + '.onnx'
+    temporary_onnx_model_file_name = "temp_" + onnx_model.graph.name + ".onnx"
     save_model(onnx_model, temporary_onnx_model_file_name)
-    cntk_model = cntk.Function.load(temporary_onnx_model_file_name, format=cntk.ModelFormat.ONNX)
+    cntk_model = cntk.Function.load(
+        temporary_onnx_model_file_name, format=cntk.ModelFormat.ONNX
+    )
 
     return cntk_model.eval(adjusted_inputs)
 
@@ -104,4 +123,4 @@ def create_tensor(N, C, H=None, W=None):
     elif H is not None and W is not None:
         return np.random.rand(N, C, H, W).astype(np.float32, copy=False)
     else:
-        raise ValueError('This function only produce 2-D or 4-D tensor')
+        raise ValueError("This function only produce 2-D or 4-D tensor")

@@ -1,0 +1,16 @@
+name: Black Format Checker
+on: [push, pull_request]
+jobs:
+  black-format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: psf/black@e42f1ffbe159018c8e887f775c0fd7b51b3cf787  # stable 24.3.0
+        with:
+          options: "--diff --check"
+          src: "."
+  ruff-format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: chartboost/ruff-action@v1.0.0

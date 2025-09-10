@@ -2,7 +2,7 @@
 
 import copy
 from ...common._registration import register_shape_calculator
-from ...common.utils import check_input_and_output_numbers
+from ...common.shape_calculator import check_input_and_output_numbers
 
 
 def calculate_identity_output_shapes(operator):
@@ -16,8 +16,7 @@ def calculate_identity_output_shapes(operator):
     output.type.doc_string = doc_string
 
 
-register_shape_calculator('identity', calculate_identity_output_shapes)
-register_shape_calculator('imputer', calculate_identity_output_shapes)
-register_shape_calculator('scaler', calculate_identity_output_shapes)
-register_shape_calculator('normalizer', calculate_identity_output_shapes)
-
+register_shape_calculator("identity", calculate_identity_output_shapes)
+register_shape_calculator("imputer", calculate_identity_output_shapes)
+register_shape_calculator("scaler", calculate_identity_output_shapes)
+register_shape_calculator("normalizer", calculate_identity_output_shapes)

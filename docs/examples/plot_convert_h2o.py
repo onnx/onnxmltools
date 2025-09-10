@@ -21,17 +21,18 @@ Train a model
 import os
 import numpy
 import onnx
+from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
+import matplotlib.pyplot as plt
 import sklearn
-from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 import onnxruntime as rt
 import h2o
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
-import skl2onnx
+from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 import onnxmltools
-from onnxconverter_common.data_types import FloatTensorType
 from onnxmltools.convert import convert_h2o
+
 
 iris = load_iris()
 X, y = iris.data, iris.target
@@ -56,7 +57,7 @@ pth = glm_logistic.download_mojo(path="model")
 # Convert a model into ONNX
 # +++++++++++++++++++++++++
 
-initial_type = [('float_input', FloatTensorType([None, 4]))]
+initial_type = [("float_input", FloatTensorType([None, 4]))]
 onx = convert_h2o(pth, initial_types=initial_type)
 
 h2o.cluster().shutdown()
@@ -65,11 +66,10 @@ h2o.cluster().shutdown()
 # Compute the predictions with onnxruntime
 # ++++++++++++++++++++++++++++++++++++++++
 
-sess = rt.InferenceSession(onx.SerializeToString())
+sess = rt.InferenceSession(onx.SerializeToString(), providers=["CPUExecutionProvider"])
 input_name = sess.get_inputs()[0].name
 label_name = sess.get_outputs()[0].name
-pred_onx = sess.run(
-    [label_name], {input_name: X_test.astype(numpy.float32)})[0]
+pred_onx = sess.run([label_name], {input_name: X_test.astype(numpy.float32)})[0]
 print(pred_onx)
 
 ##################################
@@ -77,22 +77,23 @@ print(pred_onx)
 # ++++++++++++++++++++++
 #
 # Finally, let's see the graph converted with *onnxmltools*.
-import os
-import matplotlib.pyplot as plt
-from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
 
 pydot_graph = GetPydotGraph(
-    onx.graph, name=onx.graph.name, rankdir="TB",
+    onx.graph,
+    name=onx.graph.name,
+    rankdir="TB",
     node_producer=GetOpNodeProducer(
-        "docstring", color="yellow", fillcolor="yellow", style="filled"))
+        "docstring", color="yellow", fillcolor="yellow", style="filled"
+    ),
+)
 pydot_graph.write_dot("model.dot")
 
-os.system('dot -O -Gdpi=300 -Tpng model.dot')
+os.system("dot -O -Gdpi=300 -Tpng model.dot")
 
 image = plt.imread("model.dot.png")
 fig, ax = plt.subplots(figsize=(40, 20))
 ax.imshow(image)
-ax.axis('off')
+ax.axis("off")
 
 
 #################################

@@ -4,23 +4,37 @@ import collections
 
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import FloatTensorType
-from ...common.utils import check_input_and_output_numbers
+from ...common.shape_calculator import check_input_and_output_numbers
 
 
 def convert_sparkml_linear_regressor(scope, operator, container):
     op = operator.raw_operator
-    op_type = 'LinearRegressor'
+    op_type = "LinearRegressor"
     attrs = {
-        'name': scope.get_unique_operator_name(op_type),
-        'coefficients': op.coefficients.astype(float),
-        'intercepts': op.intercept.astype(float) if isinstance(op.intercept, collections.Iterable) else [
-                 float(op.intercept)]
+        "name": scope.get_unique_operator_name(op_type),
+        "coefficients": op.coefficients.astype(float),
+        "intercepts": (
+            op.intercept.astype(float)
+            if isinstance(op.intercept, collections.abc.Iterable)
+            else [float(op.intercept)]
+        ),
     }
-    container.add_node(op_type, operator.input_full_names, operator.output_full_names, op_domain='ai.onnx.ml', **attrs)
+    container.add_node(
+        op_type,
+        operator.input_full_names,
+        operator.output_full_names,
+        op_domain="ai.onnx.ml",
+        **attrs
+    )
 
 
-register_converter('pyspark.ml.regression.LinearRegressionModel', convert_sparkml_linear_regressor)
-register_converter('pyspark.ml.regression.GeneralizedLinearRegressionModel', convert_sparkml_linear_regressor)
+register_converter(
+    "pyspark.ml.regression.LinearRegressionModel", convert_sparkml_linear_regressor
+)
+register_converter(
+    "pyspark.ml.regression.GeneralizedLinearRegressionModel",
+    convert_sparkml_linear_regressor,
+)
 
 
 def calculate_linear_regressor_output_shapes(operator):
@@ -30,6 +44,11 @@ def calculate_linear_regressor_output_shapes(operator):
     operator.outputs[0].type = FloatTensorType([N, 1])
 
 
-register_shape_calculator('pyspark.ml.regression.LinearRegressionModel', calculate_linear_regressor_output_shapes)
-register_shape_calculator('pyspark.ml.regression.GeneralizedLinearRegressionModel',
-                          calculate_linear_regressor_output_shapes)
+register_shape_calculator(
+    "pyspark.ml.regression.LinearRegressionModel",
+    calculate_linear_regressor_output_shapes,
+)
+register_shape_calculator(
+    "pyspark.ml.regression.GeneralizedLinearRegressionModel",
+    calculate_linear_regressor_output_shapes,
+)
