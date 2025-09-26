@@ -18,9 +18,11 @@ lightgbm_classifier_list = [LGBMClassifier]
 # Associate scikit-learn types with our operator names.
 # If two scikit-learn models share a single name, it means their
 # are equivalent in terms of conversion.
-lightgbm_operator_name_map = {LGBMClassifier: 'LgbmClassifier',
-                              LGBMRegressor: 'LgbmRegressor',
-                              LGBMRanker: 'LgbmRanker'}
+lightgbm_operator_name_map = {
+    LGBMClassifier: "LgbmClassifier",
+    LGBMRegressor: "LgbmRegressor",
+    LGBMRanker: "LgbmRanker",
+}
 
 
 class WrappedBooster:
@@ -34,8 +36,8 @@ class WrappedBooster:
         elif self.objective_.startswith("multiclass"):
             self.operator_name = "LgbmClassifier"
             self.classes_ = self._generate_classes(booster)
-        elif self.objective_.startswith('lambdarank'):
-            self.operator_name = 'LgbmRanker'
+        elif self.objective_.startswith("lambdarank"):
+            self.operator_name = "LgbmRanker"
         elif self.objective_.startswith(
             ("regression", "poisson", "gamma", "quantile", "huber", "tweedie")
         ):
