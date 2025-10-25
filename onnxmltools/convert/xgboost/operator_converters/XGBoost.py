@@ -10,7 +10,7 @@ try:
 except ImportError:
     XGBRFClassifier = None
 from ...common._registration import register_converter
-from ..common import get_xgb_params, get_n_estimators_classifier
+from ..common import get_xgb_params, get_n_estimators_classifier, base_score_as_list
 
 
 class XGBConverter:
@@ -259,7 +259,7 @@ class XGBRegressorConverter(XGBConverter):
             raise RuntimeError("Objective '{}' not supported.".format(objective))
 
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
-        attr_pairs["base_values"] = [base_score]
+        attr_pairs["base_values"] = base_score_as_list(base_score)
 
         if best_ntree_limit and best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
@@ -350,17 +350,20 @@ class XGBClassifierConverter(XGBConverter):
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
                 if js_trees[0].get("leaf", None) == 0:
-                    attr_pairs["base_values"] = [base_score]
+                    attr_pairs["base_values"] = base_score_as_list(base_score)
                 elif base_score != 0.5:
                     # 0.5 -> cst = 0
-                    cst = -np.log(1 / np.float32(base_score) - 1.0)
-                    attr_pairs["base_values"] = [cst]
+                    cst = -np.log(1 / np.array(base_score_as_list(base_score), dtype=np.float32) - 1.0)
+                    attr_pairs["base_values"] = cst.tolist()
             else:
-                attr_pairs["base_values"] = [base_score]
+                attr_pairs["base_values"] = base_score_as_list(base_score)
         else:
             # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L35.
             attr_pairs["post_transform"] = "SOFTMAX"
-            attr_pairs["base_values"] = [base_score for n in range(ncl)]
+            if isinstance(base_score, list):
+                attr_pairs["base_values"] = base_score
+            else:
+                attr_pairs["base_values"] = [base_score for n in range(ncl)]
             attr_pairs["class_ids"] = [v % ncl for v in attr_pairs["class_treeids"]]
 
         classes = xgb_node.classes_

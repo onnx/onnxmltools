@@ -29,9 +29,16 @@ def get_xgb_params(xgb_node):
         if xgb_node.n_estimators is not None:
             params["n_estimators"] = xgb_node.n_estimators
     if "base_score" in config["learner"]["learner_model_param"]:
-        bs = float(config["learner"]["learner_model_param"]["base_score"])
-        # xgboost >= 2.0
-        params["base_score"] = bs
+         base_score = config["learner"]["learner_model_param"]["base_score"]
+         if(base_score.startswith('[') and base_score.endswith(']')):
+            # xgboost >= 3.1, see 
+            base_score = [float(score) for score in base_score.strip('[]').split(',')]
+            if len(base_score) == 1:
+                base_score = base_score[0]
+         else:
+            #xgboost >= 2.0 and < 3.1
+            base_score = float(base_score)
+         params["base_score"] = base_score
     if "num_target" in config["learner"]["learner_model_param"]:
         params["n_targets"] = int(
             config["learner"]["learner_model_param"]["num_target"]
@@ -47,6 +54,11 @@ def get_xgb_params(xgb_node):
         if "num_trees" in gbp:
             params["best_ntree_limit"] = int(gbp["num_trees"])
     return params
+
+def base_score_as_list(base_score):
+    if isinstance(base_score, list):
+        return base_score
+    return [base_score]
 
 
 def get_n_estimators_classifier(xgb_node, params, js_trees):
