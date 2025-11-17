@@ -53,7 +53,7 @@ class XGBConverter:
         else:
             best_ntree_limit = params.get("best_ntree_limit", None)
         if base_score is None:
-            base_score = 0.5
+            base_score = [0.5]
         booster = xgb_node.get_booster()
         # The json format was available in October 2017.
         # XGBoost 0.7 was the first version released with it.
@@ -259,7 +259,10 @@ class XGBRegressorConverter(XGBConverter):
             raise RuntimeError("Objective '{}' not supported.".format(objective))
 
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
-        attr_pairs["base_values"] = [base_score]
+        if isinstance(base_score, list):
+            attr_pairs["base_values"] = base_score
+        else:
+            attr_pairs["base_values"] = [base_score]
 
         if best_ntree_limit and best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
@@ -288,7 +291,7 @@ class XGBRegressorConverter(XGBConverter):
 
         if objective == "count:poisson":
             cst = scope.get_unique_variable_name("poisson")
-            container.add_initializer(cst, TensorProto.FLOAT, [1], [base_score])
+            container.add_initializer(cst, TensorProto.FLOAT, [len(base_score)], base_score)
             new_name = scope.get_unique_variable_name("exp")
             container.add_node("Exp", names, [new_name])
             container.add_node("Mul", [new_name, cst], operator.output_full_names)
@@ -350,17 +353,24 @@ class XGBClassifierConverter(XGBConverter):
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
                 if js_trees[0].get("leaf", None) == 0:
-                    attr_pairs["base_values"] = [base_score]
-                elif base_score != 0.5:
-                    # 0.5 -> cst = 0
-                    cst = -np.log(1 / np.float32(base_score) - 1.0)
-                    attr_pairs["base_values"] = [cst]
+                    attr_pairs["base_values"] = base_score
+                else:
+                    # Transform base_score - for binary, use first element
+                    bs_val = base_score[0]
+                    if bs_val != 0.5:
+                        # 0.5 -> cst = 0
+                        cst = -np.log(1 / np.float32(bs_val) - 1.0)
+                        attr_pairs["base_values"] = [cst]
             else:
-                attr_pairs["base_values"] = [base_score]
+                attr_pairs["base_values"] = base_score
         else:
             # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L35.
             attr_pairs["post_transform"] = "SOFTMAX"
-            attr_pairs["base_values"] = [base_score for n in range(ncl)]
+            # If base_score has fewer elements than classes, replicate to match
+            if len(base_score) == 1:
+                attr_pairs["base_values"] = base_score * ncl
+            else:
+                attr_pairs["base_values"] = base_score
             attr_pairs["class_ids"] = [v % ncl for v in attr_pairs["class_treeids"]]
 
         classes = xgb_node.classes_
