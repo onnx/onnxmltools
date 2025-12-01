@@ -17,17 +17,11 @@ from sklearn.datasets import (
     make_regression,
 )
 from sklearn.model_selection import train_test_split
+import xgboost
+from xgboost import train, DMatrix, Booster, train as train_xgb
 
 try:
-    from xgboost import (
-        XGBRegressor,
-        XGBClassifier,
-        train,
-        DMatrix,
-        Booster,
-        train as train_xgb,
-    )
-    import xgboost
+    from xgboost import XGBRegressor, XGBClassifier
 except Exception:
     XGBRegressor = None
 import sklearn
