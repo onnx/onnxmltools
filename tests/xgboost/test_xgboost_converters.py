@@ -833,7 +833,6 @@ class TestXGBoostModels(unittest.TestCase):
         assert_almost_equal(expected[1], got[1])
         assert_almost_equal(expected[0], got[0])
 
-    
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     @unittest.skipIf(
         pv.Version(xgboost.__version__) < pv.Version("1.6.0"),
@@ -846,24 +845,24 @@ class TestXGBoostModels(unittest.TestCase):
         df["f0"] = df["f0"].astype("category")
         X, y = df.drop("y", axis=1), df["y"]
 
-        models =[
+        models = [
             XGBRegressor(
                 objective="reg:squarederror",
                 n_estimators=30,
                 learning_rate=0.3,
-                tree_method="hist",          
-                enable_categorical=True,     # turn on native categorical handling
+                tree_method="hist",
+                enable_categorical=True,  # turn on native categorical handling
                 random_state=0,
             ),
             XGBRegressor(
                 n_estimators=30,
-                enable_categorical=True,     # turn on native categorical handling
-                max_cat_to_onehot=8,         # use native one hot encoding
+                enable_categorical=True,  # turn on native categorical handling
+                max_cat_to_onehot=8,  # use native one hot encoding
             ),
             XGBRegressor(
                 n_estimators=100,
                 max_depth=10,
-                enable_categorical=True,     # turn on native categorical handling
+                enable_categorical=True,  # turn on native categorical handling
             ),
         ]
 
@@ -887,7 +886,9 @@ class TestXGBoostModels(unittest.TestCase):
 
             # Compare XGBoost and ONNX results.
             expected = model.predict(X).astype(np.float32)
-            sess = InferenceSession(onnx_model.SerializeToString(), providers=["CPUExecutionProvider"])
+            sess = InferenceSession(
+                onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+            )
             input_name = sess.get_inputs()[0].name
             got = sess.run(None, {input_name: X_onnx})[0].ravel().astype(np.float32)
             assert_almost_equal(expected, got, decimal=4)
