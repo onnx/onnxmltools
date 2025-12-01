@@ -121,9 +121,16 @@ def _get_attributes(booster):
             kwargs["objective"] = "binary:logistic"
 
     if "base_score" not in kwargs:
-        kwargs["base_score"] = 0.5
+        kwargs["base_score"] = [0.5]
     elif isinstance(kwargs["base_score"], str):
-        kwargs["base_score"] = float(kwargs["base_score"])
+        base_score_str = kwargs["base_score"]
+        if base_score_str.startswith("[") and base_score_str.endswith("]"):
+            # xgboost >= 3.0: base_score is a string array
+            bs = json.loads(base_score_str)
+            kwargs["base_score"] = [float(x) for x in bs]
+        else:
+            # xgboost >= 2, < 3: base_score is a string float
+            kwargs["base_score"] = [float(base_score_str)]
     return kwargs
 
 
