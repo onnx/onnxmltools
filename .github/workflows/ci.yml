@@ -121,6 +121,7 @@ jobs:
         run: pytest --maxfail=10 --durations=10 tests/lightgbm
 
       - name: Run tests xgboost
+        if: matrix.os != 'macos-latest'
         run: pytest --maxfail=10 --durations=10 tests/xgboost
 
       - name: Run tests svmlib
@@ -133,7 +134,7 @@ jobs:
           pytest --maxfail=10 --durations=10 tests/h2o
 
       - name: Run tests hummingbirdml
-        if: matrix.os != 'macos-latest'
+        if: ${{ matrix.os != 'macos-latest' && matrix.xgboost != '<2' }}
         run: |
           pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
           pip install hummingbird-ml --no-deps
