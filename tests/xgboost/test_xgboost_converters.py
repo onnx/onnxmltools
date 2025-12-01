@@ -17,17 +17,11 @@ from sklearn.datasets import (
     make_regression,
 )
 from sklearn.model_selection import train_test_split
+import xgboost
+from xgboost import train, DMatrix, Booster, train as train_xgb
 
 try:
-    from xgboost import (
-        XGBRegressor,
-        XGBClassifier,
-        train,
-        DMatrix,
-        Booster,
-        train as train_xgb,
-    )
-    import xgboost
+    from xgboost import XGBRegressor, XGBClassifier
 except Exception:
     XGBRegressor = None
 import sklearn
@@ -835,8 +829,8 @@ class TestXGBoostModels(unittest.TestCase):
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     @unittest.skipIf(
-        pv.Version(xgboost.__version__) < pv.Version("1.6.0"),
-        "xgboost version< 1.6.0 lacks stable categorical support, skipping test.",
+        pv.Version(xgboost.__version__) < pv.Version("2.0"),
+        "xgboost version<2.0 no supported for categories",
     )
     def test_xgb_regressor_categorical_hist(self):
 
