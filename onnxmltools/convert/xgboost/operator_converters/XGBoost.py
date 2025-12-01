@@ -18,6 +18,7 @@ from ..common import get_xgb_params, get_n_estimators_classifier, base_score_as_
 Node = Dict[str, Any]
 TreeLike = Union[Node, List[Node]]
 
+
 class XGBConverter:
     """
     Base class for converting XGBoost models to ONNX format.
@@ -66,24 +67,23 @@ class XGBConverter:
         js_trees: TreeLike = [json.loads(s) for s in js_tree_list]
         js_trees = XGBConverter._process_categorical_features(js_trees)
         return objective, base_score, js_trees, best_ntree_limit
-        
 
     @staticmethod
     def _is_bracketed_json_list_string(s: str) -> bool:
         s = s.strip()
-        return len(s) >= 2 and s[0] == '[' and s[-1] == ']'
-    
+        return len(s) >= 2 and s[0] == "[" and s[-1] == "]"
+
     @staticmethod
     def _clone_node_skeleton(source_node: Node) -> Node:
-            # Copy split-related metadata but not 'children' or 'split_condition'
-            new_node: Node = {}
-            for k, v in source_node.items():
-                if k in ("children", "split_condition"):
-                    continue
-                new_node[k] = v
+        # Copy split-related metadata but not 'children' or 'split_condition'
+        new_node: Node = {}
+        for k, v in source_node.items():
+            if k in ("children", "split_condition"):
+                continue
+            new_node[k] = v
 
-            new_node["decision_type"] = "BRANCH_EQ"
-            return new_node
+        new_node["decision_type"] = "BRANCH_EQ"
+        return new_node
 
     @staticmethod
     def _maybe_transform_categorical(node: Node) -> bool:
@@ -93,9 +93,9 @@ class XGBConverter:
         """
 
         split_condition = node.get("split_condition")
-        
+
         if not isinstance(split_condition, list):
-            return False # not categorical
+            return False  # not categorical
 
         if len(split_condition) == 0:
             raise ValueError("split_condition is an empty array. ")
@@ -103,8 +103,10 @@ class XGBConverter:
         # Validate it's a split node with two children
         children = node.get("children")
         if not (isinstance(children, list) and len(children) == 2):
-            raise ValueError("Expected a split node with two children before categorical transform.")
-        
+            raise ValueError(
+                "Expected a split node with two children before categorical transform."
+            )
+
         orig_left, orig_right = children
 
         # First category goes on the original node
@@ -117,8 +119,8 @@ class XGBConverter:
         for cat in split_condition[1:]:
             new_node = XGBConverter._clone_node_skeleton(current_node)
             new_node["split_condition"] = cat
-            
-            if(yes_left):
+
+            if yes_left:
                 current_node["children"] = [deepcopy(orig_left), new_node]
             else:
                 current_node["children"] = [new_node, deepcopy(orig_right)]
@@ -133,7 +135,7 @@ class XGBConverter:
         # If this is a leaf, nothing to do
         if "children" not in node or not isinstance(node["children"], list):
             return False
-        
+
         for child in node["children"]:
             any_child_node_categorical = XGBConverter._process_node(child)
 
@@ -153,7 +155,7 @@ class XGBConverter:
         # If this is a leaf, end recursion
         if not (isinstance(children, list) and len(children) == 2):
             return node_counter
-        
+
         left, right = children
         missing_yes = node.get("missing", -1) == node["yes"]
 
@@ -164,7 +166,7 @@ class XGBConverter:
         if (missing_yes and yes_left) or (not missing_yes and not yes_left):
             node["missing"] = node_counter
         node_counter = XGBConverter._update_node_ids(left, node_counter)
-        
+
         second = "no" if yes_left else "yes"
         node[second] = node_counter
         if (not missing_yes and yes_left) or (missing_yes and yes_left):
@@ -173,14 +175,12 @@ class XGBConverter:
 
         return node_counter
 
-
     @staticmethod
     def _process_root(root: Node) -> None:
         any_categorical = XGBConverter._process_node(root)
         if any_categorical:
             # If any node was categorical, renumber the tree to ensure unique ids
             XGBConverter._update_node_ids(root, node_counter=0)
-
 
     @staticmethod
     def _process_categorical_features(js_tree: TreeLike) -> TreeLike:
@@ -191,7 +191,7 @@ class XGBConverter:
         - If a split node encodes categories via a JSON list string in 'split_condition',
         it is expanded into a chain of BRANCH_EQ nodes.
         - Otherwise (non-categorical split), the node's 'decision_type' is set to 'BRANCH_LT'.
-        - If there are categorical features, the nodeids are updated, but depth is ignored 
+        - If there are categorical features, the nodeids are updated, but depth is ignored
         since its not used for the conversion
 
         Returns the processed tree model.
@@ -203,9 +203,10 @@ class XGBConverter:
         elif isinstance(js_tree, dict):
             XGBConverter._process_root(js_tree)
         else:
-            raise TypeError("js_tree must be a dict (single tree) or list of dicts (forest).")
+            raise TypeError(
+                "js_tree must be a dict (single tree) or list of dicts (forest)."
+            )
         return js_tree
-
 
     @staticmethod
     def _get_default_tree_attribute_pairs(is_classifier):
