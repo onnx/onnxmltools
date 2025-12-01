@@ -29,7 +29,14 @@ def get_xgb_params(xgb_node):
         if xgb_node.n_estimators is not None:
             params["n_estimators"] = xgb_node.n_estimators
     if "base_score" in config["learner"]["learner_model_param"]:
-        bs = float(config["learner"]["learner_model_param"]["base_score"])
+        val = config["learner"]["learner_model_param"]["base_score"]
+        try:
+            bs = float(val)
+        except ValueError as e:
+            if val == "[5E-1]":
+                bs = 0.5
+            else:
+                raise ValueError(f"Unable to extract base_score from {val!r}") from e
         # xgboost >= 2.0
         params["base_score"] = bs
     if "num_target" in config["learner"]["learner_model_param"]:
