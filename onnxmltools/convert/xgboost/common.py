@@ -29,16 +29,15 @@ def get_xgb_params(xgb_node):
         if xgb_node.n_estimators is not None:
             params["n_estimators"] = xgb_node.n_estimators
     if "base_score" in config["learner"]["learner_model_param"]:
-         base_score = config["learner"]["learner_model_param"]["base_score"]
-         if(base_score.startswith('[') and base_score.endswith(']')):
-            # xgboost >= 3.1, see 
-            base_score = [float(score) for score in base_score.strip('[]').split(',')]
-            if len(base_score) == 1:
-                base_score = base_score[0]
-         else:
-            #xgboost >= 2.0 and < 3.1
-            base_score = float(base_score)
-         params["base_score"] = base_score
+        base_score_raw = config["learner"]["learner_model_param"]["base_score"]
+        # xgboost >= 3.0: base_score is a string array
+        if base_score_raw.startswith("[") and base_score_raw.endswith("]"):
+            base_score = json.loads(base_score_raw)
+            params["base_score"] = [float(x) for x in base_score]
+        else:
+            # xgboost >= 2, < 3: base_score is a string float
+            params["base_score"] = [float(base_score_raw)]
+
     if "num_target" in config["learner"]["learner_model_param"]:
         params["n_targets"] = int(
             config["learner"]["learner_model_param"]["num_target"]
