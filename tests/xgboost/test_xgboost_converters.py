@@ -835,8 +835,8 @@ class TestXGBoostModels(unittest.TestCase):
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     @unittest.skipIf(
-        pv.Version(xgboost.__version__) < pv.Version("1.6.0"),
-        "xgboost version< 1.6.0 lacks stable categorical support, skipping test.",
+        pv.Version(xgboost.__version__) < pv.Version("2.0"),
+        "xgboost version<2.0 no supported for categories",
     )
     def test_xgb_regressor_categorical_hist(self):
 
