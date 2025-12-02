@@ -54,6 +54,11 @@ def get_xgb_params(xgb_node):
             params["best_ntree_limit"] = int(gbp["num_trees"])
     return params
 
+def base_score_as_list(base_score):
+    if isinstance(base_score, list):
+        return base_score
+    return [base_score]
+
 
 def get_n_estimators_classifier(xgb_node, params, js_trees):
     if "n_estimators" not in params:

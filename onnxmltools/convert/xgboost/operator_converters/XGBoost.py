@@ -12,7 +12,7 @@ try:
 except ImportError:
     XGBRFClassifier = None
 from ...common._registration import register_converter
-from ..common import get_xgb_params, get_n_estimators_classifier
+from ..common import get_xgb_params, get_n_estimators_classifier, base_score_as_list
 
 
 Node = Dict[str, Any]
