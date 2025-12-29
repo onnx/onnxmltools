@@ -122,6 +122,62 @@ class TestXGBoostModels(unittest.TestCase):
             )
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_xgb_regressor_gamma(self):
+        iris = load_diabetes()
+        x = iris.data
+        y = iris.target / 100
+        x_train, x_test, y_train, _ = train_test_split(
+            x, y, test_size=0.5, random_state=17
+        )
+        for nest in [5, 50]:
+            xgb = XGBRegressor(
+                objective="reg:gamma",
+                random_state=5,
+                max_depth=3,
+                n_estimators=nest,
+            )
+            xgb.fit(x_train, y_train)
+            conv_model = convert_xgboost(
+                xgb,
+                initial_types=[("input", FloatTensorType(shape=[None, None]))],
+                target_opset=TARGET_OPSET,
+            )
+            dump_data_and_model(
+                x_test.astype("float32"),
+                xgb,
+                conv_model,
+                basename=f"SklearnXGBRegressorGamma{nest}-Dec3",
+            )
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_xgb_regressor_tweedie(self):
+        iris = load_diabetes()
+        x = iris.data
+        y = iris.target / 100
+        x_train, x_test, y_train, _ = train_test_split(
+            x, y, test_size=0.5, random_state=17
+        )
+        for nest in [5, 50]:
+            xgb = XGBRegressor(
+                objective="reg:tweedie",
+                random_state=5,
+                max_depth=3,
+                n_estimators=nest,
+            )
+            xgb.fit(x_train, y_train)
+            conv_model = convert_xgboost(
+                xgb,
+                initial_types=[("input", FloatTensorType(shape=[None, None]))],
+                target_opset=TARGET_OPSET,
+            )
+            dump_data_and_model(
+                x_test.astype("float32"),
+                xgb,
+                conv_model,
+                basename=f"SklearnXGBRegressorTweedie{nest}-Dec3",
+            )
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb0_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
         conv_model = convert_xgboost(
