@@ -421,7 +421,7 @@ class XGBRegressorConverter(XGBConverter):
         attr_pairs["n_targets"] = params["n_targets"]
 
         # add nodes
-        objectives_with_loglink = ["count:poisson", "reg:gamma", "reg:tweedie"]
+        objectives_with_loglink = {"count:poisson", "reg:gamma", "reg:tweedie"}
         if objective in objectives_with_loglink:
             names = [scope.get_unique_variable_name("tree")]
             del attr_pairs["base_values"]
