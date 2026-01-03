@@ -355,7 +355,7 @@ class XGBConverter:
         if remap is None:
             remap = {}
         nid = jsnode["nodeid"]
-        if not nid in remap:
+        if nid not in remap:
             remap[nid] = len(remap)
         if "children" in jsnode:
             for ch in jsnode["children"]:
