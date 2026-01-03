@@ -5,7 +5,6 @@ import numpy as np
 from onnx import TensorProto
 from xgboost import XGBClassifier
 from typing import Any, Dict, List, Union
-from copy import deepcopy
 
 try:
     from xgboost import XGBRFClassifier
@@ -86,16 +85,16 @@ class XGBConverter:
         return new_node
 
     @staticmethod
-    def _maybe_transform_categorical(node: Node) -> bool:
+    def _maybe_transform_categorical(node: Node, last_node_id) -> tuple[int, bool]:
         """
-        If node's split_condition is a JSON list string, transform it into a right-leaning
-        chain of BRANCH_EQ nodes in-place and return True. Otherwise return False.
+        If node's split_condition is a JSON list string, transform it into a
+        chain of BRANCH_EQ nodes in-place.
         """
 
         split_condition = node.get("split_condition")
 
         if not isinstance(split_condition, list):
-            return False  # not categorical
+            return (last_node_id, False)  # not categorical
 
         if len(split_condition) == 0:
             raise ValueError("split_condition is an empty array. ")
@@ -117,70 +116,54 @@ class XGBConverter:
 
         current_node = node
         for cat in split_condition[1:]:
-            new_node = XGBConverter._clone_node_skeleton(current_node)
+            new_node = current_node.copy()
             new_node["split_condition"] = cat
+            last_node_id += 1
+            new_node["nodeid"] = last_node_id
 
             if yes_left:
-                current_node["children"] = [deepcopy(orig_left), new_node]
+                current_node["children"] = [orig_left, new_node]
             else:
-                current_node["children"] = [new_node, deepcopy(orig_right)]
+                current_node["children"] = [new_node, orig_right]
             current_node = new_node
 
         # Final "no" path goes to the original right subtree
         current_node["children"] = [orig_left, orig_right]
-        return True
+        return (last_node_id, True)
 
     @staticmethod
-    def _process_node(node: Node) -> bool:
+    def _process_node(node: Node, last_node_id: int) -> int:
         # If this is a leaf, nothing to do
         if "children" not in node or not isinstance(node["children"], list):
-            return False
+            return last_node_id
 
         for child in node["children"]:
-            any_child_node_categorical = XGBConverter._process_node(child)
+            last_node_id = XGBConverter._process_node(child, last_node_id)
 
-        transformed = XGBConverter._maybe_transform_categorical(node)
+        last_node_id, transformed = XGBConverter._maybe_transform_categorical(node, last_node_id)
         if not transformed:
             # Non-categorical split node: enforce BRANCH_LT as default
             node["decision_type"] = "BRANCH_LT"
-
-        return any_child_node_categorical or transformed
-
-    @staticmethod
-    def _update_node_ids(node: Node, node_counter: int) -> None:
-        node["nodeid"] = node_counter
-        node_counter += 1
-        children = node.get("children")
-
-        # If this is a leaf, end recursion
-        if not (isinstance(children, list) and len(children) == 2):
-            return node_counter
-
-        left, right = children
-        missing_yes = node.get("missing", -1) == node["yes"]
-
-        yes_left = left["nodeid"] == node["yes"]
-
-        first = "yes" if yes_left else "no"
-        node[first] = node_counter
-        if (missing_yes and yes_left) or (not missing_yes and not yes_left):
-            node["missing"] = node_counter
-        node_counter = XGBConverter._update_node_ids(left, node_counter)
-
-        second = "no" if yes_left else "yes"
-        node[second] = node_counter
-        if (not missing_yes and yes_left) or (missing_yes and yes_left):
-            node["missing"] = node_counter
-        node_counter = XGBConverter._update_node_ids(right, node_counter)
-
-        return node_counter
+        return last_node_id
 
     @staticmethod
     def _process_root(root: Node) -> None:
-        any_categorical = XGBConverter._process_node(root)
-        if any_categorical:
-            # If any node was categorical, renumber the tree to ensure unique ids
-            XGBConverter._update_node_ids(root, node_counter=0)
+        last_node_id = XGBConverter._find_last_node_id(root)
+        XGBConverter._process_node(root, last_node_id)
+
+    @staticmethod
+    def _find_last_node_id(node: Node) -> int:
+        if "children" not in node:
+            return node["nodeid"]
+        
+        max_id = node["nodeid"]
+        for child in node["children"]:
+            child_max = XGBConverter._find_last_node_id(child)
+            if child_max > max_id:
+                max_id = child_max
+        
+        return max_id
+
 
     @staticmethod
     def _process_categorical_features(js_tree: TreeLike) -> TreeLike:
@@ -304,8 +287,14 @@ class XGBConverter:
 
     @staticmethod
     def _fill_node_attributes(
-        treeid, tree_weight, jsnode, attr_pairs, is_classifier, remap
+        treeid, tree_weight, jsnode, attr_pairs, is_classifier, remap, ids_covered: set
     ):
+        node_id = remap[jsnode["nodeid"]]
+        if node_id in ids_covered:
+            return
+        else:
+            ids_covered.add(node_id)
+        
         if "children" in jsnode:
             XGBConverter._add_node(
                 attr_pairs=attr_pairs,
@@ -313,7 +302,7 @@ class XGBConverter:
                 tree_id=treeid,
                 tree_weight=tree_weight,
                 value=jsnode["split_condition"],
-                node_id=remap[jsnode["nodeid"]],
+                node_id=node_id,
                 feature_id=jsnode["split"],
                 mode=jsnode["decision_type"],  # 'BRANCH_LEQ' --> is for sklearn
                 # 'BRANCH_LT' --> is for xgboost numerical features
@@ -329,7 +318,7 @@ class XGBConverter:
             for ch in jsnode["children"]:
                 if "children" in ch or "leaf" in ch:
                     XGBConverter._fill_node_attributes(
-                        treeid, tree_weight, ch, attr_pairs, is_classifier, remap
+                        treeid, tree_weight, ch, attr_pairs, is_classifier, remap, ids_covered
                     )
                 else:
                     raise RuntimeError("Unable to convert this node {0}".format(ch))
@@ -343,7 +332,7 @@ class XGBConverter:
                 tree_id=treeid,
                 tree_weight=tree_weight,
                 value=0.0,
-                node_id=remap[jsnode["nodeid"]],
+                node_id=node_id,
                 feature_id=0,
                 mode="LEAF",
                 true_child_id=0,
@@ -359,7 +348,8 @@ class XGBConverter:
         if remap is None:
             remap = {}
         nid = jsnode["nodeid"]
-        remap[nid] = len(remap)
+        if not nid in remap:
+            remap[nid] = len(remap)
         if "children" in jsnode:
             for ch in jsnode["children"]:
                 XGBConverter._remap_nodeid(ch, remap)
@@ -371,8 +361,9 @@ class XGBConverter:
             raise TypeError("js_xgb_node must be a list")
         for treeid, (jstree, w) in enumerate(zip(js_xgb_node, tree_weights)):
             remap = XGBConverter._remap_nodeid(jstree)
+            ids_covered = set()
             XGBConverter._fill_node_attributes(
-                treeid, w, jstree, attr_pairs, is_classifier, remap
+                treeid, w, jstree, attr_pairs, is_classifier, remap, ids_covered
             )
 
 
