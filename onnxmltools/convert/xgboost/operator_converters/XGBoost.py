@@ -140,7 +140,9 @@ class XGBConverter:
         for child in node["children"]:
             last_node_id = XGBConverter._process_node(child, last_node_id)
 
-        last_node_id, transformed = XGBConverter._maybe_transform_categorical(node, last_node_id)
+        last_node_id, transformed = XGBConverter._maybe_transform_categorical(
+            node, last_node_id
+        )
         if not transformed:
             # Non-categorical split node: enforce BRANCH_LT as default
             node["decision_type"] = "BRANCH_LT"
@@ -155,15 +157,14 @@ class XGBConverter:
     def _find_last_node_id(node: Node) -> int:
         if "children" not in node:
             return node["nodeid"]
-        
+
         max_id = node["nodeid"]
         for child in node["children"]:
             child_max = XGBConverter._find_last_node_id(child)
             if child_max > max_id:
                 max_id = child_max
-        
-        return max_id
 
+        return max_id
 
     @staticmethod
     def _process_categorical_features(js_tree: TreeLike) -> TreeLike:
@@ -294,7 +295,7 @@ class XGBConverter:
             return
         else:
             ids_covered.add(node_id)
-        
+
         if "children" in jsnode:
             XGBConverter._add_node(
                 attr_pairs=attr_pairs,
@@ -318,7 +319,13 @@ class XGBConverter:
             for ch in jsnode["children"]:
                 if "children" in ch or "leaf" in ch:
                     XGBConverter._fill_node_attributes(
-                        treeid, tree_weight, ch, attr_pairs, is_classifier, remap, ids_covered
+                        treeid,
+                        tree_weight,
+                        ch,
+                        attr_pairs,
+                        is_classifier,
+                        remap,
+                        ids_covered,
                     )
                 else:
                     raise RuntimeError("Unable to convert this node {0}".format(ch))
