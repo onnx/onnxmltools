@@ -404,9 +404,6 @@ class XGBRegressorConverter(XGBConverter):
             xgb_node, inputs
         )
 
-        if objective in ["reg:gamma", "reg:tweedie"]:
-            raise RuntimeError("Objective '{}' not supported.".format(objective))
-
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
         if isinstance(base_score, list):
             attr_pairs["base_values"] = base_score
@@ -424,7 +421,8 @@ class XGBRegressorConverter(XGBConverter):
         attr_pairs["n_targets"] = params["n_targets"]
 
         # add nodes
-        if objective == "count:poisson":
+        objectives_with_loglink = {"count:poisson", "reg:gamma", "reg:tweedie"}
+        if objective in objectives_with_loglink:
             names = [scope.get_unique_variable_name("tree")]
             del attr_pairs["base_values"]
         else:
@@ -438,8 +436,8 @@ class XGBRegressorConverter(XGBConverter):
             **attr_pairs,
         )
 
-        if objective == "count:poisson":
-            cst = scope.get_unique_variable_name("poisson")
+        if objective in objectives_with_loglink:
+            cst = scope.get_unique_variable_name("raw_prediction")
             container.add_initializer(
                 cst, TensorProto.FLOAT, [len(base_score)], base_score
             )
