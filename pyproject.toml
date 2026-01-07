@@ -1,3 +1,57 @@
+# Copyright (c) ONNX Project Contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "onnxmltools"
+dynamic = ["version"]
+description = "Converts Machine Learning models to ONNX"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    {name = "ONNX", email = "onnx-technical-discuss@lists.lfaidata.foundation"},
+]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "onnx>=1.8.1",
+    "protobuf",
+    "skl2onnx>=1.4.9",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console", 
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10", 
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/onnx/onnxmltools"
+Repository = "https://github.com/onnx/onnxmltools"
+Issues = "https://github.com/onnx/onnxmltools/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "onnxmltools.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["onnxmltools*"]
+
+[tool.setuptools.package-data]
+onnxmltools = ["**/*"]
+
+
 [tool.ruff]
 
 exclude = [
