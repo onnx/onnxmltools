@@ -158,4 +158,5 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         with:
+          name: artifact-${{ matrix.python_version }}-${{ matrix.os }}
           path: ./dist/**
