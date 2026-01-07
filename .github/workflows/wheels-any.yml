@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -30,6 +30,6 @@ jobs:
       - name: check wheel
         run: python -m twine check ./onnxmltools*.whl
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           path: ./skl2onnx*.whl
