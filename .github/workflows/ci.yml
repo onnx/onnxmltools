@@ -154,7 +154,7 @@ jobs:
         run: pip install build
 
       - name: build
-        run: pip -m build .
+        run: python -m build .
 
       - uses: actions/upload-artifact@v4
         with:
