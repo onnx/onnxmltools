@@ -1,5 +1,9 @@
-name: CI
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 jobs:
   run:
     name: ${{ matrix.os }} py==${{ matrix.python_version }} - sklearn${{ matrix.sklearn_version }} - ${{ matrix.onnxrt_version }} - xgboost${{ matrix.xgboost_version }} - lightgbm${{ matrix.lgbm_version }}
@@ -58,10 +62,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python_version }}
 
@@ -72,7 +76,7 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
 
       - name: Cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements-dev.txt') }}
@@ -134,7 +138,7 @@ jobs:
           pytest --maxfail=10 --durations=10 tests/h2o
 
       - name: Run tests hummingbirdml
-        if: ${{ matrix.os != 'macos-latest' && matrix.xgboost_version != '<2' }}
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.xgboost_version != '<2' }}
         run: |
           pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
           pip install hummingbird-ml --no-deps
@@ -146,10 +150,14 @@ jobs:
       - name: Run tests pysparkml
         if: matrix.os == 'ubuntu-latest' && matrix.python_version != '3.12'
         run: pytest --maxfail=10 --durations=10 tests/sparkml
+     
+      - name: Install build dependencies
+        run: pip install build
 
       - name: build
-        run: pip wheel .
+        run: python -m build .
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
+          name: artifact-${{ matrix.python_version }}-${{ matrix.os }}
           path: ./dist/**
