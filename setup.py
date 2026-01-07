@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-# -*- coding: utf-8 -*-
-
 from distutils.core import setup
 from setuptools import find_packages
 import os
@@ -31,29 +29,3 @@ README = os.path.join(os.getcwd(), "README.md")
 with open(README) as f:
     long_description = f.read()
 
-setup(
-    name="onnxmltools",
-    version=version_str,
-    description="Converts Machine Learning models to ONNX",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    license="Apache License v2.0",
-    author="ONNX",
-    author_email="onnx-technical-discuss@lists.lfaidata.foundation",
-    url="https://github.com/onnx/onnxmltools",
-    packages=packages,
-    include_package_data=True,
-    install_requires=requirements,
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Environment :: Console",
-        "Intended Audience :: Developers",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "License :: OSI Approved :: Apache Software License",
-    ],
-)
