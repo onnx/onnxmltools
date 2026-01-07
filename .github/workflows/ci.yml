@@ -1,7 +1,8 @@
-name: CI
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
   run:
@@ -137,7 +138,7 @@ jobs:
           pytest --maxfail=10 --durations=10 tests/h2o
 
       - name: Run tests hummingbirdml
-        if: ${{ matrix.os != 'macos-latest' && matrix.xgboost_version != '<2' }}
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.xgboost_version != '<2' }}
         run: |
           pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
           pip install hummingbird-ml --no-deps
@@ -149,10 +150,14 @@ jobs:
       - name: Run tests pysparkml
         if: matrix.os == 'ubuntu-latest' && matrix.python_version != '3.12'
         run: pytest --maxfail=10 --durations=10 tests/sparkml
+     
+      - name: Install build dependencies
+        run: pip install build
 
       - name: build
-        run: pip wheel .
+        run: python -m build .
 
       - uses: actions/upload-artifact@v6
         with:
+          name: artifact-${{ matrix.python_version }}-${{ matrix.os }}
           path: ./dist/**

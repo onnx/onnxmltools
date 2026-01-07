@@ -11,7 +11,7 @@ pandas
 pyspark
 pytest
 pytest-cov
-pytest-spark
+pytest-spark; sys_platform != 'win32'
 ruff
 scikit-learn>=1.2.0
 scipy
