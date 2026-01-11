@@ -34,6 +34,7 @@ if XGBRegressor is not None:
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 from onnxruntime import InferenceSession
+import onnxruntime as ort
 
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
@@ -949,6 +950,145 @@ class TestXGBoostModels(unittest.TestCase):
                 model,
                 onnx_model,
                 basename=f"XGBRegressorCategoricalFeatures{idx}",
+            )
+
+    @unittest.skipIf(xgboost is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(xgboost.__version__) < pv.Version("2.0"),
+        "xgboost version <2.0 not supported for categories",
+    )
+    def test_xgb_regressor_categorical_hist_native(self):
+
+        this = os.path.dirname(__file__)
+        df = pandas.read_csv(os.path.join(this, "data_categorical.csv"))
+        df["f0"] = df["f0"].astype("category")
+        X, y = df.drop("y", axis=1), df["y"]
+        y += 5
+
+        # Use Native XGBoost api
+        params = {
+            "objective": "count:poisson",
+            "n_estimators": 30,  
+            "max_depth":6,
+            "learning_rate": 0.3,
+            "tree_method": "hist",
+            "enable_categorical": True,
+            "seed": 0,  
+            "verbosity": 0,
+        }
+
+        # Create DMatrix with categorical support
+        dtrain = xgboost.DMatrix(X, label=y, enable_categorical=True)
+
+        # Train with native API
+        model_native = xgboost.train(params, dtrain, num_boost_round=params["n_estimators"])
+
+        # Convert to ONNX (works with Booster)
+        onnx_model = convert_xgboost(
+            model_native,
+            initial_types=[("float_input", FloatTensorType([None, 2]))],
+            target_opset=TARGET_OPSET,
+        )
+
+        print(onnx_model)
+
+        cat_codes = X["f0"].cat.codes.to_numpy().astype(np.float32).reshape(-1, 1)
+        num_col = X["f1"].to_numpy().astype(np.float32).reshape(-1, 1)
+        X_onnx = np.concatenate([cat_codes, num_col], axis=1)
+
+        # Compare predictions
+        expected = model_native.predict(dtrain).astype(np.float32)  
+        sess = InferenceSession(
+            onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
+        input_name = sess.get_inputs()[0].name
+        got = sess.run(None, {input_name: X_onnx})[0].ravel().astype(np.float32)
+        np.testing.assert_almost_equal(expected, got, decimal=4)
+        
+
+        # Test onnx backend
+        dump_data_and_model(
+            X_onnx.astype("float32"),
+            model_native,
+            onnx_model,
+            basename="XGBRegressorCategoricalFeaturesNative",
+            feature_names=["f0", "f1"]
+        )
+
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(xgboost.__version__) < pv.Version("2.0"),
+        "xgboost version<2.0 no supported for categories",
+    )
+    @unittest.skipIf(
+    pv.Version(ort.__version__) >= pv.Version("1.21.0") and 
+    pv.Version(ort.__version__) < pv.Version("1.23.0"),
+    "onnxruntime versions between 1.21.X and 1.22.X contain a bug for category only trees. See https://github.com/microsoft/onnxruntime/issues/24636",
+)
+    def test_xgb_regressor_only_categorical_hist(self):
+
+        this = os.path.dirname(__file__)
+        df = pandas.read_csv(os.path.join(this, "data_categorical.csv"))
+        df["f0"] = df["f0"].astype("category")
+        df = df.drop("f1", axis=1)
+        X, y = df.drop("y", axis=1), df["y"]
+
+        models = [
+            XGBRegressor(
+                objective="reg:squarederror",
+                n_estimators=1,
+                learning_rate=0.3,
+                tree_method="hist",
+                enable_categorical=True,
+                random_state=0,
+            ),
+            XGBRegressor(
+                objective="reg:squarederror",
+                n_estimators=30,
+                learning_rate=0.3,
+                tree_method="hist",
+                enable_categorical=True,
+                random_state=0,
+            ),
+            XGBRegressor(
+                n_estimators=30,
+                enable_categorical=True,
+                max_cat_to_onehot=8,  # use native one hot encoding
+            ),
+        ]
+
+        for idx, model in enumerate(models):
+            model.fit(X, y)
+
+            # Convert to ONNX.
+            # Input has 1 column: cat codes (as numeric)
+            onnx_model = convert_xgboost(
+                model,
+                initial_types=[("float_input", FloatTensorType([None, 1]))],
+                target_opset=TARGET_OPSET,
+            )
+
+            # Build the ONNX input:
+            # - first column: category codes (int codes) cast to float32
+            cat_codes = X["f0"].cat.codes.to_numpy().astype(np.float32).reshape(-1, 1)
+            X_onnx = np.array(cat_codes)
+
+            # Compare XGBoost and ONNX results.
+            expected = model.predict(X).astype(np.float32)
+            sess = InferenceSession(
+                onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+            )
+            input_name = sess.get_inputs()[0].name
+            got = sess.run(None, {input_name: X_onnx})[0].ravel().astype(np.float32)
+            assert_almost_equal(expected, got, decimal=4)
+
+            # Test onnx backend
+            dump_data_and_model(
+                X_onnx.astype("float32"),
+                model,
+                onnx_model,
+                basename=f"XGBRegressorOnlyCategoricalFeatures{idx}",
             )
 
 
