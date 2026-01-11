@@ -73,18 +73,6 @@ class XGBConverter:
         return len(s) >= 2 and s[0] == "[" and s[-1] == "]"
 
     @staticmethod
-    def _clone_node_skeleton(source_node: Node) -> Node:
-        # Copy split-related metadata but not 'children' or 'split_condition'
-        new_node: Node = {}
-        for k, v in source_node.items():
-            if k in ("children", "split_condition"):
-                continue
-            new_node[k] = v
-
-        new_node["decision_type"] = "BRANCH_EQ"
-        return new_node
-
-    @staticmethod
     def _maybe_transform_categorical(node: Node, last_node_id) -> tuple[int, bool]:
         """
         If node's split_condition is a JSON list string, transform it into a
@@ -121,6 +109,9 @@ class XGBConverter:
             last_node_id += 1
             new_node["nodeid"] = last_node_id
 
+            if(current_node["missing"] == current_node["no"]):
+                current_node["missing"] = new_node["nodeid"]
+            current_node["no"] = new_node["nodeid"]
             if yes_left:
                 current_node["children"] = [orig_left, new_node]
             else:
