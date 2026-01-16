@@ -2,17 +2,23 @@ import unittest
 from typing import Dict, List, Tuple
 
 import numpy as np
+from numpy.testing import assert_almost_equal
 import onnxruntime
 import pandas as pd
 from onnx import ModelProto
 from onnx.defs import onnx_opset_version
 from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
-from onnxmltools.convert.common.data_types import DoubleTensorType, TensorType
+from onnxmltools.convert.common.data_types import (
+    DoubleTensorType,
+    TensorType,
+    FloatTensorType,
+)
 from onnxmltools import convert_lightgbm
+from onnxmltools.utils.tests_helper import convert_model
 from onnxruntime import InferenceSession
 from pandas.core.frame import DataFrame
 
-from lightgbm import LGBMRegressor, Booster, Dataset
+from lightgbm import LGBMClassifier, LGBMRegressor, Booster, Dataset
 
 _N_ROWS = 10_000
 _N_COLS = 10
@@ -153,6 +159,79 @@ class ObjectiveTest(unittest.TestCase):
                     decimal=_N_DECIMALS,
                     frac=_FRAC,
                 )
+
+    def test_lightgbm_classifier_custom_objective(self):
+        def custom_loss(y_true, y_pred):
+            p = 1.0 / (1.0 + np.exp(-y_pred))
+            pt = (1 - y_true).astype(float)
+            w = y_true.astype(float)
+            one_minus_pt = 1.0 - pt
+            pow_term = np.power(one_minus_pt, 0.5)
+            dp_dz = p * (1.0 - p)
+            diff = p - y_true
+            log_pt = np.log(pt + 1e-8)
+            grad = w * (pow_term * diff - np.power(one_minus_pt, -0.5) * diff * log_pt)
+            hess = w * (pow_term * dp_dz)
+            return grad, hess
+
+        X = [[0, 1], [1, 1], [2, 0], [1, 2]]
+        X = np.array(X, dtype=np.float32)
+        y = [0, 1, 0, 1]
+        model = LGBMClassifier(
+            n_estimators=3, min_child_samples=1, num_thread=1, objective=custom_loss
+        )
+        model.fit(X, y)
+        onx = convert_model(
+            model,
+            "dummy",
+            input_types=[("X", FloatTensorType([None, X.shape[1]]))],
+            target_opset=TARGET_OPSET,
+            zipmap=False,
+        )[0]
+        sess = onnxruntime.InferenceSession(
+            onx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
+        exp = model.predict(X), model.predict_proba(X)
+        got = sess.run(None, {"X": X})
+        assert_almost_equal(exp[0], got[0])
+        assert_almost_equal(exp[1], got[1][:, 1])
+
+    def test_lightgbm_classifier_custom_objective_multiclass(self):
+        def custom_loss(y_true, y_pred):
+            y_true = y_true.reshape((-1, 1))
+            p = 1.0 / (1.0 + np.exp(-y_pred))
+            pt = (1 - y_true).astype(float)
+            w = y_true.astype(float)
+            one_minus_pt = 1.0 - pt
+            pow_term = np.power(one_minus_pt, 0.5)
+            dp_dz = p * (1.0 - p)
+            diff = p - y_true
+            log_pt = np.log(pt + 1e-8)
+            grad = w * (pow_term * diff - np.power(one_minus_pt, -0.5) * diff * log_pt)
+            hess = w * (pow_term * dp_dz)
+            return grad, hess
+
+        X = [[0, 1], [1, 1], [2, 0], [1, 2], [2, 2]]
+        X = np.array(X, dtype=np.float32)
+        y = [0, 1, 0, 1, 2]
+        model = LGBMClassifier(
+            n_estimators=3, min_child_samples=1, num_thread=1, objective=custom_loss
+        )
+        model.fit(X, y)
+        onx = convert_model(
+            model,
+            "dummy",
+            input_types=[("X", FloatTensorType([None, X.shape[1]]))],
+            target_opset=TARGET_OPSET,
+            zipmap=False,
+        )[0]
+        sess = onnxruntime.InferenceSession(
+            onx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
+        exp = model.predict(X), model.predict_proba(X)
+        got = sess.run(None, {"X": X})
+        # assert_almost_equal(exp[0], got[0])
+        assert_almost_equal(exp[1], got[1])
 
 
 if __name__ == "__main__":
