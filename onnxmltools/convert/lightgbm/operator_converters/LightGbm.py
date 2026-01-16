@@ -2,6 +2,7 @@
 
 import copy
 import numbers
+import pprint
 from collections import deque, Counter
 import ctypes
 import json
@@ -550,7 +551,7 @@ def convert_lightgbm(scope, operator, container):
     # regressor, respectively
     post_transform = None
     if "objective" not in gbm_text:
-        if "num_class" not in gbm_text:
+        if "num_class" in gbm_text:
             n_classes = gbm_text["num_class"]
             if n_classes == 1:
                 attrs["post_transform"] = "LOGISTIC"
@@ -559,7 +560,7 @@ def convert_lightgbm(scope, operator, container):
             objective = "binary"
         else:
             raise NotImplementedError(
-                f"Objective not found in {gbm_text}, custom objective are not fully supported."
+                f"Objective not found in {pprint.pformat(gbm_text)}, custom objective are not fully supported."
             )
     else:
         objective = gbm_text["objective"]
