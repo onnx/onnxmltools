@@ -1,5 +1,6 @@
 import unittest
 from typing import Dict, List, Tuple
+import packaging.version as pv
 
 import numpy as np
 from numpy.testing import assert_almost_equal
@@ -18,7 +19,13 @@ from onnxmltools.utils.tests_helper import convert_model
 from onnxruntime import InferenceSession
 from pandas.core.frame import DataFrame
 
-from lightgbm import LGBMClassifier, LGBMRegressor, Booster, Dataset
+from lightgbm import (
+    LGBMClassifier,
+    LGBMRegressor,
+    Booster,
+    Dataset,
+    __version__ as lightgbm_version,
+)
 
 _N_ROWS = 10_000
 _N_COLS = 10
@@ -160,6 +167,9 @@ class ObjectiveTest(unittest.TestCase):
                     frac=_FRAC,
                 )
 
+    @unittest.skipIf(
+        pv.Version(lightgbm_version) < pv.Version("4.0"), "requires lightgbm>=4.0"
+    )
     def test_lightgbm_classifier_custom_objective_binary(self):
         def custom_loss(y_true, y_pred):
             grad = y_pred - y_true
@@ -188,6 +198,9 @@ class ObjectiveTest(unittest.TestCase):
         # assert_almost_equal(exp[0], got[0], decimal=5)
         assert_almost_equal(exp[1], got[1][:, 1], decimal=5)
 
+    @unittest.skipIf(
+        pv.Version(lightgbm_version) < pv.Version("4.0"), "requires lightgbm>=4.0"
+    )
     def test_lightgbm_classifier_custom_objective_multiclass(self):
         def custom_loss(y_true, y_pred):
             grad = y_pred - y_true.reshape((-1, 1))
