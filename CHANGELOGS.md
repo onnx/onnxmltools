@@ -2,6 +2,8 @@
 
 ## 1.16.0
 
+* Add partial support for custom objective
+  [#753](https://github.com/onnx/onnxmltools/pull/753)
 * Improve xgboost categorical feature support
   [#743](https://github.com/onnx/onnxmltools/pull/743)
 
