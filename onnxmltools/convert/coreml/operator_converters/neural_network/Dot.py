@@ -24,7 +24,7 @@ def convert_dot(scope, operator, container):
             "LpNormalization",
             [operator.inputs[0].full_name],
             [intra_variable_name1],
-            **attrs1
+            **attrs1,
         )
 
         # Normalize the second input and store the result on a temporal variable
@@ -37,7 +37,7 @@ def convert_dot(scope, operator, container):
             "LpNormalization",
             [operator.inputs[1].full_name],
             [intra_variable_name2],
-            **attrs2
+            **attrs2,
         )
     else:
         # This case is a simple dot product; no normalization is required.

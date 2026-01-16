@@ -47,7 +47,7 @@ def convert_decision_tree_classifier(scope, operator, container):
         operator.input_full_names,
         [operator.outputs[0].full_name, operator.outputs[1].full_name],
         op_domain="ai.onnx.ml",
-        **new_attrs
+        **new_attrs,
     )
 
 

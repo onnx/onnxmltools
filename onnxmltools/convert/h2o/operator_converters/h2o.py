@@ -149,7 +149,7 @@ def convert_regression(scope, operator, container, params):
         operator.output_full_names,
         op_domain="ai.onnx.ml",
         name=scope.get_unique_operator_name("TreeEnsembleRegressor"),
-        **attr_pairs
+        **attr_pairs,
     )
 
 
@@ -176,7 +176,7 @@ def convert_classifier(scope, operator, container, params):
         operator.output_full_names,
         op_domain="ai.onnx.ml",
         name=scope.get_unique_operator_name("TreeEnsembleClassifier"),
-        **attr_pairs
+        **attr_pairs,
     )
 
 

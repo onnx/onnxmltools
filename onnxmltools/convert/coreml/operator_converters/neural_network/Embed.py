@@ -60,7 +60,7 @@ def convert_embedding(scope, operator, container):
             "Gather",
             [weights_name, casted_input_name],
             gather_output_name,
-            **gather_attrs
+            **gather_attrs,
         )
 
         # Load the bias vector into an initializer
@@ -87,7 +87,7 @@ def convert_embedding(scope, operator, container):
             "Gather",
             [weights_name, casted_input_name],
             operator.output_full_names,
-            **gather_attrs
+            **gather_attrs,
         )
 
 

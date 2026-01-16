@@ -319,7 +319,7 @@ def _compare_expected(
                         onnx,
                         decimal=5,
                         onnx_shape=None,
-                        **kwargs
+                        **kwargs,
                     )
                 raise OnnxRuntimeAssertionError(
                     "Unexpected number of outputs '{0}', expected={1}, got={2}".format(

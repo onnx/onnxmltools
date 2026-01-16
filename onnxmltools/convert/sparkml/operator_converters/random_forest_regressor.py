@@ -46,7 +46,7 @@ def convert_random_forest_regressor(scope, operator, container):
         operator.input_full_names,
         operator.output_full_names[0],
         op_domain="ai.onnx.ml",
-        **main_attrs
+        **main_attrs,
     )
 
 

@@ -30,7 +30,7 @@ def convert_preprocessing_scaler(scope, operator, container):
             "ImageScaler",
             [operator.inputs[0].full_name],
             [operator.outputs[0].full_name],
-            **attrs
+            **attrs,
         )
     else:
         # In comments below, assume input tensor is X,

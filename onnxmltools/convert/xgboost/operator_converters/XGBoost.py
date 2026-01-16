@@ -109,7 +109,7 @@ class XGBConverter:
             last_node_id += 1
             new_node["nodeid"] = last_node_id
 
-            if(current_node["missing"] == current_node["no"]):
+            if current_node["missing"] == current_node["no"]:
                 current_node["missing"] = new_node["nodeid"]
             current_node["no"] = new_node["nodeid"]
             if yes_left:

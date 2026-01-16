@@ -15,7 +15,7 @@ def convert_l2_normalization(scope, operator, container):
         "LpNormalization",
         operator.input_full_names,
         operator.output_full_names,
-        **attrs
+        **attrs,
     )
 
 

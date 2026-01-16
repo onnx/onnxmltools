@@ -76,7 +76,9 @@ def _get_attributes(booster):
         ntrees = getattr(booster, "best_ntree_limit", trees)
         config = json.loads(booster.save_config())["learner"]
         config_learner = config["learner_model_param"]
-        num_class_raw = int(config_learner["num_class"]) if "num_class" in config_learner else None 
+        num_class_raw = (
+            int(config_learner["num_class"]) if "num_class" in config_learner else None
+        )
         num_class = num_class_raw if num_class_raw is not None else 0
         if num_class == 0 and ntrees > 0:
             num_class = trees // ntrees
@@ -85,8 +87,16 @@ def _get_attributes(booster):
                 f"Unable to retrieve the number of classes, num_class={num_class}, "
                 f"trees={trees}, ntrees={ntrees}, config={config_learner}."
             )
-        num_target = int(config_learner["num_target"]) if "num_target" in config_learner else None 
-        objective = config["objective"]["name"] if "objective" in config and "name" in config["objective"] else None
+        num_target = (
+            int(config_learner["num_target"])
+            if "num_target" in config_learner
+            else None
+        )
+        objective = (
+            config["objective"]["name"]
+            if "objective" in config and "name" in config["objective"]
+            else None
+        )
 
     kwargs = atts.copy()
     kwargs["feature_names"] = booster.feature_names
@@ -97,7 +107,12 @@ def _get_attributes(booster):
     for tr in res:
         covs.extend(_append_covers(tr))
 
-    if num_class_raw == 0 and num_target == 1 and objective is not None and (objective.startswith('reg:') or objective == 'count:poisson'):
+    if (
+        num_class_raw == 0
+        and num_target == 1
+        and objective is not None
+        and (objective.startswith("reg:") or objective == "count:poisson")
+    ):
         # regression
         kwargs["num_target"] = 1
         kwargs["num_class"] = 0

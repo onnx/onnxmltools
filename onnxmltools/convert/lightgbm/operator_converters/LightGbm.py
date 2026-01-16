@@ -645,7 +645,7 @@ def convert_lightgbm(scope, operator, container):
             operator.input_full_names,
             [label_tensor_name, probability_tensor_name],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
         prob_tensor = probability_tensor_name
@@ -771,7 +771,7 @@ def convert_lightgbm(scope, operator, container):
                 operator.input_full_names,
                 output_name,
                 op_domain="ai.onnx.ml",
-                **attrs
+                **attrs,
             )
         else:
             tree_attrs = _split_tree_ensemble_atts(attrs, split)
@@ -783,7 +783,7 @@ def convert_lightgbm(scope, operator, container):
                     operator.input_full_names,
                     tree_name,
                     op_domain="ai.onnx.ml",
-                    **ats
+                    **ats,
                 )
                 cast_name = scope.get_unique_variable_name("dtree%d" % i)
                 container.add_node(
@@ -1012,7 +1012,7 @@ def convert_lgbm_zipmap(scope, operator, container):
             operator.inputs[1].full_name,
             operator.outputs[1].full_name,
             op_domain="ai.onnx.ml",
-            **zipmap_attrs
+            **zipmap_attrs,
         )
     else:
         one = scope.get_unique_variable_name("one")

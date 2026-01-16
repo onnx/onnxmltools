@@ -51,7 +51,7 @@ def convert_random_forest_classifier(scope, operator, container):
         operator.input_full_names,
         [operator.outputs[0].full_name, operator.outputs[1].full_name],
         op_domain="ai.onnx.ml",
-        **main_attr_pairs
+        **main_attr_pairs,
     )
 
 

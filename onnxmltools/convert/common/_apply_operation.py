@@ -824,7 +824,7 @@ def apply_gru(
     operator_name=None,
     output_seq=0,
     reset_after=0,
-    **attrs
+    **attrs,
 ):
     name = _create_name_or_use_existing_one(scope, "GRU", operator_name)
     if container.target_opset < 3:
@@ -879,7 +879,7 @@ def apply_instance_norm(
         input_names,
         output_name,
         op_version=op_version,
-        **attrs
+        **attrs,
     )
 
 
@@ -935,7 +935,7 @@ def apply_lstm(
     container,
     operator_name=None,
     output_seq=0,
-    **attrs
+    **attrs,
 ):
     name = _create_name_or_use_existing_one(scope, "LSTM", operator_name)
     if container.target_opset <= 6:
@@ -1336,7 +1336,7 @@ def apply_rnn(
     container,
     operator_name=None,
     output_seq=0,
-    **attrs
+    **attrs,
 ):
     name = _create_name_or_use_existing_one(scope, "RNN", operator_name)
     if container.target_opset <= 6:

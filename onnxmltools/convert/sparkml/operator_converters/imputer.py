@@ -46,7 +46,7 @@ def convert_imputer(scope: Scope, operator: Operator, container):
             concatenated_output,
             imputed_output,
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
         container.add_node(
             "Split",
@@ -63,7 +63,7 @@ def convert_imputer(scope: Scope, operator: Operator, container):
             operator.inputs[0].full_name,
             operator.output_full_names[0],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
 

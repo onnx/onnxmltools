@@ -47,7 +47,7 @@ def convert_sparkml_vector_indexer(scope, operator, container):
             converted_output,
             encoded_output_name,
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
         converted_float_output = scope.get_unique_variable_name(
             "converted_float_tensor_%d" % i

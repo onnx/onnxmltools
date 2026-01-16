@@ -22,7 +22,7 @@ def convert_integer_to_float(scope, variable, container):
         variable.full_name,
         scaled_name,
         op_domain="ai.onnx.ml",
-        **scaler_attrs
+        **scaler_attrs,
     )
     return scaled_name
 

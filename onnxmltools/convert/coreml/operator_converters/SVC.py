@@ -131,7 +131,7 @@ def convert_svm_classifier(scope, operator, container):
             inputs,
             [label_output_name, proba_tensor_name],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
         # Add ZipMap to convert probability tensor into probability map
@@ -140,7 +140,7 @@ def convert_svm_classifier(scope, operator, container):
             [proba_tensor_name],
             [proba_output_name],
             op_domain="ai.onnx.ml",
-            **zipmap_attrs
+            **zipmap_attrs,
         )
     else:
         # Add support vector classifier in terms of ONNX node
@@ -149,7 +149,7 @@ def convert_svm_classifier(scope, operator, container):
             inputs,
             [label_output_name, proba_tensor_name],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
 

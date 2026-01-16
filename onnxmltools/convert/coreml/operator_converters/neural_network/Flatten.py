@@ -36,7 +36,7 @@ def convert_flatten(scope, operator, container):
         [variable_to_be_flattened_name],
         [flattened_variable_name],
         op_version=target_opset,
-        **flatten_attrs
+        **flatten_attrs,
     )
 
 
