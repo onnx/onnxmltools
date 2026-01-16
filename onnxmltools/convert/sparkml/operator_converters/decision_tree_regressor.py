@@ -36,7 +36,7 @@ def convert_decision_tree_regressor(scope, operator, container):
         operator.input_full_names,
         operator.output_full_names,
         op_domain="ai.onnx.ml",
-        **new_attrs
+        **new_attrs,
     )
 
 

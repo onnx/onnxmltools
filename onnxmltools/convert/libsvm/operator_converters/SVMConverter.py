@@ -184,7 +184,7 @@ class SVCConverter(SVMConverter):
             nb["outputs"],
             op_domain="ai.onnx.ml",
             name=scope.get_unique_operator_name("SVMClassifier"),
-            **nb["attrs"]
+            **nb["attrs"],
         )
 
 
@@ -214,7 +214,7 @@ class SVRConverter(SVMConverter):
             nb["outputs"],
             op_domain="ai.onnx.ml",
             name=scope.get_unique_operator_name("SVMRegressor"),
-            **nb["attrs"]
+            **nb["attrs"],
         )
 
 

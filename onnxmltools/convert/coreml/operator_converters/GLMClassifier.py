@@ -123,7 +123,7 @@ def convert_glm_classifier(scope, operator, container):
             inputs,
             [label_output_name, proba_tensor_name],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
         # Add a normalizer to make sure that the sum of all
@@ -158,7 +158,7 @@ def convert_glm_classifier(scope, operator, container):
             [normalized_proba_tensor_name],
             [proba_output_name],
             op_domain="ai.onnx.ml",
-            **zipmap_attrs
+            **zipmap_attrs,
         )
     else:
         # Add linear classifier with isolated probability
@@ -169,7 +169,7 @@ def convert_glm_classifier(scope, operator, container):
             inputs,
             [label_output_name, proba_tensor_name],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
 

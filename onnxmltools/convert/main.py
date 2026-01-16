@@ -370,7 +370,7 @@ def _convert_tf_wrapper(
     channel_first_inputs=None,
     debug_mode=False,
     custom_op_conversions=None,
-    **kwargs
+    **kwargs,
 ):
     """
     convert a tensorflow graph def into a ONNX model proto, just like how keras does.
@@ -412,7 +412,7 @@ def _convert_tf_wrapper(
             inputs_as_nchw=channel_first_inputs,
             output_names=output_names,
             input_names=input_names,
-            **kwargs
+            **kwargs,
         )
 
         onnx_graph = tf2onnx.optimizer.optimize_graph(g)
@@ -431,7 +431,7 @@ def convert_tensorflow(
     channel_first_inputs=None,
     debug_mode=False,
     custom_op_conversions=None,
-    **kwargs
+    **kwargs,
 ):
     import pkgutil
 
@@ -450,5 +450,5 @@ def convert_tensorflow(
         channel_first_inputs,
         debug_mode,
         custom_op_conversions,
-        **kwargs
+        **kwargs,
     )

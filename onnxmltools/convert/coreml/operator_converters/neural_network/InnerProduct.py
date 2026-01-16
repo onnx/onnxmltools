@@ -80,7 +80,7 @@ def convert_inner_product(scope, operator, container):
             [name_a, name_b, name_c],
             buffer_tensor_name,
             op_version=op_version,
-            **attrs
+            **attrs,
         )
         apply_reshape(
             scope,
@@ -96,7 +96,7 @@ def convert_inner_product(scope, operator, container):
             [name_a, name_b, name_c],
             operator.outputs[0].full_name,
             op_version=op_version,
-            **attrs
+            **attrs,
         )
 
 

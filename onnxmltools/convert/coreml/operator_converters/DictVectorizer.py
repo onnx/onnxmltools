@@ -17,7 +17,7 @@ def convert_dictionary_vectorizer(scope, operator, container):
         [operator.inputs[0].full_name],
         [operator.outputs[0].full_name],
         op_domain="ai.onnx.ml",
-        **attrs
+        **attrs,
     )
 
 

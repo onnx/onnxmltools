@@ -90,7 +90,7 @@ def convert_tensor_to_probability_map(scope, operator, container):
         buffer_name,
         operator.outputs[0].full_name,
         op_domain="ai.onnx.ml",
-        **attrs
+        **attrs,
     )
 
 

@@ -968,12 +968,12 @@ class TestXGBoostModels(unittest.TestCase):
         # Use Native XGBoost api
         params = {
             "objective": "count:poisson",
-            "n_estimators": 30,  
-            "max_depth":6,
+            "n_estimators": 30,
+            "max_depth": 6,
             "learning_rate": 0.3,
             "tree_method": "hist",
             "enable_categorical": True,
-            "seed": 0,  
+            "seed": 0,
             "verbosity": 0,
         }
 
@@ -981,7 +981,9 @@ class TestXGBoostModels(unittest.TestCase):
         dtrain = xgboost.DMatrix(X, label=y, enable_categorical=True)
 
         # Train with native API
-        model_native = xgboost.train(params, dtrain, num_boost_round=params["n_estimators"])
+        model_native = xgboost.train(
+            params, dtrain, num_boost_round=params["n_estimators"]
+        )
 
         # Convert to ONNX (works with Booster)
         onnx_model = convert_xgboost(
@@ -990,21 +992,18 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET,
         )
 
-        print(onnx_model)
-
         cat_codes = X["f0"].cat.codes.to_numpy().astype(np.float32).reshape(-1, 1)
         num_col = X["f1"].to_numpy().astype(np.float32).reshape(-1, 1)
         X_onnx = np.concatenate([cat_codes, num_col], axis=1)
 
         # Compare predictions
-        expected = model_native.predict(dtrain).astype(np.float32)  
+        expected = model_native.predict(dtrain).astype(np.float32)
         sess = InferenceSession(
             onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
         )
         input_name = sess.get_inputs()[0].name
         got = sess.run(None, {input_name: X_onnx})[0].ravel().astype(np.float32)
         np.testing.assert_almost_equal(expected, got, decimal=4)
-        
 
         # Test onnx backend
         dump_data_and_model(
@@ -1012,9 +1011,8 @@ class TestXGBoostModels(unittest.TestCase):
             model_native,
             onnx_model,
             basename="XGBRegressorCategoricalFeaturesNative",
-            feature_names=["f0", "f1"]
+            feature_names=["f0", "f1"],
         )
-
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     @unittest.skipIf(
@@ -1022,10 +1020,10 @@ class TestXGBoostModels(unittest.TestCase):
         "xgboost version<2.0 no supported for categories",
     )
     @unittest.skipIf(
-    pv.Version(ort.__version__) >= pv.Version("1.21.0") and 
-    pv.Version(ort.__version__) < pv.Version("1.23.0"),
-    "onnxruntime versions between 1.21.X and 1.22.X contain a bug for category only trees. See https://github.com/microsoft/onnxruntime/issues/24636",
-)
+        pv.Version(ort.__version__) >= pv.Version("1.21.0")
+        and pv.Version(ort.__version__) < pv.Version("1.23.0"),
+        "onnxruntime versions between 1.21.X and 1.22.X contain a bug for category only trees. See https://github.com/microsoft/onnxruntime/issues/24636",
+    )
     def test_xgb_regressor_only_categorical_hist(self):
 
         this = os.path.dirname(__file__)

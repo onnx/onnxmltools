@@ -38,7 +38,7 @@ def convert_slice(scope, operator, container):
             operator.input_full_names,
             operator.output_full_names,
             op_version=op_version,
-            **attrs
+            **attrs,
         )
     else:
         starts_name = scope.get_unique_variable_name(operator.full_name + "_starts")
@@ -61,7 +61,7 @@ def convert_slice(scope, operator, container):
             [operator.input_full_names[0], starts_name, ends_name, axes_name],
             operator.output_full_names,
             op_version=op_version,
-            **attrs
+            **attrs,
         )
 
 

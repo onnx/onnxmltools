@@ -172,7 +172,7 @@ def convert_tree_ensemble_model(scope, operator, container):
                 feature_vector_name,
                 operator.output_full_names,
                 op_domain="ai.onnx.ml",
-                **attrs
+                **attrs,
             )
         else:
             container.add_node(
@@ -180,7 +180,7 @@ def convert_tree_ensemble_model(scope, operator, container):
                 operator.input_full_names,
                 operator.output_full_names,
                 op_domain="ai.onnx.ml",
-                **attrs
+                **attrs,
             )
     else:
         # For classifiers, due to the different representation of classes' probabilities, we need to add some
@@ -237,7 +237,7 @@ def convert_tree_ensemble_model(scope, operator, container):
                 feature_vector_name,
                 [label_output_name, proba_tensor_name],
                 op_domain="ai.onnx.ml",
-                **attrs
+                **attrs,
             )
 
             # Add ZipMap to convert probability tensor into probability map
@@ -246,7 +246,7 @@ def convert_tree_ensemble_model(scope, operator, container):
                 [proba_tensor_name],
                 [proba_output_name],
                 op_domain="ai.onnx.ml",
-                **zipmap_attrs
+                **zipmap_attrs,
             )
         else:
             # Add support vector classifier without probability output
@@ -255,7 +255,7 @@ def convert_tree_ensemble_model(scope, operator, container):
                 feature_vector_name,
                 [label_output_name, proba_tensor_name],
                 op_domain="ai.onnx.ml",
-                **attrs
+                **attrs,
             )
 
 

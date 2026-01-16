@@ -23,7 +23,7 @@ def convert_feature_vectorizer(scope, operator, container):
                 [variable.full_name],
                 [scaled_name],
                 op_domain="ai.onnx.ml",
-                **scaler_attrs
+                **scaler_attrs,
             )
             inputs.append(scaled_name)
         else:
@@ -37,7 +37,7 @@ def convert_feature_vectorizer(scope, operator, container):
         inputs,
         [operator.outputs[0].full_name],
         op_domain="ai.onnx.ml",
-        **attrs
+        **attrs,
     )
 
 
