@@ -1,5 +1,19 @@
 # Change Logs
 
+## 1.16.0
+
+* Improve xgboost categorical feature support
+  [#743](https://github.com/onnx/onnxmltools/pull/743)
+
+## 1.15.0
+
+* Add support for gamma and tweedie distributions for xgboost
+  [#742](https://github.com/onnx/onnxmltools/pull/742)
+* Support xgboost 3, including for multiclass problems
+  [#736](https://github.com/onnx/onnxmltools/pull/736)
+* Add support to convert xgboost models with categorical features
+  [#734](https://github.com/onnx/onnxmltools/pull/734)
+
 ## 1.14.0
 
 * Add tweedie objective to LightGBM options
