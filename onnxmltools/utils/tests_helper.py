@@ -23,6 +23,7 @@ def dump_data_and_model(
     backend="onnxruntime",
     context=None,
     allow_failure=None,
+    feature_names=None,
     verbose=False,
 ):
     """
@@ -123,7 +124,7 @@ def dump_data_and_model(
             from ..convert.xgboost._parse import _get_attributes
             from xgboost import DMatrix
 
-            datax = DMatrix(data)
+            datax = DMatrix(data, feature_names=feature_names)
             model_dict = _get_attributes(model)
             if model_dict["objective"].startswith("binary"):
                 score = model.predict(datax)
