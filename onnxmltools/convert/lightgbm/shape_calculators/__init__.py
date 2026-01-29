@@ -3,3 +3,4 @@
 # To register shape calculators for lightgbm operators, import associated modules here.
 from . import Classifier
 from . import Regressor
+from . import Ranker

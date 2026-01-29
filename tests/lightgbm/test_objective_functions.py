@@ -12,7 +12,7 @@ from onnxmltools import convert_lightgbm
 from onnxruntime import InferenceSession
 from pandas.core.frame import DataFrame
 
-from lightgbm import LGBMRegressor, Booster, Dataset
+from lightgbm import LGBMRanker, LGBMRegressor, Booster, Dataset
 
 _N_ROWS = 10_000
 _N_COLS = 10
@@ -38,6 +38,11 @@ class ObjectiveTest(unittest.TestCase):
         "quantile",
         "huber",
         "tweedie",
+    )
+
+    _ranker_objectives: Tuple[str] = (
+        "lambdarank",
+        "rank_xendcg",
     )
 
     @staticmethod
@@ -119,6 +124,36 @@ class ObjectiveTest(unittest.TestCase):
                     decimal=_N_DECIMALS,
                     frac=_FRAC,
                 )
+    
+    def test_objective_LGBMRanker(self):
+        """
+        Test if a LGBMRanker a with certain objective (e.g. 'lambdarank')
+        can be converted to ONNX
+        and whether the ONNX graph and the original model produce
+        almost equal predictions.
+
+        Note that this tests is a bit flaky because of precision
+        differences with ONNX and LightGBM
+        and therefore sometimes fails randomly. In these cases,
+        a retry should resolve the issue.
+        """
+        for objective in self._ranker_objectives:
+            with self.subTest(X=_X, objective=objective):
+                ranker = LGBMRanker(objective=objective, num_thread=1)
+                ranker.fit(_X, _Y)
+                ranker_onnx: ModelProto = convert_lightgbm(
+                    ranker,
+                    initial_types=self._calc_initial_types(_X),
+                    target_opset=TARGET_OPSET,
+                )
+                y_pred = ranker.predict(_X)
+                y_pred_onnx = self._predict_with_onnx(ranker_onnx, _X)
+                self._assert_almost_equal(
+                    y_pred,
+                    y_pred_onnx,
+                    decimal=_N_DECIMALS,
+                    frac=_FRAC,
+                )
 
     def test_objective_Booster(self):
         """
@@ -132,7 +167,9 @@ class ObjectiveTest(unittest.TestCase):
         and therefore sometimes fails randomly. In these cases,
         a retry should resolve the issue.
         """
-        for objective in self._regressor_objectives:
+        objectives = self._regressor_objectives + self._ranker_objectives
+
+        for objective in objectives:
             with self.subTest(X=_X, objective=objective):
                 ds = Dataset(_X, feature_name="auto").construct()
                 ds.set_label(_Y)
