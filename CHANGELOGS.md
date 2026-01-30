@@ -1,5 +1,7 @@
 # Change Logs
 
+## 1.17.0
+
 ## 1.16.0
 
 * Add LGBMRanker support
