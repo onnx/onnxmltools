@@ -6,7 +6,7 @@ This framework converts any machine learned model into onnx format
 which is a common language to describe any machine learned model.
 """
 
-__version__ = "1.16.0"
+__version__ = "1.17.0"
 __author__ = "ONNX"
 __producer__ = "OnnxMLTools"
 __producer_version__ = __version__
