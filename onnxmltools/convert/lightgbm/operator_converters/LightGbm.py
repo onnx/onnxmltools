@@ -2,6 +2,7 @@
 
 import copy
 import numbers
+import pprint
 from collections import deque, Counter
 import ctypes
 import json
@@ -549,29 +550,43 @@ def convert_lightgbm(scope, operator, container):
     # Create different attributes for classifier and
     # regressor, respectively
     post_transform = None
-    if gbm_text["objective"].startswith("binary"):
-        n_classes = 1
-        attrs["post_transform"] = "LOGISTIC"
-    elif gbm_text["objective"].startswith("multiclass"):
-        n_classes = gbm_text["num_class"]
-        attrs["post_transform"] = "SOFTMAX"
-    elif gbm_text["objective"].startswith(("regression", "quantile", "huber")):
-        n_classes = 1  # Regressor has only one output variable
-        attrs["post_transform"] = "NONE"
-        attrs["n_targets"] = n_classes
-    elif gbm_text["objective"].startswith(("poisson", "gamma", "tweedie")):
-        n_classes = 1  # Regressor has only one output variable
-        attrs["n_targets"] = n_classes
-        # 'Exp' is not a supported post_transform value in the ONNX spec yet,
-        # so we need to add an 'Exp' post transform node to the model
-        attrs["post_transform"] = "NONE"
-        post_transform = "Exp"
-    else:
-        raise RuntimeError(
-            "LightGBM objective should be cleaned already not '{}'.".format(
-                gbm_text["objective"]
+    if "objective" not in gbm_text:
+        if "num_class" in gbm_text:
+            n_classes = gbm_text["num_class"]
+            if n_classes == 1:
+                attrs["post_transform"] = "LOGISTIC"
+            else:
+                attrs["post_transform"] = "NONE"
+            objective = "binary"
+        else:
+            raise NotImplementedError(
+                f"Objective not found in {pprint.pformat(gbm_text)}, custom objective are not fully supported."
             )
-        )
+    else:
+        objective = gbm_text["objective"]
+        if gbm_text["objective"].startswith("binary"):
+            n_classes = 1
+            attrs["post_transform"] = "LOGISTIC"
+        elif gbm_text["objective"].startswith("multiclass"):
+            n_classes = gbm_text["num_class"]
+            attrs["post_transform"] = "SOFTMAX"
+        elif gbm_text["objective"].startswith(("regression", "quantile", "huber")):
+            n_classes = 1  # Regressor has only one output variable
+            attrs["post_transform"] = "NONE"
+            attrs["n_targets"] = n_classes
+        elif gbm_text["objective"].startswith(("poisson", "gamma", "tweedie")):
+            n_classes = 1  # Regressor has only one output variable
+            attrs["n_targets"] = n_classes
+            # 'Exp' is not a supported post_transform value in the ONNX spec yet,
+            # so we need to add an 'Exp' post transform node to the model
+            attrs["post_transform"] = "NONE"
+            post_transform = "Exp"
+        else:
+            raise RuntimeError(
+                "LightGBM objective should be cleaned already not '{}'.".format(
+                    gbm_text["objective"]
+                )
+            )
 
     # Use the same algorithm to parse the tree
     for i, tree in enumerate(gbm_text["tree_info"]):
@@ -608,9 +623,7 @@ def convert_lightgbm(scope, operator, container):
             attrs[k] = sorted_list
 
     # Create ONNX object
-    if gbm_text["objective"].startswith("binary") or gbm_text["objective"].startswith(
-        "multiclass"
-    ):
+    if objective.startswith("binary") or objective.startswith("multiclass"):
         # Prepare label information for both of TreeEnsembleClassifier
         class_type = onnx_proto.TensorProto.STRING
         if all(

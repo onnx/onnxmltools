@@ -3,6 +3,7 @@
 """
 Tests for CatBoostRegressor and CatBoostClassifier converter.
 """
+
 import unittest
 import warnings
 import packaging.version as pv

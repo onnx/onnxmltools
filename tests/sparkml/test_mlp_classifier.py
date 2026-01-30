@@ -22,7 +22,6 @@ from tests.sparkml.sparkml_test_utils import (
 )
 from tests.sparkml import SparkMlTestCase
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 

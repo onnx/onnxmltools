@@ -18,6 +18,7 @@ Train a model
 +++++++++++++
 
 """
+
 import os
 import matplotlib.pyplot as plt
 from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer

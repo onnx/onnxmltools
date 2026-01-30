@@ -3,6 +3,7 @@
 """
 Common function to converters and shape calculators.
 """
+
 import json
 
 

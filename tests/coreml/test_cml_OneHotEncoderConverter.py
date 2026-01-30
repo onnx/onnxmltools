@@ -3,6 +3,7 @@
 """
 Main functions to convert machine learned model from *Core ML* model to *ONNX*.
 """
+
 import os
 import unittest
 import warnings
@@ -24,7 +25,6 @@ from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from sklearn.preprocessing import OneHotEncoder
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils.tests_helper import dump_data_and_model
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 

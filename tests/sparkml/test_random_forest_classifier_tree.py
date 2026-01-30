@@ -17,7 +17,6 @@ from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml import SparkMlTestCase
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 

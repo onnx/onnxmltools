@@ -18,7 +18,6 @@ if XGBRFRegressor is not None:
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 

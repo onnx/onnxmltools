@@ -18,6 +18,7 @@ Train a model
 +++++++++++++
 
 """
+
 import os
 import numpy
 import matplotlib.pyplot as plt

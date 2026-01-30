@@ -23,7 +23,6 @@ from tests.sparkml.sparkml_test_utils import (
 from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import StringIndexer, VectorIndexer
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
@@ -80,7 +79,7 @@ class TestSparkmRandomForestClassifier(SparkMlTestCase):
         # run the model
         predicted = model.transform(data)
         data_np = {
-            "label": data.toPandas().label.values.reshape((-1, 1)),
+            "label": numpy.asarray(data.toPandas().label.values).reshape((-1, 1)),
             "features": data.toPandas()
             .features.apply(lambda x: pandas.Series(x.toArray()))
             .values.astype(numpy.float32),

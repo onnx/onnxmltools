@@ -40,10 +40,8 @@ def convert(
         equivalent to the input scikit-learn model
     """
     if initial_types is None:
-        raise ValueError(
-            "Initial types are required. See usage of convert(...) in \
-                         onnxmltools.convert.libsvm.convert for details"
-        )
+        raise ValueError("Initial types are required. See usage of convert(...) in \
+                         onnxmltools.convert.libsvm.convert for details")
 
     if name is None:
         name = str(uuid4().hex)

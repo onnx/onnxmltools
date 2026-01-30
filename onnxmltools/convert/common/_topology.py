@@ -9,7 +9,6 @@ from ._container import ModelComponentContainer
 from .onnx_ex import get_maximum_opset_supported, OPSET_TO_IR_VERSION
 from .utils import get_model_version, get_domain, get_producer_version, get_producer
 
-
 KNOWN_METADATA_PROPS = {
     "Image.BitmapPixelFormat": ["gray8", "rgb8", "bgr8", "rgba8", "bgra8"],
     "Image.ColorSpaceGamma": ["linear", "srgb"],

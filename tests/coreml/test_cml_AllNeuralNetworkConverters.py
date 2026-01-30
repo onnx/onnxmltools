@@ -21,7 +21,6 @@ from coremltools.models import datatypes
 from coremltools.proto.FeatureTypes_pb2 import ImageFeatureType
 from onnxmltools import convert_coreml
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 

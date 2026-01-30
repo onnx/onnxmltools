@@ -16,7 +16,6 @@ from onnxmltools.utils import dump_binary_classification, dump_multiple_classifi
 from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
@@ -40,8 +39,8 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
             "dummy",
             input_types=[("X", FloatTensorType([None, X.shape[1]]))],
             target_opset=TARGET_OPSET,
-        )
-        assert "zipmap" in str(onx).lower()
+        )[0]
+        assert "ZipMap" in [n.op_type for n in onx.graph.node]
 
     def test_lightgbm_classifier_nozipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2], [1, 5], [6, 2]]

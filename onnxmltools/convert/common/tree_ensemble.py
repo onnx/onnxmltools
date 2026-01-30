@@ -64,7 +64,7 @@ def add_node(
     attr_pairs["nodes_values"].append(value)
     attr_pairs["nodes_truenodeids"].append(true_child_id)
     attr_pairs["nodes_falsenodeids"].append(false_child_id)
-    attr_pairs["nodes_missing_value_tracks_true"].append(False)
+    attr_pairs["nodes_missing_value_tracks_true"].append(0)
     attr_pairs["nodes_hitrates"].append(1.0)
 
     # Add leaf information for making prediction

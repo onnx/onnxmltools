@@ -269,11 +269,11 @@ def convert_sklearn(
     return convert_skl2onnx(
         model,
         name,
-        initial_types,
-        doc_string,
-        target_opset,
-        custom_conversion_functions,
-        custom_shape_calculators,
+        initial_types=initial_types,
+        doc_string=doc_string,
+        target_opset=target_opset,
+        custom_conversion_functions=custom_conversion_functions,
+        custom_shape_calculators=custom_shape_calculators,
     )
 
 

@@ -17,7 +17,6 @@ if xgboost is not None:
     from onnxmltools.convert.xgboost import convert as convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 

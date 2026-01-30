@@ -3,6 +3,7 @@
 """
 Tests CoreML Imputer converter.
 """
+
 import unittest
 import packaging.version as pv
 import numpy as np
@@ -21,7 +22,6 @@ import coremltools
 from onnx.defs import onnx_opset_version
 from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.utils import dump_data_and_model
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 

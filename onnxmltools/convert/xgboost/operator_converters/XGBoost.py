@@ -13,7 +13,6 @@ except ImportError:
 from ...common._registration import register_converter
 from ..common import get_xgb_params, get_n_estimators_classifier
 
-
 Node = Dict[str, Any]
 TreeLike = Union[Node, List[Node]]
 
@@ -260,7 +259,7 @@ class XGBConverter:
         attr_pairs["nodes_values"].append(float(value))
         attr_pairs["nodes_truenodeids"].append(true_child_id)
         attr_pairs["nodes_falsenodeids"].append(false_child_id)
-        attr_pairs["nodes_missing_value_tracks_true"].append(missing)
+        attr_pairs["nodes_missing_value_tracks_true"].append(int(missing))
         if "nodes_hitrates" in attr_pairs:
             attr_pairs["nodes_hitrates"].append(hitrate)
         if mode == "LEAF":

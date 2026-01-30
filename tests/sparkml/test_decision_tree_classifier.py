@@ -22,7 +22,6 @@ from tests.sparkml.sparkml_test_utils import (
 from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import StringIndexer, VectorIndexer
 
-
 TARGET_OPSET = min(15, min(DEFAULT_OPSET_NUMBER, onnx_opset_version()))
 
 
@@ -84,7 +83,9 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         # run the model
         predicted = model.transform(data.limit(1))
         data_np = {
-            "label": data.limit(1).toPandas().label.values.reshape((-1, 1)),
+            "label": numpy.asarray(data.limit(1).toPandas().label.values).reshape(
+                (-1, 1)
+            ),
             "features": data.limit(1)
             .toPandas()
             .features.apply(lambda x: pandas.Series(x.toArray()))

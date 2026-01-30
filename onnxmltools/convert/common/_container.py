@@ -180,8 +180,7 @@ class ModelComponentContainer(ModelContainer):
         for k, v in attrs.items():
             if v is None:
                 raise ValueError(
-                    "Failed to create ONNX node. Undefined attribute pair (%s, %s) found"
-                    % (k, v)
+                    f"Failed to create ONNX node. Undefined attribute pair ({k!r}, {v!r}) found"
                 )
 
         node = helper.make_node(op_type, inputs, outputs, **attrs)

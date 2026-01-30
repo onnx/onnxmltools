@@ -120,7 +120,9 @@ def convert_tree_ensemble_model(scope, operator, container):
     nodes_values = [x.branchFeatureValue for x in nodes]
     nodes_truenodeids = [x.trueChildNodeId for x in nodes]
     nodes_falsenodeids = [x.falseChildNodeId for x in nodes]
-    nodes_missing_value_tracks_true = [x.missingValueTracksTrueChild for x in nodes]
+    nodes_missing_value_tracks_true = [
+        int(x.missingValueTracksTrueChild) for x in nodes
+    ]
     nodes_hitrates = [float(x.relativeHitRate) for x in nodes]
     nodes_modes = [get_onnx_tree_mode(x.nodeBehavior) for x in nodes]
 
