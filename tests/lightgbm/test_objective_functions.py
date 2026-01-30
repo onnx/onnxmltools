@@ -180,7 +180,7 @@ class ObjectiveTest(unittest.TestCase):
         X = np.array(X, dtype=np.float32)
         y = [0, 1, 0, 1]
         model = LGBMClassifier(
-            n_estimators=3, min_child_samples=1, num_thread=1, objective=custom_loss
+            n_estimators=3, min_child_samples=1, n_jobs=1, objective=custom_loss
         )
         model.fit(X, y)
         onx = convert_model(
