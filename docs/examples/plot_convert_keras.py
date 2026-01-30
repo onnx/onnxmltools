@@ -36,7 +36,6 @@ import onnxmltools
 from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 from onnxmltools.convert import convert_keras
 
-
 iris = load_iris()
 X, y = iris.data, iris.target
 y_multi = numpy.zeros((y.shape[0], 3), dtype=numpy.int64)

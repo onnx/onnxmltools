@@ -68,7 +68,7 @@ def _add_node(
     attr_pairs["nodes_values"].append(float(value))
     attr_pairs["nodes_truenodeids"].append(true_child_id)
     attr_pairs["nodes_falsenodeids"].append(false_child_id)
-    attr_pairs["nodes_missing_value_tracks_true"].append(missing)
+    attr_pairs["nodes_missing_value_tracks_true"].append(int(missing))
     if mode == "LEAF":
         node_attr_prefix = _node_attr_prefix(is_classifier)
         for i, w in enumerate(weights):

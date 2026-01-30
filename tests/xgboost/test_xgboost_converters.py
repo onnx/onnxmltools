@@ -3,6 +3,7 @@
 """
 Tests scilit-learn's tree-based methods' converters.
 """
+
 import os
 import unittest
 import numpy as np
@@ -35,7 +36,6 @@ from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 from onnxruntime import InferenceSession
 import onnxruntime as ort
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
@@ -893,7 +893,7 @@ class TestXGBoostModels(unittest.TestCase):
 
         this = os.path.dirname(__file__)
         df = pandas.read_csv(os.path.join(this, "data_categorical.csv"))
-        df["f0"] = df["f0"].astype("category")
+        df["f0"] = df["f0"].apply(ord).astype("category")
         X, y = df.drop("y", axis=1), df["y"]
 
         models = [
@@ -931,8 +931,8 @@ class TestXGBoostModels(unittest.TestCase):
             # Build the ONNX input:
             # - first column: category codes (int codes) cast to float32
             # - second column: numeric feature
-            cat_codes = X["f0"].cat.codes.to_numpy().astype(np.float32).reshape(-1, 1)
-            num_col = X["f1"].to_numpy().astype(np.float32).reshape(-1, 1)
+            cat_codes = X[["f0"]].values.astype(np.float32)
+            num_col = X[["f1"]].values.astype(np.float32)
             X_onnx = np.concatenate([cat_codes, num_col], axis=1)
 
             # Compare XGBoost and ONNX results.
@@ -961,7 +961,7 @@ class TestXGBoostModels(unittest.TestCase):
 
         this = os.path.dirname(__file__)
         df = pandas.read_csv(os.path.join(this, "data_categorical.csv"))
-        df["f0"] = df["f0"].astype("category")
+        df["f0"] = df["f0"].apply(ord).astype("category")
         X, y = df.drop("y", axis=1), df["y"]
         y += 5
 
@@ -992,8 +992,8 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET,
         )
 
-        cat_codes = X["f0"].cat.codes.to_numpy().astype(np.float32).reshape(-1, 1)
-        num_col = X["f1"].to_numpy().astype(np.float32).reshape(-1, 1)
+        cat_codes = X[["f0"]].values.astype(np.float32)
+        num_col = X[["f1"]].values.astype(np.float32)
         X_onnx = np.concatenate([cat_codes, num_col], axis=1)
 
         # Compare predictions
@@ -1028,7 +1028,7 @@ class TestXGBoostModels(unittest.TestCase):
 
         this = os.path.dirname(__file__)
         df = pandas.read_csv(os.path.join(this, "data_categorical.csv"))
-        df["f0"] = df["f0"].astype("category")
+        df["f0"] = df["f0"].apply(ord).astype("category")
         df = df.drop("f1", axis=1)
         X, y = df.drop("y", axis=1), df["y"]
 
@@ -1069,7 +1069,7 @@ class TestXGBoostModels(unittest.TestCase):
 
             # Build the ONNX input:
             # - first column: category codes (int codes) cast to float32
-            cat_codes = X["f0"].cat.codes.to_numpy().astype(np.float32).reshape(-1, 1)
+            cat_codes = X[["f0"]].values.astype(np.float32)
             X_onnx = np.array(cat_codes)
 
             # Compare XGBoost and ONNX results.

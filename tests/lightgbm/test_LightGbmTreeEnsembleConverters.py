@@ -16,7 +16,6 @@ from onnxmltools.utils import dump_binary_classification, dump_multiple_classifi
 from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 

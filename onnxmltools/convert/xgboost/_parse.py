@@ -16,7 +16,6 @@ except ImportError:
 from ..common.data_types import FloatTensorType
 from ..common._container import XGBoostModelContainer, Topology
 
-
 xgboost_classifier_list = [XGBClassifier]
 
 # Associate types with our operator names.

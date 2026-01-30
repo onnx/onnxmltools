@@ -42,10 +42,8 @@ def convert(
     :return: An ONNX model (type: ModelProto) which is equivalent to the input xgboost model
     """
     if initial_types is None:
-        raise ValueError(
-            "Initial types are required. See usage of convert(...) in \
-                           onnxmltools.convert.xgboost.convert for details"
-        )
+        raise ValueError("Initial types are required. See usage of convert(...) in \
+                           onnxmltools.convert.xgboost.convert for details")
     if name is None:
         name = str(uuid4().hex)
 

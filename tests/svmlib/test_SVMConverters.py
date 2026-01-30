@@ -3,6 +3,7 @@
 """
 Tests scikit-linear converter.
 """
+
 import tempfile
 import numpy
 import os

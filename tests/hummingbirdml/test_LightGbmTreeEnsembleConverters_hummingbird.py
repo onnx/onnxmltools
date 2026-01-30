@@ -13,7 +13,6 @@ from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils.tests_helper import convert_model
 from onnxmltools.utils import dump_data_and_model
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 # PyTorch 1.8.1 supports up to opset version 13.
 HUMMINGBIRD_TARGET_OPSET = min(TARGET_OPSET, 13)

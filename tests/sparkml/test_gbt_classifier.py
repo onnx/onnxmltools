@@ -20,7 +20,6 @@ from tests.sparkml.sparkml_test_utils import (
 from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import StringIndexer
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 

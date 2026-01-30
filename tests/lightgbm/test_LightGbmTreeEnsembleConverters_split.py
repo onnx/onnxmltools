@@ -14,7 +14,6 @@ from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.convert import convert_lightgbm
 
-
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 ort_version = ".".join(ort_version.split(".")[:2])
 

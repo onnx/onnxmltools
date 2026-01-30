@@ -18,6 +18,7 @@ Train a model
 +++++++++++++
 
 """
+
 import os
 import numpy
 import onnx
@@ -32,7 +33,6 @@ from h2o.estimators.gbm import H2OGradientBoostingEstimator
 from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 import onnxmltools
 from onnxmltools.convert import convert_h2o
-
 
 iris = load_iris()
 X, y = iris.data, iris.target

@@ -3,6 +3,7 @@
 """
 Tests CoreML TreeEnsembleRegressor converter.
 """
+
 import os
 import sys
 import unittest
@@ -24,7 +25,6 @@ from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml import convert as convert_cml
 from xgboost import XGBRegressor
 from onnxmltools.utils import dump_data_and_model
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
