@@ -60,7 +60,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
                 return "passthrough"
             if column.dtype in ["O"]:
                 return OneHotEncoder(sparse_output=False)
-            raise ValueError()
+            raise ValueError(f"unexpected column type {column.dtype}")
 
         return ColumnTransformer(
             [(col, transformer_for_column(data[col]), [col]) for col in data.columns],
@@ -84,7 +84,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     @unittest.skipIf(
-        pv.Version(skl2onnx.__version__) <= pv.Version("1.19.1"),
+        pv.Version(skl2onnx.__version__) <= pv.Version("1.20.1"),
         reason="broken backward compatibility",
     )
     def test_xgboost_10_skl_missing(self):
@@ -92,7 +92,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     @unittest.skipIf(
-        pv.Version(skl2onnx.__version__) <= pv.Version("1.19.1"),
+        pv.Version(skl2onnx.__version__) <= pv.Version("1.20.1"),
         reason="broken backward compatibility",
     )
     def test_xgboost_10_skl_zero(self):
@@ -103,7 +103,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     @unittest.skipIf(
-        pv.Version(skl2onnx.__version__) <= pv.Version("1.19.1"),
+        pv.Version(skl2onnx.__version__) <= pv.Version("1.20.1"),
         reason="broken backward compatibility",
     )
     def test_xgboost_10_skl_zero_replace(self):
@@ -122,6 +122,8 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
                 data[col].fillna(0, inplace=True)
             elif dtype in ["O"]:
                 data[col].fillna("N/A", inplace=True)
+            elif dtype in [str, "str"]:
+                data[col] = data[col].astype(object).fillna("N/A")
 
         data["pclass"] = data["pclass"] * float(1)
         full_df = data.drop("survived", axis=1)
