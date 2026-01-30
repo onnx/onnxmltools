@@ -581,11 +581,13 @@ def convert_lightgbm(scope, operator, container):
             # so we need to add an 'Exp' post transform node to the model
             attrs["post_transform"] = "NONE"
             post_transform = "Exp"
+        elif gbm_text["objective"].startswith(("lambdarank", "rank_xendcg")):
+            n_classes = 1  # Ranker has only one output variable
+            attrs["n_targets"] = n_classes
+            attrs["post_transform"] = "NONE"
         else:
             raise RuntimeError(
-                "LightGBM objective should be cleaned already not '{}'.".format(
-                    gbm_text["objective"]
-                )
+                f"LightGBM objective should be cleaned already not {gbm_text['objective']!r}."
             )
 
     # Use the same algorithm to parse the tree
@@ -1039,3 +1041,4 @@ def convert_lgbm_zipmap(scope, operator, container):
 register_converter("LgbmClassifier", convert_lightgbm)
 register_converter("LgbmRegressor", convert_lightgbm)
 register_converter("LgbmZipMap", convert_lgbm_zipmap)
+register_converter("LgbmRanker", convert_lightgbm)
