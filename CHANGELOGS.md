@@ -2,6 +2,9 @@
 
 ## 1.16.0
 
+* Add LGBMRanker support
+  initial PR [754](https://github.com/onnx/onnxmltools/pull/754),
+  finalized in PR [755](https://github.com/onnx/onnxmltools/pull/755)
 * Add partial support for custom objective
   [#753](https://github.com/onnx/onnxmltools/pull/753)
 * Improve xgboost categorical feature support
