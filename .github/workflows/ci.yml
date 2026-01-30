@@ -12,24 +12,24 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python_version: ['3.13', '3.12', '3.11', '3.10', '3.9']
+        python_version: ['3.13', '3.12', '3.11', '3.10']
         include:
           - python_version: '3.13'
             documentation: 1
             numpy_version: '>=2'
             scipy_version: '>=1.7.0'
-            onnx_version: 'onnx==1.18.0'
-            onnxrt_version: 'onnxruntime==1.22.0'
-            sklearn_version: '==1.6.0'
+            onnx_version: 'onnx>=1.18.0'
+            onnxrt_version: 'onnxruntime>=1.22.0'
+            sklearn_version: '>=1.8.0'
             lgbm_version: ">=4"
             xgboost_version: ">=2"
           - python_version: '3.12'
             documentation: 1
             numpy_version: '>=1.21.1'
             scipy_version: '>=1.7.0'
-            onnx_version: 'onnx==1.17.0'
+            onnx_version: 'onnx==1.18.0'
             onnxrt_version: 'onnxruntime==1.20.1'
-            sklearn_version: '==1.6.0'
+            sklearn_version: '==1.7.0'
             lgbm_version: ">=4"
             xgboost_version: ">=2"
           - python_version: '3.11'
@@ -38,7 +38,7 @@ jobs:
             scipy_version: '>=1.7.0'
             onnx_version: 'onnx<1.16.0'
             onnxrt_version: 'onnxruntime==1.17.3'
-            sklearn_version: '==1.4.2'
+            sklearn_version: '==1.6.0'
             lgbm_version: ">=4"
             xgboost_version: ">=2"
           - python_version: '3.10'
@@ -47,15 +47,6 @@ jobs:
             scipy_version: '>=1.7.0'
             onnx_version: 'onnx==1.14.1'
             onnxrt_version: 'onnxruntime==1.16.3'
-            sklearn_version: '==1.4.2'
-            lgbm_version: "<4"
-            xgboost_version: "<2"
-          - python_version: '3.9'
-            documentation: 0
-            numpy_version: '<2'
-            scipy_version: '>=1.7.0'
-            onnx_version: 'onnx==1.13.0'
-            onnxrt_version: 'onnxruntime==1.14.1'
             sklearn_version: '==1.4.2'
             lgbm_version: "<4"
             xgboost_version: "<2"
