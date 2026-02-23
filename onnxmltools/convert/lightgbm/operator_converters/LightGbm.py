@@ -535,6 +535,79 @@ def _split_tree_ensemble_atts(attrs, split):
     return results
 
 
+def _add_decision_leaf_output(scope, operator, container, attrs, n_classes, gbm_text):
+    """
+    Adds an additional ONNX ``TreeEnsembleRegressor`` node that produces leaf
+    indices (one per tree) for each input sample.  The output is cast to int64
+    and written to the last output variable of *operator*.
+
+    :param scope: Scope object
+    :param operator: the operator being converted
+    :param container: the container to add nodes to
+    :param attrs: the attribute dict already populated with nodes_* entries
+    :param n_classes: number of classes / output targets in the main model
+    :param gbm_text: the raw JSON dump of the booster
+    """
+    n_trees = len(gbm_text["tree_info"])
+
+    # Build a TreeEnsembleRegressor that outputs the sequential leaf index
+    # reached in each tree.  One output column per tree (n_targets = n_trees).
+    leaf_attrs = {k: copy.deepcopy(v) for k, v in attrs.items() if k.startswith("nodes_")}
+    leaf_attrs["name"] = operator.full_name + "_leaf"
+    leaf_attrs["n_targets"] = n_trees
+    leaf_attrs["post_transform"] = "NONE"
+    leaf_attrs["aggregate_function"] = "SUM"
+
+    # For each leaf in the original attrs (class_treeids / class_nodeids),
+    # map tree i → output column i and assign a sequential leaf index
+    # within that tree as the weight.
+    leaf_count_per_tree: dict = {}
+    target_treeids = []
+    target_nodeids = []
+    target_ids = []
+    target_weights = []
+
+    for tree_id, node_id in zip(attrs["class_treeids"], attrs["class_nodeids"]):
+        count = leaf_count_per_tree.get(tree_id, 0)
+        target_treeids.append(tree_id)
+        target_nodeids.append(node_id)
+        target_ids.append(tree_id)
+        target_weights.append(float(count))
+        leaf_count_per_tree[tree_id] = count + 1
+
+    leaf_attrs["target_treeids"] = target_treeids
+    leaf_attrs["target_nodeids"] = target_nodeids
+    leaf_attrs["target_ids"] = target_ids
+    leaf_attrs["target_weights"] = target_weights
+
+    # onnx does not support mixed int/float lists
+    update = {}
+    for k, v in leaf_attrs.items():
+        if not isinstance(v, list):
+            continue
+        tps = set(map(type, v))
+        if len(tps) == 2 and tps == {int, float}:
+            update[k] = [float(x) for x in v]
+    leaf_attrs.update(update)
+
+    leaf_output_name = scope.get_unique_variable_name("leaf_output")
+    container.add_node(
+        "TreeEnsembleRegressor",
+        operator.input_full_names,
+        leaf_output_name,
+        op_domain="ai.onnx.ml",
+        **leaf_attrs,
+    )
+    # Cast float output to int64 for the leaf_indices output variable
+    apply_cast(
+        scope,
+        leaf_output_name,
+        operator.outputs[-1].full_name,
+        container,
+        to=TensorProto.INT64,
+    )
+
+
 def convert_lightgbm(scope, operator, container):
     """
     Converters for *lightgbm*.
@@ -623,6 +696,12 @@ def convert_lightgbm(scope, operator, container):
                 pair[1] for pair in sorted(merged_indexes, key=lambda x: x[0])
             ]
             attrs[k] = sorted_list
+
+    # Build leaf index output when decision_leaf=True
+    if getattr(operator, "decision_leaf", False):
+        _add_decision_leaf_output(
+            scope, operator, container, attrs, n_classes, gbm_text
+        )
 
     # Create ONNX object
     if objective.startswith("binary") or objective.startswith("multiclass"):
@@ -833,7 +912,7 @@ def convert_lightgbm(scope, operator, container):
             apply_div(
                 scope,
                 [output_name, denominator_name],
-                operator.output_full_names,
+                operator.outputs[0].full_name,
                 container,
                 broadcast=1,
             )
@@ -841,14 +920,14 @@ def convert_lightgbm(scope, operator, container):
             container.add_node(
                 post_transform,
                 output_name,
-                operator.output_full_names,
+                operator.outputs[0].full_name,
                 name=scope.get_unique_operator_name(post_transform),
             )
         else:
             container.add_node(
                 "Identity",
                 output_name,
-                operator.output_full_names,
+                operator.outputs[0].full_name,
                 name=scope.get_unique_operator_name("Identity"),
             )
 
