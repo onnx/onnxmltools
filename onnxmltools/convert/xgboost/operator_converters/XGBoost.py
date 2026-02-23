@@ -508,7 +508,11 @@ class XGBClassifierConverter(XGBConverter):
                 attr_pairs["base_values"] = base_score * ncl
             else:
                 attr_pairs["base_values"] = base_score
-            attr_pairs["class_ids"] = [v % ncl for v in attr_pairs["class_treeids"]]
+            num_parallel_tree = params.get("num_parallel_tree", 1)
+            attr_pairs["class_ids"] = [
+                (v % (ncl * num_parallel_tree)) // num_parallel_tree
+                for v in attr_pairs["class_treeids"]
+            ]
 
         classes = xgb_node.classes_
         if (
