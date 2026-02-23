@@ -10,6 +10,65 @@ except Exception:
 
 class TestXGBoostIssues(unittest.TestCase):
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_xgbregressor_binary_logistic_with_subsample(self):
+        """
+        XGBRegressor with binary:logistic and subsample<1.0 should produce
+        results matching XGBoost's predict() output. The base_score in the
+        model config is stored in probability space, but leaf values are in
+        log-odds space; the converter must apply logit(base_score) and then
+        a Sigmoid node to replicate XGBoost's sigmoid(logit(base) + leaves).
+        """
+        import numpy as np
+        import pandas as pd
+        import onnxruntime
+        from onnxmltools.convert import convert_xgboost
+        from onnxmltools.convert.common.data_types import FloatTensorType
+
+        df = pd.DataFrame(
+            {
+                "f1": [1.0, 2.0, 3.0, 4.0, 2.0, 3.0, 1.0, 2.0],
+                "label": [1, 0, 1, 0, 1, 1, 0, 1],
+            }
+        )
+        X_df = df.drop(columns=["label"])
+        y = df["label"]
+        X_np = df["f1"].values.reshape(-1, 1).astype(np.float32)
+
+        for subsample in [1.0, 0.95]:
+            params = {
+                "max_depth": 1,
+                "n_estimators": 3,
+                "subsample": subsample,
+                "objective": "binary:logistic",
+                "random_state": 42,
+            }
+            model = XGBRegressor(**params)
+            model.fit(X_df, y)
+
+            initial_types = [("f1", FloatTensorType([None, 1]))]
+            onnx_model = convert_xgboost(
+                model,
+                "XGBoostXGBRegressor",
+                initial_types,
+                target_opset=13,
+            )
+
+            sess = onnxruntime.InferenceSession(
+                onnx_model.SerializeToString(),
+                providers=["CPUExecutionProvider"],
+            )
+            onnx_output = sess.run(None, {"f1": X_np})[0]
+            expected = model.predict(X_df).reshape(-1, 1).astype(np.float32)
+
+            np.testing.assert_allclose(
+                onnx_output,
+                expected,
+                rtol=1e-5,
+                atol=1e-5,
+                err_msg=f"ONNX output mismatch for subsample={subsample}",
+            )
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_issue_676(self):
         import json
         import onnxruntime
