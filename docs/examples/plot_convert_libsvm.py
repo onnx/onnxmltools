@@ -18,6 +18,7 @@ Train a model
 +++++++++++++
 
 """
+
 import os
 import matplotlib.pyplot as plt
 from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
@@ -31,7 +32,7 @@ import svmutil
 import onnxruntime as rt
 
 import onnxmltools
-from onnxconverter_common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 from onnxmltools.convert import convert_libsvm
 
 iris = load_iris()

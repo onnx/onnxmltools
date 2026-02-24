@@ -3,14 +3,14 @@
 """
 Tests utilities.
 """
+
 import os
 import unittest
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 import onnxmltools
 from onnxmltools.utils import load_model, save_model
 from onnxmltools.utils import set_model_version, set_model_domain, set_model_doc_string
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 

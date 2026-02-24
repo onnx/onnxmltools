@@ -4,10 +4,11 @@ import packaging.version as pv
 import unittest
 import sys
 import onnx
+import numpy
 import pandas
 from pyspark.ml.feature import Tokenizer
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
 from tests.sparkml.sparkml_test_utils import (
@@ -16,7 +17,6 @@ from tests.sparkml.sparkml_test_utils import (
     compare_results,
 )
 from tests.sparkml import SparkMlTestCase
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
@@ -40,7 +40,7 @@ class TestSparkmlTokenizer(SparkMlTestCase):
         self.assertTrue(model_onnx is not None)
         # run the model
         expected = predicted.toPandas().words.apply(pandas.Series).values
-        data_np = data.toPandas().text.values.reshape([-1])
+        data_np = numpy.asarray(data.toPandas().text.values).reshape([-1])
         paths = save_data_models(
             data_np, expected, model, model_onnx, basename="SparkmlTokenizer"
         )

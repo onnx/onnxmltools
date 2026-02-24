@@ -3,11 +3,12 @@
 """
 Tests converters for a baseline.
 """
+
 import os
 import re
 import unittest
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 
 try:
     import coremltools

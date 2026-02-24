@@ -426,7 +426,7 @@ def convert_pooling(scope, operator, container):
                 Z_prime_name,
                 Z_prime_prime_name,
                 op_version=2,
-                **lp_pool_attrs
+                **lp_pool_attrs,
             )
 
             # Element-wisely apply adjustment coefficients

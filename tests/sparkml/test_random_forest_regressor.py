@@ -12,7 +12,7 @@ from pyspark.ml.linalg import VectorUDT, SparseVector
 from pyspark.ml.regression import RandomForestRegressor
 from pyspark.ml import Pipeline
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType, StringTensorType
 from tests.sparkml.sparkml_test_utils import (
@@ -22,7 +22,6 @@ from tests.sparkml.sparkml_test_utils import (
 )
 from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import VectorIndexer, StringIndexer
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
@@ -80,7 +79,9 @@ class TestSparkmRandomForestRegressor(SparkMlTestCase):
         # run the model
         predicted = model.transform(data.limit(1))
         data_np = {
-            "label": data.limit(1).toPandas().label.values.reshape((-1, 1)),
+            "label": numpy.asarray(data.limit(1).toPandas().label.values).reshape(
+                (-1, 1)
+            ),
             "features": data.limit(1)
             .toPandas()
             .features.apply(lambda x: pandas.Series(x.toArray()))

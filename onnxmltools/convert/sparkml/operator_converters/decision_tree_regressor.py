@@ -5,7 +5,7 @@ from ...common.tree_ensemble import (
     add_tree_to_attribute_pairs,
     get_default_tree_regressor_attribute_pairs,
 )
-from ...common.utils import check_input_and_output_numbers
+from ...common.shape_calculator import check_input_and_output_numbers
 from ...sparkml.operator_converters.decision_tree_classifier import (
     save_read_sparkml_model_data,
 )
@@ -36,7 +36,7 @@ def convert_decision_tree_regressor(scope, operator, container):
         operator.input_full_names,
         operator.output_full_names,
         op_domain="ai.onnx.ml",
-        **new_attrs
+        **new_attrs,
     )
 
 

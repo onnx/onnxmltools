@@ -2,11 +2,13 @@
 
 import copy
 import numbers
+import pprint
 from collections import deque, Counter
 import ctypes
 import json
 import numpy as np
 from onnx import TensorProto
+import onnx as onnx_proto
 from ...common._apply_operation import (
     apply_div,
     apply_reshape,
@@ -16,7 +18,6 @@ from ...common._apply_operation import (
 )
 from ...common._registration import register_converter
 from ...common.tree_ensemble import get_default_tree_classifier_attribute_pairs
-from ....proto import onnx_proto
 
 
 def has_tqdm():
@@ -549,29 +550,45 @@ def convert_lightgbm(scope, operator, container):
     # Create different attributes for classifier and
     # regressor, respectively
     post_transform = None
-    if gbm_text["objective"].startswith("binary"):
-        n_classes = 1
-        attrs["post_transform"] = "LOGISTIC"
-    elif gbm_text["objective"].startswith("multiclass"):
-        n_classes = gbm_text["num_class"]
-        attrs["post_transform"] = "SOFTMAX"
-    elif gbm_text["objective"].startswith(("regression", "quantile")):
-        n_classes = 1  # Regressor has only one output variable
-        attrs["post_transform"] = "NONE"
-        attrs["n_targets"] = n_classes
-    elif gbm_text["objective"].startswith(("poisson", "gamma")):
-        n_classes = 1  # Regressor has only one output variable
-        attrs["n_targets"] = n_classes
-        # 'Exp' is not a supported post_transform value in the ONNX spec yet,
-        # so we need to add an 'Exp' post transform node to the model
-        attrs["post_transform"] = "NONE"
-        post_transform = "Exp"
-    else:
-        raise RuntimeError(
-            "LightGBM objective should be cleaned already not '{}'.".format(
-                gbm_text["objective"]
+    if "objective" not in gbm_text:
+        if "num_class" in gbm_text:
+            n_classes = gbm_text["num_class"]
+            if n_classes == 1:
+                attrs["post_transform"] = "LOGISTIC"
+            else:
+                attrs["post_transform"] = "NONE"
+            objective = "binary"
+        else:
+            raise NotImplementedError(
+                f"Objective not found in {pprint.pformat(gbm_text)}, custom objective are not fully supported."
             )
-        )
+    else:
+        objective = gbm_text["objective"]
+        if gbm_text["objective"].startswith("binary"):
+            n_classes = 1
+            attrs["post_transform"] = "LOGISTIC"
+        elif gbm_text["objective"].startswith("multiclass"):
+            n_classes = gbm_text["num_class"]
+            attrs["post_transform"] = "SOFTMAX"
+        elif gbm_text["objective"].startswith(("regression", "quantile", "huber")):
+            n_classes = 1  # Regressor has only one output variable
+            attrs["post_transform"] = "NONE"
+            attrs["n_targets"] = n_classes
+        elif gbm_text["objective"].startswith(("poisson", "gamma", "tweedie")):
+            n_classes = 1  # Regressor has only one output variable
+            attrs["n_targets"] = n_classes
+            # 'Exp' is not a supported post_transform value in the ONNX spec yet,
+            # so we need to add an 'Exp' post transform node to the model
+            attrs["post_transform"] = "NONE"
+            post_transform = "Exp"
+        elif gbm_text["objective"].startswith(("lambdarank", "rank_xendcg")):
+            n_classes = 1  # Ranker has only one output variable
+            attrs["n_targets"] = n_classes
+            attrs["post_transform"] = "NONE"
+        else:
+            raise RuntimeError(
+                f"LightGBM objective should be cleaned already not {gbm_text['objective']!r}."
+            )
 
     # Use the same algorithm to parse the tree
     for i, tree in enumerate(gbm_text["tree_info"]):
@@ -608,9 +625,7 @@ def convert_lightgbm(scope, operator, container):
             attrs[k] = sorted_list
 
     # Create ONNX object
-    if gbm_text["objective"].startswith("binary") or gbm_text["objective"].startswith(
-        "multiclass"
-    ):
+    if objective.startswith("binary") or objective.startswith("multiclass"):
         # Prepare label information for both of TreeEnsembleClassifier
         class_type = onnx_proto.TensorProto.STRING
         if all(
@@ -645,7 +660,7 @@ def convert_lightgbm(scope, operator, container):
             operator.input_full_names,
             [label_tensor_name, probability_tensor_name],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
         prob_tensor = probability_tensor_name
@@ -771,7 +786,7 @@ def convert_lightgbm(scope, operator, container):
                 operator.input_full_names,
                 output_name,
                 op_domain="ai.onnx.ml",
-                **attrs
+                **attrs,
             )
         else:
             tree_attrs = _split_tree_ensemble_atts(attrs, split)
@@ -783,7 +798,7 @@ def convert_lightgbm(scope, operator, container):
                     operator.input_full_names,
                     tree_name,
                     op_domain="ai.onnx.ml",
-                    **ats
+                    **ats,
                 )
                 cast_name = scope.get_unique_variable_name("dtree%d" % i)
                 container.add_node(
@@ -1012,11 +1027,9 @@ def convert_lgbm_zipmap(scope, operator, container):
             operator.inputs[1].full_name,
             operator.outputs[1].full_name,
             op_domain="ai.onnx.ml",
-            **zipmap_attrs
+            **zipmap_attrs,
         )
     else:
-        # onnxconverter-common when trying to remove identity nodes
-        # if node identity is used.
         one = scope.get_unique_variable_name("one")
 
         container.add_initializer(one, onnx_proto.TensorProto.FLOAT, [], [1])
@@ -1028,3 +1041,4 @@ def convert_lgbm_zipmap(scope, operator, container):
 register_converter("LgbmClassifier", convert_lightgbm)
 register_converter("LgbmRegressor", convert_lightgbm)
 register_converter("LgbmZipMap", convert_lgbm_zipmap)
+register_converter("LgbmRanker", convert_lightgbm)

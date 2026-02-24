@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import warnings
-from ..common._container import CoremlModelContainer
-from ..common._topology import Topology
+from ..common._container import CoremlModelContainer, Topology
 from ..common.data_types import (
     find_type_conversion,
     FloatTensorType,

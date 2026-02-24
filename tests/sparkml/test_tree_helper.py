@@ -11,7 +11,7 @@ from onnx.helper import (
     make_tensor_value_info,
     make_opsetid,
 )
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxruntime import InferenceSession
 from onnxmltools.convert.sparkml.operator_converters.tree_helper import Node
 
@@ -133,21 +133,7 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
                 1.0,
                 1.0,
             ],
-            "nodes_missing_value_tracks_true": [
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-            ],
+            "nodes_missing_value_tracks_true": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             "nodes_modes": [
                 "BRANCH_LEQ",
                 "||",
@@ -364,21 +350,7 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
                 1.0,
                 1.0,
             ],
-            "nodes_missing_value_tracks_true": [
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-            ],
+            "nodes_missing_value_tracks_true": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             "nodes_modes": [
                 "BRANCH_LEQ",
                 "||",
@@ -595,21 +567,7 @@ class TestSparkmDecisionTreeClassifierBig(unittest.TestCase):
                 1.0,
                 1.0,
             ],
-            "nodes_missing_value_tracks_true": [
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-                False,
-            ],
+            "nodes_missing_value_tracks_true": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             "nodes_modes": [
                 "BRANCH_LEQ",
                 "BRANCH_LEQ",

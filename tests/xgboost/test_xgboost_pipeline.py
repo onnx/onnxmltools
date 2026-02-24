@@ -3,26 +3,35 @@
 """
 Tests scilit-learn's tree-based methods' converters.
 """
+
 import os
 import sys
 import unittest
+import packaging.version as pv
 import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
 import onnxruntime as rt
-from xgboost import XGBRegressor
+
+try:
+    from xgboost import XGBRegressor
+except Exception:
+    XGBRegressor = None
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
-from onnxconverter_common import data_types as onnxtypes
+import skl2onnx
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common import data_types as onnxtypes
 from onnxmltools.convert import convert_sklearn
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxmltools.convert.xgboost.operator_converters.XGBoost import (
-    convert_xgboost as convert_xgb,
-)
+
+if XGBRegressor is not None:
+    from onnxmltools.convert.xgboost.operator_converters.XGBoost import (
+        convert_xgboost as convert_xgb,
+    )
 
 try:
     from skl2onnx import update_registered_converter
@@ -51,7 +60,7 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
                 return "passthrough"
             if column.dtype in ["O"]:
                 return OneHotEncoder(sparse_output=False)
-            raise ValueError()
+            raise ValueError(f"unexpected column type {column.dtype}")
 
         return ColumnTransformer(
             [(col, transformer_for_column(data[col]), [col]) for col in data.columns],
@@ -73,15 +82,30 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
         res = [(col, type_for_column(data[col])) for col in data.columns]
         return res
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(skl2onnx.__version__) <= pv.Version("1.20.1"),
+        reason="broken backward compatibility",
+    )
     def test_xgboost_10_skl_missing(self):
         self.common_test_xgboost_10_skl(np.nan)
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(skl2onnx.__version__) <= pv.Version("1.20.1"),
+        reason="broken backward compatibility",
+    )
     def test_xgboost_10_skl_zero(self):
         try:
             self.common_test_xgboost_10_skl(0.0, True)
         except RuntimeError as e:
             assert "Cannot convert a XGBoost model where missing values" in str(e)
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(skl2onnx.__version__) <= pv.Version("1.20.1"),
+        reason="broken backward compatibility",
+    )
     def test_xgboost_10_skl_zero_replace(self):
         self.common_test_xgboost_10_skl(np.nan, True)
 
@@ -98,6 +122,8 @@ class TestXGBoostModelsPipeline(unittest.TestCase):
                 data[col].fillna(0, inplace=True)
             elif dtype in ["O"]:
                 data[col].fillna("N/A", inplace=True)
+            elif dtype in [str, "str"]:
+                data[col] = data[col].astype(object).fillna("N/A")
 
         data["pclass"] = data["pclass"] * float(1)
         full_df = data.drop("survived", axis=1)

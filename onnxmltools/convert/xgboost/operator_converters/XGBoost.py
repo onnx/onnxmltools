@@ -4,6 +4,7 @@ import json
 import numpy as np
 from onnx import TensorProto
 from xgboost import XGBClassifier
+from typing import Any, Dict, List, Union
 
 try:
     from xgboost import XGBRFClassifier
@@ -12,8 +13,17 @@ except ImportError:
 from ...common._registration import register_converter
 from ..common import get_xgb_params, get_n_estimators_classifier
 
+Node = Dict[str, Any]
+TreeLike = Union[Node, List[Node]]
+
 
 class XGBConverter:
+    """
+    Base class for converting XGBoost models to ONNX format.
+    This class provides methods to validate the model, retrieve parameters,
+    and fill in the attributes for the ONNX TreeEnsemble node.
+    """
+
     @staticmethod
     def get_xgb_params(xgb_node):
         """
@@ -47,13 +57,130 @@ class XGBConverter:
         else:
             best_ntree_limit = params.get("best_ntree_limit", None)
         if base_score is None:
-            base_score = 0.5
+            base_score = [0.5]
         booster = xgb_node.get_booster()
         # The json format was available in October 2017.
         # XGBoost 0.7 was the first version released with it.
         js_tree_list = booster.get_dump(with_stats=True, dump_format="json")
-        js_trees = [json.loads(s) for s in js_tree_list]
+        js_trees: TreeLike = [json.loads(s) for s in js_tree_list]
+        js_trees = XGBConverter._process_categorical_features(js_trees)
         return objective, base_score, js_trees, best_ntree_limit
+
+    @staticmethod
+    def _is_bracketed_json_list_string(s: str) -> bool:
+        s = s.strip()
+        return len(s) >= 2 and s[0] == "[" and s[-1] == "]"
+
+    @staticmethod
+    def _maybe_transform_categorical(node: Node, last_node_id) -> tuple[int, bool]:
+        """
+        If node's split_condition is a JSON list string, transform it into a
+        chain of BRANCH_EQ nodes in-place.
+        """
+
+        split_condition = node.get("split_condition")
+
+        if not isinstance(split_condition, list):
+            return (last_node_id, False)  # not categorical
+
+        if len(split_condition) == 0:
+            raise ValueError("split_condition is an empty array. ")
+
+        # Validate it's a split node with two children
+        children = node.get("children")
+        if not (isinstance(children, list) and len(children) == 2):
+            raise ValueError(
+                "Expected a split node with two children before categorical transform."
+            )
+
+        orig_left, orig_right = children
+
+        # First category goes on the original node
+        node["decision_type"] = "BRANCH_EQ"
+        node["split_condition"] = split_condition[0]
+
+        yes_left = orig_left["nodeid"] == node["yes"]
+
+        current_node = node
+        for cat in split_condition[1:]:
+            new_node = current_node.copy()
+            new_node["split_condition"] = cat
+            last_node_id += 1
+            new_node["nodeid"] = last_node_id
+
+            if current_node["missing"] == current_node["no"]:
+                current_node["missing"] = new_node["nodeid"]
+            current_node["no"] = new_node["nodeid"]
+            if yes_left:
+                current_node["children"] = [orig_left, new_node]
+            else:
+                current_node["children"] = [new_node, orig_right]
+            current_node = new_node
+
+        # Final "no" path goes to the original right subtree
+        current_node["children"] = [orig_left, orig_right]
+        return (last_node_id, True)
+
+    @staticmethod
+    def _process_node(node: Node, last_node_id: int) -> int:
+        # If this is a leaf, nothing to do
+        if "children" not in node or not isinstance(node["children"], list):
+            return last_node_id
+
+        for child in node["children"]:
+            last_node_id = XGBConverter._process_node(child, last_node_id)
+
+        last_node_id, transformed = XGBConverter._maybe_transform_categorical(
+            node, last_node_id
+        )
+        if not transformed:
+            # Non-categorical split node: enforce BRANCH_LT as default
+            node["decision_type"] = "BRANCH_LT"
+        return last_node_id
+
+    @staticmethod
+    def _process_root(root: Node) -> None:
+        last_node_id = XGBConverter._find_last_node_id(root)
+        XGBConverter._process_node(root, last_node_id)
+
+    @staticmethod
+    def _find_last_node_id(node: Node) -> int:
+        if "children" not in node:
+            return node["nodeid"]
+
+        max_id = node["nodeid"]
+        for child in node["children"]:
+            child_max = XGBConverter._find_last_node_id(child)
+            if child_max > max_id:
+                max_id = child_max
+
+        return max_id
+
+    @staticmethod
+    def _process_categorical_features(js_tree: TreeLike) -> TreeLike:
+        """
+        Processes the native handling of categorical features to equality checks that
+        are supported in Onnx.
+
+        - If a split node encodes categories via a JSON list string in 'split_condition',
+        it is expanded into a chain of BRANCH_EQ nodes.
+        - Otherwise (non-categorical split), the node's 'decision_type' is set to 'BRANCH_LT'.
+        - If there are categorical features, the nodeids are updated, but depth is ignored
+        since its not used for the conversion
+
+        Returns the processed tree model.
+        """
+        if isinstance(js_tree, list):
+            for root in js_tree:
+                if isinstance(root, dict):
+                    XGBConverter._process_root(root)
+        elif isinstance(js_tree, dict):
+            XGBConverter._process_root(js_tree)
+        else:
+            raise TypeError(
+                "js_tree must be a dict (single tree) or list of dicts (forest)."
+            )
+        return js_tree
 
     @staticmethod
     def _get_default_tree_attribute_pairs(is_classifier):
@@ -132,7 +259,7 @@ class XGBConverter:
         attr_pairs["nodes_values"].append(float(value))
         attr_pairs["nodes_truenodeids"].append(true_child_id)
         attr_pairs["nodes_falsenodeids"].append(false_child_id)
-        attr_pairs["nodes_missing_value_tracks_true"].append(missing)
+        attr_pairs["nodes_missing_value_tracks_true"].append(int(missing))
         if "nodes_hitrates" in attr_pairs:
             attr_pairs["nodes_hitrates"].append(hitrate)
         if mode == "LEAF":
@@ -151,8 +278,14 @@ class XGBConverter:
 
     @staticmethod
     def _fill_node_attributes(
-        treeid, tree_weight, jsnode, attr_pairs, is_classifier, remap
+        treeid, tree_weight, jsnode, attr_pairs, is_classifier, remap, ids_covered: set
     ):
+        node_id = remap[jsnode["nodeid"]]
+        if node_id in ids_covered:
+            return
+        else:
+            ids_covered.add(node_id)
+
         if "children" in jsnode:
             XGBConverter._add_node(
                 attr_pairs=attr_pairs,
@@ -160,9 +293,11 @@ class XGBConverter:
                 tree_id=treeid,
                 tree_weight=tree_weight,
                 value=jsnode["split_condition"],
-                node_id=remap[jsnode["nodeid"]],
+                node_id=node_id,
                 feature_id=jsnode["split"],
-                mode="BRANCH_LT",  # 'BRANCH_LEQ' --> is for sklearn
+                mode=jsnode["decision_type"],  # 'BRANCH_LEQ' --> is for sklearn
+                # 'BRANCH_LT' --> is for xgboost numerical features
+                # 'BRANCH_EQ' --> is for xgboost categorical features
                 true_child_id=remap[jsnode["yes"]],  # ['children'][0]['nodeid'],
                 false_child_id=remap[jsnode["no"]],  # ['children'][1]['nodeid'],
                 weights=None,
@@ -174,7 +309,13 @@ class XGBConverter:
             for ch in jsnode["children"]:
                 if "children" in ch or "leaf" in ch:
                     XGBConverter._fill_node_attributes(
-                        treeid, tree_weight, ch, attr_pairs, is_classifier, remap
+                        treeid,
+                        tree_weight,
+                        ch,
+                        attr_pairs,
+                        is_classifier,
+                        remap,
+                        ids_covered,
                     )
                 else:
                     raise RuntimeError("Unable to convert this node {0}".format(ch))
@@ -188,7 +329,7 @@ class XGBConverter:
                 tree_id=treeid,
                 tree_weight=tree_weight,
                 value=0.0,
-                node_id=remap[jsnode["nodeid"]],
+                node_id=node_id,
                 feature_id=0,
                 mode="LEAF",
                 true_child_id=0,
@@ -204,7 +345,8 @@ class XGBConverter:
         if remap is None:
             remap = {}
         nid = jsnode["nodeid"]
-        remap[nid] = len(remap)
+        if nid not in remap:
+            remap[nid] = len(remap)
         if "children" in jsnode:
             for ch in jsnode["children"]:
                 XGBConverter._remap_nodeid(ch, remap)
@@ -216,12 +358,21 @@ class XGBConverter:
             raise TypeError("js_xgb_node must be a list")
         for treeid, (jstree, w) in enumerate(zip(js_xgb_node, tree_weights)):
             remap = XGBConverter._remap_nodeid(jstree)
+            ids_covered = set()
             XGBConverter._fill_node_attributes(
-                treeid, w, jstree, attr_pairs, is_classifier, remap
+                treeid, w, jstree, attr_pairs, is_classifier, remap, ids_covered
             )
 
 
 class XGBRegressorConverter(XGBConverter):
+    """
+    Converter for XGBoost Regressor models to ONNX format.
+    This class inherits from XGBConverter and implements the conversion
+    logic specific to regression tasks.
+    It handles the conversion of model parameters, tree structure,
+    and the creation of the ONNX TreeEnsembleRegressor node.
+    """
+
     @staticmethod
     def validate(xgb_node):
         return XGBConverter.validate(xgb_node)
@@ -241,11 +392,11 @@ class XGBRegressorConverter(XGBConverter):
             xgb_node, inputs
         )
 
-        if objective in ["reg:gamma", "reg:tweedie"]:
-            raise RuntimeError("Objective '{}' not supported.".format(objective))
-
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
-        attr_pairs["base_values"] = [base_score]
+        if isinstance(base_score, list):
+            attr_pairs["base_values"] = base_score
+        else:
+            attr_pairs["base_values"] = [base_score]
 
         if best_ntree_limit and best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
@@ -258,7 +409,8 @@ class XGBRegressorConverter(XGBConverter):
         attr_pairs["n_targets"] = params["n_targets"]
 
         # add nodes
-        if objective == "count:poisson":
+        objectives_with_loglink = {"count:poisson", "reg:gamma", "reg:tweedie"}
+        if objective in objectives_with_loglink:
             names = [scope.get_unique_variable_name("tree")]
             del attr_pairs["base_values"]
         else:
@@ -272,9 +424,11 @@ class XGBRegressorConverter(XGBConverter):
             **attr_pairs,
         )
 
-        if objective == "count:poisson":
-            cst = scope.get_unique_variable_name("poisson")
-            container.add_initializer(cst, TensorProto.FLOAT, [1], [base_score])
+        if objective in objectives_with_loglink:
+            cst = scope.get_unique_variable_name("raw_prediction")
+            container.add_initializer(
+                cst, TensorProto.FLOAT, [len(base_score)], base_score
+            )
             new_name = scope.get_unique_variable_name("exp")
             container.add_node("Exp", names, [new_name])
             container.add_node("Mul", [new_name, cst], operator.output_full_names)
@@ -336,17 +490,24 @@ class XGBClassifierConverter(XGBConverter):
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
                 if js_trees[0].get("leaf", None) == 0:
-                    attr_pairs["base_values"] = [base_score]
-                elif base_score != 0.5:
-                    # 0.5 -> cst = 0
-                    cst = -np.log(1 / np.float32(base_score) - 1.0)
-                    attr_pairs["base_values"] = [cst]
+                    attr_pairs["base_values"] = base_score
+                else:
+                    # Transform base_score - for binary, use first element
+                    bs_val = base_score[0]
+                    if bs_val != 0.5:
+                        # 0.5 -> cst = 0
+                        cst = -np.log(1 / np.float32(bs_val) - 1.0)
+                        attr_pairs["base_values"] = [cst]
             else:
-                attr_pairs["base_values"] = [base_score]
+                attr_pairs["base_values"] = base_score
         else:
             # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L35.
             attr_pairs["post_transform"] = "SOFTMAX"
-            attr_pairs["base_values"] = [base_score for n in range(ncl)]
+            # If base_score has fewer elements than classes, replicate to match
+            if len(base_score) == 1:
+                attr_pairs["base_values"] = base_score * ncl
+            else:
+                attr_pairs["base_values"] = base_score
             attr_pairs["class_ids"] = [v % ncl for v in attr_pairs["class_treeids"]]
 
         classes = xgb_node.classes_
@@ -423,6 +584,17 @@ class XGBClassifierConverter(XGBConverter):
 
 
 def convert_xgboost(scope, operator, container):
+    """
+    Converts an XGBoost model (XGBClassifier or XGBRegressor) into an ONNX TreeEnsemble node.
+
+    Parameters:
+        scope: Object for managing variable names in the ONNX graph.
+        operator: Wrapper for the XGBoost model and its input/output variables.
+        container: Object to which the ONNX nodes will be added.
+
+    This function dispatches the conversion to the appropriate internal converter
+    based on whether the model is a classifier or regressor.
+    """
     xgb_node = operator.raw_operator
     if isinstance(xgb_node, (XGBClassifier, XGBRFClassifier)) or getattr(
         xgb_node, "operator_name", None

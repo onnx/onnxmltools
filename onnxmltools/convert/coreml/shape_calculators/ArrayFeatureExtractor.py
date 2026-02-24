@@ -3,7 +3,10 @@
 import copy
 from ...common._registration import register_shape_calculator
 from ...common.data_types import FloatTensorType, Int64TensorType, StringTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 
 
 def calculate_array_feature_extractor_output_shapes(operator):

@@ -75,10 +75,8 @@ def convert(
         ('int64_input', Int64TensorType([1, 10]))]
     """
     if initial_types is None:
-        raise ValueError(
-            "Initial types are required. See usage of convert(...) in \
-                         onnxmltools.convert.sparkml.convert for details"
-        )
+        raise ValueError("Initial types are required. See usage of convert(...) in \
+                         onnxmltools.convert.sparkml.convert for details")
 
     if name is None:
         name = str(uuid4().hex)

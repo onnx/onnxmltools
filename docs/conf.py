@@ -7,7 +7,6 @@
 import onnxmltools
 import sphinx_readable_theme
 
-
 # -- Project information -----------------------------------------------------
 
 project = "onnxmltools"

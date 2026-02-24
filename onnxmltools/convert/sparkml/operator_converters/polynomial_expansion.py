@@ -4,7 +4,10 @@ import copy
 from onnx import onnx_pb as onnx_proto
 from ...common._apply_operation import apply_concat, apply_cast
 from ...common.data_types import Int64TensorType, FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 from ...common._registration import register_converter, register_shape_calculator
 
 

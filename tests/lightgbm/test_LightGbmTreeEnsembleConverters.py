@@ -9,13 +9,12 @@ from onnx.defs import onnx_opset_version
 from lightgbm import LGBMClassifier, LGBMRegressor
 import onnxruntime
 from onnxmltools.convert.common.data_types import FloatTensorType
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert import convert_lightgbm
 from onnxmltools.utils import dump_data_and_model
 from onnxmltools.utils import dump_binary_classification, dump_multiple_classification
 from onnxmltools.utils import dump_single_regression
 from onnxmltools.utils.tests_helper import convert_model
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
@@ -40,8 +39,8 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
             "dummy",
             input_types=[("X", FloatTensorType([None, X.shape[1]]))],
             target_opset=TARGET_OPSET,
-        )
-        assert "zipmap" in str(onx).lower()
+        )[0]
+        assert "ZipMap" in [n.op_type for n in onx.graph.node]
 
     def test_lightgbm_classifier_nozipmap(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2], [1, 5], [6, 2]]

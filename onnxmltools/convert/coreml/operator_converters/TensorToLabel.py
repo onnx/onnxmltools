@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from ....proto import helper
-from ....proto import onnx_proto
+import onnx as onnx_proto
+from onnx import helper
 from ...common._registration import register_converter
 from ...common._apply_operation import apply_constant
 
@@ -87,7 +87,7 @@ def convert_tensor_to_label(scope, operator, container):
         "ArgMax",
         [operator.inputs[0].full_name],
         [extracted_id_name],
-        **label_id_extractor_attrs
+        **label_id_extractor_attrs,
     )
 
     # Pick up the label indicated by the selected ID
@@ -98,7 +98,7 @@ def convert_tensor_to_label(scope, operator, container):
         [label_buffer_name, extracted_id_name],
         [operator.outputs[0].full_name],
         op_domain="ai.onnx.ml",
-        **label_selector_attrs
+        **label_selector_attrs,
     )
 
 

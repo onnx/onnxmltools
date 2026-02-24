@@ -26,6 +26,7 @@ build/
 *.pkl
 .pytest_cache
 .cache
+tests_dump/
 tests/temp
 tests/utils/models/coreml_OneHotEncoder_BikeSharing_new.json
 tests/utils/models/coreml_OneHotEncoder_BikeSharing2.onnx

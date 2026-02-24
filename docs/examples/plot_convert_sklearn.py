@@ -30,6 +30,7 @@ Train a model
 A very basic example using random forest and
 the iris dataset.
 """
+
 import os
 import matplotlib.pyplot as plt
 from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
@@ -44,7 +45,7 @@ import onnxruntime as rt
 
 import skl2onnx
 import onnxmltools
-from onnxconverter_common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 from onnxmltools.convert import convert_sklearn
 
 iris = load_iris()

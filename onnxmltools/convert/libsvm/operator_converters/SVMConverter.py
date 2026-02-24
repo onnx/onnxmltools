@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from ....proto import onnx_proto
+import onnx as onnx_proto
 from ...common._registration import register_converter
 from ...common.utils import cast_list
 import numpy
@@ -184,7 +184,7 @@ class SVCConverter(SVMConverter):
             nb["outputs"],
             op_domain="ai.onnx.ml",
             name=scope.get_unique_operator_name("SVMClassifier"),
-            **nb["attrs"]
+            **nb["attrs"],
         )
 
 
@@ -214,7 +214,7 @@ class SVRConverter(SVMConverter):
             nb["outputs"],
             op_domain="ai.onnx.ml",
             name=scope.get_unique_operator_name("SVMRegressor"),
-            **nb["attrs"]
+            **nb["attrs"],
         )
 
 

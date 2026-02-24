@@ -1,10 +1,42 @@
 # Change Logs
 
-## 1.13.0 (development)
+## 1.17.0
+
+## 1.16.0
+
+* Add LGBMRanker support
+  initial PR [754](https://github.com/onnx/onnxmltools/pull/754),
+  finalized in PR [755](https://github.com/onnx/onnxmltools/pull/755)
+* Add partial support for custom objective
+  [#753](https://github.com/onnx/onnxmltools/pull/753)
+* Improve xgboost categorical feature support
+  [#743](https://github.com/onnx/onnxmltools/pull/743)
+
+## 1.15.0
+
+* Add support for gamma and tweedie distributions for xgboost
+  [#742](https://github.com/onnx/onnxmltools/pull/742)
+* Support xgboost 3, including for multiclass problems
+  [#736](https://github.com/onnx/onnxmltools/pull/736)
+* Add support to convert xgboost models with categorical features
+  [#734](https://github.com/onnx/onnxmltools/pull/734)
+
+## 1.14.0
+
+* Add tweedie objective to LightGBM options
+  [#722](https://github.com/onnx/onnxmltools/pull/722)
+* Support for "huber" objective in the LGBM Booster
+  [#705](https://github.com/onnx/onnxmltools/pull/705)
+* Remove import of split_complex_to_pairs and unused functions
+  [#714](https://github.com/onnx/onnxmltools/pull/714)
+* Removes dependency on onnxconveter-common
+  [#718](https://github.com/onnx/onnxmltools/pull/718)
+
+## 1.13.0
 
 * Handle issue with binary classifier setting output to [N,1] vs [N,2],
   [#681](https://github.com/onnx/onnxmltools/pull/681)
-* Add missing dependency onnxconverter_common, fix multi regression with xgboost,
+* Fix multi regression with xgboost,
   [#679](https://github.com/onnx/onnxmltools/pull/679),
   fixes issues [No module named 'onnxconverter_common'](https://github.com/onnx/onnxmltools/issues/673),
   [onnx converted : xgboostRegressor multioutput model predicts 1 dimension instead of original 210 dimensions.](https://github.com/onnx/onnxmltools/issues/676)

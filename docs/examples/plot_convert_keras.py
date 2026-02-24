@@ -33,9 +33,8 @@ from keras.layers import Dense
 import onnxruntime as rt
 
 import onnxmltools
-from onnxconverter_common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 from onnxmltools.convert import convert_keras
-
 
 iris = load_iris()
 X, y = iris.data, iris.target

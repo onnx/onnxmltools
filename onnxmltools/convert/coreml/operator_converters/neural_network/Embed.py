@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy as np
+import onnx as onnx_proto
 from .Scale import deduce_broadcast_axis_and_shape
-from .....proto import onnx_proto
 from ....common._apply_operation import apply_add, apply_reshape, apply_cast
 from ....common._registration import register_converter
 
@@ -60,7 +60,7 @@ def convert_embedding(scope, operator, container):
             "Gather",
             [weights_name, casted_input_name],
             gather_output_name,
-            **gather_attrs
+            **gather_attrs,
         )
 
         # Load the bias vector into an initializer
@@ -87,7 +87,7 @@ def convert_embedding(scope, operator, container):
             "Gather",
             [weights_name, casted_input_name],
             operator.output_full_names,
-            **gather_attrs
+            **gather_attrs,
         )
 
 

@@ -2,7 +2,7 @@
 
 from ...common._registration import register_shape_calculator
 from ...common.data_types import FloatTensorType, StringTensorType
-from ...common.utils import check_input_and_output_numbers
+from ...common.shape_calculator import check_input_and_output_numbers
 
 
 def calculate_one_hot_encoder_output_shapes(operator):
@@ -26,7 +26,7 @@ def calculate_one_hot_encoder_output_shapes(operator):
         operator.outputs[0].type = FloatTensorType(
             [N, len(int_categories)], doc_string=operator.outputs[0].type.doc_string
         )
-    elif len(str_categories) > 0 and type(operator.inputs[0].type) == StringTensorType:
+    elif len(str_categories) > 0 and type(operator.inputs[0].type) is StringTensorType:
         operator.outputs[0].type = FloatTensorType(
             [N, len(str_categories)], doc_string=operator.outputs[0].type.doc_string
         )

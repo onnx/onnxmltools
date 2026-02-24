@@ -18,6 +18,7 @@ Train a model
 +++++++++++++
 
 """
+
 import os
 import matplotlib.pyplot as plt
 from onnx.tools.net_drawer import GetPydotGraph, GetOpNodeProducer
@@ -30,7 +31,7 @@ import lightgbm
 from lightgbm import LGBMClassifier, Dataset, train as train_lgbm
 import onnxruntime as rt
 import onnxmltools
-from onnxconverter_common.data_types import FloatTensorType
+from onnxmltools.convert.common.data_types.data_types import FloatTensorType
 from onnxmltools.convert import convert_lightgbm
 
 iris = load_iris()

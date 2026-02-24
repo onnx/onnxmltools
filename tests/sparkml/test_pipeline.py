@@ -10,7 +10,7 @@ from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType
 from tests.sparkml.sparkml_test_utils import (
@@ -19,7 +19,6 @@ from tests.sparkml.sparkml_test_utils import (
     compare_results,
 )
 from tests.sparkml import SparkMlTestCase
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 

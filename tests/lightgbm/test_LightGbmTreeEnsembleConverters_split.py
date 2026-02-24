@@ -10,10 +10,9 @@ from lightgbm import LGBMRegressor
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from onnxruntime import InferenceSession, __version__ as ort_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.convert import convert_lightgbm
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 ort_version = ".".join(ort_version.split(".")[:2])

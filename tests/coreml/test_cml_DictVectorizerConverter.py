@@ -3,6 +3,7 @@
 """
 Tests CoreML DictVectorizer converter.
 """
+
 import sys
 import packaging.version as pv
 import unittest
@@ -21,10 +22,9 @@ except ImportError:
 import coremltools
 from sklearn.feature_extraction import DictVectorizer
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 

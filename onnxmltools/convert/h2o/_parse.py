@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from onnxconverter_common.data_types import FloatTensorType
-from ..common._container import H2OModelContainer
-from ..common._topology import Topology
+from onnxmltools.convert.common.data_types import FloatTensorType
+from ..common._container import H2OModelContainer, Topology
 
 
 def _parse_h2o(scope, model, inputs):

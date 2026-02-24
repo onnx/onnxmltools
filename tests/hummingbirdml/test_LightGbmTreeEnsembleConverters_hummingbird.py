@@ -5,14 +5,13 @@ import unittest
 import lightgbm
 import numpy
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from lightgbm import LGBMClassifier, LGBMRegressor
 from onnxruntime import InferenceSession
 from onnxmltools.convert.common.utils import hummingbird_installed
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils.tests_helper import convert_model
 from onnxmltools.utils import dump_data_and_model
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 # PyTorch 1.8.1 supports up to opset version 13.

@@ -3,6 +3,7 @@
 """
 Tests scikit-linear converter.
 """
+
 import tempfile
 import numpy
 import os
@@ -31,7 +32,7 @@ except ImportError:
 
 import unittest
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from sklearn.datasets import load_iris
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model

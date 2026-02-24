@@ -1,7 +1,7 @@
 <!--- SPDX-License-Identifier: Apache-2.0 -->
 #
 
-![ONNXMLTools_logo_main](https://github.com/onnx/onnxmltools/blob/main/docs/ONNXMLTools_logo_main.png)
+![ONNXMLTools_logo_main](https://raw.githubusercontent.com/onnx/onnxmltools/main/docs/ONNXMLTools_logo_main.png)
 
 [![CI](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml/badge.svg)](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml)
 
@@ -32,7 +32,6 @@ pip install onnxmltools
 or install from source:
 
 ```bash
-pip install git+https://github.com/microsoft/onnxconverter-common
 pip install git+https://github.com/onnx/onnxmltools
 ```
 

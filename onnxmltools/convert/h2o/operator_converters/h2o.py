@@ -68,7 +68,7 @@ def _add_node(
     attr_pairs["nodes_values"].append(float(value))
     attr_pairs["nodes_truenodeids"].append(true_child_id)
     attr_pairs["nodes_falsenodeids"].append(false_child_id)
-    attr_pairs["nodes_missing_value_tracks_true"].append(missing)
+    attr_pairs["nodes_missing_value_tracks_true"].append(int(missing))
     if mode == "LEAF":
         node_attr_prefix = _node_attr_prefix(is_classifier)
         for i, w in enumerate(weights):
@@ -149,7 +149,7 @@ def convert_regression(scope, operator, container, params):
         operator.output_full_names,
         op_domain="ai.onnx.ml",
         name=scope.get_unique_operator_name("TreeEnsembleRegressor"),
-        **attr_pairs
+        **attr_pairs,
     )
 
 
@@ -176,7 +176,7 @@ def convert_classifier(scope, operator, container, params):
         operator.output_full_names,
         op_domain="ai.onnx.ml",
         name=scope.get_unique_operator_name("TreeEnsembleClassifier"),
-        **attr_pairs
+        **attr_pairs,
     )
 
 

@@ -8,7 +8,10 @@ from ...common.data_types import (
     StringTensorType,
     Int64TensorType,
 )
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 
 
 def calculate_tensor_to_probability_map_output_shapes(operator):

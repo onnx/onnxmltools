@@ -3,6 +3,7 @@
 """
 Helpers to test runtimes.
 """
+
 import warnings
 
 import numpy
@@ -297,6 +298,30 @@ def _compare_expected(
                     (len(expected), len(output.ravel()) // len(expected))
                 )
             if len(expected) != len(output):
+                if (
+                    len(output) == 2
+                    and len(expected) == 1
+                    and output[0].dtype in (numpy.int64, numpy.int32)
+                ):
+                    # a classifier
+                    if len(expected[0].shape) == 1:
+                        expected = [
+                            numpy.hstack(
+                                [
+                                    1 - expected[0].reshape((-1, 1)),
+                                    expected[0].reshape((-1, 1)),
+                                ]
+                            )
+                        ]
+                    return _compare_expected(
+                        expected,
+                        output[1:],
+                        sess,
+                        onnx,
+                        decimal=5,
+                        onnx_shape=None,
+                        **kwargs,
+                    )
                 raise OnnxRuntimeAssertionError(
                     "Unexpected number of outputs '{0}', expected={1}, got={2}".format(
                         onnx, len(expected), len(output)

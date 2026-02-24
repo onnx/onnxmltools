@@ -11,7 +11,7 @@ from pyspark.ml.linalg import Vectors, SparseVector, VectorUDT
 from pyspark.ml.regression import DecisionTreeRegressor
 from pyspark.ml import Pipeline
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import FloatTensorType
 from tests.sparkml.sparkml_test_utils import (
@@ -21,7 +21,6 @@ from tests.sparkml.sparkml_test_utils import (
 )
 from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import VectorIndexer
-
 
 TARGET_OPSET = min(15, min(DEFAULT_OPSET_NUMBER, onnx_opset_version()))
 
@@ -59,7 +58,7 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
             maxCategories=4,
             handleInvalid="error",
         )
-        (trainingData, testData) = data.randomSplit([0.7, 0.3])
+        trainingData, testData = data.randomSplit([0.7, 0.3])
         dt = DecisionTreeRegressor(featuresCol="indexedFeatures")
         pipeline = Pipeline(stages=[featureIndexer, dt])
         model = pipeline.fit(trainingData)

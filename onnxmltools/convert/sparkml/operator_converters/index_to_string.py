@@ -5,7 +5,10 @@ import copy
 from ..utils import SparkMlConversionError
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import Int64TensorType, StringTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 
 
 def convert_index_to_string(scope, operator, container):
@@ -25,7 +28,7 @@ def convert_index_to_string(scope, operator, container):
         operator.input_full_names,
         operator.output_full_names,
         op_domain="ai.onnx.ml",
-        **attrs
+        **attrs,
     )
 
 

@@ -3,6 +3,7 @@
 """
 Tests SupportVectorRegressor converter.
 """
+
 import packaging.version as pv
 
 try:
@@ -20,10 +21,9 @@ import numpy
 from sklearn.datasets import make_regression
 from sklearn.svm import SVR
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml.convert import convert
 from onnxmltools.utils import dump_data_and_model
-
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 

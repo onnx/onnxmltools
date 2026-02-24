@@ -2,8 +2,7 @@
 
 import numpy
 
-from ..common._container import LightGbmModelContainer
-from ..common._topology import Topology
+from ..common._container import LightGbmModelContainer, Topology
 from ..common.data_types import (
     FloatTensorType,
     SequenceType,
@@ -12,7 +11,7 @@ from ..common.data_types import (
     Int64Type,
 )
 
-from lightgbm import LGBMClassifier, LGBMRegressor
+from lightgbm import LGBMClassifier, LGBMRegressor, LGBMRanker
 
 lightgbm_classifier_list = [LGBMClassifier]
 
@@ -22,6 +21,7 @@ lightgbm_classifier_list = [LGBMClassifier]
 lightgbm_operator_name_map = {
     LGBMClassifier: "LgbmClassifier",
     LGBMRegressor: "LgbmRegressor",
+    LGBMRanker: "LgbmRanker",
 }
 
 
@@ -36,8 +36,12 @@ class WrappedBooster:
         elif self.objective_.startswith("multiclass"):
             self.operator_name = "LgbmClassifier"
             self.classes_ = self._generate_classes(booster)
-        elif self.objective_.startswith("regression"):
+        elif self.objective_.startswith(
+            ("regression", "poisson", "gamma", "quantile", "huber", "tweedie")
+        ):
             self.operator_name = "LgbmRegressor"
+        elif self.objective_.startswith(("lambdarank", "rank_xendcg")):
+            self.operator_name = "LgbmRanker"
         else:
             raise NotImplementedError(
                 "Unsupported LightGbm objective: %r." % self.objective_

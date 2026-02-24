@@ -4,7 +4,10 @@ from pyspark.ml.classification import LogisticRegressionModel, LinearSVCModel
 
 from ...common._registration import register_converter, register_shape_calculator
 from ...common.data_types import Int64TensorType, FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 
 
 def convert_sparkml_linear_classifier(scope, operator, container):
@@ -50,7 +53,7 @@ def convert_sparkml_linear_classifier(scope, operator, container):
             operator.inputs[0].full_name,
             [label_name, probability_tensor_name],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
         # Make sure the probability sum is 1 over all classes
@@ -64,7 +67,7 @@ def convert_sparkml_linear_classifier(scope, operator, container):
             probability_tensor_name,
             operator.outputs[1].full_name,
             op_domain="ai.onnx.ml",
-            **normalizer_attrs
+            **normalizer_attrs,
         )
     else:
         # add a dummy output variable since onnx LinearClassifier has 2
@@ -74,7 +77,7 @@ def convert_sparkml_linear_classifier(scope, operator, container):
             operator.inputs[0].full_name,
             [label_name, unused_probabilities_output],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
 

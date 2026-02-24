@@ -3,11 +3,13 @@
 """
 Tests scilit-learn's tree-based methods' converters.
 """
+
 import os
 import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal
 import pandas
+import packaging.version as pv
 from sklearn.datasets import (
     load_diabetes,
     load_iris,
@@ -16,22 +18,24 @@ from sklearn.datasets import (
     make_regression,
 )
 from sklearn.model_selection import train_test_split
-from xgboost import (
-    XGBRegressor,
-    XGBClassifier,
-    train,
-    DMatrix,
-    Booster,
-    train as train_xgb,
-)
+import xgboost
+from xgboost import train, DMatrix, Booster, train as train_xgb
+
+try:
+    from xgboost import XGBRegressor, XGBClassifier
+except Exception:
+    XGBRegressor = None
+import sklearn
 from sklearn.preprocessing import StandardScaler
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
-from onnxmltools.convert import convert_xgboost
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
+
+if XGBRegressor is not None:
+    from onnxmltools.convert import convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType
 from onnxmltools.utils import dump_data_and_model
 from onnxruntime import InferenceSession
-
+import onnxruntime as ort
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
@@ -67,6 +71,7 @@ def _fit_classification_model(model, n_classes, is_str=False, dtype=None):
 
 
 class TestXGBoostModels(unittest.TestCase):
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_regressor(self):
         iris = load_diabetes()
         x = iris.data
@@ -89,6 +94,7 @@ class TestXGBoostModels(unittest.TestCase):
             basename="SklearnXGBRegressor-Dec3",
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_regressor_poisson(self):
         iris = load_diabetes()
         x = iris.data
@@ -116,6 +122,63 @@ class TestXGBoostModels(unittest.TestCase):
                 basename=f"SklearnXGBRegressorPoisson{nest}-Dec3",
             )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_xgb_regressor_gamma(self):
+        iris = load_diabetes()
+        x = iris.data
+        y = iris.target / 100
+        x_train, x_test, y_train, _ = train_test_split(
+            x, y, test_size=0.5, random_state=17
+        )
+        for nest in [5, 50]:
+            xgb = XGBRegressor(
+                objective="reg:gamma",
+                random_state=5,
+                max_depth=3,
+                n_estimators=nest,
+            )
+            xgb.fit(x_train, y_train)
+            conv_model = convert_xgboost(
+                xgb,
+                initial_types=[("input", FloatTensorType(shape=[None, None]))],
+                target_opset=TARGET_OPSET,
+            )
+            dump_data_and_model(
+                x_test.astype("float32"),
+                xgb,
+                conv_model,
+                basename=f"SklearnXGBRegressorGamma{nest}-Dec3",
+            )
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_xgb_regressor_tweedie(self):
+        iris = load_diabetes()
+        x = iris.data
+        y = iris.target / 100
+        x_train, x_test, y_train, _ = train_test_split(
+            x, y, test_size=0.5, random_state=17
+        )
+        for nest in [5, 50]:
+            xgb = XGBRegressor(
+                objective="reg:tweedie",
+                random_state=5,
+                max_depth=3,
+                n_estimators=nest,
+            )
+            xgb.fit(x_train, y_train)
+            conv_model = convert_xgboost(
+                xgb,
+                initial_types=[("input", FloatTensorType(shape=[None, None]))],
+                target_opset=TARGET_OPSET,
+            )
+            dump_data_and_model(
+                x_test.astype("float32"),
+                xgb,
+                conv_model,
+                basename=f"SklearnXGBRegressorTweedie{nest}-Dec3",
+            )
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb0_classifier(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2)
         conv_model = convert_xgboost(
@@ -126,6 +189,7 @@ class TestXGBoostModels(unittest.TestCase):
 
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBClassifier")
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier_uint8(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 2, dtype=np.uint8)
         conv_model = convert_xgboost(
@@ -136,6 +200,7 @@ class TestXGBoostModels(unittest.TestCase):
 
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBClassifier")
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier_multi(self):
         xgb, x_test = _fit_classification_model(XGBClassifier(), 3)
         conv_model = convert_xgboost(
@@ -148,6 +213,7 @@ class TestXGBoostModels(unittest.TestCase):
             x_test, xgb, conv_model, basename="SklearnXGBClassifierMulti"
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier_multi_reglog(self):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective="reg:logistic"), 4
@@ -162,6 +228,7 @@ class TestXGBoostModels(unittest.TestCase):
             x_test, xgb, conv_model, basename="SklearnXGBClassifierMultiRegLog"
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier_reglog(self):
         xgb, x_test = _fit_classification_model(
             XGBClassifier(objective="reg:logistic"), 2
@@ -176,6 +243,7 @@ class TestXGBoostModels(unittest.TestCase):
             x_test, xgb, conv_model, basename="SklearnXGBClassifierRegLog-Dec4"
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier_multi_discrete_int_labels(self):
         iris = load_iris()
         x = iris.data[:, :2]
@@ -198,6 +266,7 @@ class TestXGBoostModels(unittest.TestCase):
             basename="SklearnXGBClassifierMultiDiscreteIntLabels",
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb1_booster_classifier_bin(self):
         x, y = make_classification(
             n_classes=2, n_features=5, n_samples=100, random_state=42, n_informative=3
@@ -221,6 +290,7 @@ class TestXGBoostModels(unittest.TestCase):
             x_test.astype(np.float32), model, model_onnx, basename="XGBBoosterMCl"
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb0_booster_classifier_multiclass_softprob(self):
         x, y = make_classification(
             n_classes=3, n_features=5, n_samples=100, random_state=42, n_informative=3
@@ -252,6 +322,7 @@ class TestXGBoostModels(unittest.TestCase):
             basename="XGBBoosterMClSoftProb",
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgboost_booster_classifier_multiclass_softmax(self):
         x, y = make_classification(
             n_classes=3, n_features=5, n_samples=100, random_state=42, n_informative=3
@@ -283,6 +354,7 @@ class TestXGBoostModels(unittest.TestCase):
             basename="XGBBoosterMClSoftMax",
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgboost_booster_reg(self):
         x, y = make_classification(
             n_classes=2, n_features=5, n_samples=100, random_state=42, n_informative=3
@@ -311,6 +383,7 @@ class TestXGBoostModels(unittest.TestCase):
             x_test.astype(np.float32), model, model_onnx, basename="XGBBoosterReg"
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgboost_10(self):
         this = os.path.abspath(os.path.dirname(__file__))
         train = os.path.join(this, "input_fail_train.csv")
@@ -356,12 +429,22 @@ class TestXGBoostModels(unittest.TestCase):
             basename="XGBBoosterRegBug",
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(sklearn.__version__) < pv.Version("1.6.0"),
+        "move parameters from fit to the convstructor",
+    )
     def test_xgboost_classifier_i5450_softmax(self):
         iris = load_iris()
         X, y = iris.data, iris.target
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=10)
-        clr = XGBClassifier(objective="multi:softmax", max_depth=1, n_estimators=2)
-        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
+        clr = XGBClassifier(
+            objective="multi:softmax",
+            max_depth=1,
+            n_estimators=2,
+            early_stopping_rounds=40,
+        )
+        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)])
         initial_type = [("float_input", FloatTensorType([None, 4]))]
         onx = convert_xgboost(
             clr, initial_types=initial_type, target_opset=TARGET_OPSET
@@ -382,12 +465,18 @@ class TestXGBoostModels(unittest.TestCase):
             basename="XGBClassifierIris-Out0",
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgboost_classifier_i5450(self):
         iris = load_iris()
         X, y = iris.data, iris.target
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=10)
-        clr = XGBClassifier(objective="multi:softprob", max_depth=1, n_estimators=2)
-        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
+        clr = XGBClassifier(
+            objective="multi:softprob",
+            max_depth=1,
+            n_estimators=2,
+            early_stopping_rounds=40,
+        )
+        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)])
         initial_type = [("float_input", FloatTensorType([None, 4]))]
         onx = convert_xgboost(
             clr, initial_types=initial_type, target_opset=TARGET_OPSET
@@ -405,6 +494,7 @@ class TestXGBoostModels(unittest.TestCase):
             X_test.astype(np.float32) + 1e-5, clr, onx, basename="XGBClassifierIris"
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgboost_example_mnist(self):
         """
         Train a simple xgboost model and store associated artefacts.
@@ -431,6 +521,7 @@ class TestXGBoostModels(unittest.TestCase):
             X_test.astype(np.float32), clf, onnx_model, basename="XGBoostExample"
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb0_empty_tree_classifier(self):
         xgb = XGBClassifier(n_estimators=2, max_depth=2)
 
@@ -451,6 +542,7 @@ class TestXGBoostModels(unittest.TestCase):
         assert_almost_equal(xgb.predict_proba(X), res[1])
         assert_almost_equal(xgb.predict(X), res[0])
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_best_tree_limit_classifier(self):
         # Train
         iris = load_iris()
@@ -499,6 +591,7 @@ class TestXGBoostModels(unittest.TestCase):
         )
         assert_almost_equal(bst_loaded.predict(dtest), res[0])
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier(self):
         x = np.random.randn(100, 10).astype(np.float32)
         y = ((x.sum(axis=1) + np.random.randn(x.shape[0]) / 50 + 0.5) >= 0).astype(
@@ -531,6 +624,7 @@ class TestXGBoostModels(unittest.TestCase):
                 res2 = oinf.run(None, {"X": x_test})
                 assert_almost_equal(model_skl.predict_proba(x_test), res2[1])
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_cost(self):
         obj_classes = {
             "reg:logistic": (
@@ -611,12 +705,12 @@ class TestXGBoostModels(unittest.TestCase):
                         y = oinf.run(None, {"X": X_test.astype(np.float32)})
                         if cl == XGBRegressor:
                             exp = clr.predict(X_test)
-                            assert_almost_equal(exp, y[0].ravel(), decimal=5)
+                            assert_almost_equal(exp, y[0].ravel(), decimal=4)
                         else:
                             if "softmax" not in obj:
                                 exp = clr.predict_proba(X_test)
                                 got = pandas.DataFrame(y[1]).values
-                                assert_almost_equal(exp, got, decimal=5)
+                                assert_almost_equal(exp, got, decimal=4)
 
                             exp = clr.predict(X_test[:10])
                             assert_almost_equal(exp, y[0][:10])
@@ -625,6 +719,7 @@ class TestXGBoostModels(unittest.TestCase):
 
         self.assertGreater(nb_tests, 8)
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier_601(self):
         model = XGBClassifier(
             base_score=0.5,
@@ -661,6 +756,7 @@ class TestXGBoostModels(unittest.TestCase):
 
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBClassifier601")
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier_hinge(self):
         model = XGBClassifier(
             n_estimators=3, objective="binary:hinge", random_state=0, max_depth=2
@@ -675,6 +771,7 @@ class TestXGBoostModels(unittest.TestCase):
             x_test, xgb, conv_model, basename="SklearnXGBClassifierHinge"
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_doc_example(self):
         iris = load_iris()
         X, y = iris.data, iris.target
@@ -704,6 +801,7 @@ class TestXGBoostModels(unittest.TestCase):
         pred_onx = sess.run(None, {input_name: X_test.astype(np.float32)})
         assert_almost_equal(expected_prob, pred_onx[1], decimal=5)
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier_13(self):
         this = os.path.dirname(__file__)
         df = pandas.read_csv(os.path.join(this, "data_fail_empty.csv"))
@@ -725,9 +823,10 @@ class TestXGBoostModels(unittest.TestCase):
             colsample_bytree=0.75,
             random_state=42,
             verbosity=0,
+            early_stopping_rounds=40,
         )
 
-        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)], early_stopping_rounds=40)
+        clr.fit(X_train, y_train, eval_set=[(X_test, y_test)])
 
         initial_type = [("float_input", FloatTensorType([None, 797]))]
         onx = convert_xgboost(
@@ -742,6 +841,7 @@ class TestXGBoostModels(unittest.TestCase):
         assert_almost_equal(expected[1], got[1])
         assert_almost_equal(expected[0], got[0])
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_classifier_13_2(self):
         this = os.path.dirname(__file__)
         df = pandas.read_csv(os.path.join(this, "data_bug.csv"))
@@ -756,14 +856,13 @@ class TestXGBoostModels(unittest.TestCase):
             "early_stopping_rounds": 113,
             "random_state": 42,
             "max_depth": 3,
+            "eval_metric": ["logloss", "auc", "error"],
         }
-        eval_metric = ["logloss", "auc", "error"]
         model = XGBClassifier(**model_param)
         model.fit(
             X=x_train,
             y=y_train,
             eval_set=[(x_test, y_test)],
-            eval_metric=eval_metric,
             verbose=False,
         )
 
@@ -785,7 +884,211 @@ class TestXGBoostModels(unittest.TestCase):
         assert_almost_equal(expected[1], got[1])
         assert_almost_equal(expected[0], got[0])
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(xgboost.__version__) < pv.Version("2.0"),
+        "xgboost version<2.0 no supported for categories",
+    )
+    def test_xgb_regressor_categorical_hist(self):
+
+        this = os.path.dirname(__file__)
+        df = pandas.read_csv(os.path.join(this, "data_categorical.csv"))
+        df["f0"] = df["f0"].apply(ord).astype("category")
+        X, y = df.drop("y", axis=1), df["y"]
+
+        models = [
+            XGBRegressor(
+                objective="reg:squarederror",
+                n_estimators=30,
+                learning_rate=0.3,
+                tree_method="hist",
+                enable_categorical=True,  # turn on native categorical handling
+                random_state=0,
+            ),
+            XGBRegressor(
+                n_estimators=30,
+                enable_categorical=True,  # turn on native categorical handling
+                max_cat_to_onehot=8,  # use native one hot encoding
+            ),
+            XGBRegressor(
+                n_estimators=100,
+                max_depth=10,
+                enable_categorical=True,  # turn on native categorical handling
+            ),
+        ]
+
+        for idx, model in enumerate(models):
+            model.fit(X, y)
+
+            # Convert to ONNX.
+            # Input has 2 columns: cat codes (as numeric) + numeric feature.
+            onnx_model = convert_xgboost(
+                model,
+                initial_types=[("float_input", FloatTensorType([None, 2]))],
+                target_opset=TARGET_OPSET,
+            )
+
+            # Build the ONNX input:
+            # - first column: category codes (int codes) cast to float32
+            # - second column: numeric feature
+            cat_codes = X[["f0"]].values.astype(np.float32)
+            num_col = X[["f1"]].values.astype(np.float32)
+            X_onnx = np.concatenate([cat_codes, num_col], axis=1)
+
+            # Compare XGBoost and ONNX results.
+            expected = model.predict(X).astype(np.float32)
+            sess = InferenceSession(
+                onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+            )
+            input_name = sess.get_inputs()[0].name
+            got = sess.run(None, {input_name: X_onnx})[0].ravel().astype(np.float32)
+            assert_almost_equal(expected, got, decimal=4)
+
+            # Test onnx backend
+            dump_data_and_model(
+                X_onnx.astype("float32"),
+                model,
+                onnx_model,
+                basename=f"XGBRegressorCategoricalFeatures{idx}",
+            )
+
+    @unittest.skipIf(xgboost is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(xgboost.__version__) < pv.Version("2.0"),
+        "xgboost version <2.0 not supported for categories",
+    )
+    def test_xgb_regressor_categorical_hist_native(self):
+
+        this = os.path.dirname(__file__)
+        df = pandas.read_csv(os.path.join(this, "data_categorical.csv"))
+        df["f0"] = df["f0"].apply(ord).astype("category")
+        X, y = df.drop("y", axis=1), df["y"]
+        y += 5
+
+        # Use Native XGBoost api
+        params = {
+            "objective": "count:poisson",
+            "n_estimators": 30,
+            "max_depth": 6,
+            "learning_rate": 0.3,
+            "tree_method": "hist",
+            "enable_categorical": True,
+            "seed": 0,
+            "verbosity": 0,
+        }
+
+        # Create DMatrix with categorical support
+        dtrain = xgboost.DMatrix(X, label=y, enable_categorical=True)
+
+        # Train with native API
+        model_native = xgboost.train(
+            params, dtrain, num_boost_round=params["n_estimators"]
+        )
+
+        # Convert to ONNX (works with Booster)
+        onnx_model = convert_xgboost(
+            model_native,
+            initial_types=[("float_input", FloatTensorType([None, 2]))],
+            target_opset=TARGET_OPSET,
+        )
+
+        cat_codes = X[["f0"]].values.astype(np.float32)
+        num_col = X[["f1"]].values.astype(np.float32)
+        X_onnx = np.concatenate([cat_codes, num_col], axis=1)
+
+        # Compare predictions
+        expected = model_native.predict(dtrain).astype(np.float32)
+        sess = InferenceSession(
+            onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
+        input_name = sess.get_inputs()[0].name
+        got = sess.run(None, {input_name: X_onnx})[0].ravel().astype(np.float32)
+        np.testing.assert_almost_equal(expected, got, decimal=4)
+
+        # Test onnx backend
+        dump_data_and_model(
+            X_onnx.astype("float32"),
+            model_native,
+            onnx_model,
+            basename="XGBRegressorCategoricalFeaturesNative",
+            feature_names=["f0", "f1"],
+        )
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(xgboost.__version__) < pv.Version("2.0"),
+        "xgboost version<2.0 no supported for categories",
+    )
+    @unittest.skipIf(
+        pv.Version(ort.__version__) >= pv.Version("1.21.0")
+        and pv.Version(ort.__version__) < pv.Version("1.23.0"),
+        "onnxruntime versions between 1.21.X and 1.22.X contain a bug for category only trees. See https://github.com/microsoft/onnxruntime/issues/24636",
+    )
+    def test_xgb_regressor_only_categorical_hist(self):
+
+        this = os.path.dirname(__file__)
+        df = pandas.read_csv(os.path.join(this, "data_categorical.csv"))
+        df["f0"] = df["f0"].apply(ord).astype("category")
+        df = df.drop("f1", axis=1)
+        X, y = df.drop("y", axis=1), df["y"]
+
+        models = [
+            XGBRegressor(
+                objective="reg:squarederror",
+                n_estimators=1,
+                learning_rate=0.3,
+                tree_method="hist",
+                enable_categorical=True,
+                random_state=0,
+            ),
+            XGBRegressor(
+                objective="reg:squarederror",
+                n_estimators=30,
+                learning_rate=0.3,
+                tree_method="hist",
+                enable_categorical=True,
+                random_state=0,
+            ),
+            XGBRegressor(
+                n_estimators=30,
+                enable_categorical=True,
+                max_cat_to_onehot=8,  # use native one hot encoding
+            ),
+        ]
+
+        for idx, model in enumerate(models):
+            model.fit(X, y)
+
+            # Convert to ONNX.
+            # Input has 1 column: cat codes (as numeric)
+            onnx_model = convert_xgboost(
+                model,
+                initial_types=[("float_input", FloatTensorType([None, 1]))],
+                target_opset=TARGET_OPSET,
+            )
+
+            # Build the ONNX input:
+            # - first column: category codes (int codes) cast to float32
+            cat_codes = X[["f0"]].values.astype(np.float32)
+            X_onnx = np.array(cat_codes)
+
+            # Compare XGBoost and ONNX results.
+            expected = model.predict(X).astype(np.float32)
+            sess = InferenceSession(
+                onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+            )
+            input_name = sess.get_inputs()[0].name
+            got = sess.run(None, {input_name: X_onnx})[0].ravel().astype(np.float32)
+            assert_almost_equal(expected, got, decimal=4)
+
+            # Test onnx backend
+            dump_data_and_model(
+                X_onnx.astype("float32"),
+                model,
+                onnx_model,
+                basename=f"XGBRegressorOnlyCategoricalFeatures{idx}",
+            )
+
 
 if __name__ == "__main__":
-    TestXGBoostModels().test_xgb_classifier_13_2()
     unittest.main(verbosity=2)

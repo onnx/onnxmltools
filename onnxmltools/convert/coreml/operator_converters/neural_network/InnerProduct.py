@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from .....proto import onnx_proto
+import onnx as onnx_proto
 from ....common._apply_operation import apply_reshape
 from ....common._registration import register_converter
 
@@ -80,7 +80,7 @@ def convert_inner_product(scope, operator, container):
             [name_a, name_b, name_c],
             buffer_tensor_name,
             op_version=op_version,
-            **attrs
+            **attrs,
         )
         apply_reshape(
             scope,
@@ -96,7 +96,7 @@ def convert_inner_product(scope, operator, container):
             [name_a, name_b, name_c],
             operator.outputs[0].full_name,
             op_version=op_version,
-            **attrs
+            **attrs,
         )
 
 

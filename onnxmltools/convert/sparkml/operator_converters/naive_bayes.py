@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import numpy
-
-from ....proto import onnx_proto
+import onnx as onnx_proto
 from ...common.data_types import FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 from ...common._registration import register_converter, register_shape_calculator
 
 

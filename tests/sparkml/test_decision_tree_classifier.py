@@ -11,7 +11,7 @@ from pyspark.ml import Pipeline
 from pyspark.ml.classification import DecisionTreeClassifier
 from pyspark.ml.linalg import VectorUDT, SparseVector, Vectors
 from onnx.defs import onnx_opset_version
-from onnxconverter_common.onnx_ex import DEFAULT_OPSET_NUMBER
+from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools import convert_sparkml
 from onnxmltools.convert.common.data_types import StringTensorType, FloatTensorType
 from tests.sparkml.sparkml_test_utils import (
@@ -21,7 +21,6 @@ from tests.sparkml.sparkml_test_utils import (
 )
 from tests.sparkml import SparkMlTestCase
 from pyspark.ml.feature import StringIndexer, VectorIndexer
-
 
 TARGET_OPSET = min(15, min(DEFAULT_OPSET_NUMBER, onnx_opset_version()))
 
@@ -84,7 +83,9 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
         # run the model
         predicted = model.transform(data.limit(1))
         data_np = {
-            "label": data.limit(1).toPandas().label.values.reshape((-1, 1)),
+            "label": numpy.asarray(data.limit(1).toPandas().label.values).reshape(
+                (-1, 1)
+            ),
             "features": data.limit(1)
             .toPandas()
             .features.apply(lambda x: pandas.Series(x.toArray()))

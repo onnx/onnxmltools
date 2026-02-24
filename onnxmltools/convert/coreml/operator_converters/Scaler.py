@@ -19,7 +19,7 @@ def convert_scaler(scope, operator, container):
         operator.input_full_names,
         operator.output_full_names,
         op_domain="ai.onnx.ml",
-        **attrs
+        **attrs,
     )
 
 

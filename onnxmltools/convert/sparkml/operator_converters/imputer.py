@@ -3,9 +3,12 @@
 import copy
 
 from ...common.data_types import Int64TensorType, FloatTensorType
-from ...common.utils import check_input_and_output_numbers, check_input_and_output_types
+from ...common.shape_calculator import (
+    check_input_and_output_numbers,
+    check_input_and_output_types,
+)
 from ...common._registration import register_converter, register_shape_calculator
-from ...common._topology import Operator, Scope
+from ...common._container import Operator, Scope
 from pyspark.ml.feature import ImputerModel
 
 
@@ -43,7 +46,7 @@ def convert_imputer(scope: Scope, operator: Operator, container):
             concatenated_output,
             imputed_output,
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
         container.add_node(
             "Split",
@@ -60,7 +63,7 @@ def convert_imputer(scope: Scope, operator: Operator, container):
             operator.inputs[0].full_name,
             operator.output_full_names[0],
             op_domain="ai.onnx.ml",
-            **attrs
+            **attrs,
         )
 
 

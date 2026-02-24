@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from .....proto import onnx_proto
+import onnx as onnx_proto
 from ....common._registration import register_converter
 from ....common._apply_operation import apply_add, apply_mul
 
@@ -30,7 +30,7 @@ def convert_preprocessing_scaler(scope, operator, container):
             "ImageScaler",
             [operator.inputs[0].full_name],
             [operator.outputs[0].full_name],
-            **attrs
+            **attrs,
         )
     else:
         # In comments below, assume input tensor is X,

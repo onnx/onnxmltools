@@ -94,7 +94,7 @@ def convert_keras(
             )
 
         if initial_types is not None:
-            from onnxconverter_common import (
+            from onnxmltools.convert.common.data_types import (
                 FloatTensorType,
                 DoubleTensorType,
                 Int64TensorType,
@@ -269,11 +269,11 @@ def convert_sklearn(
     return convert_skl2onnx(
         model,
         name,
-        initial_types,
-        doc_string,
-        target_opset,
-        custom_conversion_functions,
-        custom_shape_calculators,
+        initial_types=initial_types,
+        doc_string=doc_string,
+        target_opset=target_opset,
+        custom_conversion_functions=custom_conversion_functions,
+        custom_shape_calculators=custom_shape_calculators,
     )
 
 
@@ -370,7 +370,7 @@ def _convert_tf_wrapper(
     channel_first_inputs=None,
     debug_mode=False,
     custom_op_conversions=None,
-    **kwargs
+    **kwargs,
 ):
     """
     convert a tensorflow graph def into a ONNX model proto, just like how keras does.
@@ -412,7 +412,7 @@ def _convert_tf_wrapper(
             inputs_as_nchw=channel_first_inputs,
             output_names=output_names,
             input_names=input_names,
-            **kwargs
+            **kwargs,
         )
 
         onnx_graph = tf2onnx.optimizer.optimize_graph(g)
@@ -431,7 +431,7 @@ def convert_tensorflow(
     channel_first_inputs=None,
     debug_mode=False,
     custom_op_conversions=None,
-    **kwargs
+    **kwargs,
 ):
     import pkgutil
 
@@ -450,5 +450,5 @@ def convert_tensorflow(
         channel_first_inputs,
         debug_mode,
         custom_op_conversions,
-        **kwargs
+        **kwargs,
     )

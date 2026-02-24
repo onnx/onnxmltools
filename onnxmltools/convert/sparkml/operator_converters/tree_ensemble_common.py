@@ -68,9 +68,7 @@ def save_read_sparkml_model_data(spark: SparkSession, model):
                 Please set this variable to a root distributed file system path to allow \
                 for saving and reading of spark models in cluster mode. \
                 You can set this in your SparkConfig \
-                by setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(
-                    dfs_key
-                )
+                by setting sparkBuilder.config(ONNX_DFS_PATH, dfs_path)".format(dfs_key)
             )
         if dfs_path is None:
             # If dfs_path is not specified, throw an error message
@@ -178,7 +176,7 @@ def add_node(
     attr_pairs["nodes_values"].append(value)
     attr_pairs["nodes_truenodeids"].append(true_child_id)
     attr_pairs["nodes_falsenodeids"].append(false_child_id)
-    attr_pairs["nodes_missing_value_tracks_true"].append(False)
+    attr_pairs["nodes_missing_value_tracks_true"].append(0)
     attr_pairs["nodes_hitrates"].append(1.0)
 
     # Add leaf information for making prediction
