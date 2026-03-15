@@ -278,7 +278,14 @@ class XGBConverter:
 
     @staticmethod
     def _fill_node_attributes(
-        treeid, tree_weight, jsnode, attr_pairs, is_classifier, remap, ids_covered: set
+        treeid,
+        tree_weight,
+        jsnode,
+        attr_pairs,
+        is_classifier,
+        remap,
+        ids_covered: set,
+        target_id=0,
     ):
         node_id = remap[jsnode["nodeid"]]
         if node_id in ids_covered:
@@ -316,13 +323,14 @@ class XGBConverter:
                         is_classifier,
                         remap,
                         ids_covered,
+                        target_id,
                     )
                 else:
                     raise RuntimeError("Unable to convert this node {0}".format(ch))
 
         else:
             weights = [jsnode["leaf"]]
-            weights_id_bias = 0
+            weights_id_bias = target_id
             XGBConverter._add_node(
                 attr_pairs=attr_pairs,
                 is_classifier=is_classifier,
@@ -353,14 +361,24 @@ class XGBConverter:
         return remap
 
     @staticmethod
-    def fill_tree_attributes(js_xgb_node, attr_pairs, tree_weights, is_classifier):
+    def fill_tree_attributes(
+        js_xgb_node, attr_pairs, tree_weights, is_classifier, tree_info=None
+    ):
         if not isinstance(js_xgb_node, list):
             raise TypeError("js_xgb_node must be a list")
         for treeid, (jstree, w) in enumerate(zip(js_xgb_node, tree_weights)):
             remap = XGBConverter._remap_nodeid(jstree)
             ids_covered = set()
+            target_id = tree_info[treeid] if tree_info is not None else 0
             XGBConverter._fill_node_attributes(
-                treeid, w, jstree, attr_pairs, is_classifier, remap, ids_covered
+                treeid,
+                w,
+                jstree,
+                attr_pairs,
+                is_classifier,
+                remap,
+                ids_covered,
+                target_id,
             )
 
 
@@ -401,12 +419,23 @@ class XGBRegressorConverter(XGBConverter):
         if best_ntree_limit and best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
 
+        params = XGBConverter.get_xgb_params(xgb_node)
+        n_targets = params["n_targets"]
+
+        tree_info = None
+        if n_targets > 1:
+            raw = json.loads(xgb_node.get_booster().save_raw(raw_format="json"))
+            tree_info = raw["learner"]["gradient_booster"]["model"]["tree_info"]
+            if best_ntree_limit and best_ntree_limit < len(tree_info):
+                tree_info = tree_info[:best_ntree_limit]
+
         XGBConverter.fill_tree_attributes(
-            js_trees, attr_pairs, [1 for _ in js_trees], False
+            js_trees, attr_pairs, [1 for _ in js_trees], False, tree_info
         )
 
-        params = XGBConverter.get_xgb_params(xgb_node)
-        attr_pairs["n_targets"] = params["n_targets"]
+        attr_pairs["n_targets"] = n_targets
+        if len(attr_pairs["base_values"]) == 1 and n_targets > 1:
+            attr_pairs["base_values"] = attr_pairs["base_values"] * n_targets
 
         # add nodes
         objectives_with_loglink = {"count:poisson", "reg:gamma", "reg:tweedie"}
