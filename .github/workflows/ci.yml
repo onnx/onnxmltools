@@ -150,7 +150,7 @@ jobs:
       - name: build
         run: python -m build .
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: artifact-${{ matrix.python_version }}-${{ matrix.os }}
           path: ./dist/**
