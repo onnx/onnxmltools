@@ -30,6 +30,6 @@ jobs:
       - name: check wheel
         run: python -m twine check ./onnxmltools*.whl
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           path: ./skl2onnx*.whl
