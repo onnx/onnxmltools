@@ -2,6 +2,9 @@
 
 import unittest
 
+import numpy as np
+from numpy.testing import assert_allclose
+
 try:
     from xgboost import XGBRegressor
 except Exception:
@@ -34,8 +37,9 @@ class TestXGBoostIssues(unittest.TestCase):
             convert_xgboost,
         )
         # Your data and labels
-        X = np.random.rand(100, 10)
-        y = np.random.rand(100, 2)
+        rng = np.random.default_rng()
+        X = rng.random((100, 10))
+        y = rng.random((100, 2))
 
         # Train XGBoost regressor
         model = xgboost.XGBRegressor(
@@ -57,6 +61,62 @@ class TestXGBoostIssues(unittest.TestCase):
         )
         got = sess.run(None, {"float_input": X.astype(np.float32)})
         self.assertEqual(got[0].shape, (100, 2))
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_issue_676_values(self):
+        import onnxruntime
+        import xgboost
+        from onnxmltools.convert import convert_xgboost
+        from onnxmltools.convert.common.data_types import FloatTensorType
+
+        rng = np.random.default_rng(0)
+        X = rng.random((50, 10)).astype(np.float32)
+        y = rng.random((50, 10))
+
+        model = xgboost.XGBRegressor(objective="reg:squarederror", n_estimators=3)
+        model.fit(X, y)
+
+        onnx_model = convert_xgboost(
+            model, initial_types=[("float_input", FloatTensorType([None, 10]))]
+        )
+        sess = onnxruntime.InferenceSession(
+            onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
+        got = sess.run(None, {"float_input": X})[0]
+        expected = model.predict(X)
+
+        self.assertEqual(got.shape, (50, 10))
+        assert_allclose(got, expected, rtol=1e-5, atol=1e-5)
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_quantile_regression(self):
+        import onnxruntime
+        import xgboost
+        from onnxmltools.convert import convert_xgboost
+        from onnxmltools.convert.common.data_types import FloatTensorType
+
+        rng = np.random.default_rng(0)
+        X = rng.random((20, 3)).astype(np.float32)
+        y = rng.random(20)
+
+        model = xgboost.XGBRegressor(
+            objective="reg:quantileerror",
+            quantile_alpha=[0.1, 0.5, 0.9],
+            n_estimators=3,
+        )
+        model.fit(X, y)
+
+        onnx_model = convert_xgboost(
+            model, initial_types=[("input", FloatTensorType([None, 3]))]
+        )
+        sess = onnxruntime.InferenceSession(
+            onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
+        got = sess.run(None, {"input": X})[0]
+        expected = model.predict(X)
+
+        self.assertEqual(got.shape, (20, 3))
+        assert_allclose(got, expected, rtol=1e-5, atol=1e-5)
 
 
 if __name__ == "__main__":
