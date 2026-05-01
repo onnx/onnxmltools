@@ -13,7 +13,7 @@ pytest
 pytest-cov
 pytest-spark; sys_platform != 'win32'
 ruff
-scikit-learn>=1.2.0
+scikit-learn>=1.6.1
 scipy
 skl2onnx>=1.19.1
 wheel
