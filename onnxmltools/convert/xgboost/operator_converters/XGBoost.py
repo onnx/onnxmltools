@@ -393,11 +393,19 @@ class XGBRegressorConverter(XGBConverter):
         )
 
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
-        if isinstance(base_score, list):
-            attr_pairs["base_values"] = base_score
-        else:
-            attr_pairs["base_values"] = [base_score]
 
+        if objective == "binary:logistic":
+            bs_list = base_score if isinstance(base_score, list) else [base_score]
+            logit_base = [
+                float(np.log(np.float32(bs) / (1.0 - np.float32(bs))))
+                for bs in bs_list
+            ]
+            attr_pairs["base_values"] = logit_base
+        else:
+            if isinstance(base_score, list):
+                attr_pairs["base_values"] = base_score
+            else:
+                attr_pairs["base_values"] = [base_score]
         if best_ntree_limit and best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
 
@@ -413,6 +421,10 @@ class XGBRegressorConverter(XGBConverter):
         if objective in objectives_with_loglink:
             names = [scope.get_unique_variable_name("tree")]
             del attr_pairs["base_values"]
+
+        elif objective == "binary:logistic":
+            names = [scope.get_unique_variable_name("tree")]
+
         else:
             names = operator.output_full_names
         container.add_node(
@@ -423,6 +435,13 @@ class XGBRegressorConverter(XGBConverter):
             name=scope.get_unique_operator_name("TreeEnsembleRegressor"),
             **attr_pairs,
         )
+        if objective == "binary:logistic":
+            container.add_node(
+                "Sigmoid",
+                names,
+                operator.output_full_names,
+                name=scope.get_unique_operator_name("Sigmoid"),
+            )
 
         if objective in objectives_with_loglink:
             cst = scope.get_unique_variable_name("raw_prediction")
