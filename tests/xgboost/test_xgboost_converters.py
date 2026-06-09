@@ -929,9 +929,12 @@ class TestXGBoostModels(unittest.TestCase):
             )
 
             # Build the ONNX input:
-            # - first column: category codes (int codes) cast to float32
+            # - first column: pandas category codes (0-based int codes) cast to float32
             # - second column: numeric feature
-            cat_codes = X[["f0"]].values.astype(np.float32)
+            # Note: X[["f0"]].values gives actual category values (e.g. 65, 66, 67),
+            # but XGBoost stores category codes (0, 1, 2...) in its tree JSON dump,
+            # so ONNX BRANCH_EQ nodes compare against codes, not raw values.
+            cat_codes = X["f0"].cat.codes.values.reshape(-1, 1).astype(np.float32)
             num_col = X[["f1"]].values.astype(np.float32)
             X_onnx = np.concatenate([cat_codes, num_col], axis=1)
 
@@ -992,7 +995,8 @@ class TestXGBoostModels(unittest.TestCase):
             target_opset=TARGET_OPSET,
         )
 
-        cat_codes = X[["f0"]].values.astype(np.float32)
+        # Use pandas category codes (0, 1, 2...) not raw values (65, 66, 67...)
+        cat_codes = X["f0"].cat.codes.values.reshape(-1, 1).astype(np.float32)
         num_col = X[["f1"]].values.astype(np.float32)
         X_onnx = np.concatenate([cat_codes, num_col], axis=1)
 
@@ -1068,8 +1072,8 @@ class TestXGBoostModels(unittest.TestCase):
             )
 
             # Build the ONNX input:
-            # - first column: category codes (int codes) cast to float32
-            cat_codes = X[["f0"]].values.astype(np.float32)
+            # - first column: pandas category codes (0-based int codes) cast to float32
+            cat_codes = X["f0"].cat.codes.values.reshape(-1, 1).astype(np.float32)
             X_onnx = np.array(cat_codes)
 
             # Compare XGBoost and ONNX results.
