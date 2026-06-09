@@ -523,7 +523,7 @@ class TestXGBoostModels(unittest.TestCase):
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb0_empty_tree_classifier(self):
-        xgb = XGBClassifier(n_estimators=2, max_depth=2)
+        xgb = XGBClassifier(n_estimators=2, max_depth=2, random_state=42)
 
         # simple dataset
         X = [[0, 1], [1, 1], [2, 0]]
@@ -806,7 +806,7 @@ class TestXGBoostModels(unittest.TestCase):
         this = os.path.dirname(__file__)
         df = pandas.read_csv(os.path.join(this, "data_fail_empty.csv"))
         X, y = df.drop("y", axis=1), df["y"]
-        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 
         clr = XGBClassifier(
             max_delta_step=0,
