@@ -553,10 +553,7 @@ def convert_lightgbm(scope, operator, container):
     if "objective" not in gbm_text:
         if "num_class" in gbm_text:
             n_classes = gbm_text["num_class"]
-            if n_classes == 1:
-                attrs["post_transform"] = "LOGISTIC"
-            else:
-                attrs["post_transform"] = "NONE"
+            attrs["post_transform"] = "NONE"
             objective = "binary"
         else:
             raise NotImplementedError(

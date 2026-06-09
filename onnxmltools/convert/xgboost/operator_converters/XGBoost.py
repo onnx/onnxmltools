@@ -67,6 +67,14 @@ class XGBConverter:
         return objective, base_score, js_trees, best_ntree_limit
 
     @staticmethod
+    def _base_score_to_margin(base_score):
+        bs_list = base_score if isinstance(base_score, list) else [base_score]
+        return [
+            float(np.log(np.float32(bs) / (1.0 - np.float32(bs))))
+            for bs in bs_list
+        ]
+
+    @staticmethod
     def _is_bracketed_json_list_string(s: str) -> bool:
         s = s.strip()
         return len(s) >= 2 and s[0] == "[" and s[-1] == "]"
@@ -395,12 +403,7 @@ class XGBRegressorConverter(XGBConverter):
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
 
         if objective == "binary:logistic":
-            bs_list = base_score if isinstance(base_score, list) else [base_score]
-            logit_base = [
-                float(np.log(np.float32(bs) / (1.0 - np.float32(bs))))
-                for bs in bs_list
-            ]
-            attr_pairs["base_values"] = logit_base
+            attr_pairs["base_values"] = XGBConverter._base_score_to_margin(base_score)
         else:
             if isinstance(base_score, list):
                 attr_pairs["base_values"] = base_score
@@ -508,15 +511,9 @@ class XGBClassifierConverter(XGBConverter):
                 # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L23.
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
-                if js_trees[0].get("leaf", None) == 0:
-                    attr_pairs["base_values"] = base_score
-                else:
-                    # Transform base_score - for binary, use first element
-                    bs_val = base_score[0]
-                    if bs_val != 0.5:
-                        # 0.5 -> cst = 0
-                        cst = -np.log(1 / np.float32(bs_val) - 1.0)
-                        attr_pairs["base_values"] = [cst]
+                attr_pairs["base_values"] = XGBConverter._base_score_to_margin(
+                    base_score
+                )
             else:
                 attr_pairs["base_values"] = base_score
         else:
@@ -535,13 +532,73 @@ class XGBClassifierConverter(XGBConverter):
             or np.issubdtype(classes.dtype, np.integer)
             or np.issubdtype(classes.dtype, np.bool_)
         ):
+            numeric_classes = True
             attr_pairs["classlabels_int64s"] = classes.astype("int")
         else:
+            numeric_classes = False
             classes = np.array([s.encode("utf-8") for s in classes])
             attr_pairs["classlabels_strings"] = classes
 
         # add nodes
-        if objective in ("binary:logistic", "binary:hinge"):
+        if objective == "binary:logistic" and numeric_classes:
+            raw_attrs = XGBRegressorConverter._get_default_tree_attribute_pairs()
+            raw_attrs["base_values"] = XGBConverter._base_score_to_margin(base_score)
+            raw_attrs["n_targets"] = 1
+            XGBConverter.fill_tree_attributes(
+                js_trees, raw_attrs, [1 for _ in js_trees], False
+            )
+
+            raw_score = scope.get_unique_variable_name("raw_score")
+            prob1 = scope.get_unique_variable_name("prob1")
+            prob0 = scope.get_unique_variable_name("prob0")
+            label_cond = scope.get_unique_variable_name("label_cond")
+            label_matrix = scope.get_unique_variable_name("label_matrix")
+            one = scope.get_unique_variable_name("one")
+            half = scope.get_unique_variable_name("half")
+            class0 = scope.get_unique_variable_name("class0")
+            class1 = scope.get_unique_variable_name("class1")
+            label_shape = scope.get_unique_variable_name("label_shape")
+
+            container.add_node(
+                "TreeEnsembleRegressor",
+                operator.input_full_names,
+                [raw_score],
+                op_domain="ai.onnx.ml",
+                name=scope.get_unique_operator_name("TreeEnsembleRegressor"),
+                **raw_attrs,
+            )
+            container.add_node(
+                "Sigmoid",
+                [raw_score],
+                [prob1],
+                name=scope.get_unique_operator_name("Sigmoid"),
+            )
+            container.add_initializer(one, TensorProto.FLOAT, [1], [1.0])
+            container.add_initializer(half, TensorProto.FLOAT, [1], [0.5])
+            container.add_node("Sub", [one, prob1], [prob0])
+            container.add_node(
+                "Concat",
+                [prob0, prob1],
+                [operator.output_full_names[1]],
+                axis=1,
+            )
+
+            class_labels = classes.astype("int64")
+            container.add_initializer(
+                class0, TensorProto.INT64, [1], [class_labels[0]]
+            )
+            container.add_initializer(
+                class1, TensorProto.INT64, [1], [class_labels[1]]
+            )
+            container.add_initializer(label_shape, TensorProto.INT64, [1], [-1])
+            container.add_node("Greater", [prob1, half], [label_cond])
+            container.add_node("Where", [label_cond, class1, class0], [label_matrix])
+            container.add_node(
+                "Reshape",
+                [label_matrix, label_shape],
+                [operator.output_full_names[0]],
+            )
+        elif objective in ("binary:logistic", "binary:hinge"):
             ncl = 2
             if objective == "binary:hinge":
                 attr_pairs["post_transform"] = "NONE"
