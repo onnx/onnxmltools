@@ -1,8 +1,13 @@
 name: Ruff Format Checker
+
 on: [push, pull_request]
+
+permissions:
+  contents: read
+
 jobs:
   ruff-format-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
-      - uses: chartboost/ruff-action@v1.0.0
+      - uses: astral-sh/ruff-action@v3
