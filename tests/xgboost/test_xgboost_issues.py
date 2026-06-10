@@ -70,12 +70,13 @@ class TestXGBoostIssues(unittest.TestCase):
             convert_xgboost,
         )
 
+        # overwrite_existing was removed in skl2onnx >=1.18; the default
+        # behaviour is already to overwrite, so simply drop the kwarg.
         update_registered_converter(
             XGBRegressor,
             "XGBoostXGBRegressor",
             calculate_linear_regressor_output_shapes,
             convert_xgboost,
-            overwrite_existing=True,
         )
 
         X = np.array(

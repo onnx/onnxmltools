@@ -364,6 +364,18 @@ class XGBConverter:
             )
 
 
+def _compute_base_score_logit(base_score):
+    """
+    Convert a base_score probability value to logit space.
+    Returns (logit_value, is_zero) where is_zero=True means logit is 0
+    (i.e. base_score == 0.5) and no base_values entry is needed.
+    """
+    bs_val = np.float32(base_score)
+    bs_clipped = np.clip(bs_val, 1e-7, 1.0 - 1e-7)
+    logit_bs = float(-np.log(1.0 / bs_clipped - 1.0))
+    return logit_bs, np.isclose(logit_bs, 0.0)
+
+
 class XGBRegressorConverter(XGBConverter):
     """
     Converter for XGBoost Regressor models to ONNX format.
@@ -420,13 +432,11 @@ class XGBRegressorConverter(XGBConverter):
                     f"base_score={bs_val} is out of range for binary:logistic; "
                     "expected a probability in (0, 1)."
                 )
-            if np.isclose(bs_val, 0.5):
+            logit_bs, is_zero = _compute_base_score_logit(bs_val)
+            if is_zero:
                 # logit(0.5) == 0, so omit base_values entirely
                 attr_pairs.pop("base_values", None)
             else:
-                # Clip away from 0/1 for numerical stability before computing logit
-                bs_clipped = np.clip(bs_val, 1e-7, 1.0 - 1e-7)
-                logit_bs = float(-np.log(1.0 / bs_clipped - 1.0))
                 attr_pairs["base_values"] = [logit_bs]
 
             raw_name = scope.get_unique_variable_name("binary_logistic_raw")
@@ -488,6 +498,16 @@ class XGBClassifierConverter(XGBConverter):
         return attrs
 
     @staticmethod
+    def _all_trees_are_stumps(js_trees):
+        """
+        Returns True if every tree in js_trees is a single root-level leaf
+        (i.e. the model is degenerate / learned nothing from the data).
+        XGBoost >=2 can produce these when early stopping fires on round 0
+        or when gamma/min_child_weight constraints prune every split.
+        """
+        return all("leaf" in t and "children" not in t for t in js_trees)
+
+    @staticmethod
     def convert(scope, operator, container):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
@@ -529,15 +549,22 @@ class XGBClassifierConverter(XGBConverter):
                 # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L23.
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
-                if js_trees[0].get("leaf", None) == 0:
-                    attr_pairs["base_values"] = base_score
+
+                # Always apply the logit transform to base_score for binary
+                # classifiers.  XGBoost >=2 stores base_score in probability
+                # space and accumulates tree outputs in logit space, so the
+                # base offset fed into TreeEnsembleClassifier must also be in
+                # logit space.  The previous code skipped the transform when
+                # all trees were stumps (leaf==0), which caused ONNX to use
+                # the raw probability as a logit offset and produced wrong
+                # probabilities for degenerate / early-stopped models.
+                bs_val = base_score[0]
+                logit_bs, is_zero = _compute_base_score_logit(bs_val)
+                if is_zero:
+                    # logit(0.5) == 0 → no offset needed, omit base_values
+                    attr_pairs.pop("base_values", None)
                 else:
-                    # Transform base_score - for binary, use first element
-                    bs_val = base_score[0]
-                    if bs_val != 0.5:
-                        # 0.5 -> cst = 0
-                        cst = -np.log(1 / np.float32(bs_val) - 1.0)
-                        attr_pairs["base_values"] = [cst]
+                    attr_pairs["base_values"] = [logit_bs]
             else:
                 attr_pairs["base_values"] = base_score
         else:
