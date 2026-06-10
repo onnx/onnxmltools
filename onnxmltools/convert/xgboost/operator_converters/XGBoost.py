@@ -415,11 +415,18 @@ class XGBRegressorConverter(XGBConverter):
         # then append an explicit Sigmoid node.
         if objective == "binary:logistic":
             bs_val = np.float32(bs_list[0])
-            if bs_val == 0.5:
+            if not (0.0 < bs_val < 1.0):
+                raise ValueError(
+                    f"base_score={bs_val} is out of range for binary:logistic; "
+                    "expected a probability in (0, 1)."
+                )
+            if np.isclose(bs_val, 0.5):
                 # logit(0.5) == 0, so omit base_values entirely
                 attr_pairs.pop("base_values", None)
             else:
-                logit_bs = float(-np.log(1.0 / bs_val - 1.0))
+                # Clip away from 0/1 for numerical stability before computing logit
+                bs_clipped = np.clip(bs_val, 1e-7, 1.0 - 1e-7)
+                logit_bs = float(-np.log(1.0 / bs_clipped - 1.0))
                 attr_pairs["base_values"] = [logit_bs]
 
             raw_name = scope.get_unique_variable_name("binary_logistic_raw")
