@@ -56,15 +56,36 @@ class XGBConverter:
             best_ntree_limit = xgb_node.best_iteration + 1
         else:
             best_ntree_limit = params.get("best_ntree_limit", None)
-        if base_score is None:
-            base_score = [0.5]
+
+        # Detect whether base_score came from the model config (XGBoost >=2)
+        # or from raw sklearn params (XGBoost <2).
+        #
+        # XGBoost >=2: get_xgb_params() sets base_score to a list (e.g. [0.5])
+        #   read from save_config(). The value is in *probability* space, and
+        #   XGBoost accumulates tree outputs in *logit* space, so we must convert
+        #   base_score to logit space before passing it to the ONNX operator.
+        #
+        # XGBoost <2: base_score is a plain float coming directly from
+        #   get_xgb_params() / __dict__. XGBoost <2 bakes the base_score offset
+        #   into the tree leaf values at training time, so the raw float should
+        #   be passed through unchanged (no logit transform).
+        if isinstance(base_score, list):
+            base_score_needs_logit = True
+        else:
+            # Normalise to list for uniform downstream handling
+            base_score_needs_logit = False
+            if base_score is None:
+                base_score = [0.5]
+            else:
+                base_score = [float(base_score)]
+
         booster = xgb_node.get_booster()
         # The json format was available in October 2017.
         # XGBoost 0.7 was the first version released with it.
         js_tree_list = booster.get_dump(with_stats=True, dump_format="json")
         js_trees: TreeLike = [json.loads(s) for s in js_tree_list]
         js_trees = XGBConverter._process_categorical_features(js_trees)
-        return objective, base_score, js_trees, best_ntree_limit
+        return objective, base_score, js_trees, best_ntree_limit, base_score_needs_logit
 
     @staticmethod
     def _is_bracketed_json_list_string(s: str) -> bool:
@@ -400,20 +421,21 @@ class XGBRegressorConverter(XGBConverter):
     def convert(scope, operator, container):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
-        objective, base_score, js_trees, best_ntree_limit = XGBConverter.common_members(
-            xgb_node, inputs
-        )
+        (
+            objective,
+            base_score,
+            js_trees,
+            best_ntree_limit,
+            base_score_needs_logit,
+        ) = XGBConverter.common_members(xgb_node, inputs)
 
-        attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
-
-        if isinstance(base_score, list):
-            bs_list = base_score
-        else:
-            bs_list = [base_score]
+        # base_score is always a list at this point (normalised in common_members)
+        bs_list = base_score
 
         if best_ntree_limit and best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
 
+        attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(
             js_trees, attr_pairs, [1 for _ in js_trees], False
         )
@@ -421,23 +443,26 @@ class XGBRegressorConverter(XGBConverter):
         params = XGBConverter.get_xgb_params(xgb_node)
         attr_pairs["n_targets"] = params["n_targets"]
 
-        # binary:logistic: XGBoost accumulates tree outputs in logit space and
-        # applies sigmoid at the end.  base_score is stored in probability space
-        # so convert it to logit space before passing to TreeEnsembleRegressor,
-        # then append an explicit Sigmoid node.
+        # binary:logistic: XGBoost >=2 stores base_score in probability space
+        # and accumulates tree outputs in logit space, so we convert base_score
+        # to logit space and append an explicit Sigmoid node.
+        # XGBoost <2 bakes base_score into leaf values, so pass it through as-is.
         if objective == "binary:logistic":
-            bs_val = np.float32(bs_list[0])
-            if not (0.0 < bs_val < 1.0):
-                raise ValueError(
-                    f"base_score={bs_val} is out of range for binary:logistic; "
-                    "expected a probability in (0, 1)."
-                )
-            logit_bs, is_zero = _compute_base_score_logit(bs_val)
-            if is_zero:
-                # logit(0.5) == 0, so omit base_values entirely
-                attr_pairs.pop("base_values", None)
+            if base_score_needs_logit:
+                bs_val = np.float32(bs_list[0])
+                if not (0.0 < bs_val < 1.0):
+                    raise ValueError(
+                        f"base_score={bs_val} is out of range for binary:logistic; "
+                        "expected a probability in (0, 1)."
+                    )
+                logit_bs, is_zero = _compute_base_score_logit(bs_val)
+                if is_zero:
+                    attr_pairs.pop("base_values", None)
+                else:
+                    attr_pairs["base_values"] = [logit_bs]
             else:
-                attr_pairs["base_values"] = [logit_bs]
+                # XGBoost <2: base_score already accounted for in leaf values
+                attr_pairs.pop("base_values", None)
 
             raw_name = scope.get_unique_variable_name("binary_logistic_raw")
             container.add_node(
@@ -512,9 +537,15 @@ class XGBClassifierConverter(XGBConverter):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
 
-        objective, base_score, js_trees, best_ntree_limit = XGBConverter.common_members(
-            xgb_node, inputs
-        )
+        (
+            objective,
+            base_score,
+            js_trees,
+            best_ntree_limit,
+            base_score_needs_logit,
+        ) = XGBConverter.common_members(xgb_node, inputs)
+
+        # base_score is always a list at this point (normalised in common_members)
 
         params = XGBConverter.get_xgb_params(xgb_node)
         n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
@@ -550,31 +581,40 @@ class XGBClassifierConverter(XGBConverter):
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
 
-                # Always apply the logit transform to base_score for binary
-                # classifiers.  XGBoost >=2 stores base_score in probability
-                # space and accumulates tree outputs in logit space, so the
-                # base offset fed into TreeEnsembleClassifier must also be in
-                # logit space.  The previous code skipped the transform when
-                # all trees were stumps (leaf==0), which caused ONNX to use
-                # the raw probability as a logit offset and produced wrong
-                # probabilities for degenerate / early-stopped models.
-                bs_val = base_score[0]
-                logit_bs, is_zero = _compute_base_score_logit(bs_val)
-                if is_zero:
-                    # logit(0.5) == 0 → no offset needed, omit base_values
-                    attr_pairs.pop("base_values", None)
+                # XGBoost >=2 stores base_score in probability space and
+                # accumulates tree outputs in logit space, so convert it to
+                # logit space before passing to TreeEnsembleClassifier.
+                # XGBoost <2 bakes base_score into the leaf values at training
+                # time, so no transform is needed — just omit base_values.
+                if base_score_needs_logit:
+                    bs_val = base_score[0]
+                    logit_bs, is_zero = _compute_base_score_logit(bs_val)
+                    if is_zero:
+                        # logit(0.5) == 0 → no offset needed
+                        attr_pairs.pop("base_values", None)
+                    else:
+                        attr_pairs["base_values"] = [logit_bs]
                 else:
-                    attr_pairs["base_values"] = [logit_bs]
+                    # XGBoost <2: offset already in leaf values
+                    attr_pairs.pop("base_values", None)
             else:
-                attr_pairs["base_values"] = base_score
+                # binary:hinge: only set base_values for XGBoost >=2
+                if base_score_needs_logit:
+                    attr_pairs["base_values"] = base_score
+                else:
+                    attr_pairs.pop("base_values", None)
         else:
             # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L35.
             attr_pairs["post_transform"] = "SOFTMAX"
-            # If base_score has fewer elements than classes, replicate to match
-            if len(base_score) == 1:
-                attr_pairs["base_values"] = base_score * ncl
+            if base_score_needs_logit:
+                # XGBoost >=2: replicate base_score across classes
+                if len(base_score) == 1:
+                    attr_pairs["base_values"] = base_score * ncl
+                else:
+                    attr_pairs["base_values"] = base_score
             else:
-                attr_pairs["base_values"] = base_score
+                # XGBoost <2: offset already in leaf values, omit base_values
+                attr_pairs.pop("base_values", None)
             attr_pairs["class_ids"] = [v % ncl for v in attr_pairs["class_treeids"]]
 
         classes = xgb_node.classes_
