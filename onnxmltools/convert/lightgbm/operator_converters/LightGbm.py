@@ -553,7 +553,10 @@ def convert_lightgbm(scope, operator, container):
     if "objective" not in gbm_text:
         if "num_class" in gbm_text:
             n_classes = gbm_text["num_class"]
-            attrs["post_transform"] = "NONE"
+            if n_classes == 1:
+                attrs["post_transform"] = "LOGISTIC"   # binary → needs sigmoid
+            else:
+                attrs["post_transform"] = "NONE"        # multiclass → already softmax elsewhere
             objective = "binary"
         else:
             raise NotImplementedError(

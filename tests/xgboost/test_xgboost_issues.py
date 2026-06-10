@@ -56,42 +56,49 @@ class TestXGBoostIssues(unittest.TestCase):
         )
         got = sess.run(None, {"float_input": X.astype(np.float32)})
         self.assertEqual(got[0].shape, (100, 2))
+
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_issue_726_binary_logistic_subsample(self):
         import numpy as np
-        import pandas as pd
         import onnxruntime as rt
-
-        from onnxmltools.convert import convert_xgboost
+        from skl2onnx import convert_sklearn, update_registered_converter
         from skl2onnx.common.data_types import FloatTensorType
-
-        df = pd.DataFrame(
-            {
-                "f1": [1.0, 2.0, 3.0, 4.0, 2.0, 3.0, 1.0, 2.0],
-                "label": [1, 0, 1, 0, 1, 1, 0, 1],
-            }
+        from skl2onnx.common.shape_calculator import (
+            calculate_linear_regressor_output_shapes,
+        )
+        from onnxmltools.convert.xgboost.operator_converters.XGBoost import (
+            convert_xgboost,
         )
 
-        params = {
-            "max_depth": 1,
-            "n_estimators": 3,
-            "subsample": 0.95,
-            "objective": "binary:logistic",
-        }
+        update_registered_converter(
+            XGBRegressor,
+            "XGBoostXGBRegressor",
+            calculate_linear_regressor_output_shapes,
+            convert_xgboost,
+            overwrite_existing=True,
+        )
 
-        model = XGBRegressor(**params)
+        X = np.array(
+            [[1.0], [2.0], [3.0], [4.0], [2.0], [3.0], [1.0], [2.0]],
+            dtype=np.float32,
+        )
+        y = np.array([1, 0, 1, 0, 1, 1, 0, 1], dtype=np.float32)
 
-        model.fit(df.drop(columns=["label"]), df["label"])
+        model = XGBRegressor(
+            max_depth=1,
+            n_estimators=3,
+            subsample=0.95,
+            objective="binary:logistic",
+        )
+        model.fit(X, y)
 
-        initial_types = [
-            ("f1", FloatTensorType([None, 1])),
-        ]
+        initial_types = [("f1", FloatTensorType([None, 1]))]
 
-        onnx_model = convert_xgboost(
+        onnx_model = convert_sklearn(
             model,
             "XGBoostXGBRegressor",
             initial_types,
-            target_opset=13,
+            target_opset={"": 13, "ai.onnx.ml": 3},
         )
 
         sess = rt.InferenceSession(
@@ -99,25 +106,20 @@ class TestXGBoostIssues(unittest.TestCase):
             providers=["CPUExecutionProvider"],
         )
 
-        got = sess.run(
-            None,
-            {
-                "f1": df["f1"].values.reshape(-1, 1).astype(np.float32),
-            },
-        )[0]
-
-        expected = (
-            model.predict(df.drop(columns=["label"]))
-            .reshape(-1, 1)
-            .astype(np.float32)
-        )
+        got = sess.run(None, {"f1": X})[0]
+        expected = model.predict(X).reshape(-1, 1).astype(np.float32)
 
         np.testing.assert_allclose(
             got,
             expected,
             rtol=1e-5,
             atol=1e-8,
+            err_msg=(
+                f"\nExpected: {expected.flatten()}"
+                f"\nONNX:     {got.flatten()}"
+            ),
         )
+
 
 if __name__ == "__main__":
     unittest.main()
