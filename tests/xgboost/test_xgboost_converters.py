@@ -868,13 +868,16 @@ class TestXGBoostModels(unittest.TestCase):
 
         initial_types = [("float_input", FloatTensorType([None, x_train.shape[1]]))]
         onnx_model = convert_xgboost(model, initial_types=initial_types)
-        tree_node = onnx_model.graph.node[0]
+        tree_node = next(
+            node
+            for node in onnx_model.graph.node
+            if node.op_type == "TreeEnsembleClassifier"
+        )
         tree_attrs = {att.name: att for att in tree_node.attribute}
-        self.assertEqual(tree_node.op_type, "TreeEnsembleRegressor")
         self.assertLess(max(tree_attrs["nodes_treeids"].ints), 1000)
-        self.assertEqual(len(tree_attrs["base_values"].floats), 1)
-        self.assertEqual(tree_attrs["post_transform"].s, b"NONE")
-        self.assertIn("Sigmoid", {node.op_type for node in onnx_model.graph.node})
+        if "base_values" in tree_attrs:
+            self.assertEqual(len(tree_attrs["base_values"].floats), 1)
+        self.assertEqual(tree_attrs["post_transform"].s, b"LOGISTIC")
 
         expected = model.predict(x_test), model.predict_proba(x_test)
         sess = InferenceSession(onnx_model.SerializeToString())

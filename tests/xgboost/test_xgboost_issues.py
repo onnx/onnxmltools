@@ -89,6 +89,7 @@ class TestXGBoostIssues(unittest.TestCase):
             n_estimators=3,
             subsample=0.95,
             objective="binary:logistic",
+            random_state=0,
         )
         model.fit(X, y)
 

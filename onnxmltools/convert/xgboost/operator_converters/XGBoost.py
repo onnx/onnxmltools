@@ -443,7 +443,7 @@ class XGBRegressorConverter(XGBConverter):
         objectives_with_loglink = {"count:poisson", "reg:gamma", "reg:tweedie"}
         if objective in objectives_with_loglink:
             names = [scope.get_unique_variable_name("tree")]
-            del attr_pairs["base_values"]
+            attr_pairs.pop("base_values", None)
         else:
             attr_pairs["base_values"] = bs_list
             names = operator.output_full_names
