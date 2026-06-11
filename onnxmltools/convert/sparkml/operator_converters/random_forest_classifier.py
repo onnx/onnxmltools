@@ -1,14 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
-
 import logging
-from ...common.tree_ensemble import (
-    get_default_tree_classifier_attribute_pairs,
-    add_tree_to_attribute_pairs,
-)
 from ...common._registration import register_converter, register_shape_calculator
 from .tree_ensemble_common import (
     save_read_sparkml_model_data,
     sparkml_tree_dataset_to_sklearn,
+    get_default_tree_classifier_attribute_pairs,
+    add_tree_to_attribute_pairs,
 )
 from .decision_tree_classifier import calculate_decision_tree_classifier_output_shapes
 from .tree_helper import rewrite_ids_and_process

@@ -581,21 +581,37 @@ class XGBClassifierConverter(XGBConverter):
                 attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
 
-                # XGBoost >=2 stores base_score in probability space and
-                # accumulates tree outputs in logit space, so convert it to
-                # logit space before passing to TreeEnsembleClassifier.
-                # XGBoost <2 bakes base_score into the leaf values at training
-                # time, so no transform is needed — just omit base_values.
-                if base_score_needs_logit:
+                # When every tree is a stump with leaf=0, all class_weights are
+                # zero and the prediction is determined entirely by base_score.
+                # TreeEnsembleClassifier with post_transform=LOGISTIC requires
+                # non-zero class weights to function correctly; with all-zero
+                # weights it outputs raw logit scores instead of probabilities.
+                # In this degenerate case we synthesize the output directly:
+                # compute p1=sigmoid(logit(base_score)) and store explicit
+                # class_weights [p0, p1] with post_transform=NONE.
+                all_stumps = XGBClassifierConverter._all_trees_are_stumps(js_trees)
+                if all_stumps:
+                    bs_val = float(base_score[0])
+                    bs_clipped = float(np.clip(bs_val, 1e-7, 1.0 - 1e-7))
+                    p1 = float(1.0 / (1.0 + np.exp(np.log(1.0 / bs_clipped - 1.0))))
+                    p0 = 1.0 - p1
+                    attr_pairs["post_transform"] = "NONE"
+                    attr_pairs.pop("base_values", None)
+                    first_node = attr_pairs["class_nodeids"][0]
+                    attr_pairs["class_treeids"] = [0, 0]
+                    attr_pairs["class_nodeids"] = [first_node, first_node]
+                    attr_pairs["class_ids"] = [0, 1]
+                    attr_pairs["class_weights"] = [p0, p1]
+                elif base_score_needs_logit:
+                    # XGBoost >=2: base_score in probability space, convert to logit
                     bs_val = base_score[0]
                     logit_bs, is_zero = _compute_base_score_logit(bs_val)
                     if is_zero:
-                        # logit(0.5) == 0 → no offset needed
                         attr_pairs.pop("base_values", None)
                     else:
                         attr_pairs["base_values"] = [logit_bs]
                 else:
-                    # XGBoost <2: offset already in leaf values
+                    # XGBoost <2 with non-stump trees: offset already in leaf values
                     attr_pairs.pop("base_values", None)
             else:
                 # binary:hinge: only set base_values for XGBoost >=2
