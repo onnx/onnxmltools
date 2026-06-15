@@ -393,10 +393,6 @@ class XGBRegressorConverter(XGBConverter):
         )
 
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
-        if isinstance(base_score, list):
-            attr_pairs["base_values"] = base_score
-        else:
-            attr_pairs["base_values"] = [base_score]
 
         if best_ntree_limit and best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
@@ -410,10 +406,22 @@ class XGBRegressorConverter(XGBConverter):
 
         # add nodes
         objectives_with_loglink = {"count:poisson", "reg:gamma", "reg:tweedie"}
+        # For binary:logistic, base_score is stored in probability space but
+        # leaf values are in log-odds space. We must convert base_score to
+        # log-odds and then apply a sigmoid to match XGBoost's prediction.
+        objectives_with_logistic = {"binary:logistic"}
         if objective in objectives_with_loglink:
             names = [scope.get_unique_variable_name("tree")]
-            del attr_pairs["base_values"]
+        elif objective in objectives_with_logistic:
+            bs_list = base_score if isinstance(base_score, list) else [base_score]
+            logit_base = [
+                float(np.log(np.float32(bs) / (1.0 - np.float32(bs)))) for bs in bs_list
+            ]
+            attr_pairs["base_values"] = logit_base
+            names = [scope.get_unique_variable_name("tree_logits")]
         else:
+            bs_list = base_score if isinstance(base_score, list) else [base_score]
+            attr_pairs["base_values"] = bs_list
             names = operator.output_full_names
         container.add_node(
             "TreeEnsembleRegressor",
@@ -432,6 +440,8 @@ class XGBRegressorConverter(XGBConverter):
             new_name = scope.get_unique_variable_name("exp")
             container.add_node("Exp", names, [new_name])
             container.add_node("Mul", [new_name, cst], operator.output_full_names)
+        elif objective in objectives_with_logistic:
+            container.add_node("Sigmoid", names, operator.output_full_names)
 
 
 class XGBClassifierConverter(XGBConverter):
