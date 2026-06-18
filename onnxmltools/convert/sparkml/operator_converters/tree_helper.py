@@ -274,9 +274,9 @@ class Node:
                     # (e.g. the root's left child) must still be remapped.
                     if attrs["nodes_modes"][i] == "LEAF":
                         continue
-            tid = attrs[field][i]
-            new_id = new_numbers[tid, nid]
-            attrs[k][i] = new_id
+                tid = attrs[field][i]
+                new_id = new_numbers[tid, nid]
+                attrs[k][i] = new_id
         return attrs
 
 

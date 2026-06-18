@@ -12,6 +12,7 @@ from .tree_ensemble_common import (
     sparkml_tree_dataset_to_sklearn,
     add_tree_to_attribute_pairs,
     get_default_tree_classifier_attribute_pairs,
+    add_tree_ensemble_classifier_node,
 )
 from .tree_helper import rewrite_ids_and_process
 
@@ -42,12 +43,14 @@ def convert_decision_tree_classifier(scope, operator, container):
 
     new_attrs = rewrite_ids_and_process(attrs, logger)
 
-    container.add_node(
-        op_type,
+    add_tree_ensemble_classifier_node(
+        scope,
+        container,
         operator.input_full_names,
-        [operator.outputs[0].full_name, operator.outputs[1].full_name],
-        op_domain="ai.onnx.ml",
-        **new_attrs,
+        operator.outputs[0].full_name,
+        operator.outputs[1].full_name,
+        new_attrs,
+        op.numClasses,
     )
 
 
