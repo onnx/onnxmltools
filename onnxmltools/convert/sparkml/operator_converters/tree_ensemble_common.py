@@ -287,6 +287,14 @@ def add_tree_ensemble_classifier_node(
     )
 
     if num_classes == 2:
+        # SparkML classification labels are always the integer indices
+        # 0..numClasses-1 (see decision_tree_classifier.py /
+        # random_forest_classifier.py), never string labels, so attrs is
+        # always built with classlabels_int64s.
+        assert "classlabels_int64s" in attrs, (
+            "Expected integer class labels for a SparkML classifier; "
+            "got attrs={!r}".format(sorted(attrs))
+        )
         argmax_name = scope.get_unique_variable_name("tree_ensemble_argmax")
         container.add_node(
             "ArgMax",

@@ -57,27 +57,19 @@ class XGBConverter:
         else:
             best_ntree_limit = params.get("best_ntree_limit", None)
 
-        # Detect whether base_score came from the model config (XGBoost >=2)
-        # or from raw sklearn params (XGBoost <2).
-        #
-        # XGBoost >=2: get_xgb_params() sets base_score to a list (e.g. [0.5])
-        #   read from save_config(). The value is in *probability* space, and
-        #   XGBoost accumulates tree outputs in *logit* space, so we must convert
-        #   base_score to logit space before passing it to the ONNX operator.
-        #
-        # XGBoost <2: base_score is a plain float coming directly from
-        #   get_xgb_params() / __dict__. XGBoost <2 bakes the base_score offset
-        #   into the tree leaf values at training time, so the raw float should
-        #   be passed through unchanged (no logit transform).
+        # base_score is in probability space regardless of XGBoost version.
+        # get_xgb_params() returns it as a list (e.g. [0.5]) whenever it was
+        # read from the model config via save_config(), which is the case
+        # for essentially every model produced by a real training run; the
+        # plain-float fallback below only normalises the rare case where
+        # that config key is absent (e.g. a Booster predating JSON config
+        # support).
         if isinstance(base_score, list):
-            base_score_needs_logit = True
+            pass
+        elif base_score is None:
+            base_score = [0.5]
         else:
-            # Normalise to list for uniform downstream handling
-            base_score_needs_logit = False
-            if base_score is None:
-                base_score = [0.5]
-            else:
-                base_score = [float(base_score)]
+            base_score = [float(base_score)]
 
         booster = xgb_node.get_booster()
         # The json format was available in October 2017.
@@ -85,7 +77,7 @@ class XGBConverter:
         js_tree_list = booster.get_dump(with_stats=True, dump_format="json")
         js_trees: TreeLike = [json.loads(s) for s in js_tree_list]
         js_trees = XGBConverter._process_categorical_features(js_trees)
-        return objective, base_score, js_trees, best_ntree_limit, base_score_needs_logit
+        return objective, base_score, js_trees, best_ntree_limit
 
     @staticmethod
     def _is_bracketed_json_list_string(s: str) -> bool:
@@ -426,7 +418,6 @@ class XGBRegressorConverter(XGBConverter):
             base_score,
             js_trees,
             best_ntree_limit,
-            _base_score_needs_logit,
         ) = XGBConverter.common_members(xgb_node, inputs)
 
         # base_score is always a list at this point (normalised in common_members)
@@ -528,7 +519,6 @@ class XGBClassifierConverter(XGBConverter):
             base_score,
             js_trees,
             best_ntree_limit,
-            base_score_needs_logit,
         ) = XGBConverter.common_members(xgb_node, inputs)
 
         # base_score is always a list at this point (normalised in common_members)
@@ -605,23 +595,15 @@ class XGBClassifierConverter(XGBConverter):
                     else:
                         attr_pairs["base_values"] = [logit_bs]
             else:
-                # binary:hinge: only set base_values for XGBoost >=2
-                if base_score_needs_logit:
-                    attr_pairs["base_values"] = base_score
-                else:
-                    attr_pairs.pop("base_values", None)
+                attr_pairs["base_values"] = base_score
         else:
             # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L35.
             attr_pairs["post_transform"] = "SOFTMAX"
-            if base_score_needs_logit:
-                # XGBoost >=2: replicate base_score across classes
-                if len(base_score) == 1:
-                    attr_pairs["base_values"] = base_score * ncl
-                else:
-                    attr_pairs["base_values"] = base_score
+            # If base_score has fewer elements than classes, replicate to match
+            if len(base_score) == 1:
+                attr_pairs["base_values"] = base_score * ncl
             else:
-                # XGBoost <2: offset already in leaf values, omit base_values
-                attr_pairs.pop("base_values", None)
+                attr_pairs["base_values"] = base_score
             attr_pairs["class_ids"] = [v % ncl for v in attr_pairs["class_treeids"]]
 
         classes = xgb_node.classes_
