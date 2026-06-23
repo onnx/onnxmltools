@@ -1,21 +1,28 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
+from typing import Any
 import warnings
 import packaging.version as pv
 import onnx
 from .common import utils
+from .common.data_types import DataType
+
+# (feature_name, data_type) pairs that describe the model's inputs
+InitialTypes = list[tuple[str, DataType]]
 
 
 def convert_coreml(
-    model,
-    name=None,
-    initial_types=None,
-    doc_string="",
-    target_opset=None,
-    targeted_onnx=None,
-    custom_conversion_functions=None,
-    custom_shape_calculators=None,
-):
+    model: Any,
+    name: str | None = None,
+    initial_types: InitialTypes | None = None,
+    doc_string: str = "",
+    target_opset: int | None = None,
+    targeted_onnx: str | None = None,
+    custom_conversion_functions: dict[str, Any] | None = None,
+    custom_shape_calculators: dict[str, Any] | None = None,
+) -> onnx.ModelProto:
     if targeted_onnx is not None:
         warnings.warn(
             "targeted_onnx is deprecated. Use target_opset.", DeprecationWarning
@@ -40,17 +47,17 @@ def convert_coreml(
 
 
 def convert_keras(
-    model,
-    name=None,
-    initial_types=None,
-    doc_string="",
-    target_opset=None,
-    targeted_onnx=None,
-    channel_first_inputs=None,
-    custom_conversion_functions=None,
-    custom_shape_calculators=None,
-    default_batch_size=1,
-):
+    model: Any,
+    name: str | None = None,
+    initial_types: InitialTypes | None = None,
+    doc_string: str = "",
+    target_opset: int | None = None,
+    targeted_onnx: str | None = None,
+    channel_first_inputs: list[str] | None = None,
+    custom_conversion_functions: dict[str, Any] | None = None,
+    custom_shape_calculators: dict[str, Any] | None = None,
+    default_batch_size: int = 1,
+) -> onnx.ModelProto:
     """
     .. versionchanged:: 1.9.0
         The conversion is now using *tf2onnx*.
@@ -150,15 +157,15 @@ def convert_keras(
 
 
 def convert_libsvm(
-    model,
-    name=None,
-    initial_types=None,
-    doc_string="",
-    target_opset=None,
-    targeted_onnx=None,
-    custom_conversion_functions=None,
-    custom_shape_calculators=None,
-):
+    model: Any,
+    name: str | None = None,
+    initial_types: InitialTypes | None = None,
+    doc_string: str = "",
+    target_opset: int | None = None,
+    targeted_onnx: str | None = None,
+    custom_conversion_functions: dict[str, Any] | None = None,
+    custom_shape_calculators: dict[str, Any] | None = None,
+) -> onnx.ModelProto:
     if targeted_onnx is not None:
         warnings.warn(
             "targeted_onnx is deprecated. Use target_opset.", DeprecationWarning
@@ -183,8 +190,12 @@ def convert_libsvm(
 
 
 def convert_catboost(
-    model, name=None, initial_types=None, doc_string="", target_opset=None
-):
+    model: Any,
+    name: str | None = None,
+    initial_types: InitialTypes | None = None,
+    doc_string: str = "",
+    target_opset: int | None = None,
+) -> onnx.ModelProto:
     try:
         from catboost.utils import convert_to_onnx_object
     except ImportError:
@@ -202,18 +213,18 @@ def convert_catboost(
 
 
 def convert_lightgbm(
-    model,
-    name=None,
-    initial_types=None,
-    doc_string="",
-    target_opset=None,
-    targeted_onnx=None,
-    custom_conversion_functions=None,
-    custom_shape_calculators=None,
-    without_onnx_ml=False,
-    zipmap=True,
-    split=None,
-):
+    model: Any,
+    name: str | None = None,
+    initial_types: InitialTypes | None = None,
+    doc_string: str = "",
+    target_opset: int | None = None,
+    targeted_onnx: str | None = None,
+    custom_conversion_functions: dict[str, Any] | None = None,
+    custom_shape_calculators: dict[str, Any] | None = None,
+    without_onnx_ml: bool = False,
+    zipmap: bool = True,
+    split: int | None = None,
+) -> onnx.ModelProto:
     if targeted_onnx is not None:
         warnings.warn(
             "targeted_onnx is deprecated. Use target_opset.", DeprecationWarning
@@ -241,15 +252,15 @@ def convert_lightgbm(
 
 
 def convert_sklearn(
-    model,
-    name=None,
-    initial_types=None,
-    doc_string="",
-    target_opset=None,
-    targeted_onnx=None,
-    custom_conversion_functions=None,
-    custom_shape_calculators=None,
-):
+    model: Any,
+    name: str | None = None,
+    initial_types: InitialTypes | None = None,
+    doc_string: str = "",
+    target_opset: int | None = None,
+    targeted_onnx: str | None = None,
+    custom_conversion_functions: dict[str, Any] | None = None,
+    custom_shape_calculators: dict[str, Any] | None = None,
+) -> onnx.ModelProto:
     if targeted_onnx is not None:
         warnings.warn(
             "targeted_onnx is deprecated. Use target_opset.", DeprecationWarning
@@ -278,16 +289,16 @@ def convert_sklearn(
 
 
 def convert_sparkml(
-    model,
-    name=None,
-    initial_types=None,
-    doc_string="",
-    target_opset=None,
-    targeted_onnx=None,
-    custom_conversion_functions=None,
-    custom_shape_calculators=None,
-    spark_session=None,
-):
+    model: Any,
+    name: str | None = None,
+    initial_types: InitialTypes | None = None,
+    doc_string: str = "",
+    target_opset: int | None = None,
+    targeted_onnx: str | None = None,
+    custom_conversion_functions: dict[str, Any] | None = None,
+    custom_shape_calculators: dict[str, Any] | None = None,
+    spark_session: Any = None,
+) -> onnx.ModelProto:
     if targeted_onnx is not None:
         warnings.warn(
             "targeted_onnx is deprecated. Use target_opset.", DeprecationWarning
@@ -312,7 +323,7 @@ def convert_sparkml(
     )
 
 
-def convert_xgboost(*args, **kwargs):
+def convert_xgboost(*args: Any, **kwargs: Any) -> onnx.ModelProto:
     if kwargs.get("targeted_onnx", None) is not None:
         warnings.warn(
             "targeted_onnx is deprecated. Use target_opset.", DeprecationWarning
@@ -327,7 +338,7 @@ def convert_xgboost(*args, **kwargs):
     return convert(*args, **kwargs)
 
 
-def convert_h2o(*args, **kwargs):
+def convert_h2o(*args: Any, **kwargs: Any) -> onnx.ModelProto:
     if kwargs.get("targeted_onnx", None) is not None:
         warnings.warn(
             "targeted_onnx is deprecated. Use target_opset.", DeprecationWarning
@@ -342,7 +353,7 @@ def convert_h2o(*args, **kwargs):
     return convert(*args, **kwargs)
 
 
-def _collect_input_nodes(graph, outputs):
+def _collect_input_nodes(graph: Any, outputs: list[str]) -> tuple[set[Any], set[Any]]:
     nodes_to_keep = set()
     input_nodes = set()
     node_inputs = [graph.get_tensor_by_name(ts_).op for ts_ in outputs]
@@ -361,17 +372,17 @@ def _collect_input_nodes(graph, outputs):
 
 
 def _convert_tf_wrapper(
-    frozen_graph_def,
-    name=None,
-    input_names=None,
-    output_names=None,
-    doc_string="",
-    target_opset=None,
-    channel_first_inputs=None,
-    debug_mode=False,
-    custom_op_conversions=None,
-    **kwargs,
-):
+    frozen_graph_def: Any,
+    name: str | None = None,
+    input_names: list[str] | None = None,
+    output_names: list[str] | None = None,
+    doc_string: str = "",
+    target_opset: int | None = None,
+    channel_first_inputs: list[str] | None = None,
+    debug_mode: bool = False,
+    custom_op_conversions: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> onnx.ModelProto:
     """
     convert a tensorflow graph def into a ONNX model proto, just like how keras does.
     :param graph_def: the frozen tensorflow graph
@@ -402,6 +413,7 @@ def _convert_tf_wrapper(
         tf.import_graph_def(tf_graph_def, name="")
 
         if not input_names:
+            assert output_names is not None, "output_names must be provided when input_names is not set"
             input_nodes = list(_collect_input_nodes(tf_graph, output_names)[0])
             input_names = [nd_.outputs[0].name for nd_ in input_nodes]
         g = tf2onnx.tfonnx.process_tf_graph(
@@ -422,20 +434,20 @@ def _convert_tf_wrapper(
 
 
 def convert_tensorflow(
-    frozen_graph_def,
-    name=None,
-    input_names=None,
-    output_names=None,
-    doc_string="",
-    target_opset=None,
-    channel_first_inputs=None,
-    debug_mode=False,
-    custom_op_conversions=None,
-    **kwargs,
-):
-    import pkgutil
+    frozen_graph_def: Any,
+    name: str | None = None,
+    input_names: list[str] | None = None,
+    output_names: list[str] | None = None,
+    doc_string: str = "",
+    target_opset: int | None = None,
+    channel_first_inputs: list[str] | None = None,
+    debug_mode: bool = False,
+    custom_op_conversions: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> onnx.ModelProto:
+    import importlib.util
 
-    if not pkgutil.find_loader("tf2onnx"):
+    if importlib.util.find_spec("tf2onnx") is None:
         raise RuntimeError(
             "tf2onnx is not installed, please install it before calling this function."
         )

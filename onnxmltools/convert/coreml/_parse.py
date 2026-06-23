@@ -3,7 +3,6 @@
 import warnings
 from ..common._container import CoremlModelContainer, Topology
 from ..common.data_types import (
-    find_type_conversion,
     FloatTensorType,
     Int64TensorType,
     StringTensorType,
@@ -84,9 +83,8 @@ def _parse_coreml_feature(feature_info, target_opset, batch_size=1):
         shape.append(raw_type.imageType.height)
         shape.append(raw_type.imageType.width)
         color_space_map = {10: "Gray8", 20: "Rgb8", 30: "Bgr8"}
-        return FloatTensorType(
+        t = FloatTensorType(
             shape,
-            color_space_map[color_space],
             doc_string=doc_string,
             denotation="IMAGE",
             channel_denotations=[
@@ -96,6 +94,8 @@ def _parse_coreml_feature(feature_info, target_opset, batch_size=1):
                 "DATA_FEATURE",
             ],
         )
+        t.color_space = color_space_map[color_space]
+        return t
     elif type_name == "multiArrayType":
         element_type_id = raw_type.multiArrayType.dataType
         shape = [d for d in raw_type.multiArrayType.shape]
@@ -485,10 +485,7 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
             variable.type = Int64TensorType(variable.type.shape)
 
         # Feed model input to the associated model input
-        operator_type = find_type_conversion(
-            source_type=variable.type, target_type=child_variable.type
-        )
-        operator = scope.declare_local_operator(operator_type)
+        operator = scope.declare_local_operator("identity")
         operator.inputs.append(variable)
         operator.outputs.append(child_variable)
 
