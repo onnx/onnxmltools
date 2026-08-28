@@ -1094,6 +1094,83 @@ class TestXGBoostModels(unittest.TestCase):
                 basename=f"XGBRegressorOnlyCategoricalFeatures{idx}",
             )
 
+    def test_remap_nodeid_shared_subtrees_linear(self):
+        # Regression test: _maybe_transform_categorical rewrites a categorical
+        # set-membership split into a chain of BRANCH_EQ nodes that all
+        # reference the SAME yes-subtree object, so the transformed tree is a
+        # DAG with shared subtrees. _remap_nodeid must visit each node once;
+        # re-descending from an already-remapped node repeats shared subtrees
+        # once per chain entry, which compounds multiplicatively across nested
+        # categorical splits (conversion of models with a few hundred
+        # categories per split then takes hours). This ladder of 60 nodes,
+        # each listing the next node twice among its children, requires 2**59
+        # descents without memoization and 60 with it.
+        from onnxmltools.convert.xgboost.operator_converters.XGBoost import (
+            XGBConverter,
+        )
+
+        nodes = [{"nodeid": i} for i in range(60)]
+        for i in range(59):
+            nodes[i]["children"] = [nodes[i + 1], nodes[i + 1]]
+        remap = XGBConverter._remap_nodeid(nodes[0])
+        self.assertEqual(len(remap), 60)
+        self.assertEqual(remap, {i: i for i in range(60)})
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(xgboost.__version__) < pv.Version("2.0"),
+        "xgboost version<2.0 no supported for categories",
+    )
+    def test_xgb_regressor_categorical_high_cardinality(self):
+        # High-cardinality native-categorical regression: split sets holding
+        # ~100+ categories produce long BRANCH_EQ chains. Without the
+        # memoization in _remap_nodeid this conversion is ~150x slower
+        # (seconds instead of milliseconds at this size; hours at production
+        # vocabularies of several hundred levels with depth-6 trees). Also
+        # checks numerical parity at high cardinality.
+        rng = np.random.RandomState(0)
+        n, c1, c2 = 5000, 200, 100
+        f0 = rng.randint(0, c1, n)
+        f1 = rng.randint(0, c2, n)
+        f2 = rng.randn(n).astype(np.float32)
+        y = (f0 % 7) * 0.5 + (f1 % 5) * 0.25 + f2 * 0.1 + rng.randn(n) * 0.01
+        df = pandas.DataFrame(
+            {
+                "f0": pandas.Categorical(f0, categories=list(range(c1))),
+                "f1": pandas.Categorical(f1, categories=list(range(c2))),
+                "f2": f2,
+            }
+        )
+        model = XGBRegressor(
+            n_estimators=5,
+            max_depth=4,
+            tree_method="hist",
+            enable_categorical=True,
+            random_state=0,
+        )
+        model.fit(df, y)
+
+        onnx_model = convert_xgboost(
+            model,
+            initial_types=[("float_input", FloatTensorType([None, 3]))],
+            target_opset=TARGET_OPSET,
+        )
+
+        x_onnx = np.column_stack(
+            [
+                df["f0"].cat.codes.to_numpy(dtype=np.float32),
+                df["f1"].cat.codes.to_numpy(dtype=np.float32),
+                f2,
+            ]
+        ).astype(np.float32)
+        expected = model.predict(df).astype(np.float32)
+        sess = InferenceSession(
+            onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
+        input_name = sess.get_inputs()[0].name
+        got = sess.run(None, {input_name: x_onnx})[0].ravel().astype(np.float32)
+        assert_almost_equal(expected, got, decimal=4)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
