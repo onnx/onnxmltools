@@ -358,8 +358,16 @@ class XGBConverter:
         if remap is None:
             remap = {}
         nid = jsnode["nodeid"]
-        if nid not in remap:
-            remap[nid] = len(remap)
+        if nid in remap:
+            # Categorical set-membership splits are rewritten into BRANCH_EQ
+            # chains whose entries share (not copy) their yes-subtree, so the
+            # transformed tree is a DAG. A nodeid already in remap means the
+            # whole subtree below it has been assigned; descending again once
+            # per chain entry compounds multiplicatively across nested
+            # categorical splits and makes conversion time exponential in the
+            # category counts.
+            return remap
+        remap[nid] = len(remap)
         if "children" in jsnode:
             for ch in jsnode["children"]:
                 XGBConverter._remap_nodeid(ch, remap)
