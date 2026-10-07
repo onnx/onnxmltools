@@ -102,6 +102,32 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         assert_almost_equal(exp[0], got[0])
         assert_almost_equal(exp[1], got[1])
 
+    def test_lightgbm_classifier_sigmoid(self):
+        rng = numpy.random.RandomState(0)
+        X = rng.randn(200, 4).astype(numpy.float32)
+        y_bin = (X[:, 0] + X[:, 1] > 0).astype(int)
+        y_multi = numpy.digitize(X[:, 0] + X[:, 2], [-1, 0, 1])
+        params = dict(n_estimators=5, num_leaves=5, num_thread=1, verbose=-1)
+        for model, y in [
+            (LGBMClassifier(sigmoid=0.5, **params), y_bin),
+            (LGBMClassifier(objective="multiclassova", **params), y_multi),
+            (LGBMClassifier(objective="multiclassova", sigmoid=2.0, **params), y_multi),
+        ]:
+            with self.subTest(model=model):
+                model.fit(X, y)
+                onx = convert_lightgbm(
+                    model,
+                    initial_types=[("X", FloatTensorType([None, X.shape[1]]))],
+                    zipmap=False,
+                    target_opset=TARGET_OPSET,
+                )
+                sess = onnxruntime.InferenceSession(
+                    onx.SerializeToString(), providers=["CPUExecutionProvider"]
+                )
+                got = sess.run(None, {"X": X})
+                assert_almost_equal(model.predict(X), got[0])
+                assert_almost_equal(model.predict_proba(X), got[1], decimal=5)
+
     def test_lightgbm_regressor(self):
         model = LGBMRegressor(n_estimators=3, min_child_samples=1, num_thread=1)
         dump_single_regression(model)
