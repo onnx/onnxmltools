@@ -272,6 +272,45 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
             basename=prefix + "BoosterBin" + model.__class__.__name__,
         )
 
+    def test_lightgbm_random_forest(self):
+        rng = numpy.random.RandomState(0)
+        X = rng.randn(200, 4).astype(numpy.float32)
+        y_reg = X[:, 0] * 2 + X[:, 1] + rng.randn(200) * 0.1
+        y_bin = (X[:, 0] + X[:, 1] > 0).astype(int)
+        y_multi = numpy.digitize(X[:, 0] + X[:, 2], [-1, 0, 1])
+        params = dict(
+            boosting_type="rf",
+            bagging_freq=1,
+            bagging_fraction=0.7,
+            n_estimators=7,
+            num_leaves=5,
+            num_thread=1,
+            verbose=-1,
+        )
+        for model, y in [
+            (LGBMRegressor(**params), y_reg),
+            (LGBMRegressor(objective="poisson", **params), numpy.exp(y_reg / 4)),
+            (LGBMClassifier(**params), y_bin),
+            (LGBMClassifier(**params), y_multi),
+        ]:
+            with self.subTest(model=model, n_classes=len(numpy.unique(y))):
+                model.fit(X, y)
+                onx = convert_lightgbm(
+                    model,
+                    initial_types=[("X", FloatTensorType([None, X.shape[1]]))],
+                    zipmap=False,
+                    target_opset=TARGET_OPSET,
+                )
+                sess = onnxruntime.InferenceSession(
+                    onx.SerializeToString(), providers=["CPUExecutionProvider"]
+                )
+                got = sess.run(None, {"X": X})
+                if isinstance(model, LGBMClassifier):
+                    assert_almost_equal(model.predict(X), got[0])
+                    assert_almost_equal(model.predict_proba(X), got[1], decimal=5)
+                else:
+                    assert_almost_equal(model.predict(X), got[0].ravel(), decimal=5)
+
 
 if __name__ == "__main__":
     unittest.main()
