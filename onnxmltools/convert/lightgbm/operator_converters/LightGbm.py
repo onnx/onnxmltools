@@ -270,6 +270,12 @@ def _parse_node(
         attrs["nodes_missing_value_tracks_true"].append(0)
         attrs["nodes_hitrates"].append(1.0)
 
+        if node.get("leaf_coeff"):
+            # The linear models in the leaves cannot be expressed with TreeEnsemble.
+            raise NotImplementedError(
+                "LightGBM models trained with linear_tree=True are not supported."
+            )
+
         # Leaf attributes
         attrs["class_treeids"].append(tree_id)
         attrs["class_nodeids"].append(node_id)
