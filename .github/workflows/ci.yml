@@ -135,7 +135,7 @@ jobs:
       - name: Run tests h2o
         if: matrix.os == 'ubuntu-latest'
         run: |
-          pip install h2o
+          pip install h2o==3.46.0.11
           pytest tests/h2o
 
       - name: Run tests hummingbirdml
