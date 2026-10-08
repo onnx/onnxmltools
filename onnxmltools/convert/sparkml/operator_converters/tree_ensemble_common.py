@@ -5,6 +5,7 @@ import os
 import time
 import numpy
 import re
+from onnx import TensorProto
 from pyspark.sql import SparkSession
 
 
@@ -183,18 +184,21 @@ def add_node(
     if mode == "LEAF":
         flattened_weights = weights.flatten()
         factor = tree_weight
-        # If the values stored at leaves are counts of possible classes,
-        # we need convert them to probabilities by
-        # doing a normalization.
+        # If the values stored at leaves are counts of possible classes, we need
+        # convert them to probabilities by doing a normalization.
         if leaf_weights_are_counts:
             s = sum(flattened_weights)
             factor /= float(s) if s != 0.0 else 1.0
         flattened_weights = [w * factor for w in flattened_weights]
-        if len(flattened_weights) == 2 and is_classifier:
-            flattened_weights = [flattened_weights[1]]
 
-        # Note that attribute names for making prediction
-        # are different for classifiers and regressors
+        # Previously, binary classifiers dropped class-0 and stored only the
+        # class-1 weight at class_id=0, relying on an old onnxruntime behaviour
+        # that inferred the complementary probability.  onnxruntime >=1.22
+        # interprets class_id literally, so that shortcut now produces wrong
+        # (negated) probabilities.  Always emit every class weight explicitly.
+
+        # Note that attribute names for making prediction are different for
+        # classifiers and regressors
         if is_classifier:
             for i, w in enumerate(flattened_weights):
                 attr_pairs["class_treeids"].append(tree_id)
@@ -249,4 +253,67 @@ def add_tree_to_attribute_pairs(
             weight,
             weight_id_bias,
             leaf_weights_are_counts,
+        )
+
+
+def add_tree_ensemble_classifier_node(
+    scope, container, input_full_names, label_full_name, prob_full_name, attrs, num_classes
+):
+    """
+    Adds a TreeEnsembleClassifier node for the attrs built from
+    add_tree_to_attribute_pairs/rewrite_ids_and_process.
+
+    For binary (2-class) classifiers, onnxruntime's native label output for
+    this op only looks at whether the explicit class_id=1 score is positive,
+    ignoring the explicit class_id=0 score - this is wrong whenever leaf
+    weights are fractional (e.g. averaged across an ensemble of trees, or a
+    single tree with impure leaves), even though the probability output
+    itself is computed correctly. The label is instead derived via
+    ArgMax+Gather over the probability output, which does not have this
+    issue.
+    """
+    if num_classes == 2:
+        raw_label_name = scope.get_unique_variable_name("tree_ensemble_raw_label")
+        output_names = [raw_label_name, prob_full_name]
+    else:
+        output_names = [label_full_name, prob_full_name]
+
+    container.add_node(
+        "TreeEnsembleClassifier",
+        input_full_names,
+        output_names,
+        op_domain="ai.onnx.ml",
+        **attrs,
+    )
+
+    if num_classes == 2:
+        # SparkML classification labels are always the integer indices
+        # 0..numClasses-1 (see decision_tree_classifier.py /
+        # random_forest_classifier.py), never string labels, so attrs is
+        # always built with classlabels_int64s.
+        assert "classlabels_int64s" in attrs, (
+            "Expected integer class labels for a SparkML classifier; "
+            "got attrs={!r}".format(sorted(attrs))
+        )
+        argmax_name = scope.get_unique_variable_name("tree_ensemble_argmax")
+        container.add_node(
+            "ArgMax",
+            [prob_full_name],
+            [argmax_name],
+            axis=1,
+            keepdims=0,
+            name=scope.get_unique_operator_name("ArgMax"),
+        )
+        labels_name = scope.get_unique_variable_name("tree_ensemble_classlabels")
+        container.add_initializer(
+            labels_name,
+            TensorProto.INT64,
+            [len(attrs["classlabels_int64s"])],
+            [int(c) for c in attrs["classlabels_int64s"]],
+        )
+        container.add_node(
+            "Gather",
+            [labels_name, argmax_name],
+            [label_full_name],
+            name=scope.get_unique_operator_name("Gather"),
         )

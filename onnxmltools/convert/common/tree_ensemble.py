@@ -71,16 +71,21 @@ def add_node(
     if mode == "LEAF":
         flattened_weights = weights.flatten()
         factor = tree_weight
-        # If the values stored at leaves are counts of possible classes, we need convert them to probabilities by
-        # doing a normalization.
+        # If the values stored at leaves are counts of possible classes, we need
+        # convert them to probabilities by doing a normalization.
         if leaf_weights_are_counts:
             s = sum(flattened_weights)
             factor /= float(s) if s != 0.0 else 1.0
         flattened_weights = [w * factor for w in flattened_weights]
-        if len(flattened_weights) == 2 and is_classifier:
-            flattened_weights = [flattened_weights[1]]
 
-        # Note that attribute names for making prediction are different for classifiers and regressors
+        # Previously, binary classifiers dropped class-0 and stored only the
+        # class-1 weight at class_id=0, relying on an old onnxruntime behaviour
+        # that inferred the complementary probability.  onnxruntime >=1.22
+        # interprets class_id literally, so that shortcut now produces wrong
+        # (negated) probabilities.  Always emit every class weight explicitly.
+
+        # Note that attribute names for making prediction are different for
+        # classifiers and regressors
         if is_classifier:
             for i, w in enumerate(flattened_weights):
                 attr_pairs["class_treeids"].append(tree_id)
