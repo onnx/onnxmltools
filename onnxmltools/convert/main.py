@@ -262,8 +262,8 @@ def convert_sklearn(
     doc_string: str = "",
     target_opset: int | dict[str, int] | None = None,
     targeted_onnx: str | None = None,
-    custom_conversion_functions: dict[str, Any] | None = None,
-    custom_shape_calculators: dict[str, Any] | None = None,
+    custom_conversion_functions: dict[Any, Any] | None = None,
+    custom_shape_calculators: dict[Any, Any] | None = None,
 ) -> onnx.ModelProto:
     if targeted_onnx is not None:
         warnings.warn(
