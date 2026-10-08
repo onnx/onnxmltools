@@ -29,4 +29,8 @@ updates:
       interval: "monthly"
     cooldown:
       default-days: 7
+    groups:
+      codeql:
+        patterns:
+          - "github/codeql-action/*"
     open-pull-requests-limit: 20
