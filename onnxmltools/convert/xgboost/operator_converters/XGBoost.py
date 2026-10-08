@@ -56,8 +56,21 @@ class XGBConverter:
             best_ntree_limit = xgb_node.best_iteration + 1
         else:
             best_ntree_limit = params.get("best_ntree_limit", None)
-        if base_score is None:
+
+        # base_score is in probability space regardless of XGBoost version.
+        # get_xgb_params() returns it as a list (e.g. [0.5]) whenever it was
+        # read from the model config via save_config(), which is the case
+        # for essentially every model produced by a real training run; the
+        # plain-float fallback below only normalises the rare case where
+        # that config key is absent (e.g. a Booster predating JSON config
+        # support).
+        if isinstance(base_score, list):
+            pass
+        elif base_score is None:
             base_score = [0.5]
+        else:
+            base_score = [float(base_score)]
+
         booster = xgb_node.get_booster()
         # The json format was available in October 2017.
         # XGBoost 0.7 was the first version released with it.
@@ -345,8 +358,16 @@ class XGBConverter:
         if remap is None:
             remap = {}
         nid = jsnode["nodeid"]
-        if nid not in remap:
-            remap[nid] = len(remap)
+        if nid in remap:
+            # Categorical set-membership splits are rewritten into BRANCH_EQ
+            # chains whose entries share (not copy) their yes-subtree, so the
+            # transformed tree is a DAG. A nodeid already in remap means the
+            # whole subtree below it has been assigned; descending again once
+            # per chain entry compounds multiplicatively across nested
+            # categorical splits and makes conversion time exponential in the
+            # category counts.
+            return remap
+        remap[nid] = len(remap)
         if "children" in jsnode:
             for ch in jsnode["children"]:
                 XGBConverter._remap_nodeid(ch, remap)
@@ -362,6 +383,18 @@ class XGBConverter:
             XGBConverter._fill_node_attributes(
                 treeid, w, jstree, attr_pairs, is_classifier, remap, ids_covered
             )
+
+
+def _compute_base_score_logit(base_score):
+    """
+    Convert a base_score probability value to logit space.
+    Returns (logit_value, is_zero) where is_zero=True means logit is 0
+    (i.e. base_score == 0.5) and no base_values entry is needed.
+    """
+    bs_val = np.float32(base_score)
+    bs_clipped = np.clip(bs_val, 1e-7, 1.0 - 1e-7)
+    logit_bs = float(-np.log(1.0 / bs_clipped - 1.0))
+    return logit_bs, np.isclose(logit_bs, 0.0)
 
 
 class XGBRegressorConverter(XGBConverter):
@@ -388,19 +421,20 @@ class XGBRegressorConverter(XGBConverter):
     def convert(scope, operator, container):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
-        objective, base_score, js_trees, best_ntree_limit = XGBConverter.common_members(
-            xgb_node, inputs
-        )
+        (
+            objective,
+            base_score,
+            js_trees,
+            best_ntree_limit,
+        ) = XGBConverter.common_members(xgb_node, inputs)
 
-        attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
-        if isinstance(base_score, list):
-            attr_pairs["base_values"] = base_score
-        else:
-            attr_pairs["base_values"] = [base_score]
+        # base_score is always a list at this point (normalised in common_members)
+        bs_list = base_score
 
         if best_ntree_limit and best_ntree_limit < len(js_trees):
             js_trees = js_trees[:best_ntree_limit]
 
+        attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(
             js_trees, attr_pairs, [1 for _ in js_trees], False
         )
@@ -408,13 +442,49 @@ class XGBRegressorConverter(XGBConverter):
         params = XGBConverter.get_xgb_params(xgb_node)
         attr_pairs["n_targets"] = params["n_targets"]
 
+        # binary:logistic: XGBoost accumulates tree outputs in logit space and
+        # base_score is stored in probability space (in both XGBoost <2 and
+        # >=2), so it must be converted to logit space before being added to
+        # the tree sum.
+        if objective == "binary:logistic":
+            bs_val = np.float32(bs_list[0])
+            if not (0.0 < bs_val < 1.0):
+                raise ValueError(
+                    f"base_score={bs_val} is out of range for binary:logistic; "
+                    "expected a probability in (0, 1)."
+                )
+            logit_bs, is_zero = _compute_base_score_logit(bs_val)
+            if is_zero:
+                attr_pairs.pop("base_values", None)
+            else:
+                attr_pairs["base_values"] = [logit_bs]
+
+            raw_name = scope.get_unique_variable_name("binary_logistic_raw")
+            container.add_node(
+                "TreeEnsembleRegressor",
+                operator.input_full_names,
+                [raw_name],
+                op_domain="ai.onnx.ml",
+                name=scope.get_unique_operator_name("TreeEnsembleRegressor"),
+                **attr_pairs,
+            )
+            container.add_node(
+                "Sigmoid",
+                [raw_name],
+                operator.output_full_names,
+                name=scope.get_unique_operator_name("Sigmoid"),
+            )
+            return
+
         # add nodes
         objectives_with_loglink = {"count:poisson", "reg:gamma", "reg:tweedie"}
         if objective in objectives_with_loglink:
             names = [scope.get_unique_variable_name("tree")]
-            del attr_pairs["base_values"]
+            attr_pairs.pop("base_values", None)
         else:
+            attr_pairs["base_values"] = bs_list
             names = operator.output_full_names
+
         container.add_node(
             "TreeEnsembleRegressor",
             operator.input_full_names,
@@ -427,7 +497,7 @@ class XGBRegressorConverter(XGBConverter):
         if objective in objectives_with_loglink:
             cst = scope.get_unique_variable_name("raw_prediction")
             container.add_initializer(
-                cst, TensorProto.FLOAT, [len(base_score)], base_score
+                cst, TensorProto.FLOAT, [len(bs_list)], bs_list
             )
             new_name = scope.get_unique_variable_name("exp")
             container.add_node("Exp", names, [new_name])
@@ -452,9 +522,14 @@ class XGBClassifierConverter(XGBConverter):
         xgb_node = operator.raw_operator
         inputs = operator.inputs
 
-        objective, base_score, js_trees, best_ntree_limit = XGBConverter.common_members(
-            xgb_node, inputs
-        )
+        (
+            objective,
+            base_score,
+            js_trees,
+            best_ntree_limit,
+        ) = XGBConverter.common_members(xgb_node, inputs)
+
+        # base_score is always a list at this point (normalised in common_members)
 
         params = XGBConverter.get_xgb_params(xgb_node)
         n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
@@ -483,21 +558,50 @@ class XGBClassifierConverter(XGBConverter):
         if len(attr_pairs["class_treeids"]) == 0:
             raise RuntimeError("XGBoost model is empty.")
 
+        all_zero_weights = False
         if ncl <= 1:
             ncl = 2
             if objective != "binary:hinge":
                 # See https://github.com/dmlc/xgboost/blob/main/src/common/math.h#L23.
-                attr_pairs["post_transform"] = "LOGISTIC"
                 attr_pairs["class_ids"] = [0 for v in attr_pairs["class_treeids"]]
-                if js_trees[0].get("leaf", None) == 0:
-                    attr_pairs["base_values"] = base_score
+                all_zero_weights = all(
+                    w == 0.0 for w in attr_pairs["class_weights"]
+                )
+                if all_zero_weights:
+                    # Degenerate model: every leaf is exactly zero, so the
+                    # prediction is a constant fully determined by
+                    # base_score. onnxruntime's handling of
+                    # TreeEnsembleClassifier with post_transform=LOGISTIC and
+                    # all-zero class_weights has been observed to differ by
+                    # platform/CPU for the same onnxruntime version, so we
+                    # synthesize explicit per-class weights with
+                    # post_transform=NONE instead, which is stable. Its
+                    # native label output still breaks an exact 0.5/0.5 tie
+                    # towards the higher class index (the opposite of
+                    # XGBoost's tiebreak), so the predicted label is
+                    # recomputed below via ArgMax+Gather.
+                    bs_val = float(np.clip(base_score[0], 1e-7, 1.0 - 1e-7))
+                    p1 = bs_val
+                    p0 = 1.0 - p1
+                    attr_pairs["post_transform"] = "NONE"
+                    attr_pairs.pop("base_values", None)
+                    first_node = attr_pairs["class_nodeids"][0]
+                    attr_pairs["class_treeids"] = [0, 0]
+                    attr_pairs["class_nodeids"] = [first_node, first_node]
+                    attr_pairs["class_ids"] = [0, 1]
+                    attr_pairs["class_weights"] = [p0, p1]
                 else:
-                    # Transform base_score - for binary, use first element
-                    bs_val = base_score[0]
-                    if bs_val != 0.5:
-                        # 0.5 -> cst = 0
-                        cst = -np.log(1 / np.float32(bs_val) - 1.0)
-                        attr_pairs["base_values"] = [cst]
+                    # XGBoost accumulates tree outputs in logit space and
+                    # base_score is stored in probability space (in both
+                    # XGBoost <2 and >=2), so it must be converted to logit
+                    # space before being added to the tree sum.
+                    attr_pairs["post_transform"] = "LOGISTIC"
+                    bs_val = float(base_score[0])
+                    logit_bs, is_zero = _compute_base_score_logit(bs_val)
+                    if is_zero:
+                        attr_pairs.pop("base_values", None)
+                    else:
+                        attr_pairs["base_values"] = [logit_bs]
             else:
                 attr_pairs["base_values"] = base_score
         else:
@@ -534,6 +638,11 @@ class XGBClassifierConverter(XGBConverter):
                     operator.output_full_names[0],
                     scope.get_unique_variable_name("output_prob"),
                 ]
+            elif all_zero_weights:
+                output_names = [
+                    scope.get_unique_variable_name("xgb_raw_label"),
+                    operator.output_full_names[1],
+                ]
             else:
                 output_names = operator.output_full_names
             container.add_node(
@@ -558,6 +667,40 @@ class XGBClassifierConverter(XGBConverter):
                 container.add_node("Greater", [output_names[1], zero], [greater])
                 container.add_node(
                     "Where", [greater, one, zero], operator.output_full_names[1]
+                )
+            elif all_zero_weights:
+                # ArgMax's default tiebreak (first/lowest index on ties)
+                # matches XGBoost's, unlike TreeEnsembleClassifier's own
+                # label output in this degenerate case.
+                argmax_name = scope.get_unique_variable_name("xgb_argmax")
+                container.add_node(
+                    "ArgMax",
+                    [operator.output_full_names[1]],
+                    [argmax_name],
+                    axis=1,
+                    keepdims=0,
+                    name=scope.get_unique_operator_name("ArgMax"),
+                )
+                labels_name = scope.get_unique_variable_name("xgb_classlabels")
+                if "classlabels_int64s" in attr_pairs:
+                    container.add_initializer(
+                        labels_name,
+                        TensorProto.INT64,
+                        [len(attr_pairs["classlabels_int64s"])],
+                        [int(c) for c in attr_pairs["classlabels_int64s"]],
+                    )
+                else:
+                    container.add_initializer(
+                        labels_name,
+                        TensorProto.STRING,
+                        [len(attr_pairs["classlabels_strings"])],
+                        list(attr_pairs["classlabels_strings"]),
+                    )
+                container.add_node(
+                    "Gather",
+                    [labels_name, argmax_name],
+                    [operator.output_full_names[0]],
+                    name=scope.get_unique_operator_name("Gather"),
                 )
         elif objective in ("multi:softprob", "multi:softmax"):
             ncl = len(js_trees) // n_estimators
