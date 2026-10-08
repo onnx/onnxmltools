@@ -25,8 +25,13 @@ def calculate_lightgbm_classifier_output_shapes(operator):
 
     Note that the second case is not allowed as long as ZipMap only produces dictionary.
     """
+    op = operator.raw_operator
+    decision_leaf = getattr(operator, "decision_leaf", False)
+    expected_outputs = 3 if decision_leaf else 2
     check_input_and_output_numbers(
-        operator, input_count_range=1, output_count_range=[1, 2]
+        operator,
+        input_count_range=1,
+        output_count_range=[expected_outputs, expected_outputs],
     )
     check_input_and_output_types(
         operator, good_input_types=[FloatTensorType, Int64TensorType]
@@ -36,7 +41,7 @@ def calculate_lightgbm_classifier_output_shapes(operator):
 
     N = operator.inputs[0].type.shape[0]
 
-    class_labels = operator.raw_operator.classes_
+    class_labels = op.classes_
     if all(isinstance(i, np.ndarray) for i in class_labels):
         class_labels = np.concatenate(class_labels)
     if all(isinstance(i, str) for i in class_labels):
@@ -47,6 +52,10 @@ def calculate_lightgbm_classifier_output_shapes(operator):
         operator.outputs[1].type = FloatTensorType()
     else:
         operator.outputs[1].type = FloatTensorType(shape=[N, 1])
+
+    if decision_leaf:
+        n_trees = op.booster_.num_trees()
+        operator.outputs[2].type = Int64TensorType(shape=[N, n_trees])
 
 
 def calculate_lgbm_zipmap(operator):

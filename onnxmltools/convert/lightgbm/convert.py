@@ -24,6 +24,7 @@ def convert(
     without_onnx_ml=False,
     zipmap=True,
     split=None,
+    decision_leaf=False,
 ):
     """
     This function produces an equivalent ONNX model of the given lightgbm model.
@@ -65,7 +66,14 @@ def convert(
         Parameter *split* is the number of trees per node. It could be possible to
         do the same with TreeEnsembleClassifier. However, the normalization of the
         probabilities significantly reduces the discrepancies.
-    to use ONNX-ML operators as well.
+    :param decision_leaf: if True, an additional output named *leaf_indices* is
+        added to the ONNX model. It returns an int64 tensor of shape [N, n_trees]
+        where each element is the index of the leaf node reached in the corresponding
+        tree for each input sample. This is equivalent to LightGBM's
+        ``predict(X, pred_leaf=True)``.
+    :param without_onnx_ml: set to True to generate a model composed of ONNX
+        operators only (requires hummingbird-ml); set to False (default) to allow
+        ONNX-ML operators as well.
     :return: An ONNX model (type: ModelProto) which is equivalent to the input lightgbm model
     """
     if initial_types is None:
@@ -92,6 +100,7 @@ def convert(
         custom_shape_calculators,
         zipmap=zipmap,
         split=split,
+        decision_leaf=decision_leaf,
     )
     topology.compile()
     onnx_ml_model = convert_topology(
