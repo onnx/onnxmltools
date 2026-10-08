@@ -122,6 +122,38 @@ class TestXGBoostIssues(unittest.TestCase):
             ),
         )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_issue_646_reg_logistic(self):
+        import numpy as np
+        import onnxruntime as rt
+        from onnxmltools import convert_xgboost
+        from onnxmltools.convert.common.data_types import FloatTensorType
+
+        rng = np.random.RandomState(0)
+        X = rng.rand(100, 5).astype(np.float32)
+        y = (X[:, 0] + X[:, 1] > 1).astype(np.float32)
+
+        for base_score in [None, 0.3]:
+            with self.subTest(base_score=base_score):
+                model = XGBRegressor(
+                    objective="reg:logistic",
+                    n_estimators=5,
+                    max_depth=3,
+                    base_score=base_score,
+                )
+                model.fit(X, y)
+                onnx_model = convert_xgboost(
+                    model, initial_types=[("X", FloatTensorType([None, 5]))]
+                )
+                sess = rt.InferenceSession(
+                    onnx_model.SerializeToString(),
+                    providers=["CPUExecutionProvider"],
+                )
+                got = sess.run(None, {"X": X})[0]
+                np.testing.assert_allclose(
+                    got.ravel(), model.predict(X), rtol=1e-5, atol=1e-6
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
