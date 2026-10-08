@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
 import warnings
+from typing import Any
+
 import packaging.version as pv
 import onnx
+from skl2onnx.common.data_types import DataType as SklearnDataType
+
 from .common import utils
 from .common.data_types import DataType
 
 # (feature_name, data_type) pairs that describe the model's inputs
 InitialTypes = list[tuple[str, DataType]]
+SklearnInitialTypes = list[tuple[str, DataType | SklearnDataType]]
 
 
 def convert_coreml(
@@ -254,9 +258,9 @@ def convert_lightgbm(
 def convert_sklearn(
     model: Any,
     name: str | None = None,
-    initial_types: InitialTypes | None = None,
+    initial_types: SklearnInitialTypes | None = None,
     doc_string: str = "",
-    target_opset: int | None = None,
+    target_opset: int | dict[str, int] | None = None,
     targeted_onnx: str | None = None,
     custom_conversion_functions: dict[str, Any] | None = None,
     custom_shape_calculators: dict[str, Any] | None = None,

@@ -3,6 +3,7 @@
 # To register converters for Core ML operators, import associated modules here.
 from . import neural_network  # noqa: F401
 from . import ArrayFeatureExtractor
+from . import cast
 from . import DictVectorizer
 from . import FeatureVectorizer
 from . import GLMClassifier

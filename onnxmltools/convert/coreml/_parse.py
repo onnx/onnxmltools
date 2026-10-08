@@ -1,16 +1,61 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import warnings
+
+import onnx
+
 from ..common._container import CoremlModelContainer, Topology
 from ..common.data_types import (
-    FloatTensorType,
-    Int64TensorType,
-    StringTensorType,
     DictionaryType,
-    Int64Type,
+    FloatTensorType,
     FloatType,
+    Int64TensorType,
+    Int64Type,
+    StringTensorType,
     StringType,
 )
+
+_NUMERIC_TENSOR_TYPES = {
+    onnx.TensorProto.FLOAT,
+    onnx.TensorProto.UINT8,
+    onnx.TensorProto.INT8,
+    onnx.TensorProto.UINT16,
+    onnx.TensorProto.INT16,
+    onnx.TensorProto.INT32,
+    onnx.TensorProto.INT64,
+    onnx.TensorProto.FLOAT16,
+    onnx.TensorProto.DOUBLE,
+    onnx.TensorProto.UINT32,
+    onnx.TensorProto.UINT64,
+    onnx.TensorProto.BFLOAT16,
+}
+
+
+def _find_type_conversion(source_type, target_type):
+    source_onnx_type = source_type.to_onnx_type()
+    target_onnx_type = target_type.to_onnx_type()
+    if (
+        source_onnx_type.WhichOneof("value") != "tensor_type"
+        or target_onnx_type.WhichOneof("value") != "tensor_type"
+    ):
+        raise ValueError(
+            "Type conversion is only supported between tensor types, not "
+            f"{type(source_type).__name__} and {type(target_type).__name__}"
+        )
+
+    source_element_type = source_onnx_type.tensor_type.elem_type
+    target_element_type = target_onnx_type.tensor_type.elem_type
+    if source_element_type == target_element_type:
+        return "identity"
+    if (
+        source_element_type in _NUMERIC_TENSOR_TYPES
+        and target_element_type in _NUMERIC_TENSOR_TYPES
+    ):
+        return "cast"
+    raise ValueError(
+        "Unsupported tensor element type conversion from "
+        f"{source_element_type} to {target_element_type}"
+    )
 
 
 def _parse_coreml_feature(feature_info, target_opset, batch_size=1):
@@ -485,7 +530,10 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
             variable.type = Int64TensorType(variable.type.shape)
 
         # Feed model input to the associated model input
-        operator = scope.declare_local_operator("identity")
+        operator_type = _find_type_conversion(
+            source_type=variable.type, target_type=child_variable.type
+        )
+        operator = scope.declare_local_operator(operator_type)
         operator.inputs.append(variable)
         operator.outputs.append(child_variable)
 
@@ -494,7 +542,10 @@ def _parse_neural_network_model(topology, parent_scope, model, inputs, outputs):
     for parent_variable in inputs:
         raw_name = parent_variable.raw_name
         child_variable = scope.variables[scope.variable_name_mapping[raw_name][0]]
-        operator = scope.declare_local_operator("identity")
+        operator_type = _find_type_conversion(
+            source_type=parent_variable.type, target_type=child_variable.type
+        )
+        operator = scope.declare_local_operator(operator_type)
         operator.inputs.append(parent_variable)
         operator.outputs.append(child_variable)
 
