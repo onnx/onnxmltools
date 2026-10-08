@@ -25,8 +25,8 @@ jobs:
             documentation: 1
             numpy_version: '>=2'
             scipy_version: '>=1.7.0'
-            onnx_version: 'onnx>=1.18.0'
-            onnxrt_version: 'onnxruntime>=1.22.0'
+            onnx_version: 'onnx==1.23.2'
+            onnxrt_version: 'onnxruntime==1.30.0'
             sklearn_version: '>=1.8.0'
             lgbm_version: ">=4"
             xgboost_version: ">=2"
