@@ -84,6 +84,36 @@ class TestXGBoostRFModels(unittest.TestCase):
         )
         dump_data_and_model(x_test, xgb, conv_model, basename="SklearnXGBRFClassifier")
 
+    @unittest.skipIf(XGBRFRegressor is None, "xgboost is not available")
+    def test_xgbrf_classifier_multiclass(self):
+        """Test XGBRFClassifier with multiple classes and multiple estimators."""
+        import onnxruntime as rt
+
+        for n_estimators in [1, 3, 5]:
+            xgb, x_test = _fit_classification_model(
+                XGBRFClassifier(n_estimators=n_estimators), 3
+            )
+            conv_model = convert_xgboost(
+                xgb,
+                initial_types=[("input", FloatTensorType(shape=[None, None]))],
+                target_opset=TARGET_OPSET,
+            )
+            sess = rt.InferenceSession(conv_model.SerializeToString())
+            onnx_labels, onnx_probs = sess.run(None, {"input": x_test})
+            xgb_labels = xgb.predict(x_test)
+            xgb_probs = xgb.predict_proba(x_test)
+            np.testing.assert_array_equal(
+                onnx_labels,
+                xgb_labels,
+                err_msg=f"Label mismatch for n_estimators={n_estimators}",
+            )
+            np.testing.assert_allclose(
+                onnx_probs,
+                xgb_probs,
+                atol=1e-5,
+                err_msg=f"Probability mismatch for n_estimators={n_estimators}",
+            )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
