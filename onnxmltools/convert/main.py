@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any
+from typing import Any, Union
 
 import packaging.version as pv
 import onnx
@@ -14,7 +14,7 @@ from .common.data_types import DataType
 
 # (feature_name, data_type) pairs that describe the model's inputs
 InitialTypes = list[tuple[str, DataType]]
-SklearnInitialTypes = list[tuple[str, DataType | SklearnDataType]]
+SklearnInitialTypes = list[tuple[str, Union[DataType, SklearnDataType]]]
 
 
 def convert_coreml(

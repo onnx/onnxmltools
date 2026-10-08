@@ -163,6 +163,34 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
 
+    def test_int32_input_to_pooling_is_cast_and_normalized_to_4d(self):
+        inputs = [("input", datatypes.Array(3))]
+        outputs = [("output", datatypes.Array(3))]
+        builder = NeuralNetworkBuilder(inputs, outputs)
+        builder.add_pooling(
+            name="Pool",
+            height=1,
+            width=1,
+            stride_height=1,
+            stride_width=1,
+            layer_type="MAX",
+            padding_type="SAME",
+            input_name="input",
+            output_name="output",
+        )
+        builder.spec.description.input[0].type.multiArrayType.dataType = (
+            ArrayFeatureType.INT32
+        )
+
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
+
+        input_shape = [
+            dimension.dim_param or dimension.dim_value
+            for dimension in model_onnx.graph.input[0].type.tensor_type.shape.dim
+        ]
+        self.assertEqual(input_shape, ["None", 3, 1, 1])
+        self.assertIn("Cast", [node.op_type for node in model_onnx.graph.node])
+
     def test_activation_converter(self):
         input_dim = (3,)
         output_dim = (3,)
