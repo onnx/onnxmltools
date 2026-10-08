@@ -65,7 +65,7 @@ method of ONNX model
 6. And finally run the newly converted ONNX model in the runtime:
 
     ```python
-    sess = onnxruntime.InferenceSession(onnx_model)
+    sess = onnxruntime.InferenceSession(onnx_model, providers=["CPUExecutionProvider"])
     output = sess.run(None, input_data)
     ```
 

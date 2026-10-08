@@ -47,7 +47,7 @@ In `Topology`, we provide some functions for processing the whole graph. For exa
 
 There are two major functions a `Scope` may provide. First, it includes a naming mechanism for variables/operators so that all variable/operator names are unique. Note that variables' naming mechanism is independent from that of operators so that an operator and a variable can share the same name. Second, a `Scope` works like a container of operators and variables. Because two different `Scope` objects are essentially independent, we can use them in a recursive parsing algorithm to isolate components found at different stages.
 
-`Variable` and `Operator` are the smallest objects in a computational graph. To encode the topological dependencies between operators, each `Operator` object has an input list and an output list. The two lists are python lists of `Variable` objects. As you may expect, an operator computes its output(s) from its given input(s). One important attribute of a `Variable` object is its `type` field (i.e., a member variable in C++). Allowed `type` values such as `FloatTensorType` and `Int64TensorType` are defined in `onnxconverter_common.data_types`. Shape information is also included in `type`. To access the shape of a variable, `x`, you can do `x.type.shape`, which returns a list of integers and strings. Note that the only allowed string is `'None'`, which stands for a variable-length coordinate.
+`Variable` and `Operator` are the smallest objects in a computational graph. To encode the topological dependencies between operators, each `Operator` object has an input list and an output list. The two lists are python lists of `Variable` objects. As you may expect, an operator computes its output(s) from its given input(s). One important attribute of a `Variable` object is its `type` field (i.e., a member variable in C++). Shape information is also included in `type`. To access the shape of a variable, `x`, you can do `x.type.shape`, which returns a list of integers and strings. Note that the only allowed string is `'None'`, which stands for a variable-length coordinate.
 
 ## Containers
 
@@ -81,7 +81,7 @@ The shape mapping from Core ML to our IR obeys the following rules.
 Notice that the compiler can overwrite those rules at some stages like shape inference. An example is the label shape of a classifier. One may expect that its shape is `[1, 1].` Nevertheless, our shape inference may change it to `[1]`. The major reason is that the current definition of ZipMap, the operator used to generate the predicted probabilities, does not support batch size greater than one.
 
 Core ML's batch size, `N-axis`, is ignored because it is not related to graph structures. In fact, ONNX's batch size is rather equivalent to sequence axis in Core ML. By default, we use `N=1` for traditional machine learning models and `N='None'` for neural networks. To overwrite our default types, user can provide `initial_types` when calling `convert(...)` defined in `onnxmltools.convert.coreml.convert.py`. All Core ML's shape calculations are derived from [this document](https://apple.github.io/coremltools/coremlspecification/index.html) specifically for our type system.
-Some more details about Core ML neural network operator can be found at this [page](https://github.com/apple/coremltools/blob/master/mlmodel/format/NeuralNetwork.proto)
+Some more details about Core ML neural network operator can be found at this [page](https://github.com/apple/coremltools/blob/main/mlmodel/format/NeuralNetwork.proto)
 
 For scikit-learn, user may need to specify the input types for their models. In general, we expect `[1, C]` if the input is feature vector.
 
@@ -99,7 +99,7 @@ To invoke converters in a topological order, call `convert_topology(...)` define
 
 ## Registration
 
-For each `Operator` type we want to support, one shape calculator and one converter function must be registrated. Detailed instructions can be found in `onnxconverter_common.registration`.
+For each `Operator` type we want to support, one shape calculator and one converter function must be registrated.
 
 ## A Typical Model Conversion Procedure
 

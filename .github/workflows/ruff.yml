@@ -1,0 +1,18 @@
+name: Ruff Format Checker
+
+on: [push, pull_request]
+
+permissions: {}
+
+jobs:
+  ruff-format-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/ruff-action@4919ec5cf1f49eff0871dbcea0da843445b837e6 # v3
+        with:
+          version: "0.14.14"

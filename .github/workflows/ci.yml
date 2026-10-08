@@ -1,0 +1,160 @@
+name: "CI"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  run:
+    name: ${{ matrix.os }} py==${{ matrix.python_version }} - sklearn${{ matrix.sklearn_version }} - ${{ matrix.onnxrt_version }} - xgboost${{ matrix.xgboost_version }} - lightgbm${{ matrix.lgbm_version }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python_version: ['3.13', '3.12', '3.11', '3.10']
+        include:
+          - python_version: '3.13'
+            documentation: 1
+            numpy_version: '>=2'
+            scipy_version: '>=1.7.0'
+            onnx_version: 'onnx==1.23.2'
+            onnxrt_version: 'onnxruntime==1.30.0'
+            sklearn_version: '>=1.8.0'
+            lgbm_version: ">=4"
+            xgboost_version: ">=2"
+          - python_version: '3.12'
+            documentation: 1
+            numpy_version: '>=1.21.1'
+            scipy_version: '>=1.7.0'
+            onnx_version: 'onnx==1.18.0'
+            onnxrt_version: 'onnxruntime==1.20.1'
+            sklearn_version: '==1.7.0'
+            lgbm_version: ">=4"
+            xgboost_version: ">=2"
+          - python_version: '3.11'
+            documentation: 0
+            numpy_version: '<2'
+            scipy_version: '>=1.7.0'
+            onnx_version: 'onnx<1.16.0'
+            onnxrt_version: 'onnxruntime==1.17.3'
+            sklearn_version: '==1.6.0'
+            lgbm_version: ">=4"
+            xgboost_version: ">=2"
+          - python_version: '3.10'
+            documentation: 0
+            numpy_version: '>=1.21.1,<2'
+            scipy_version: '>=1.7.0'
+            onnx_version: 'onnx==1.14.1'
+            onnxrt_version: 'onnxruntime==1.16.3'
+            sklearn_version: '==1.4.2'
+            lgbm_version: "<4"
+            xgboost_version: "<2"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      - name: Cache pip
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.python_version }}-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python_version }}-
+            ${{ runner.os }}-pip-
+
+      - name: Install requirements
+        run: python -m pip install -r requirements.txt
+
+      - name: Install requirements dev
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Install specific versions
+        run: pip install "${{ matrix.onnx_version }}" "${{ matrix.onnxrt_version }}" "numpy${{ matrix.numpy_version }}" "scikit-learn${{ matrix.sklearn_version}}" "scipy${{ matrix.scipy_version }}" "xgboost${{ matrix.xgboost_version }}"
+
+      - name: Install lightgbm
+        if: matrix.os != 'macos-latest'
+        run: pip install "lightgbm${{ matrix.lgbm_version }}"
+
+      - name: Install
+        run: pip install -e .
+
+      - name: Print versions
+        run: |
+          python -c "from numpy import __version__;print('numpy', __version__)"
+          python -c "from pandas import __version__;print('pandas', __version__)"
+          python -c "from scipy import __version__;print('scipy', __version__)"
+          python -c "from sklearn import __version__;print('sklearn', __version__)"
+          python -c "from skl2onnx import __version__;print('skl2onnx', __version__)"
+          python -c "from onnxruntime import __version__;print('onnxruntime', __version__)"
+          python -c "from onnx import __version__;print('onnx', __version__)"
+          python -c "import onnx.defs;print('onnx_opset_version', onnx.defs.onnx_opset_version())"
+
+      - name: Print versions lightgbm, xgboost, catboost
+        if: matrix.os != 'macos-latest'
+        run: |
+          python -c "from lightgbm import __version__;print('lightgbm', __version__)"
+          python -c "from xgboost import __version__;print('xgboost', __version__)"
+          python -c "from catboost import __version__;print('catboost', __version__)"
+
+      - name: Run tests baseline
+        run: pytest tests/baseline
+
+      - name: Run tests utils
+        run: pytest tests/utils
+
+      - name: Run tests catboost
+        run: pytest tests/catboost
+
+      - name: Run tests lightgbm
+        if: matrix.os != 'macos-latest'
+        run: pytest tests/lightgbm
+
+      - name: Run tests xgboost
+        if: matrix.os != 'macos-latest'
+        run: pytest tests/xgboost
+
+      - name: Run tests svmlib
+        run: pytest tests/svmlib
+
+      - name: Run tests h2o
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pip install h2o==3.46.0.11
+          pytest tests/h2o
+
+      - name: Run tests hummingbirdml
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.xgboost_version != '<2' }}
+        run: |
+          pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install hummingbird-ml --no-deps
+          pytest tests/hummingbirdml
+
+      - name: Run tests pysparkml
+        if: matrix.os == 'ubuntu-latest' && matrix.python_version != '3.12'
+        run: pytest tests/sparkml
+
+      - name: Build package
+        run: |
+          pip install build
+          python -m build .
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: artifact-${{ matrix.python_version }}-${{ matrix.os }}
+          path: ./dist/**

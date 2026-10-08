@@ -4,6 +4,7 @@
 Mapping and utilities for the names of Params(propeties) that various Spark ML models
 have for their input and output columns
 """
+
 from .ops_names import get_sparkml_operator_name
 
 
@@ -71,7 +72,10 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.NaiveBayesModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.feature.VectorSlicer": (
             lambda model: [model.getOrDefault("inputCol")],
@@ -95,11 +99,17 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.RandomForestClassificationModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.classification.MultilayerPerceptronClassificationModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.regression.DecisionTreeRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],
@@ -107,7 +117,10 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.DecisionTreeClassificationModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.feature.VectorIndexerModel": (
             lambda model: [model.getOrDefault("inputCol")],
@@ -122,8 +135,16 @@ def build_io_name_map():
             lambda model: [model.getOrDefault("predictionCol")],
         ),
         "pyspark.ml.feature.ImputerModel": (
-            lambda model: model.getOrDefault("inputCols"),
-            lambda model: model.getOrDefault("outputCols"),
+            lambda model: (
+                model.getOrDefault("inputCols")
+                if model.isSet("inputCols")
+                else [model.getOrDefault("inputCol")]
+            ),
+            lambda model: (
+                model.getOrDefault("outputCols")
+                if model.isSet("outputCols")
+                else [model.getOrDefault("outputCol")]
+            ),
         ),
         "pyspark.ml.feature.MaxAbsScalerModel": (
             lambda model: [model.getOrDefault("inputCol")],
@@ -155,23 +176,34 @@ def build_io_name_map():
         ),
         "pyspark.ml.classification.LogisticRegressionModel": (
             lambda model: [model.getOrDefault("featuresCol")],
-            lambda model: [model.getOrDefault("predictionCol"), model.getOrDefault("probabilityCol")],
+            lambda model: [
+                model.getOrDefault("predictionCol"),
+                model.getOrDefault("probabilityCol"),
+            ],
         ),
         "pyspark.ml.feature.OneHotEncoderModel": (
-            lambda model: model.getOrDefault("inputCols")
-            if model.isSet("inputCols")
-            else [model.getOrDefault("inputCol")],
-            lambda model: model.getOrDefault("outputCols")
-            if model.isSet("outputCols")
-            else [model.getOrDefault("outputCol")],
+            lambda model: (
+                model.getOrDefault("inputCols")
+                if model.isSet("inputCols")
+                else [model.getOrDefault("inputCol")]
+            ),
+            lambda model: (
+                model.getOrDefault("outputCols")
+                if model.isSet("outputCols")
+                else [model.getOrDefault("outputCol")]
+            ),
         ),
         "pyspark.ml.feature.StringIndexerModel": (
-            lambda model: model.getOrDefault("inputCols")
-            if model.isSet("inputCols")
-            else [model.getOrDefault("inputCol")],
-            lambda model: model.getOrDefault("outputCols")
-            if model.isSet("outputCols")
-            else [model.getOrDefault("outputCol")],
+            lambda model: (
+                model.getOrDefault("inputCols")
+                if model.isSet("inputCols")
+                else [model.getOrDefault("inputCol")]
+            ),
+            lambda model: (
+                model.getOrDefault("outputCols")
+                if model.isSet("outputCols")
+                else [model.getOrDefault("outputCol")]
+            ),
         ),
         "pyspark.ml.feature.VectorAssembler": (
             lambda model: model.getOrDefault("inputCols"),

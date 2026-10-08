@@ -58,7 +58,7 @@ ONNX and finally uses *onnxruntime* to predict.
     # Convert into ONNX format with onnxmltools
     from onnxmltools import convert_sklearn
     from onnxmltools.utils import save_model
-    from onnxconverter_common.data_types import FloatTensorType
+    from onnxmltools.convert.common.data_types.data_types import FloatTensorType
     initial_type = [('float_input', FloatTensorType([None, 4]))]  # using 'None' to support multiple input samples for pred
     onx = convert_sklearn(clr, initial_types=initial_type)
     save_model(onx, "rf_iris.onnx")
@@ -66,7 +66,7 @@ ONNX and finally uses *onnxruntime* to predict.
     # Compute the prediction with ONNX Runtime
     import onnxruntime as rt
     import numpy
-    sess = rt.InferenceSession("rf_iris.onnx")
+    sess = rt.InferenceSession("rf_iris.onnx", providers=["CPUExecutionProvider"])
     input_name = sess.get_inputs()[0].name
     label_name = sess.get_outputs()[0].name
     pred_onx = sess.run([label_name], {input_name: X_test.astype(numpy.float32)})[0]

@@ -5,8 +5,13 @@ from ....common._registration import register_converter
 
 
 def convert_average(scope, operator, container):
-    apply_mean(scope, operator.input_full_names, operator.output_full_names, container,
-               operator_name=operator.full_name)
+    apply_mean(
+        scope,
+        operator.input_full_names,
+        operator.output_full_names,
+        container,
+        operator_name=operator.full_name,
+    )
 
 
-register_converter('average', convert_average)
+register_converter("average", convert_average)
