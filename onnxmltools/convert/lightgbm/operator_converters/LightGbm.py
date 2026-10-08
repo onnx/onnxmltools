@@ -3,6 +3,7 @@
 import copy
 import numbers
 import pprint
+import re
 from collections import deque, Counter
 import ctypes
 import json
@@ -602,6 +603,10 @@ def convert_lightgbm(scope, operator, container):
         if gbm_text["objective"].startswith("binary"):
             n_classes = 1
             attrs["post_transform"] = "LOGISTIC"
+        elif gbm_text["objective"].startswith("multiclassova"):
+            # One-vs-all: one independent sigmoid per class, not normalized.
+            n_classes = gbm_text["num_class"]
+            attrs["post_transform"] = "LOGISTIC"
         elif gbm_text["objective"].startswith("multiclass"):
             n_classes = gbm_text["num_class"]
             attrs["post_transform"] = "SOFTMAX"
@@ -658,6 +663,12 @@ def convert_lightgbm(scope, operator, container):
                 pair[1] for pair in sorted(merged_indexes, key=lambda x: x[0])
             ]
             attrs[k] = sorted_list
+
+    sigmoid = re.search(r"\bsigmoid:(\S+)", objective)
+    if attrs["post_transform"] == "LOGISTIC" and sigmoid and float(sigmoid.group(1)) != 1:
+        # LightGBM computes the probabilities as 1 / (1 + exp(-sigmoid * score)).
+        sigmoid = float(sigmoid.group(1))
+        attrs["class_weights"] = [w * sigmoid for w in attrs["class_weights"]]
 
     # Create ONNX object
     if objective.startswith("binary") or objective.startswith("multiclass"):
