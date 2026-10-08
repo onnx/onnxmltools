@@ -116,6 +116,19 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
         )
         dump_single_regression(model, suffix="2")
 
+    def test_lightgbm_linear_tree_not_supported(self):
+        rng = numpy.random.RandomState(0)
+        X = rng.randn(100, 3).astype(numpy.float32)
+        y = X[:, 0] * 2 + X[:, 1]
+        model = LGBMRegressor(linear_tree=True, n_estimators=3, num_thread=1, verbose=-1)
+        model.fit(X, y)
+        with self.assertRaises(NotImplementedError):
+            convert_lightgbm(
+                model,
+                initial_types=[("X", FloatTensorType([None, X.shape[1]]))],
+                target_opset=TARGET_OPSET,
+            )
+
     def test_lightgbm_booster_classifier(self):
         X = [[0, 1], [1, 1], [2, 0], [1, 2]]
         X = numpy.array(X, dtype=numpy.float32)
