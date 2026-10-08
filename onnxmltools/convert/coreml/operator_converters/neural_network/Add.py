@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from onnx import onnx_proto
+import onnx
 from ....common._registration import register_converter
 from ....common._apply_operation import apply_add
 
@@ -10,7 +10,7 @@ def convert_add(scope, operator, container):
         scaler_name = scope.get_unique_variable_name(operator.full_name + "_B")
         container.add_initializer(
             scaler_name,
-            onnx_proto.TensorProto.FLOAT,
+            onnx.TensorProto.FLOAT,
             [],
             [operator.raw_operator.add.alpha],
         )

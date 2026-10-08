@@ -51,7 +51,7 @@ This package relies on ONNX, NumPy, and ProtoBuf. If you are converting a model 
 8. H2O
 9. CatBoost
 
-ONNXMLTools is tested with Python **3.7+**.
+ONNXMLTools is tested with Python **3.9+**.
 
 # Examples
 

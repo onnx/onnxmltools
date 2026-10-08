@@ -19,12 +19,26 @@ try:
         setattr(sklearn.preprocessing, "Imputer", Imputer)
 except ImportError:
     from sklearn.preprocessing import Imputer
-from coremltools.converters.xgboost import convert as convert_xgb_to_coreml
 from onnx.defs import onnx_opset_version
 from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from onnxmltools.convert.coreml import convert as convert_cml
-from xgboost import XGBRegressor
 from onnxmltools.utils import dump_data_and_model
+
+try:
+    from coremltools.converters.xgboost import convert as convert_xgb_to_coreml
+    from xgboost import XGBRegressor
+except (ImportError, OSError):
+    XGBOOST_AVAILABLE = False
+except Exception as e:
+    # XGBoostError (raised when libomp.dylib is missing on macOS) does not
+    # inherit from ImportError/OSError, so we check by name to avoid catching
+    # unrelated programming errors.
+    if type(e).__name__ == "XGBoostError":
+        XGBOOST_AVAILABLE = False
+    else:
+        raise
+else:
+    XGBOOST_AVAILABLE = True
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
