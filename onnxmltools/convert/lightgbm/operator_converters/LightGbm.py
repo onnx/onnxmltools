@@ -50,6 +50,29 @@ def _translate_split_criterion(criterion):
         )
 
 
+def _float32_threshold(threshold, criterion):
+    """
+    LightGBM compares a float64 input with a float64 threshold, ONNX
+    TreeEnsemble compares a float32 input with a float32 threshold.
+    For ``x <= t``, rounding ``t`` to the nearest float32 can round it up
+    past a float32 value ``x`` with ``x > t``, which then goes to the
+    other branch. The largest float32 not above ``t`` gives the same
+    answer as the float64 comparison for every float32 input.
+    """
+    if criterion != "<=":
+        return threshold
+    try:
+        t = float(threshold)
+    except (TypeError, ValueError):
+        return threshold
+    if not np.isfinite(t) or abs(t) > float(np.finfo(np.float32).max):
+        return threshold
+    t32 = np.float32(t)
+    if float(t32) > t:
+        t32 = np.nextafter(t32, np.float32(-np.inf))
+    return float(t32)
+
+
 def _create_node_id(node_id_pool):
     i = 0
     while i in node_id_pool:
@@ -123,7 +146,11 @@ def _parse_tree_structure(tree_id, class_id, learning_rate, tree_structure, attr
                 "\n{}".format(tree_structure["threshold"], text)
             )
     else:
-        attrs["nodes_values"].append(tree_structure["threshold"])
+        attrs["nodes_values"].append(
+            _float32_threshold(
+                tree_structure["threshold"], tree_structure["decision_type"]
+            )
+        )
 
     # Assume left is the true branch and right is the false branch
     attrs["nodes_truenodeids"].append(left_id)
@@ -210,7 +237,9 @@ def _parse_node(
                     "\n{}".format(node["threshold"], text)
                 )
         else:
-            attrs["nodes_values"].append(node["threshold"])
+            attrs["nodes_values"].append(
+                _float32_threshold(node["threshold"], node["decision_type"])
+            )
 
         # Assume left is the true branch
         # and right is the false branch

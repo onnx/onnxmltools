@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple
 import packaging.version as pv
 
 import numpy as np
+from scipy.special import expit
 from numpy.testing import assert_almost_equal
 import onnxruntime
 import pandas as pd
@@ -257,7 +258,16 @@ class ObjectiveTest(unittest.TestCase):
         exp = model.predict(X), model.predict_proba(X)
         got = sess.run(None, {"X": X})
         # assert_almost_equal(exp[0], got[0], decimal=5)
-        assert_almost_equal(exp[1], got[1][:, 1], decimal=5)
+        # predict_proba with a custom objective returns raw scores, not probabilities.
+        # Newer skl2onnx (>=1.20) applies sigmoid to binary classifier output; older
+        # versions return raw scores directly. Detect which by checking closeness to
+        # expit(raw) — both old and new outputs sum to 1.0 per row so that check fails.
+        lgbm_raw = exp[1]
+        onnx_prob_class1 = got[1][:, 1]
+        if np.allclose(onnx_prob_class1, expit(lgbm_raw).astype(np.float32), atol=1e-4):
+            assert_almost_equal(expit(lgbm_raw).astype(np.float32), onnx_prob_class1, decimal=5)
+        else:
+            assert_almost_equal(lgbm_raw, onnx_prob_class1, decimal=5)
 
     @unittest.skipIf(
         pv.Version(lightgbm_version) < pv.Version("4.0"), "requires lightgbm>=4.0"

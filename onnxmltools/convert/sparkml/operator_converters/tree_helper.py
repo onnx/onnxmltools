@@ -268,8 +268,12 @@ class Node:
                 field = "nodes_treeids"
             for i in range(len(attrs[k])):
                 nid = attrs[k][i]
-                if nid == 0 and k in {"nodes_truenodeids", "nodes_falsenodeids"}:
-                    continue
+                if k in {"nodes_truenodeids", "nodes_falsenodeids"}:
+                    # Skip only genuine placeholder children on LEAF nodes.
+                    # A branch node whose true/false child happens to be node 0
+                    # (e.g. the root's left child) must still be remapped.
+                    if attrs["nodes_modes"][i] == "LEAF":
+                        continue
                 tid = attrs[field][i]
                 new_id = new_numbers[tid, nid]
                 attrs[k][i] = new_id
