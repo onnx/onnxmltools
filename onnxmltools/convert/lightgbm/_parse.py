@@ -37,7 +37,19 @@ class WrappedBooster:
             self.operator_name = "LgbmClassifier"
             self.classes_ = self._generate_classes(booster)
         elif self.objective_.startswith(
-            ("regression", "poisson", "gamma", "quantile", "huber", "tweedie")
+            (
+                "regression",
+                "poisson",
+                "gamma",
+                "quantile",
+                "huber",
+                "tweedie",
+                "fair",
+                "mape",
+                "cross_entropy",
+                "xentropy",
+                "xentlambda",
+            )
         ):
             self.operator_name = "LgbmRegressor"
         elif self.objective_.startswith(("lambdarank", "rank_xendcg")):
