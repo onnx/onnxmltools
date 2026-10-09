@@ -615,6 +615,12 @@ def convert_lightgbm(scope, operator, container):
         elif gbm_text["objective"].startswith("cross_entropy") and (
             operator.type == "LgbmClassifier"
         ):
+            if gbm_text["objective"].startswith("cross_entropy_lambda"):
+                # predict_proba then returns log(1 + exp(score)) as the
+                # probability of the positive class, which can exceed 1.
+                raise NotImplementedError(
+                    "LGBMClassifier with objective 'cross_entropy_lambda' is not supported."
+                )
             # Binary classifier trained with the cross-entropy objective.
             objective = "binary"
             n_classes = 1

@@ -47,6 +47,8 @@ class WrappedBooster:
                 "fair",
                 "mape",
                 "cross_entropy",
+                "xentropy",
+                "xentlambda",
             )
         ):
             self.operator_name = "LgbmRegressor"

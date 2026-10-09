@@ -64,6 +64,8 @@ class ObjectiveTest(unittest.TestCase):
         "mape",
         "cross_entropy",
         "cross_entropy_lambda",
+        "xentropy",
+        "xentlambda",
     )
 
     _ranker_objectives: Tuple[str] = (
@@ -248,6 +250,19 @@ class ObjectiveTest(unittest.TestCase):
         label, proba = sess.run(None, {"input": X})
         assert_almost_equal(classifier.predict(X), label)
         assert_almost_equal(classifier.predict_proba(X), proba, decimal=_N_DECIMALS)
+
+    def test_objective_LGBMClassifier_cross_entropy_lambda(self):
+        X = _X.values.astype(np.float32)
+        y = (_Y > 0.5).astype(int)
+        classifier = LGBMClassifier(objective="cross_entropy_lambda", num_thread=1)
+        classifier.fit(X, y)
+        with self.assertRaises(NotImplementedError):
+            convert_lightgbm(
+                classifier,
+                initial_types=[("input", FloatTensorType([None, X.shape[1]]))],
+                target_opset=TARGET_OPSET,
+                zipmap=False,
+            )
 
     @unittest.skipIf(
         pv.Version(lightgbm_version) < pv.Version("4.0"), "requires lightgbm>=4.0"
