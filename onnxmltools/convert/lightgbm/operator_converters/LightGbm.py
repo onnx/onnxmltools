@@ -11,9 +11,6 @@ import numpy as np
 from onnx import TensorProto
 import onnx as onnx_proto
 from ...common._apply_operation import (
-    apply_div,
-    apply_reshape,
-    apply_sub,
     apply_cast,
     apply_identity,
 )
@@ -631,11 +628,17 @@ def convert_lightgbm(scope, operator, container):
             )
 
     # Use the same algorithm to parse the tree
+    if gbm_text.get("average_output", False):
+        # Random forest mode averages the raw scores of all iterations
+        # before applying the objective's transform. The dumped model sets
+        # this flag for boosting="rf" or "random_forest", also for a Booster.
+        learning_rate = n_classes / len(gbm_text["tree_info"])
+    else:
+        # tree['shrinkage'] --> LightGbm provides figures with it already.
+        learning_rate = 1.0
     for i, tree in enumerate(gbm_text["tree_info"]):
         tree_id = i
         class_id = tree_id % n_classes
-        # tree['shrinkage'] --> LightGbm provides figures with it already.
-        learning_rate = 1.0
         _parse_tree_structure(
             tree_id, class_id, learning_rate, tree["tree_structure"], attrs
         )
@@ -673,11 +676,9 @@ def convert_lightgbm(scope, operator, container):
     # Create ONNX object
     if objective.startswith("binary") or objective.startswith("multiclass"):
         # Prepare label information for both of TreeEnsembleClassifier
-        class_type = onnx_proto.TensorProto.STRING
         if all(
             isinstance(i, (numbers.Real, bool, np.bool_)) for i in gbm_model.classes_
         ):
-            class_type = onnx_proto.TensorProto.INT64
             class_labels = [int(i) for i in gbm_model.classes_]
             attrs["classlabels_int64s"] = class_labels
         elif all(isinstance(i, str) for i in gbm_model.classes_):
@@ -711,92 +712,12 @@ def convert_lightgbm(scope, operator, container):
 
         prob_tensor = probability_tensor_name
 
-        if gbm_model.boosting_type == "rf":
-            col_index_name = scope.get_unique_variable_name("col_index")
-            first_col_name = scope.get_unique_variable_name("first_col")
-            zeroth_col_name = scope.get_unique_variable_name("zeroth_col")
-            denominator_name = scope.get_unique_variable_name("denominator")
-            modified_first_col_name = scope.get_unique_variable_name(
-                "modified_first_col"
-            )
-            unit_float_tensor_name = scope.get_unique_variable_name("unit_float_tensor")
-            merged_prob_name = scope.get_unique_variable_name("merged_prob")
-            predicted_label_name = scope.get_unique_variable_name("predicted_label")
-            classes_name = scope.get_unique_variable_name("classes")
-            final_label_name = scope.get_unique_variable_name("final_label")
-
-            container.add_initializer(
-                col_index_name, onnx_proto.TensorProto.INT64, [], [1]
-            )
-            container.add_initializer(
-                unit_float_tensor_name, onnx_proto.TensorProto.FLOAT, [], [1.0]
-            )
-            container.add_initializer(
-                denominator_name, onnx_proto.TensorProto.FLOAT, [], [100.0]
-            )
-            container.add_initializer(
-                classes_name, class_type, [len(class_labels)], class_labels
-            )
-
-            container.add_node(
-                "ArrayFeatureExtractor",
-                [probability_tensor_name, col_index_name],
-                first_col_name,
-                name=scope.get_unique_operator_name("ArrayFeatureExtractor"),
-                op_domain="ai.onnx.ml",
-            )
-            apply_div(
-                scope,
-                [first_col_name, denominator_name],
-                modified_first_col_name,
-                container,
-                broadcast=1,
-            )
-            apply_sub(
-                scope,
-                [unit_float_tensor_name, modified_first_col_name],
-                zeroth_col_name,
-                container,
-                broadcast=1,
-            )
-            container.add_node(
-                "Concat",
-                [zeroth_col_name, modified_first_col_name],
-                merged_prob_name,
-                name=scope.get_unique_operator_name("Concat"),
-                axis=1,
-            )
-            container.add_node(
-                "ArgMax",
-                merged_prob_name,
-                predicted_label_name,
-                name=scope.get_unique_operator_name("ArgMax"),
-                axis=1,
-            )
-            container.add_node(
-                "ArrayFeatureExtractor",
-                [classes_name, predicted_label_name],
-                final_label_name,
-                name=scope.get_unique_operator_name("ArrayFeatureExtractor"),
-                op_domain="ai.onnx.ml",
-            )
-            apply_reshape(
-                scope,
-                final_label_name,
-                operator.outputs[0].full_name,
-                container,
-                desired_shape=[
-                    -1,
-                ],
-            )
-            prob_tensor = merged_prob_name
-        else:
-            container.add_node(
-                "Identity",
-                label_tensor_name,
-                operator.outputs[0].full_name,
-                name=scope.get_unique_operator_name("Identity"),
-            )
+        container.add_node(
+            "Identity",
+            label_tensor_name,
+            operator.outputs[0].full_name,
+            name=scope.get_unique_operator_name("Identity"),
+        )
 
         # Convert probability tensor to probability map
         # (keys are labels while values are the associated probabilities)
@@ -869,21 +790,7 @@ def convert_lightgbm(scope, operator, container):
                 to=TensorProto.FLOAT,  # pylint: disable=E1101
                 name=scope.get_unique_operator_name("dtree%d" % i),
             )
-        if gbm_model.boosting_type == "rf":
-            denominator_name = scope.get_unique_variable_name("denominator")
-
-            container.add_initializer(
-                denominator_name, onnx_proto.TensorProto.FLOAT, [], [100.0]
-            )
-
-            apply_div(
-                scope,
-                [output_name, denominator_name],
-                operator.output_full_names,
-                container,
-                broadcast=1,
-            )
-        elif post_transform:
+        if post_transform:
             container.add_node(
                 post_transform,
                 output_name,
