@@ -292,6 +292,7 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
             (LGBMRegressor(objective="poisson", **params), numpy.exp(y_reg / 4)),
             (LGBMClassifier(**params), y_bin),
             (LGBMClassifier(**params), y_multi),
+            (LGBMRegressor(**{**params, "boosting_type": "random_forest"}), y_reg),
         ]:
             with self.subTest(model=model, n_classes=len(numpy.unique(y))):
                 model.fit(X, y)
@@ -310,6 +311,26 @@ class TestLightGbmTreeEnsembleModels(unittest.TestCase):
                     assert_almost_equal(model.predict_proba(X), got[1], decimal=5)
                 else:
                     assert_almost_equal(model.predict(X), got[0].ravel(), decimal=5)
+
+        # a native Booster trained in random forest mode
+        booster_params = {
+            k: v for k, v in params.items() if k not in ("boosting_type", "n_estimators")
+        }
+        booster = lightgbm.train(
+            {"boosting": "rf", "objective": "regression", **booster_params},
+            lightgbm.Dataset(X, label=y_reg),
+            num_boost_round=7,
+        )
+        onx = convert_lightgbm(
+            booster,
+            initial_types=[("X", FloatTensorType([None, X.shape[1]]))],
+            target_opset=TARGET_OPSET,
+        )
+        sess = onnxruntime.InferenceSession(
+            onx.SerializeToString(), providers=["CPUExecutionProvider"]
+        )
+        got = sess.run(None, {"X": X})
+        assert_almost_equal(booster.predict(X), got[0].ravel(), decimal=5)
 
 
 if __name__ == "__main__":

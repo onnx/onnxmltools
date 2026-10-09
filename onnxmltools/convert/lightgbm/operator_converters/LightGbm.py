@@ -617,9 +617,10 @@ def convert_lightgbm(scope, operator, container):
             )
 
     # Use the same algorithm to parse the tree
-    if gbm_model.boosting_type == "rf":
+    if gbm_text.get("average_output", False):
         # Random forest mode averages the raw scores of all iterations
-        # before applying the objective's transform.
+        # before applying the objective's transform. The dumped model sets
+        # this flag for boosting="rf" or "random_forest", also for a Booster.
         learning_rate = n_classes / len(gbm_text["tree_info"])
     else:
         # tree['shrinkage'] --> LightGbm provides figures with it already.
