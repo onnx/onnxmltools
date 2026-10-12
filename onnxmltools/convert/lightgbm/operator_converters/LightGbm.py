@@ -610,7 +610,9 @@ def convert_lightgbm(scope, operator, container):
         elif gbm_text["objective"].startswith("multiclass"):
             n_classes = gbm_text["num_class"]
             attrs["post_transform"] = "SOFTMAX"
-        elif gbm_text["objective"].startswith(("regression", "quantile", "huber")):
+        elif gbm_text["objective"].startswith(
+            ("regression", "quantile", "huber", "fair", "mape")
+        ):
             n_classes = 1  # Regressor has only one output variable
             attrs["post_transform"] = "NONE"
             attrs["n_targets"] = n_classes
@@ -621,6 +623,27 @@ def convert_lightgbm(scope, operator, container):
             # so we need to add an 'Exp' post transform node to the model
             attrs["post_transform"] = "NONE"
             post_transform = "Exp"
+        elif gbm_text["objective"].startswith("cross_entropy") and (
+            operator.type == "LgbmClassifier"
+        ):
+            if gbm_text["objective"].startswith("cross_entropy_lambda"):
+                # predict_proba then returns log(1 + exp(score)) as the
+                # probability of the positive class, which can exceed 1.
+                raise NotImplementedError(
+                    "LGBMClassifier with objective 'cross_entropy_lambda' is not supported."
+                )
+            # Binary classifier trained with the cross-entropy objective.
+            objective = "binary"
+            n_classes = 1
+            attrs["post_transform"] = "LOGISTIC"
+        elif gbm_text["objective"].startswith("cross_entropy"):
+            n_classes = 1  # Regressor has only one output variable
+            attrs["n_targets"] = n_classes
+            attrs["post_transform"] = "NONE"
+            if gbm_text["objective"].startswith("cross_entropy_lambda"):
+                post_transform = "Softplus"  # log(1 + exp(x))
+            else:
+                post_transform = "Sigmoid"
         elif gbm_text["objective"].startswith(("lambdarank", "rank_xendcg")):
             n_classes = 1  # Ranker has only one output variable
             attrs["n_targets"] = n_classes
