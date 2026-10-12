@@ -417,7 +417,8 @@ def _convert_tf_wrapper(
         tf.import_graph_def(tf_graph_def, name="")
 
         if not input_names:
-            assert output_names is not None, "output_names must be provided when input_names is not set"
+            if output_names is None:
+                raise ValueError("output_names must be provided when input_names is not set")
             input_nodes = list(_collect_input_nodes(tf_graph, output_names)[0])
             input_names = [nd_.outputs[0].name for nd_ in input_nodes]
         g = tf2onnx.tfonnx.process_tf_graph(
