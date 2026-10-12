@@ -2,6 +2,10 @@
 
 ## 1.17.0
 
+* Fix LightGBM thresholds rounded to float32 above the float64 value,
+  which sent one float32 input per threshold to the other branch
+  [#806](https://github.com/onnx/onnxmltools/issues/806)
+
 ## 1.16.0
 
 * Add LGBMRanker support
