@@ -3,12 +3,12 @@
 # This dictionary defines the converters which can be invoked in the conversion framework defined in topology.py. A key
 # in this dictionary is an operator's unique ID (e.g., string and type) while the associated value is the callable
 # object used to convert the operator specified by the key.
-_converter_pool = {}
+_converter_pool: dict[object, object] = {}
 
 # This dictionary defines the shape calculators which can be invoked in the conversion framework defined in
 # topology.py. A key in this dictionary is an operator's unique ID (e.g., string and type) while the associated value
 # is the callable object used to infer the output shape(s) for the operator specified by the key.
-_shape_calculator_pool = {}
+_shape_calculator_pool: dict[object, object] = {}
 
 
 def register_converter(operator_name, conversion_function, overwrite=False):

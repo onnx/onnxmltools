@@ -65,7 +65,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: ${{ matrix.python_version }}
 
@@ -131,6 +131,15 @@ jobs:
 
       - name: Run tests svmlib
         run: pytest tests/svmlib
+
+      - name: Run tests coreml
+        if: matrix.os != 'windows-latest' && matrix.python_version != '3.13'
+        run: |
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            brew install libomp
+          fi
+          pip install coremltools
+          pytest tests/coreml
 
       - name: Run tests h2o
         if: matrix.os == 'ubuntu-latest'

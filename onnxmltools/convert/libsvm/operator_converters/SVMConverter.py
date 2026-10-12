@@ -2,7 +2,6 @@
 
 import onnx as onnx_proto
 from ...common._registration import register_converter
-from ...common.utils import cast_list
 import numpy
 
 try:
@@ -159,7 +158,7 @@ class SVCConverter(SVMConverter):
         else:
             nb["attrs"]["rho"] = [svm_node.rho[0] * sign_rho]
 
-        class_labels = cast_list(int, svm_node.get_labels())
+        class_labels = list(map(int, svm_node.get_labels()))
         # Predictions are different when label are not sorted (multi-classification).
         class_labels.sort()
         nb["attrs"]["classlabels_ints"] = class_labels
