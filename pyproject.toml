@@ -19,6 +19,7 @@ requires-python = ">=3.9"
 dependencies = [
     "numpy",
     "onnx>=1.8.1",
+    "packaging",
     "protobuf",
     "skl2onnx>=1.4.9",
 ]
@@ -48,6 +49,24 @@ include = ["onnxmltools*"]
 [tool.setuptools.package-data]
 onnxmltools = ["**/*"]
 
+
+[tool.mypy]
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+# Pre-existing issues in legacy modules — suppress until addressed in follow-up PRs
+[[tool.mypy.overrides]]
+module = [
+    "onnxmltools.convert.coreml.operator_converters.*",
+    "onnxmltools.convert.coreml.shape_calculators.*",
+    "onnxmltools.convert.coreml.convert",
+    "onnxmltools.convert.libsvm.*",
+    "onnxmltools.convert.common._apply_operation",
+    "onnxmltools.convert.sparkml.operator_converters.tree_ensemble_common",
+]
+ignore_errors = true
 
 [tool.ruff]
 

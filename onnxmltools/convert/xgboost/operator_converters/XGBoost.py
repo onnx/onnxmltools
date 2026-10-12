@@ -442,15 +442,15 @@ class XGBRegressorConverter(XGBConverter):
         params = XGBConverter.get_xgb_params(xgb_node)
         attr_pairs["n_targets"] = params["n_targets"]
 
-        # binary:logistic: XGBoost accumulates tree outputs in logit space and
-        # base_score is stored in probability space (in both XGBoost <2 and
-        # >=2), so it must be converted to logit space before being added to
-        # the tree sum.
-        if objective == "binary:logistic":
+        # binary:logistic and reg:logistic: XGBoost accumulates tree outputs
+        # in logit space and base_score is stored in probability space (in
+        # both XGBoost <2 and >=2), so it must be converted to logit space
+        # before being added to the tree sum.
+        if objective in ("binary:logistic", "reg:logistic"):
             bs_val = np.float32(bs_list[0])
             if not (0.0 < bs_val < 1.0):
                 raise ValueError(
-                    f"base_score={bs_val} is out of range for binary:logistic; "
+                    f"base_score={bs_val} is out of range for {objective}; "
                     "expected a probability in (0, 1)."
                 )
             logit_bs, is_zero = _compute_base_score_logit(bs_val)
