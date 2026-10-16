@@ -79,6 +79,28 @@ def _create_node_id(node_id_pool):
     return i
 
 
+def _add_zero_missing_node(
+    tree_id, node, node_id, node_id_pool, left_id, right_id, attrs
+):
+    """
+    With missing_type Zero, LightGBM sends 0 (and NaN, which it reads as 0)
+    to the default child before comparing with the threshold. TreeEnsemble
+    only treats NaN as missing, so a BRANCH_EQ node on 0 goes in front of the
+    split. Returns the id left for the split itself.
+    """
+    split_id = _create_node_id(node_id_pool)
+    attrs["nodes_treeids"].append(tree_id)
+    attrs["nodes_nodeids"].append(node_id)
+    attrs["nodes_featureids"].append(node["split_feature"])
+    attrs["nodes_modes"].append("BRANCH_EQ")
+    attrs["nodes_values"].append(0.0)
+    attrs["nodes_truenodeids"].append(left_id if node["default_left"] else right_id)
+    attrs["nodes_falsenodeids"].append(split_id)
+    attrs["nodes_missing_value_tracks_true"].append(1)
+    attrs["nodes_hitrates"].append(1.0)
+    return split_id
+
+
 def _parse_tree_structure(tree_id, class_id, learning_rate, tree_structure, attrs):
     """
     The pool of all nodes' indexes created when parsing a single tree.
@@ -122,6 +144,14 @@ def _parse_tree_structure(tree_id, class_id, learning_rate, tree_structure, attr
         right_id = _create_node_id(node_id_pool)
         node_pyid_pool[right_pyid] = right_id
         right_parse = True
+
+    if (
+        tree_structure.get("missing_type") == "Zero"
+        and tree_structure["decision_type"] == "<="
+    ):
+        node_id = _add_zero_missing_node(
+            tree_id, tree_structure, node_id, node_id_pool, left_id, right_id, attrs
+        )
 
     attrs["nodes_treeids"].append(tree_id)
     attrs["nodes_nodeids"].append(node_id)
@@ -215,6 +245,11 @@ def _parse_node(
             right_id = _create_node_id(node_id_pool)
             node_pyid_pool[right_pyid] = right_id
             right_parse = True
+
+        if node.get("missing_type") == "Zero" and node["decision_type"] == "<=":
+            node_id = _add_zero_missing_node(
+                tree_id, node, node_id, node_id_pool, left_id, right_id, attrs
+            )
 
         attrs["nodes_treeids"].append(tree_id)
         attrs["nodes_nodeids"].append(node_id)

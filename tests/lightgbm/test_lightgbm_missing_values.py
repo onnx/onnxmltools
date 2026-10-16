@@ -83,6 +83,34 @@ class TestMissingValues(unittest.TestCase):
             frac=_FRAC,
         )
 
+    def test_zero_as_missing(self):
+        """
+        With zero_as_missing=True, LightGBM sends 0 and NaN to the default
+        child of every numerical split.
+        """
+        rng = np.random.RandomState(0)
+        X = rng.randn(400, 3).astype(np.float32)
+        X[rng.rand(*X.shape) < 0.2] = 0.0
+        y = X[:, 0] * 2 + X[:, 1] ** 2 - X[:, 2]
+        X_test = X.copy()
+        X_test[rng.rand(*X.shape) < 0.1] = np.nan
+        regressor = LGBMRegressor(
+            n_estimators=10, num_leaves=15, zero_as_missing=True, verbose=-1
+        )
+        regressor.fit(X, y)
+        regressor_onnx: ModelProto = convert_lightgbm(
+            regressor,
+            initial_types=[("input", FloatTensorType([None, 3]))],
+            target_opset=TARGET_OPSET,
+        )
+        for data in (X, X_test):
+            np.testing.assert_allclose(
+                self._predict_with_onnx(regressor_onnx, data),
+                regressor.predict(data),
+                rtol=1e-5,
+                atol=1e-5,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
