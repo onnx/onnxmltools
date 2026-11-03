@@ -57,3 +57,6 @@ docs/examples/*.onnx
 docs/examples/*.dot
 docs/examples/*.png
 docs/examples/model
+dump.raw.txt
+model.json
+model2.json
