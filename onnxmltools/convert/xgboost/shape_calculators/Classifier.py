@@ -7,7 +7,7 @@ from ...common.shape_calculator import (
     check_input_and_output_types,
 )
 from ...common.data_types import FloatTensorType, Int64TensorType, StringTensorType
-from ..common import get_xgb_params, get_n_estimators_classifier
+from ..common import get_xgb_params
 
 
 def calculate_xgboost_classifier_output_shapes(operator):
@@ -19,23 +19,14 @@ def calculate_xgboost_classifier_output_shapes(operator):
 
     xgb_node = operator.raw_operator
     params = get_xgb_params(xgb_node)
-    booster = xgb_node.get_booster()
-    booster.attributes()
-    js_trees = booster.get_dump(with_stats=True, dump_format="json")
-    ntrees = len(js_trees)
     objective = params["objective"]
-    n_estimators = get_n_estimators_classifier(xgb_node, params, js_trees)
     num_class = params.get("num_class", None)
 
-    if objective == "binary:logistic":
-        ncl = 2
-    elif num_class is not None:
+    if objective != "binary:logistic" and num_class is not None:
         ncl = num_class
-        n_estimators = ntrees // ncl
     else:
-        ncl = ntrees // n_estimators
-        if objective == "reg:logistic" and ncl == 1:
-            ncl = 2
+        # The booster config only has num_class for multi-class models.
+        ncl = 2
     classes = xgb_node.classes_
     if (
         np.issubdtype(classes.dtype, np.floating)
