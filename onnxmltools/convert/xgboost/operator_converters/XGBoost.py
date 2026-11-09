@@ -568,7 +568,10 @@ class XGBClassifierConverter(XGBConverter):
             ncl = num_class
             n_estimators = len(js_trees) // ncl
         else:
-            ncl = (max(attr_pairs["class_treeids"]) + 1) // n_estimators
+            # num_class comes from the booster config, which leaves it out
+            # for binary models. Dividing the tree count by n_estimators
+            # would count num_parallel_tree trees per round as classes.
+            ncl = 1
 
         best_ntree_limit = best_ntree_limit or len(js_trees)
         if ncl > 0:
