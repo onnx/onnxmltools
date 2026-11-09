@@ -154,6 +154,34 @@ class TestXGBoostIssues(unittest.TestCase):
                     got.ravel(), model.predict(X), rtol=1e-5, atol=1e-6
                 )
 
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_multi_softmax_predict_proba(self):
+        import numpy as np
+        import onnxruntime as rt
+        from xgboost import XGBClassifier
+        from onnxmltools.convert import convert_xgboost
+        from onnxmltools.convert.common.data_types import FloatTensorType
+
+        rng = np.random.RandomState(0)
+        X = rng.randn(200, 5).astype(np.float32)
+        for n_classes in [3, 4]:
+            with self.subTest(n_classes=n_classes):
+                y = np.argsort(X[:, :n_classes], axis=1)[:, -1]
+                model = XGBClassifier(objective="multi:softmax", n_estimators=5, max_depth=3)
+                model.fit(X, y)
+                onnx_model = convert_xgboost(
+                    model, initial_types=[("X", FloatTensorType([None, 5]))]
+                )
+                sess = rt.InferenceSession(
+                    onnx_model.SerializeToString(),
+                    providers=["CPUExecutionProvider"],
+                )
+                label, proba = sess.run(None, {"X": X})
+                np.testing.assert_array_equal(label, model.predict(X))
+                np.testing.assert_allclose(
+                    proba, model.predict_proba(X), rtol=1e-5, atol=1e-6
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
