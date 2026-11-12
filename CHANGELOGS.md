@@ -5,6 +5,7 @@
 * Fix the probabilities of XGBClassifier with objective multi:softmax:
   the converted model returned the raw margins instead of the softmax
   that `predict_proba` returns since xgboost 1.7
+  [#826](https://github.com/onnx/onnxmltools/pull/826)
 * Fix LightGBM thresholds rounded to float32 above the float64 value,
   which sent one float32 input per threshold to the other branch
   [#806](https://github.com/onnx/onnxmltools/issues/806)
