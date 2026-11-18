@@ -42,6 +42,8 @@ jobs:
           - python_version: '3.11'
             documentation: 0
             numpy_version: '<2'
+            # pandas 3.1 requires numpy>=2.0.2
+            pandas_version: '<3.1'
             scipy_version: '>=1.7.0'
             onnx_version: 'onnx<1.16.0'
             onnxrt_version: 'onnxruntime==1.17.3'
@@ -53,7 +55,9 @@ jobs:
             numpy_version: '>=1.21.1,<2'
             scipy_version: '>=1.7.0'
             onnx_version: 'onnx==1.14.1'
-            onnxrt_version: 'onnxruntime==1.16.3'
+            # onnxruntime 1.16.3 requests an executable stack, which the
+            # glibc on ubuntu-latest (26.04) refuses; 1.17.3 does not.
+            onnxrt_version: 'onnxruntime==1.17.3'
             sklearn_version: '==1.4.2'
             lgbm_version: "<4"
             xgboost_version: "<2"
@@ -85,7 +89,7 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
 
       - name: Install specific versions
-        run: pip install "${{ matrix.onnx_version }}" "${{ matrix.onnxrt_version }}" "numpy${{ matrix.numpy_version }}" "scikit-learn${{ matrix.sklearn_version}}" "scipy${{ matrix.scipy_version }}" "xgboost${{ matrix.xgboost_version }}"
+        run: pip install "${{ matrix.onnx_version }}" "${{ matrix.onnxrt_version }}" "numpy${{ matrix.numpy_version }}" "pandas${{ matrix.pandas_version }}" "scikit-learn${{ matrix.sklearn_version}}" "scipy${{ matrix.scipy_version }}" "xgboost${{ matrix.xgboost_version }}"
 
       - name: Install lightgbm
         if: matrix.os != 'macos-latest'
