@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import numpy
 import pandas
@@ -21,7 +20,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlNormalizer(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_normalizer_1(self):
         data = self.spark.createDataFrame(
             [
@@ -61,7 +59,6 @@ class TestSparkmlNormalizer(SparkMlTestCase):
         )
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_normalizer_2(self):
         data = self.spark.createDataFrame(
             [
