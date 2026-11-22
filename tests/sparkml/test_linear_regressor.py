@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import inspect
 import os
@@ -23,7 +22,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlLinearRegression(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_linear_regression_basic(self):
         data = self.spark.createDataFrame(
             [(1.0, 2.0, Vectors.dense(1.0)), (0.0, 2.0, Vectors.sparse(1, [], []))],
@@ -61,7 +59,6 @@ class TestSparkmlLinearRegression(SparkMlTestCase):
         output, output_shapes = run_onnx_model(["prediction"], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_linear_regression(self):
         this_script_dir = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -97,7 +94,6 @@ class TestSparkmlLinearRegression(SparkMlTestCase):
         output, output_shapes = run_onnx_model(["prediction"], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_generalized_linear_regression(self):
         this_script_dir = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))
