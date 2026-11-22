@@ -22,7 +22,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 class TestBucketedRandomProjectionLSH(SparkMlTestCase):
     @unittest.skipIf(sys.platform == "win32", reason="UnsatisfiedLinkError")
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_bucketed_random_projection_lsh(self):
         data = self.spark.createDataFrame(
             [

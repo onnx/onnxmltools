@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import packaging.version as pv
 import numpy
@@ -29,7 +28,6 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
             "discrepency, unfound values are replaced by -1 by ONNX and 0 " "by spark."
         ),
     )
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     @unittest.skipIf(
         pv.Version(onnx.__version__) <= pv.Version("1.3"), "Need Greater Opset 9"
     )
@@ -70,7 +68,6 @@ class TestSparkmlVectorIndexer(SparkMlTestCase):
         output, output_shapes = run_onnx_model(["indexed"], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     @unittest.skipIf(
         pv.Version(onnx.__version__) <= pv.Version("1.3"), "Need Greater Opset 9"
     )

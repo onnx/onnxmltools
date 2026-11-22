@@ -22,7 +22,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 class TestSparkmTreeEnsembleClassifier(SparkMlTestCase):
     @unittest.skipIf(sys.platform == "win32", reason="UnsatisfiedLinkError")
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_gbt_regressor(self):
         data = self.spark.createDataFrame(
             [(1.0, Vectors.dense(1.0)), (0.0, Vectors.sparse(1, [], []))],

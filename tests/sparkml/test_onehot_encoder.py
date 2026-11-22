@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import numpy
 from pyspark.ml.feature import OneHotEncoder
@@ -19,7 +18,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlOneHotEncoder(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_onehot_encoder_1(self):
         """
         Testing ONNX conversion for Spark OneHotEncoder when handleInvalid
@@ -108,7 +106,6 @@ class TestSparkmlOneHotEncoder(SparkMlTestCase):
         compare_results(expected["index1Vec"], actual_output["index1Vec"], decimal=5)
         compare_results(expected["index2Vec"], actual_output["index2Vec"], decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_onehot_encoder_2(self):
         """
         Testing ONNX conversion for Spark OneHotEncoder when handleInvalid
