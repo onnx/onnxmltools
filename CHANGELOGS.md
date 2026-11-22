@@ -7,6 +7,8 @@
   1.18.0 will require xgboost 2.0 and lightgbm 4.0 or later
 * Require Python 3.11 or later; Python 3.9 and 3.10 are no longer supported
   [#829](https://github.com/onnx/onnxmltools/pull/829)
+* Require onnx 1.14.1 or later (previously 1.8.1) and skl2onnx 1.19.1 or later
+  (previously 1.4.9), the oldest versions tested
 * Fix LightGBM thresholds rounded to float32 above the float64 value,
   which sent one float32 input per threshold to the other branch
   [#806](https://github.com/onnx/onnxmltools/issues/806)

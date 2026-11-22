@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import numpy
 import pandas
@@ -21,7 +20,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlScaler(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_maxabs_scaler(self):
         data = self.spark.createDataFrame(
             [
@@ -73,7 +71,6 @@ class TestSparkmlScaler(SparkMlTestCase):
         )
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_minmax_scaler(self):
         data = self.spark.createDataFrame(
             [
@@ -125,7 +122,6 @@ class TestSparkmlScaler(SparkMlTestCase):
         )
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_standard_scaler(self):
         data = self.spark.createDataFrame(
             [
