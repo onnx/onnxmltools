@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
-import sys
 import numpy
 from pyspark.ml.feature import Bucketizer
 from onnx.defs import onnx_opset_version
@@ -19,7 +18,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlBucketizer(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_bucketizer(self):
         values = [(0.1,), (0.4,), (1.2,), (1.5,)]
         data = self.spark.createDataFrame(values, ["features"])
