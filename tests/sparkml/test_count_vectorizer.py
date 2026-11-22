@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import numpy
 import pandas
@@ -20,7 +19,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlCountVectorizer(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_count_vectorizer_default(self):
         data = self.spark.createDataFrame(
             [
@@ -74,7 +72,6 @@ class TestSparkmlCountVectorizer(SparkMlTestCase):
             expected["prediction_result"], actual_output["result"], decimal=5
         )
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_count_vectorizer_binary(self):
         data = self.spark.createDataFrame(
             [
