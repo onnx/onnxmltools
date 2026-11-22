@@ -18,10 +18,10 @@ authors = [
 requires-python = ">=3.11"
 dependencies = [
     "numpy",
-    "onnx>=1.8.1",
+    "onnx>=1.14.1",
     "packaging",
     "protobuf",
-    "skl2onnx>=1.4.9",
+    "skl2onnx>=1.19.1",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
