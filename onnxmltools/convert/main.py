@@ -17,6 +17,18 @@ InitialTypes = list[tuple[str, DataType]]
 SklearnInitialTypes = list[tuple[str, Union[DataType, SklearnDataType]]]
 
 
+def _warn_if_deprecated_version(module: Any, minimum: str) -> None:
+    """Warns that the installed *module* is older than the next minimum version."""
+    version = getattr(module, "__version__", None)
+    if version is not None and pv.Version(version) < pv.Version(minimum):
+        warnings.warn(
+            f"{module.__name__} {version} is deprecated and will not be supported "
+            f"by onnxmltools 1.18.0. Upgrade to {module.__name__}>={minimum}.",
+            FutureWarning,
+            stacklevel=3,
+        )
+
+
 def convert_coreml(
     model: Any,
     name: str | None = None,
@@ -237,6 +249,9 @@ def convert_lightgbm(
         raise RuntimeError(
             "lightgbm is not installed. Please install lightgbm to use this feature."
         )
+    import lightgbm
+
+    _warn_if_deprecated_version(lightgbm, "4.0.0")
 
     from .lightgbm.convert import convert
 
@@ -336,6 +351,9 @@ def convert_xgboost(*args: Any, **kwargs: Any) -> onnx.ModelProto:
         raise RuntimeError(
             "xgboost is not installed. Please install xgboost to use this feature."
         )
+    import xgboost
+
+    _warn_if_deprecated_version(xgboost, "2.0.0")
 
     from .xgboost.convert import convert
 

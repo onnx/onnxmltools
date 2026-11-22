@@ -2,6 +2,9 @@
 
 ## 1.17.0
 
+* Deprecate xgboost 1.x and lightgbm 3.x; `convert_xgboost` and
+  `convert_lightgbm` now emit a `FutureWarning` for them, and onnxmltools
+  1.18.0 will require xgboost 2.0 and lightgbm 4.0 or later
 * Require Python 3.11 or later; Python 3.9 and 3.10 are no longer supported
   [#829](https://github.com/onnx/onnxmltools/pull/829)
 * Fix LightGBM thresholds rounded to float32 above the float64 value,
