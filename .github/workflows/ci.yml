@@ -71,21 +71,23 @@ jobs:
             ${{ runner.os }}-pip-${{ matrix.python_version }}-
             ${{ runner.os }}-pip-
 
-      - name: Install requirements
-        run: python -m pip install -r requirements.txt
-
-      - name: Install requirements dev
-        run: python -m pip install -r requirements-dev.txt
-
-      - name: Install specific versions
-        run: pip install "${{ matrix.onnx_version }}" "${{ matrix.onnxrt_version }}" "numpy${{ matrix.numpy_version }}" "pandas${{ matrix.pandas_version }}" "scikit-learn${{ matrix.sklearn_version}}" "scipy${{ matrix.scipy_version }}" "xgboost${{ matrix.xgboost_version }}"
-
-      - name: Install lightgbm
-        if: matrix.os != 'macos-latest'
-        run: pip install "lightgbm${{ matrix.lgbm_version }}"
+      # One resolver run for the requirements and the matrix pins, so that pip
+      # does not leave packages installed that need a newer version than the
+      # pins allow (for example ml-dtypes requiring numpy>=2 next to numpy<2).
+      - name: Install requirements and specific versions
+        run: >-
+          python -m pip install -r requirements.txt -r requirements-dev.txt
+          "${{ matrix.onnx_version }}" "${{ matrix.onnxrt_version }}"
+          "numpy${{ matrix.numpy_version }}" "pandas${{ matrix.pandas_version }}"
+          "scikit-learn${{ matrix.sklearn_version}}" "scipy${{ matrix.scipy_version }}"
+          "xgboost${{ matrix.xgboost_version }}"
+          "lightgbm${{ matrix.lgbm_version }}; sys_platform != 'darwin'"
 
       - name: Install
         run: pip install -e .
+
+      - name: Check dependency consistency
+        run: python -m pip check
 
       - name: Print versions
         run: |
