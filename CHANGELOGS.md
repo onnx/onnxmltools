@@ -2,6 +2,8 @@
 
 ## 1.17.0
 
+* Require Python 3.11 or later; Python 3.9 and 3.10 are no longer supported
+  [#829](https://github.com/onnx/onnxmltools/pull/829)
 * Fix LightGBM thresholds rounded to float32 above the float64 value,
   which sent one float32 input per threshold to the other branch
   [#806](https://github.com/onnx/onnxmltools/issues/806)
