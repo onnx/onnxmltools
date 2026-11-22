@@ -2,7 +2,6 @@
 
 import packaging.version as pv
 import unittest
-import sys
 import onnx
 import numpy
 import pandas
@@ -22,7 +21,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlTokenizer(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     @unittest.skipIf(
         pv.Version(onnx.__version__) <= pv.Version("1.5"), "Need Greater Opset 10"
     )

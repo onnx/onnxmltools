@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import numpy
 import pandas
@@ -28,7 +27,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 ## Therefore we leave these tests out for now until a newere version
 ## of pyspark is availabe that address this issue
 class TestSparkmlWord2Vec(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_word2vec(self):
         data = self.spark.createDataFrame(
             [
