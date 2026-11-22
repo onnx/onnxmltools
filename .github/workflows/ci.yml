@@ -20,6 +20,17 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python_version: ['3.13', '3.12', '3.11']
+        # 'legacy' tests xgboost 1.x and lightgbm 3.x, deprecated in 1.17.0.
+        # Remove it together with their support in 1.18.0.
+        deps: ['default', 'legacy']
+        exclude:
+          - python_version: '3.13'
+            deps: 'legacy'
+          - python_version: '3.12'
+            deps: 'legacy'
+          # The macOS jobs do not run the xgboost and lightgbm tests.
+          - os: macos-latest
+            deps: 'legacy'
         include:
           - python_version: '3.13'
             documentation: 1
@@ -39,15 +50,25 @@ jobs:
             sklearn_version: '==1.7.0'
             lgbm_version: ">=4"
             xgboost_version: ">=2"
+          # Oldest supported versions on the oldest supported Python.
           - python_version: '3.11'
             documentation: 0
-            numpy_version: '<2'
+            numpy_version: '>=1.21.1,<2'
+            # pandas 3.x is newer than these scikit-learn and numpy versions.
+            pandas_version: '<3'
             scipy_version: '>=1.7.0'
-            onnx_version: 'onnx<1.16.0'
+            onnx_version: 'onnx==1.14.1'
+            # onnxruntime 1.16.3 requests an executable stack, which the
+            # glibc on ubuntu-latest (26.04) refuses; 1.17.3 does not.
             onnxrt_version: 'onnxruntime==1.17.3'
-            sklearn_version: '==1.6.0'
-            lgbm_version: ">=4"
-            xgboost_version: ">=2"
+            sklearn_version: '==1.4.2'
+            lgbm_version: "==4.0.0"
+            xgboost_version: ">=2,<3"
+          # Overrides xgboost and lightgbm for the 'legacy' cells.
+          - python_version: '3.11'
+            deps: 'legacy'
+            lgbm_version: "<4"
+            xgboost_version: "<2"
 
     steps:
       - name: Checkout repository
@@ -56,7 +77,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: ${{ matrix.python_version }}
 
@@ -69,21 +90,23 @@ jobs:
             ${{ runner.os }}-pip-${{ matrix.python_version }}-
             ${{ runner.os }}-pip-
 
-      - name: Install requirements
-        run: python -m pip install -r requirements.txt
-
-      - name: Install requirements dev
-        run: python -m pip install -r requirements-dev.txt
-
-      - name: Install specific versions
-        run: pip install "${{ matrix.onnx_version }}" "${{ matrix.onnxrt_version }}" "numpy${{ matrix.numpy_version }}" "scikit-learn${{ matrix.sklearn_version}}" "scipy${{ matrix.scipy_version }}" "xgboost${{ matrix.xgboost_version }}"
-
-      - name: Install lightgbm
-        if: matrix.os != 'macos-latest'
-        run: pip install "lightgbm${{ matrix.lgbm_version }}"
+      # One resolver run for the requirements and the matrix pins, so that pip
+      # does not leave packages installed that need a newer version than the
+      # pins allow (for example ml-dtypes requiring numpy>=2 next to numpy<2).
+      - name: Install requirements and specific versions
+        run: >-
+          python -m pip install -r requirements.txt -r requirements-dev.txt
+          "${{ matrix.onnx_version }}" "${{ matrix.onnxrt_version }}"
+          "numpy${{ matrix.numpy_version }}" "pandas${{ matrix.pandas_version }}"
+          "scikit-learn${{ matrix.sklearn_version}}" "scipy${{ matrix.scipy_version }}"
+          "xgboost${{ matrix.xgboost_version }}"
+          "lightgbm${{ matrix.lgbm_version }}; sys_platform != 'darwin'"
 
       - name: Install
         run: pip install -e .
+
+      - name: Check dependency consistency
+        run: python -m pip check
 
       - name: Print versions
         run: |
@@ -154,7 +177,7 @@ jobs:
           pip install build
           python -m build .
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: artifact-${{ matrix.python_version }}-${{ matrix.os }}
+          name: artifact-${{ matrix.python_version }}-${{ matrix.deps }}-${{ matrix.os }}
           path: ./dist/**

@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import numpy
 from pyspark.ml.feature import Imputer
@@ -27,11 +26,9 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 ## Therefore we leave these tests out for now until a newere
 ## version of pyspark is availabe that address this issue
 class TestSparkmlImputer(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_imputer_single(self):
         self._imputer_test_single()
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_imputer_multi(self):
         self._imputer_test_multi()
 
