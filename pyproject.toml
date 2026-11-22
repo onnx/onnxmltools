@@ -15,7 +15,7 @@ license = "Apache-2.0"
 authors = [
     {name = "ONNX", email = "onnx-technical-discuss@lists.lfaidata.foundation"},
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "numpy",
     "onnx>=1.8.1",
@@ -28,8 +28,6 @@ classifiers = [
     "Environment :: Console", 
     "Intended Audience :: Developers",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10", 
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
