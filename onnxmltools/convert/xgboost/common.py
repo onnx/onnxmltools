@@ -50,7 +50,11 @@ def get_xgb_params(xgb_node):
     if hasattr(bst, "best_ntree_limit"):
         params["best_ntree_limit"] = bst.best_ntree_limit
     if "gradient_booster" in config["learner"]:
-        gbp = config["learner"]["gradient_booster"]["gbtree_model_param"]
+        gbooster = config["learner"]["gradient_booster"]
+        # the 'dart' booster (xgboost < 3.4) nests the gbtree parameters
+        gbp = gbooster.get("gbtree_model_param") or gbooster.get("gbtree", {}).get(
+            "gbtree_model_param", {}
+        )
         if "num_trees" in gbp:
             params["best_ntree_limit"] = int(gbp["num_trees"])
     return params

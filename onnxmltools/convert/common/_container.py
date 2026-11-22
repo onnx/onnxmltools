@@ -992,7 +992,13 @@ class Topology:
         self._initialize_graph_status_for_traversing()
 
         # Scan through all operators and adjust their variables' shapes if needed
-        for operator in self.unordered_operator_iterator():
+        operators = list(self.unordered_operator_iterator())
+        producers = {
+            variable.onnx_name: operator
+            for operator in operators
+            for variable in operator.outputs
+        }
+        for operator in operators:
             # Rule 1 (CoreML):
             # Some operator in CoreML only accepts 4-D tensors but their protobuf models might specify a 2-D one.
             # We fix this problem here.
@@ -1017,9 +1023,15 @@ class Topology:
             ]:
                 # We only adjust inputs because outputs will be automatically fixed at our shape inference stage
                 for variable in operator.inputs:
-                    if variable.is_root:
+                    shape_source = variable
+                    producer = producers.get(variable.onnx_name)
+                    if producer is not None and producer.type == "cast":
+                        shape_source = producer.inputs[0]
+                    if shape_source.is_root:
                         # Convert [N, C] to [N, C, 1, 1] while [N, C, H, W] is unchanged
-                        variable.type.shape += [1] * (4 - len(variable.type.shape))
+                        shape_source.type.shape += [1] * (
+                            4 - len(shape_source.type.shape)
+                        )
 
     def _prune(self):
         # Conduct a dummy evaluation of this topology. It may set all reachable operators evaluated and all reachable

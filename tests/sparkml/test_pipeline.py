@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
-import sys
 import inspect
 import os
 import numpy
@@ -24,7 +23,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlPipeline(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_pipeline_4_stage(self):
         this_script_dir = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -106,7 +104,6 @@ class TestSparkmlPipeline(SparkMlTestCase):
         )
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_pipeline_3_stage(self):
         this_script_dir = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -178,7 +175,6 @@ class TestSparkmlPipeline(SparkMlTestCase):
         output, output_shapes = run_onnx_model(["features"], data_np, onnx_model_path)
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_pipeline_2_stage(self):
         this_script_dir = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))

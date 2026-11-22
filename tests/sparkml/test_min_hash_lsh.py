@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import pandas
 import numpy
@@ -22,7 +21,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 class TestSparkmMinHashLSH(SparkMlTestCase):
     @unittest.skipIf(True, reason="Discrepencies (Float -> Double?).")
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_min_hash_lsh(self):
         data = self.spark.createDataFrame(
             [

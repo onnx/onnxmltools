@@ -18,7 +18,7 @@ from onnx.defs import onnx_opset_version
 from onnxmltools.convert.common.onnx_ex import DEFAULT_OPSET_NUMBER
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from coremltools.models import datatypes
-from coremltools.proto.FeatureTypes_pb2 import ImageFeatureType
+from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType, ImageFeatureType
 from onnxmltools import convert_coreml
 
 TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
@@ -47,6 +47,37 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         )
         model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
+
+    def test_int32_input_to_inner_product_is_cast_to_float(self):
+        inputs = [("input", datatypes.Array(3))]
+        outputs = [("output", datatypes.Array(2))]
+        builder = NeuralNetworkBuilder(inputs, outputs)
+        builder.add_inner_product(
+            name="FC",
+            W=numpy.zeros((3, 2)),
+            b=numpy.zeros(2),
+            input_channels=3,
+            output_channels=2,
+            has_bias=True,
+            input_name="input",
+            output_name="output",
+        )
+        builder.spec.description.input[0].type.multiArrayType.dataType = (
+            ArrayFeatureType.INT32
+        )
+
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
+
+        self.assertEqual(
+            model_onnx.graph.input[0].type.tensor_type.elem_type,
+            onnx.TensorProto.INT64,
+        )
+        cast_nodes = [node for node in model_onnx.graph.node if node.op_type == "Cast"]
+        self.assertEqual(len(cast_nodes), 1)
+        cast_to = next(
+            attribute.i for attribute in cast_nodes[0].attribute if attribute.name == "to"
+        )
+        self.assertEqual(cast_to, onnx.TensorProto.FLOAT)
 
     def test_unary_function_converter(self):
         input_dim = (3,)
@@ -131,6 +162,34 @@ class TestNeuralNetworkLayerConverter(unittest.TestCase):
         )
         model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
+
+    def test_int32_input_to_pooling_is_cast_and_normalized_to_4d(self):
+        inputs = [("input", datatypes.Array(3))]
+        outputs = [("output", datatypes.Array(3))]
+        builder = NeuralNetworkBuilder(inputs, outputs)
+        builder.add_pooling(
+            name="Pool",
+            height=1,
+            width=1,
+            stride_height=1,
+            stride_width=1,
+            layer_type="MAX",
+            padding_type="SAME",
+            input_name="input",
+            output_name="output",
+        )
+        builder.spec.description.input[0].type.multiArrayType.dataType = (
+            ArrayFeatureType.INT32
+        )
+
+        model_onnx = convert_coreml(builder.spec, target_opset=TARGET_OPSET)
+
+        input_shape = [
+            dimension.dim_param or dimension.dim_value
+            for dimension in model_onnx.graph.input[0].type.tensor_type.shape.dim
+        ]
+        self.assertEqual(input_shape, ["None", 3, 1, 1])
+        self.assertIn("Cast", [node.op_type for node in model_onnx.graph.node])
 
     def test_activation_converter(self):
         input_dim = (3,)

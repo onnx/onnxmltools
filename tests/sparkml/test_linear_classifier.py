@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import inspect
 import os
@@ -23,7 +22,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlLogisticRegression(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_logistic_regression_binary_class(self):
         this_script_dir = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -75,7 +73,6 @@ class TestSparkmlLogisticRegression(SparkMlTestCase):
         )
         compare_results(expected, output, decimal=5)
 
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_linear_svc(self):
         this_script_dir = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))
