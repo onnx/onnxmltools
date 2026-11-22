@@ -9,6 +9,36 @@
 * Fix LightGBM thresholds rounded to float32 above the float64 value,
   which sent one float32 input per threshold to the other branch
   [#806](https://github.com/onnx/onnxmltools/issues/806)
+* Fix LightGBM random forests (`boosting_type="rf"`), which were converted
+  with wrong predictions
+  [#801](https://github.com/onnx/onnxmltools/pull/801)
+* Fix LightGBM classifier probabilities for a `sigmoid` parameter other than 1
+  and for the `multiclassova` objective
+  [#802](https://github.com/onnx/onnxmltools/pull/802)
+* Send zeros to the default child of LightGBM splits trained with
+  `zero_as_missing=True`
+  [#814](https://github.com/onnx/onnxmltools/pull/814)
+* Support the `fair`, `mape`, `cross_entropy` and `cross_entropy_lambda`
+  LightGBM objectives
+  [#804](https://github.com/onnx/onnxmltools/pull/804)
+* Raise an error for LightGBM models with linear trees (`linear_tree=True`)
+  instead of converting them with wrong predictions
+  [#803](https://github.com/onnx/onnxmltools/pull/803)
+* Fix `XGBRegressor` with `binary:logistic` giving wrong predictions when the
+  trees are not all zero, for example with `subsample < 1.0`
+  [#771](https://github.com/onnx/onnxmltools/pull/771)
+* Apply the sigmoid for `XGBRegressor` with `reg:logistic`
+  [#805](https://github.com/onnx/onnxmltools/pull/805)
+* Apply the DART tree weights when converting XGBoost models trained with dropout
+  [#813](https://github.com/onnx/onnxmltools/pull/813)
+* Fix the exponential conversion time of XGBoost models with native categorical
+  splits
+  [#793](https://github.com/onnx/onnxmltools/pull/793)
+* Add type hints to the `convert_*` functions, accept skl2onnx data types in
+  `initial_types` of the scikit-learn wrapper, and fix Core ML converter bugs
+  [#776](https://github.com/onnx/onnxmltools/pull/776)
+* Declare `packaging` as a dependency
+  [#800](https://github.com/onnx/onnxmltools/pull/800)
 
 ## 1.16.0
 
