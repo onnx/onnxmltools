@@ -625,6 +625,40 @@ class TestXGBoostModels(unittest.TestCase):
                 assert_almost_equal(model_skl.predict_proba(x_test), res2[1])
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_xgb_dart(self):
+        # dropout scales every tree by its weight_drop at prediction time
+        rng = np.random.RandomState(0)
+        x = rng.randn(500, 5).astype(np.float32)
+        dart = {
+            "n_estimators": 10,
+            "max_depth": 3,
+            "booster": "dart",
+            "rate_drop": 0.3,
+            "skip_drop": 0.0,
+        }
+        cases = [
+            ("regressor", XGBRegressor(**dart), x[:, 0] * 2 + x[:, 1] ** 2),
+            ("binary", XGBClassifier(**dart), (x[:, 0] > 0).astype(np.int64)),
+            ("multiclass", XGBClassifier(**dart), np.digitize(x[:, 0], [-0.5, 0.5])),
+        ]
+        for name, model, y in cases:
+            with self.subTest(model=name):
+                model.fit(x, y)
+                onx = convert_xgboost(
+                    model,
+                    initial_types=[("X", FloatTensorType([None, x.shape[1]]))],
+                    target_opset=TARGET_OPSET,
+                )
+                sess = InferenceSession(
+                    onx.SerializeToString(), providers=["CPUExecutionProvider"]
+                )
+                got = sess.run(None, {"X": x})
+                if name == "regressor":
+                    assert_almost_equal(model.predict(x), got[0].ravel(), decimal=4)
+                else:
+                    assert_almost_equal(model.predict_proba(x), got[1], decimal=5)
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_cost(self):
         obj_classes = {
             "reg:logistic": (

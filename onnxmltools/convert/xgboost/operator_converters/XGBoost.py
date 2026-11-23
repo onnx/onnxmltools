@@ -80,6 +80,25 @@ class XGBConverter:
         return objective, base_score, js_trees, best_ntree_limit
 
     @staticmethod
+    def get_tree_weights(xgb_node, n_trees):
+        """
+        Returns the weight of every tree. Trees trained with dropout (DART)
+        are scaled by ``weight_drop`` at prediction time, the others by 1.
+        """
+        booster = xgb_node.get_booster()
+        gbooster = json.loads(booster.save_raw(raw_format="json"))["learner"][
+            "gradient_booster"
+        ]
+        # xgboost >= 3.4 keeps weight_drop with the trees, the former
+        # 'dart' booster next to them.
+        weights = gbooster.get("model", {}).get("weight_drop") or gbooster.get(
+            "weight_drop"
+        )
+        if not weights:
+            return [1.0] * n_trees
+        return [float(w) for w in weights[:n_trees]]
+
+    @staticmethod
     def _is_bracketed_json_list_string(s: str) -> bool:
         s = s.strip()
         return len(s) >= 2 and s[0] == "[" and s[-1] == "]"
@@ -436,7 +455,10 @@ class XGBRegressorConverter(XGBConverter):
 
         attr_pairs = XGBRegressorConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(
-            js_trees, attr_pairs, [1 for _ in js_trees], False
+            js_trees,
+            attr_pairs,
+            XGBConverter.get_tree_weights(xgb_node, len(js_trees)),
+            False,
         )
 
         params = XGBConverter.get_xgb_params(xgb_node)
@@ -537,7 +559,10 @@ class XGBClassifierConverter(XGBConverter):
 
         attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
         XGBConverter.fill_tree_attributes(
-            js_trees, attr_pairs, [1 for _ in js_trees], True
+            js_trees,
+            attr_pairs,
+            XGBConverter.get_tree_weights(xgb_node, len(js_trees)),
+            True,
         )
         if num_class is not None:
             ncl = num_class
@@ -552,7 +577,10 @@ class XGBClassifierConverter(XGBConverter):
             js_trees = js_trees[:best_ntree_limit]
             attr_pairs = XGBClassifierConverter._get_default_tree_attribute_pairs()
             XGBConverter.fill_tree_attributes(
-                js_trees, attr_pairs, [1 for _ in js_trees], True
+                js_trees,
+                attr_pairs,
+                XGBConverter.get_tree_weights(xgb_node, len(js_trees)),
+                True,
             )
 
         if len(attr_pairs["class_treeids"]) == 0:

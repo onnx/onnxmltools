@@ -27,7 +27,6 @@ TARGET_OPSET = min(15, min(DEFAULT_OPSET_NUMBER, onnx_opset_version()))
 
 class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
     @unittest.skipIf(sys.platform == "win32", reason="UnsatisfiedLinkError")
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     @unittest.skipIf(
         pv.Version(onnx.__version__) <= pv.Version("1.3"), "Need Greater Opset 9"
     )
@@ -90,7 +89,6 @@ class TestSparkmDecisionTreeRegressor(SparkMlTestCase):
         compare_results(expected, output, decimal=5)
 
     @unittest.skipIf(sys.platform == "win32", reason="UnsatisfiedLinkError")
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_decision_tree_regressor(self):
         features = [[0, 1], [1, 1], [2, 0]]
         features = numpy.array(features, dtype=numpy.float32)

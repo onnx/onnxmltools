@@ -5,7 +5,6 @@ Tests scilit-learn's tree-based methods' converters.
 """
 
 import os
-import sys
 import unittest
 import packaging.version as pv
 import numpy as np
@@ -49,7 +48,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 TARGET_OPSET_ML = 2
 
 
-@unittest.skipIf(sys.version_info[:2] <= (3, 5), reason="not available")
 @unittest.skipIf(not can_test, reason="sklearn-onnx not recent enough")
 class TestXGBoostModelsPipeline(unittest.TestCase):
     def _column_tranformer_fitted_from_df(self, data):
