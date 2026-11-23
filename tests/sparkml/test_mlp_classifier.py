@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import inspect
 import os
@@ -26,7 +25,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlMLPClassifier(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_mlp_classifier_binary_class(self):
         this_script_dir = os.path.dirname(
             os.path.abspath(inspect.getfile(inspect.currentframe()))

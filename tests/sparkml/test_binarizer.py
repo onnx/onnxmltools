@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import numpy
 from pyspark.ml.feature import Binarizer
@@ -19,7 +18,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmlBinarizer(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     def test_model_binarizer(self):
         data = self.spark.createDataFrame(
             [(0, 0.1), (1, 0.8), (2, 0.2)], ["id", "feature"]
