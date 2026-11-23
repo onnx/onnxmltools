@@ -105,6 +105,14 @@ jobs:
       - name: Install
         run: pip install -e .
 
+      # XGBoost 1.7.6 wheels contain incorrect Python/ABI tags, which
+      # pip >=24.2 rejects during `pip check` even though the wheels work.
+      # https://github.com/pypa/pip/issues/12884
+      # Keep dependency checking for the legacy jobs until their removal in 1.18.0.
+      - name: Use pip compatible with legacy XGBoost wheel metadata
+        if: matrix.deps == 'legacy'
+        run: python -m pip install "pip==24.1.2"
+
       - name: Check dependency consistency
         run: python -m pip check
 
