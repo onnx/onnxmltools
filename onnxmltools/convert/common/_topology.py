@@ -6,7 +6,7 @@ from onnx import helper
 from ._registration import get_converter
 from .data_types import StringType, FloatType, Int64Type, TensorType
 from ._container import ModelComponentContainer
-from .onnx_ex import get_maximum_opset_supported, OPSET_TO_IR_VERSION
+from .onnx_ex import get_maximum_opset_supported
 from .utils import get_model_version, get_domain, get_producer_version, get_producer
 
 KNOWN_METADATA_PROPS = {
@@ -19,16 +19,6 @@ KNOWN_METADATA_PROPS = {
         "nominalrange_16_235",
     ],
 }
-
-
-def _get_main_opset_version(model):
-    """
-    Returns the main opset version.
-    """
-    for op in model.opset_import:
-        if op.domain == "" or op.domain == "ai.onnx":
-            return op.version
-    return None
 
 
 def _validate_metadata(metadata_props):
@@ -131,8 +121,28 @@ def make_model_ex(
     # Add extra information
     if metadata_props:
         add_metadata_props(onnx_model, metadata_props, target_default_opset)
-    opv = _get_main_opset_version(onnx_model) or target_default_opset
-    irv = OPSET_TO_IR_VERSION.get(opv, onnx.IR_VERSION)
+    # Include every ONNX domain, not just the default domain. Custom domains
+    # (for example com.microsoft in Spark converters) have no ONNX IR mapping.
+    # Keep unknown versions of ONNX domains strict rather than silently using
+    # an IR version that may be too old.
+    onnx_opsets = [
+        opset
+        for opset in onnx_model.opset_import
+        if opset.domain
+        in (
+            "",
+            "ai.onnx",
+            "ai.onnx.ml",
+            "ai.onnx.training",
+            "ai.onnx.preview.training",
+            "ai.onnx.preview",
+        )
+    ]
+    irv = helper.find_min_ir_version_for(onnx_opsets)
+    # Converters targeting opset >= 8 may omit initializers from graph inputs.
+    # This requires IR >= 4 even when the imported opsets only require IR 3.
+    if target_default_opset is not None and target_default_opset >= 8:
+        irv = max(4, irv)
     onnx_model.ir_version = irv
     onnx_model.producer_name = (
         kwargs.get("producer_name") if "producer_name" in kwargs else get_producer()

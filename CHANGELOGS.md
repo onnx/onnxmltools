@@ -2,6 +2,8 @@
 
 ## 1.17.0
 
+* Derive model IR versions from ONNX's version mappings for all imported ONNX
+  domains, including `ai.onnx.ml`, while preserving older-runtime compatibility
 * Require Python 3.11 or later; Python 3.9 and 3.10 are no longer supported
   [#829](https://github.com/onnx/onnxmltools/pull/829)
 * Require onnx 1.14.1 or later (previously 1.8.1) and skl2onnx 1.19.1 or later
