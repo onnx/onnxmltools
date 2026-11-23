@@ -741,10 +741,9 @@ class TestXGBoostModels(unittest.TestCase):
                             exp = clr.predict(X_test)
                             assert_almost_equal(exp, y[0].ravel(), decimal=4)
                         else:
-                            if "softmax" not in obj:
-                                exp = clr.predict_proba(X_test)
-                                got = pandas.DataFrame(y[1]).values
-                                assert_almost_equal(exp, got, decimal=4)
+                            exp = clr.predict_proba(X_test)
+                            got = pandas.DataFrame(y[1]).values
+                            assert_almost_equal(exp, got, decimal=4)
 
                             exp = clr.predict(X_test[:10])
                             assert_almost_equal(exp, y[0][:10])

@@ -12,6 +12,7 @@ except ImportError:
     XGBRFClassifier = None
 from ...common._registration import register_converter
 from ..common import get_xgb_params, get_n_estimators_classifier
+from .._parse import WrappedBooster
 
 Node = Dict[str, Any]
 TreeLike = Union[Node, List[Node]]
@@ -728,7 +729,10 @@ class XGBClassifierConverter(XGBConverter):
                 )
         elif objective in ("multi:softprob", "multi:softmax"):
             ncl = len(js_trees) // n_estimators
-            if objective == "multi:softmax":
+            if objective == "multi:softmax" and isinstance(xgb_node, WrappedBooster):
+                # A raw Booster has no predict_proba: keep the margins.
+                # XGBClassifier.predict_proba applies softmax to the margins
+                # since xgboost 1.7, so SOFTMAX (set above) matches it.
                 attr_pairs["post_transform"] = "NONE"
             container.add_node(
                 "TreeEnsembleClassifier",

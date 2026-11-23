@@ -2,6 +2,10 @@
 
 ## 1.17.0
 
+* Fix the probabilities of XGBClassifier with objective multi:softmax:
+  the converted model returned the raw margins instead of the softmax
+  that `predict_proba` returns since xgboost 1.7
+  [#826](https://github.com/onnx/onnxmltools/pull/826)
 * Require Python 3.11 or later; Python 3.9 and 3.10 are no longer supported
   [#829](https://github.com/onnx/onnxmltools/pull/829)
 * Require onnx 1.14.1 or later (previously 1.8.1) and skl2onnx 1.19.1 or later
