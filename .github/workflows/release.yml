@@ -1,46 +1,115 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+# SPDX-License-Identifier: Apache-2.0
 
 name: Upload Python Package
 
 on:
   release:
     types: [published]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      artifact_id: ${{ steps.artifacts.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - name: Install build tools
+        run: python -m pip install build
+      - name: Test release validation
+        run: python -m unittest discover -s tests/release -v
+      - name: Build distributions
+        run: python -m build
+      - name: Check distribution versions and release tag
+        id: metadata
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          tag_args=()
+          if [[ "$GITHUB_EVENT_NAME" == "release" ]]; then
+            tag_args+=(--tag "$RELEASE_TAG")
+          fi
+          python .github/scripts/check_release.py artifacts dist \
+            "${tag_args[@]}" --github-output "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        id: artifacts
+        with:
+          name: release-distributions
+          path: dist/*
+          if-no-files-found: error
 
+  validate:
+    name: Validate ${{ matrix.distribution }} on Python ${{ matrix.python }}
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.13']
+        distribution: [wheel, sdist]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          path: source
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/release-distributions
+      - name: Install artifact in a clean environment
+        working-directory: ${{ runner.temp }}
+        env:
+          DISTRIBUTION: ${{ matrix.distribution }}
+        run: |
+          python -m venv "$RUNNER_TEMP/release-venv"
+          if [[ "$DISTRIBUTION" == "wheel" ]]; then
+            artifact=("$RUNNER_TEMP"/release-distributions/*.whl)
+          else
+            artifact=("$RUNNER_TEMP"/release-distributions/*.tar.gz)
+          fi
+          "$RUNNER_TEMP/release-venv/bin/python" -m pip install --no-cache-dir \
+            "${artifact[0]}" onnxruntime xgboost lightgbm
+          "$RUNNER_TEMP/release-venv/bin/python" -m pip check
+      - name: Verify installed version and smoke-test conversions
+        working-directory: ${{ runner.temp }}
+        env:
+          EXPECTED_VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          "$RUNNER_TEMP/release-venv/bin/python" -I \
+            "$GITHUB_WORKSPACE/source/.github/scripts/check_release.py" installed \
+            --version "$EXPECTED_VERSION" --source-root "$GITHUB_WORKSPACE/source"
+
+  deploy:
+    needs: [build, validate]
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     environment: release
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      with:
-        persist-credentials: false
-    - name: Set up Python
-      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
-      with:
-        python-version: '3.13'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-
-    - name: Build package
-      run: python -m build
-
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1
-      with:
-        attestations: true
+      # Publish the exact artifact that passed validation; do not rebuild it.
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact_id }}
+          merge-multiple: true
+          path: dist
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1
+        with:
+          attestations: true
