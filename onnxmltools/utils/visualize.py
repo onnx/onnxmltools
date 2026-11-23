@@ -1,21 +1,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import os
+from html import escape
+import json
+from pathlib import Path
 import shutil
+from string import Template
 import sys
 from webbrowser import open_new_tab
 
 
 def get_set_node(node, i="0"):
-    return (
-        "g.setNode("
-        + str(i)
-        + ", { label: '"
-        + node
-        + "', class: 'type-"
-        + node
-        + "' });"
-    )
+    # JSON protects JavaScript literals; escaping '<' also prevents a model
+    # label from closing the surrounding HTML script element.
+    attributes = json.dumps({"label": node, "class": "type-" + node}).replace("<", "\\u003c")
+    return f"g.setNode({i}, {attributes});"
 
 
 def get_set_edge(start, end):
@@ -60,9 +58,7 @@ def get_edges(graph):
                     print("No corresponding output found for {0}.".format(input))
     for i, output in enumerate(graph.output, len(nodes) + len(graph.input) + 1):
         if output.name in output_node_hash.keys():
-            edge_list.extend(
-                [(node_id, i) for node_id in output_node_hash[output.name]]
-            )
+            edge_list.extend([(node_id, i) for node_id in output_node_hash[output.name]])
         else:
             pass
     return edge_list
@@ -101,7 +97,7 @@ def visualize_model(onnx_model, open_browser=True, dest="index.html"):
     <link rel="stylesheet" href="styles.css">
     <script src="dagre-d3.min.js"></script>
 
-    <h2>[model_info]</h2>
+    <h2>$model_info</h2>
 
     <svg id="svg-canvas" width=960 height=600></svg>
 
@@ -110,7 +106,7 @@ def visualize_model(onnx_model, open_browser=True, dest="index.html"):
     .setGraph({})
     .setDefaultEdgeLabel(function() { return {}; });
 
-    [nodes_html]
+    $nodes_html
 
     g.nodes().forEach(function(v) {
     var node = g.node(v);
@@ -118,7 +114,7 @@ def visualize_model(onnx_model, open_browser=True, dest="index.html"):
     node.rx = node.ry = 5;
     });
 
-    [edges_html]
+    $edges_html
 
     // Create the renderer
     var render = new dagreD3.render();
@@ -137,25 +133,20 @@ def visualize_model(onnx_model, open_browser=True, dest="index.html"):
     </script>
     """
 
-    html_str = html_str.replace(
-        "[nodes_html]", "\n".join(get_nodes_builder(get_nodes(graph)))
+    # Substitute once, so placeholder-like model text is never reinterpreted
+    # in a different output context.
+    html_str = Template(html_str).substitute(
+        model_info=escape(model_info),
+        nodes_html="\n".join(get_nodes_builder(get_nodes(graph))),
+        edges_html="\n".join(get_set_edge(*edge) for edge in get_edges(graph)),
     )
 
-    html_str = html_str.replace(
-        "[edges_html]",
-        "\n".join([get_set_edge(edge[0], edge[1]) for edge in get_edges(graph)]),
-    )
+    destination = Path(dest).resolve()
+    destination.write_text(html_str, encoding="utf-8")
 
-    html_str = html_str.replace("[model_info]", model_info)
+    pkgdir = Path(sys.modules["onnxmltools"].__path__[0])
+    for asset in ("styles.css", "dagre-d3.min.js"):
+        shutil.copy(pkgdir / "utils" / asset, destination.parent)
 
-    Html_file = open(dest, "w")
-    Html_file.write(html_str)
-    Html_file.close()
-
-    pkgdir = sys.modules["onnxmltools"].__path__[0]
-    fullpath = os.path.join(pkgdir, "utils", "styles.css")
-    shutil.copy(fullpath, os.getcwd())
-    fullpath = os.path.join(pkgdir, "utils", "dagre-d3.min.js")
-    shutil.copy(fullpath, os.getcwd())
-
-    open_new_tab("file://" + os.path.realpath("index.html"))
+    if open_browser:
+        open_new_tab(destination.as_uri())
