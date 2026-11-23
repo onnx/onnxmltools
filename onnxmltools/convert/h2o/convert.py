@@ -2,6 +2,7 @@
 
 from uuid import uuid4
 import json
+from pathlib import Path
 import tempfile
 import h2o
 
@@ -69,13 +70,14 @@ def convert(
         initial_types = [("input", FloatTensorType(shape=["None", "None"]))]
 
     if isinstance(model, str):
-        model_path = model
+        mojo_str = h2o.print_mojo(model, format="json")
     else:
-        _, model_path = tempfile.mkstemp()
-        f = open(model_path, "wb")
-        f.write(model)
-        f.close()
-    mojo_str = h2o.print_mojo(model_path, format="json")
+        # Keep the file available to H2O's subprocess, then remove it even if
+        # writing or parsing the MOJO fails. Caller-owned paths stay untouched.
+        with tempfile.TemporaryDirectory() as directory:
+            model_path = Path(directory) / "model.zip"
+            model_path.write_bytes(model)
+            mojo_str = h2o.print_mojo(str(model_path), format="json")
     mojo_model = json.loads(mojo_str)
     if mojo_model["params"]["algo"] != "gbm":
         raise ValueError(
@@ -92,7 +94,5 @@ def convert(
         custom_shape_calculators,
     )
     topology.compile()
-    onnx_model = convert_topology(
-        topology, name, doc_string, target_opset, targeted_onnx
-    )
+    onnx_model = convert_topology(topology, name, doc_string, target_opset, targeted_onnx)
     return onnx_model
