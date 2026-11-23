@@ -85,7 +85,7 @@ def smoke_test_conversions():
     from lightgbm import LGBMClassifier
     from xgboost import XGBRegressor
 
-    from onnxmltools import convert_lightgbm, convert_xgboost
+    import onnxmltools
     from onnxmltools.convert.common.data_types import FloatTensorType
 
     values = np.random.RandomState(0).normal(size=(30, 3)).astype(np.float32)
@@ -103,7 +103,7 @@ def smoke_test_conversions():
 
     regressor = XGBRegressor(n_estimators=3, max_depth=2, n_jobs=1, random_state=0)
     regressor.fit(values, values[:, 0] + values[:, 1])
-    regression = convert_xgboost(regressor, initial_types=initial_types)
+    regression = onnxmltools.convert_xgboost(regressor, initial_types=initial_types)
     np.testing.assert_allclose(
         run(regression)[0].ravel(), regressor.predict(values), rtol=1e-5, atol=1e-6
     )
@@ -117,7 +117,9 @@ def smoke_test_conversions():
         verbosity=-1,
     )
     classifier.fit(values, (values[:, 0] > 0).astype(np.int64))
-    classification = convert_lightgbm(classifier, initial_types=initial_types, zipmap=False)
+    classification = onnxmltools.convert_lightgbm(
+        classifier, initial_types=initial_types, zipmap=False
+    )
     labels, probabilities = run(classification)
     np.testing.assert_array_equal(labels.ravel(), classifier.predict(values))
     np.testing.assert_allclose(
