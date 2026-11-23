@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import unittest
 import packaging.version as pv
 import inspect
@@ -24,7 +23,6 @@ TARGET_OPSET = min(DEFAULT_OPSET_NUMBER, onnx_opset_version())
 
 
 class TestSparkmOneVsRest(SparkMlTestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), reason="pickle fails on python 3.7")
     @unittest.skipIf(
         pv.Version(onnx.__version__) <= pv.Version("1.3"), "Need Greater Opset 9"
     )
