@@ -659,6 +659,45 @@ class TestXGBoostModels(unittest.TestCase):
                     assert_almost_equal(model.predict_proba(x), got[1], decimal=5)
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    @unittest.skipIf(
+        pv.Version(xgboost.__version__) < pv.Version("1.6.0"),
+        "early_stopping_rounds is a fit parameter",
+    )
+    def test_xgb_early_stopping_num_parallel_tree(self):
+        # every boosting round adds num_parallel_tree trees, predict keeps
+        # the rounds up to best_iteration
+        rng = np.random.RandomState(0)
+        x = rng.randn(500, 5).astype(np.float32)
+        params = {
+            "n_estimators": 100,
+            "num_parallel_tree": 3,
+            "max_depth": 3,
+            "learning_rate": 0.5,
+            "early_stopping_rounds": 5,
+        }
+        cases = [
+            ("regressor", XGBRegressor(**params), x[:, 0] * 2 + x[:, 1] ** 2),
+            ("binary", XGBClassifier(**params), (x[:, 0] > 0).astype(np.int64)),
+        ]
+        for name, model, y in cases:
+            with self.subTest(model=name):
+                model.fit(x[:400], y[:400], eval_set=[(x[400:], y[400:])])
+                self.assertLess(model.best_iteration + 1, params["n_estimators"])
+                onx = convert_xgboost(
+                    model,
+                    initial_types=[("X", FloatTensorType([None, x.shape[1]]))],
+                    target_opset=TARGET_OPSET,
+                )
+                sess = InferenceSession(
+                    onx.SerializeToString(), providers=["CPUExecutionProvider"]
+                )
+                got = sess.run(None, {"X": x})
+                if name == "regressor":
+                    assert_almost_equal(model.predict(x), got[0].ravel(), decimal=4)
+                else:
+                    assert_almost_equal(model.predict_proba(x), got[1], decimal=5)
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
     def test_xgb_cost(self):
         obj_classes = {
             "reg:logistic": (

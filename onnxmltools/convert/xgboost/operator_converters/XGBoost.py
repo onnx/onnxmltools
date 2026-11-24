@@ -53,7 +53,11 @@ class XGBConverter:
         if hasattr(xgb_node, "best_ntree_limit"):
             best_ntree_limit = xgb_node.best_ntree_limit
         elif hasattr(xgb_node, "best_iteration"):
-            best_ntree_limit = xgb_node.best_iteration + 1
+            # best_iteration counts boosting rounds, every round adds
+            # num_parallel_tree trees (per class).
+            best_ntree_limit = (xgb_node.best_iteration + 1) * params.get(
+                "num_parallel_tree", 1
+            )
         else:
             best_ntree_limit = params.get("best_ntree_limit", None)
 
