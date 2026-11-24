@@ -22,7 +22,7 @@ import xgboost
 from xgboost import train, DMatrix, Booster, train as train_xgb
 
 try:
-    from xgboost import XGBRegressor, XGBClassifier
+    from xgboost import XGBRegressor, XGBClassifier, XGBRFClassifier
 except Exception:
     XGBRegressor = None
 import sklearn
@@ -656,6 +656,40 @@ class TestXGBoostModels(unittest.TestCase):
                 if name == "regressor":
                     assert_almost_equal(model.predict(x), got[0].ravel(), decimal=4)
                 else:
+                    assert_almost_equal(model.predict_proba(x), got[1], decimal=5)
+
+    @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
+    def test_xgb_binary_num_parallel_tree(self):
+        # a binary model has num_parallel_tree trees per round, not one per
+        # class
+        rng = np.random.RandomState(0)
+        x = rng.randn(500, 5).astype(np.float32)
+        y = (x[:, 0] + x[:, 1] ** 2 > 1).astype(np.int64)
+        cases = []
+        for num_parallel_tree in [2, 3, 4]:
+            for objective in ["binary:logistic", "binary:hinge"]:
+                model = XGBClassifier(
+                    n_estimators=5,
+                    num_parallel_tree=num_parallel_tree,
+                    max_depth=3,
+                    objective=objective,
+                )
+                cases.append((f"{objective} {num_parallel_tree}", model))
+        cases.append(("XGBRFClassifier", XGBRFClassifier(n_estimators=4, max_depth=3)))
+        for name, model in cases:
+            with self.subTest(model=name):
+                model.fit(x, y)
+                onx = convert_xgboost(
+                    model,
+                    initial_types=[("X", FloatTensorType([None, x.shape[1]]))],
+                    target_opset=TARGET_OPSET,
+                )
+                sess = InferenceSession(
+                    onx.SerializeToString(), providers=["CPUExecutionProvider"]
+                )
+                got = sess.run(None, {"X": x})
+                assert_almost_equal(model.predict(x), got[0])
+                if "hinge" not in name:
                     assert_almost_equal(model.predict_proba(x), got[1], decimal=5)
 
     @unittest.skipIf(XGBRegressor is None, "xgboost is not available")
