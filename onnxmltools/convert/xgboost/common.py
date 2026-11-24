@@ -57,6 +57,8 @@ def get_xgb_params(xgb_node):
         )
         if "num_trees" in gbp:
             params["best_ntree_limit"] = int(gbp["num_trees"])
+        if "num_parallel_tree" in gbp:
+            params["num_parallel_tree"] = int(gbp["num_parallel_tree"])
     return params
 
 
