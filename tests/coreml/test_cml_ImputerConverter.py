@@ -47,6 +47,7 @@ class TestCoreMLImputerConverter(unittest.TestCase):
             if "not supported" in str(e):
                 # Python 2.7 + scikit-learn 0.22
                 return
+            raise
         model_onnx = convert(model_coreml.get_spec(), target_opset=TARGET_OPSET)
         self.assertTrue(model_onnx is not None)
         dump_data_and_model(

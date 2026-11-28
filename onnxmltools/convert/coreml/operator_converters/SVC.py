@@ -5,6 +5,28 @@ import numpy as np
 from ...common._registration import register_converter
 
 
+def _get_kernel_params(kernel, kernel_type):
+    if kernel_type == "rbfKernel":
+        return [kernel.rbfKernel.gamma, 0.0, 0.0]
+    if kernel_type == "polyKernel":
+        return [
+            kernel.polyKernel.gamma,
+            kernel.polyKernel.coef0,
+            kernel.polyKernel.degree,
+        ]
+    if kernel_type == "sigmoidKernel":
+        return [
+            kernel.sigmoidKernel.gamma,
+            kernel.sigmoidKernel.coef0,
+            0.0,
+        ]
+    if kernel_type == "linearKernel":
+        return [0.0, 0.0, 0.0]
+    if kernel_type == "precomputedKernel":
+        raise ValueError("Precomputed SVM kernels are not supported by ONNX-ML")
+    raise ValueError("Unsupported SVM kernel type: %s" % kernel_type)
+
+
 def extract_support_vectors_as_dense_tensor(svm_model):
     support_type = svm_model.WhichOneof("supportVectors")
     if support_type == "denseSupportVectors":
@@ -43,23 +65,7 @@ def convert_svm_classifier(scope, operator, container):
     kernel = params.kernel
     kernel_val = kernel.WhichOneof("kernel")
     svc_kernel = kernel_enum[kernel_val]
-
-    if kernel_val == "rbfKernel":
-        svc_kernel_params = [kernel.rbfKernel.gamma, 0.0, 0.0]
-    elif kernel_val == "polyKernel":
-        svc_kernel_params = [
-            kernel.polyKernel.gamma,
-            kernel.polyKernel.coef0,
-            kernel.polyKernel.degree,
-        ]
-    elif kernel_val == "sigmoidKernel":
-        svc_kernel_params = [
-            kernel.sigmoidKernel.gamma,
-            kernel.sigmoidKernel.coef0,
-            0.0,
-        ]
-    elif kernel_val == "linearKernel":
-        svc_kernel_params = [0.0, 0.0, 0.0]
+    svc_kernel_params = _get_kernel_params(kernel, kernel_val)
 
     prob_a = params.probA
     prob_b = params.probB
