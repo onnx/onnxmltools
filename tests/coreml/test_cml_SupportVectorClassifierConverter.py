@@ -73,7 +73,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         svm, X = self._fit_binary_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
-        self.assertTrue(svm_onnx is not None)
+        self.assertIsNotNone(svm_onnx)
         # This should not have a probability output and will be a single node
         nodes = svm_onnx.graph.node
         self.assertEqual(len(nodes), 1)
@@ -87,7 +87,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         svm, X = self._fit_binary_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
-        self.assertTrue(svm_onnx is not None)
+        self.assertIsNotNone(svm_onnx)
         self.validate_zipmap(svm_onnx)
         self._check_model_outputs(svm_onnx, ["classLabel", "classProbability"])
 
@@ -98,7 +98,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         svm, X = self._fit_multi_classification(SVC(gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
-        self.assertTrue(svm_onnx is not None)
+        self.assertIsNotNone(svm_onnx)
         nodes = svm_onnx.graph.node
         self.assertEqual(len(nodes), 1)
         self._check_model_outputs(svm_onnx, ["classLabel"])
@@ -110,7 +110,7 @@ class TestCoreMLSupportVectorClassifierConverter(unittest.TestCase):
         svm, X = self._fit_multi_classification(SVC(probability=True, gamma=0.5))
         svm_coreml = coremltools.converters.sklearn.convert(svm)
         svm_onnx = convert(svm_coreml.get_spec(), target_opset=TARGET_OPSET)
-        self.assertTrue(svm_onnx is not None)
+        self.assertIsNotNone(svm_onnx)
         self.validate_zipmap(svm_onnx)
         self._check_model_outputs(svm_onnx, ["classLabel", "classProbability"])
 

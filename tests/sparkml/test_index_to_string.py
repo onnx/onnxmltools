@@ -61,7 +61,7 @@ class TestSparkmlIndexToString(SparkMlTestCase):
             [("categoryIndex", Int64TensorType([None, 1]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(model_onnx is not None)
+        self.assertIsNotNone(model_onnx)
         # run the model
         predicted = model.transform(data)
         expected = predicted.select("originalCategory").toPandas().values

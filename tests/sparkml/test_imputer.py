@@ -53,7 +53,7 @@ class TestSparkmlImputer(SparkMlTestCase):
             [("a", FloatTensorType([None, 1])), ("b", FloatTensorType([None, 1]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(model_onnx is not None)
+        self.assertIsNotNone(model_onnx)
 
         # run the model
         predicted = model.transform(data)
@@ -95,7 +95,7 @@ class TestSparkmlImputer(SparkMlTestCase):
             [("a", FloatTensorType([None, 1]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(model_onnx is not None)
+        self.assertIsNotNone(model_onnx)
 
         # run the model
         predicted = model.transform(data)

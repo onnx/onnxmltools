@@ -36,7 +36,7 @@ class TestSparkmlElementwiseProduct(SparkMlTestCase):
             [("features", FloatTensorType([None, feature_count]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(model_onnx is not None)
+        self.assertIsNotNone(model_onnx)
 
         # run the model
         predicted = model.transform(data)
