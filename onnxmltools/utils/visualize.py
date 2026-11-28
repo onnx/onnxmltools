@@ -93,7 +93,9 @@ def visualize_model(onnx_model, open_browser=True, dest="index.html"):
     <!doctype html>
     <meta charset="utf-8">
     <title>ONNX Visualization</title>
-    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"
+            integrity="sha256-dsOXGNHAo/syFnazt+KTBsCQeRmlcW1XKL0bCK4Baec="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="styles.css">
     <script src="dagre-d3.min.js"></script>
 

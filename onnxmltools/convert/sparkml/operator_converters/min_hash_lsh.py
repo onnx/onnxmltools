@@ -18,16 +18,16 @@ from ...common.shape_calculator import (
 from .tree_ensemble_common import save_read_sparkml_model_data
 
 MinHashLSH_HASH_PRIME = 2038074743
-g_rand_coefficients = None
+_RAND_COEFFICIENTS = "onnxmltools_rand_coefficients"
 
 
 def get_rand_coefficients(operator):
-    global g_rand_coefficients
-    if not g_rand_coefficients:
-        g_rand_coefficients = save_read_sparkml_model_data(
+    return operator.get_or_create_local_state(
+        _RAND_COEFFICIENTS,
+        lambda: save_read_sparkml_model_data(
             operator.raw_params["SparkSession"], operator.raw_operator
-        ).first()[0]
-    return g_rand_coefficients
+        ).first()[0],
+    )
 
 
 def convert_min_hash_lsh(scope, operator, container):

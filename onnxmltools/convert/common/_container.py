@@ -363,6 +363,13 @@ class Operator(OperatorBase):
         self.is_evaluated = None
         self.is_abandoned = False
         self.target_opset = target_opset
+        self._local_state = {}
+
+    def get_or_create_local_state(self, name, factory):
+        """Returns conversion state that is private to this operator."""
+        if name not in self._local_state:
+            self._local_state[name] = factory()
+        return self._local_state[name]
 
     @property
     def full_name(self):

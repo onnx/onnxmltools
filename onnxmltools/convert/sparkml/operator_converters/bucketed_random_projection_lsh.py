@@ -11,13 +11,13 @@ from ...common.shape_calculator import (
 )
 from .tree_ensemble_common import save_read_sparkml_model_data
 
-g_rand_vectors = None
+_RAND_VECTORS = "onnxmltools_rand_vectors"
 
 
 def get_rand_vectors(operator):
-    global g_rand_vectors
-    if not g_rand_vectors:
-        g_rand_vectors = (
+    return operator.get_or_create_local_state(
+        _RAND_VECTORS,
+        lambda: (
             save_read_sparkml_model_data(
                 operator.raw_params["SparkSession"], operator.raw_operator
             )
@@ -25,8 +25,8 @@ def get_rand_vectors(operator):
             .toArray()
             .transpose()
             .astype(numpy.float32)
-        )
-    return g_rand_vectors
+        ),
+    )
 
 
 def convert_min_hash_lsh(scope, operator, container):
