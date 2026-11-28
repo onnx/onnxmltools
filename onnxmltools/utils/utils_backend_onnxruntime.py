@@ -92,7 +92,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
                 raise OnnxRuntimeAssertionError(
                     "Wrong number of inputs onnx {0} "
                     "!= original shape {1}, onnx='{2}'".format(
-                        len(inp), input.shape, onnx
+                        len(inp), input.shape, onx
                     )
                 )
         elif isinstance(input, list):
@@ -101,7 +101,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
             except Exception:
                 raise OnnxRuntimeAssertionError(
                     "Wrong number of inputs onnx {0} != original {1}, "
-                    "onnx='{2}'".format(len(inp), len(input), onnx)
+                    "onnx='{2}'".format(len(inp), len(input), onx)
                 )
             shape = sum(i.shape[1] for i in inp)
             if shape == array_input.shape[1]:
@@ -112,12 +112,12 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
             else:
                 raise OnnxRuntimeAssertionError(
                     "Wrong number of inputs onnx {0} != original "
-                    "shape {1}, onnx='{2}'*".format(len(inp), array_input.shape, onnx)
+                    "shape {1}, onnx='{2}'*".format(len(inp), array_input.shape, onx)
                 )
         else:
             raise OnnxRuntimeAssertionError(
                 "Wrong number of inputs onnx {0} != original {1}, onnx='{2}'".format(
-                    len(inp), len(input), onnx
+                    len(inp), len(input), onx
                 )
             )
     else:
@@ -141,7 +141,7 @@ def compare_runtime(test, decimal=5, options=None, verbose=False, context=None):
                     raise expe
                 except Exception as e:
                     raise OnnxRuntimeAssertionError(
-                        "Unable to run onnx '{0}' due to {1}".format(onnx, e)
+                        "Unable to run onnx '{0}' due to {1}".format(onx, e)
                     )
                 res.append(one)
             output = _post_process_output(res)

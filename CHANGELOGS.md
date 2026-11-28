@@ -17,6 +17,9 @@
 * Clean up temporary files and file descriptors when converting H2O models from
   bytes, including after conversion errors
   [#842](https://github.com/onnx/onnxmltools/pull/842)
+* Fix uninitialized error paths in the ONNX Runtime test helpers and Core ML
+  converters, and reject precomputed SVM kernels that ONNX-ML does not support
+  [#849](https://github.com/onnx/onnxmltools/pull/849)
 * Fix LightGBM thresholds rounded to float32 above the float64 value,
   which sent one float32 input per threshold to the other branch
   [#806](https://github.com/onnx/onnxmltools/issues/806)

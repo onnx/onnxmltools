@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from ...common._registration import register_converter
-from .SVC import extract_support_vectors_as_dense_tensor
+from .SVC import _get_kernel_params, extract_support_vectors_as_dense_tensor
 
 
 def convert_svm_regressor(scope, operator, container):
@@ -17,23 +17,7 @@ def convert_svm_regressor(scope, operator, container):
     kernel = params.kernel
     kernel_val = kernel.WhichOneof("kernel")
     svr_kernel = kernel_enum[kernel_val]
-
-    if kernel_val == "rbfKernel":
-        svr_kernel_params = [kernel.rbfKernel.gamma, 0.0, 0.0]
-    elif kernel_val == "polyKernel":
-        svr_kernel_params = [
-            kernel.polyKernel.gamma,
-            kernel.polyKernel.coef0,
-            kernel.polyKernel.degree,
-        ]
-    elif kernel_val == "sigmoidKernel":
-        svr_kernel_params = [
-            kernel.sigmoidKernel.gamma,
-            kernel.sigmoidKernel.coef0,
-            0.0,
-        ]
-    elif kernel_val == "linearKernel":
-        svr_kernel_params = [0.0, 0.0, 0.0]
+    svr_kernel_params = _get_kernel_params(kernel, kernel_val)
 
     n_supports, support_vectors = extract_support_vectors_as_dense_tensor(
         operator.raw_operator.supportVectorRegressor

@@ -15,6 +15,11 @@ def convert_sequence_repeat(scope, operator, container):
     elif len(operator.inputs[0].type.shape) == 2:
         # Number of copies along [N, C]
         repeats = [int(repeat_count), 1]
+    else:
+        raise RuntimeError(
+            "Input shape of CoreML SequenceRepeat must be either 2-D or 4-D but got %s"
+            % operator.inputs[0].type.shape
+        )
 
     apply_tile(
         scope,
