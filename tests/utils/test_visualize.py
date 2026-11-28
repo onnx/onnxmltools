@@ -17,6 +17,7 @@ class VisualizationHTML(HTMLParser):
         super().__init__()
         self.tags = []
         self.scripts = []
+        self.script_attributes = []
         self.heading = []
         self.in_script = False
         self.in_heading = False
@@ -27,6 +28,7 @@ class VisualizationHTML(HTMLParser):
         if tag == "script":
             self.in_script = True
             self.scripts.append("")
+            self.script_attributes.append(dict(attrs))
         elif tag == "h2":
             self.in_heading = True
 
@@ -125,6 +127,25 @@ class TestVisualization(unittest.TestCase):
     def test_browser_is_not_opened_when_disabled(self):
         _, browser = self.render(self.model(), open_browser=False)
         browser.assert_not_called()
+
+    def test_remote_script_is_version_pinned_and_integrity_checked(self):
+        content, _ = self.render(self.model())
+        remote_scripts = [
+            attributes
+            for attributes in VisualizationHTML(content).script_attributes
+            if attributes.get("src", "").startswith("https://")
+        ]
+        self.assertEqual(
+            remote_scripts,
+            [
+                {
+                    "src": "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js",
+                    "integrity": "sha256-dsOXGNHAo/syFnazt+KTBsCQeRmlcW1XKL0bCK4Baec=",
+                    "crossorigin": "anonymous",
+                    "referrerpolicy": "no-referrer",
+                }
+            ],
+        )
 
     def test_browser_and_assets_use_the_selected_destination(self):
         folder = self.root / "nested space"

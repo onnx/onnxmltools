@@ -17,6 +17,12 @@
 * Clean up temporary files and file descriptors when converting H2O models from
   bytes, including after conversion errors
   [#842](https://github.com/onnx/onnxmltools/pull/842)
+* Keep Spark LSH parameters scoped to each conversion so repeated or concurrent
+  conversions cannot reuse another model's state
+  [#847](https://github.com/onnx/onnxmltools/pull/847)
+* Pin the D3 visualization dependency to an exact version and verify it with
+  Subresource Integrity
+  [#847](https://github.com/onnx/onnxmltools/pull/847)
 * Fix LightGBM thresholds rounded to float32 above the float64 value,
   which sent one float32 input per threshold to the other branch
   [#806](https://github.com/onnx/onnxmltools/issues/806)
