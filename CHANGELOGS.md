@@ -4,6 +4,11 @@
 
 * Derive model IR versions from ONNX's version mappings for all imported ONNX
   domains, including `ai.onnx.ml`, while preserving older-runtime compatibility
+  [#839](https://github.com/onnx/onnxmltools/pull/839)
+* Deprecate xgboost 1.x and lightgbm 3.x; `convert_xgboost` and
+  `convert_lightgbm` now emit a `FutureWarning` for them, and onnxmltools
+  1.18.0 will require xgboost 2.0 and lightgbm 4.0 or later
+  [#835](https://github.com/onnx/onnxmltools/pull/835)
 * Require Python 3.11 or later; Python 3.9 and 3.10 are no longer supported
   [#829](https://github.com/onnx/onnxmltools/pull/829)
 * Require onnx 1.14.1 or later (previously 1.8.1) and skl2onnx 1.19.1 or later
