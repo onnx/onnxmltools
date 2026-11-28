@@ -1,68 +1,56 @@
 <!--- SPDX-License-Identifier: Apache-2.0 -->
-#
 
-![ONNXMLTools_logo_main](https://raw.githubusercontent.com/onnx/onnxmltools/main/docs/ONNXMLTools_logo_main.png)
+# ONNXMLTools
 
-[![CI](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml/badge.svg)](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml)
+![ONNXMLTools logo](https://raw.githubusercontent.com/onnx/onnxmltools/main/docs/ONNXMLTools_logo_main.png)
 
-## Introduction
+[![CI](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/onnx/onnxmltools/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/onnx/onnxmltools/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/onnx/onnxmltools/actions/workflows/codeql.yml)
+[![PyPI](https://img.shields.io/pypi/v/onnxmltools.svg)](https://pypi.org/project/onnxmltools/)
+[![Python](https://img.shields.io/pypi/pyversions/onnxmltools.svg)](https://pypi.org/project/onnxmltools/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-ONNXMLTools converts models from machine learning toolkits into [ONNX](https://onnx.ai). It supports:
+Convert trained machine learning models to [ONNX](https://onnx.ai) for portable
+inference with runtimes such as [ONNX Runtime](https://onnxruntime.ai).
 
-* LightGBM
-* XGBoost
-* CatBoost
-* Apple Core ML
-* H2O (MOJO models)
-* libsvm
-* Spark ML (experimental)
-* scikit-learn, as a wrapper of [skl2onnx](https://github.com/onnx/sklearn-onnx/)
-* TensorFlow and Keras, as a wrapper of [tf2onnx](https://github.com/onnx/tensorflow-onnx/).
-  New projects should use tf2onnx directly.
-
-PyTorch has a built-in ONNX exporter; see the [PyTorch documentation](https://pytorch.org/docs/stable/onnx.html).
+[Install](#install) · [Quick start](#quick-start) ·
+[Supported toolkits](#supported-toolkits) · [Compatibility](#compatibility) ·
+[Contributing](#contributing) · [Release notes](CHANGELOGS.md)
 
 ## Install
 
 Install the latest release from [PyPI](https://pypi.org/project/onnxmltools/):
 
 ```bash
-pip install onnxmltools
+python -m pip install onnxmltools
 ```
 
-or the development version from source:
+Install the toolkit that produced your model separately. ONNX Runtime is only
+needed if you want to run the exported model. For the quick start below:
 
 ```bash
-pip install git+https://github.com/onnx/onnxmltools
+python -m pip install onnxmltools lightgbm scikit-learn onnxruntime
 ```
 
-## Requirements
+Install the development version directly from GitHub with:
 
-ONNXMLTools requires Python **3.11+**, ONNX, NumPy and protobuf.
-To convert a model, the toolkit that produced it must also be installed.
-CI tests every pull request on Linux, macOS and Windows against the oldest and
-newest versions below; the [CI matrix](.github/workflows/ci.yml) lists the exact combinations.
+```bash
+python -m pip install git+https://github.com/onnx/onnxmltools.git
+```
 
-| Package | Tested versions |
-|---|---|
-| onnx | 1.14.1 – 1.23.2 |
-| onnxruntime (tests only) | 1.17.3 – 1.30.0 |
-| scikit-learn | 1.4.2 – latest |
-| LightGBM | 3.3 – latest 4.x |
-| XGBoost | 1.7 – latest 3.x |
-| CatBoost, H2O, libsvm, pyspark | latest |
-| coremltools | latest (not tested on Windows) |
+The development version requires **Python 3.11 or later**. Published releases
+may have different requirements; check the Python badge or the release metadata
+on PyPI when installing an older version.
 
-## Converting a model
+## Quick start
 
-Every converter returns an `onnx.ModelProto`.
-`initial_types` describes the model inputs: one `(name, type)` pair per input,
-with `None` for a dynamic dimension such as the batch size.
-
-### LightGBM
+A converter returns an `onnx.ModelProto`. The `initial_types` argument describes
+each input's name, element type, and shape. In this example, `None` allows a
+variable batch size and `FloatTensorType` requires `float32` inputs.
 
 ```python
 import numpy as np
+import onnx
 import onnxruntime as rt
 from lightgbm import LGBMClassifier
 from sklearn.datasets import load_iris
@@ -72,101 +60,114 @@ from onnxmltools.convert.common.data_types import FloatTensorType
 
 X, y = load_iris(return_X_y=True)
 X = X.astype(np.float32)
-model = LGBMClassifier(n_estimators=10).fit(X, y)
+model = LGBMClassifier(
+    n_estimators=10, random_state=0, n_jobs=1, verbosity=-1
+).fit(X, y)
 
 onnx_model = convert_lightgbm(
-    model, initial_types=[("input", FloatTensorType([None, X.shape[1]]))]
+    model,
+    initial_types=[("input", FloatTensorType([None, X.shape[1]]))],
+    target_opset=15,
+    zipmap=False,
 )
+onnx.checker.check_model(onnx_model)
+onnx.save_model(onnx_model, "lightgbm.onnx")
 
-sess = rt.InferenceSession(
+session = rt.InferenceSession(
     onnx_model.SerializeToString(), providers=["CPUExecutionProvider"]
 )
-labels, probabilities = sess.run(None, {"input": X[:5]})
-```
+sample = X[:1]
+labels, probabilities = session.run(None, {"input": sample})
 
-### XGBoost
-
-```python
-import numpy as np
-from sklearn.datasets import load_iris
-from xgboost import XGBClassifier
-
-from onnxmltools import convert_xgboost
-from onnxmltools.convert.common.data_types import FloatTensorType
-
-X, y = load_iris(return_X_y=True)
-model = XGBClassifier(n_estimators=10).fit(X.astype(np.float32), y)
-
-onnx_model = convert_xgboost(
-    model, initial_types=[("input", FloatTensorType([None, X.shape[1]]))]
+np.testing.assert_array_equal(labels, model.predict(sample))
+np.testing.assert_allclose(
+    probabilities, model.predict_proba(sample), rtol=1e-5, atol=1e-6
 )
 ```
 
-### Core ML
+For LightGBM classifiers, `zipmap=False` returns probabilities as an array with
+one column per class. The default, `zipmap=True`, returns a sequence of
+dictionaries that map class labels to probabilities.
+
+`onnx.checker` validates the model's ONNX structure; it does not establish
+prediction equivalence. Before deployment, compare the converted model with the
+original on representative data, including missing values and categorical
+features when applicable. Keep feature order, preprocessing, and input types
+consistent with training.
+
+## Supported toolkits
+
+Support depends on a model's operators and configuration, not only its toolkit.
+
+| Toolkit | Converter | Notes |
+| --- | --- | --- |
+| LightGBM | `convert_lightgbm` | Classifiers, regressors, rankers, and supported Boosters. |
+| XGBoost | `convert_xgboost` | Supported classifiers, regressors, and Boosters. |
+| CatBoost | `convert_catboost` | Uses CatBoost's ONNX export support. |
+| Apple Core ML | `convert_coreml` | Supports selected Core ML model types and operators. |
+| H2O | `convert_h2o` | Converts supported GBM MOJO models. |
+| libsvm | `onnxmltools.convert.convert_libsvm` | Classification and regression. |
+| Spark ML | `convert_sparkml` | Experimental; see the [Spark ML guide](onnxmltools/convert/sparkml/README.md). |
+| scikit-learn | `convert_sklearn` | Wraps [skl2onnx](https://github.com/onnx/sklearn-onnx/). |
+| TensorFlow / Keras | `convert_tensorflow` / `convert_keras` | Wraps [tf2onnx](https://github.com/onnx/tensorflow-onnx/); use tf2onnx directly for new integrations. |
+
+PyTorch provides its own [ONNX exporter](https://pytorch.org/docs/stable/onnx.html).
+More conversion examples are available in [docs/examples](docs/examples).
+
+## Compatibility
+
+The development version requires Python 3.11 or later, ONNX 1.14.1 or later,
+and skl2onnx 1.19.1 or later. The [CI matrix](.github/workflows/ci.yml) tests
+Python 3.11 through 3.13 on Linux, macOS, and Windows against both minimum and
+recent dependency versions. It is the source of truth for exact tested
+combinations.
+
+The converters implemented directly in this repository support the default ONNX
+domain through **opset 15**. Their default target is 15, limited by the installed
+ONNX package. Wrapper converters follow the capabilities of the exporter they
+delegate to.
+
+To target an older runtime, choose a supported lower `target_opset` during
+conversion and test the result with that runtime. Three version values matter:
+
+- **ONNX package version:** the installed Python library.
+- **Opset imports:** operator versions for each domain, such as `ai.onnx.ml`.
+- **IR version:** the model format version, which the runtime must support.
+
+Inspect every domain import instead of assuming the first one is the default
+domain:
 
 ```python
-import coremltools
-import onnxmltools
-
-coreml_model = coremltools.utils.load_spec("example.mlmodel")
-onnx_model = onnxmltools.convert_coreml(coreml_model, "Example Model")
-onnxmltools.utils.save_model(onnx_model, "example.onnx")
+print("IR version:", onnx_model.ir_version)
+print({op.domain or "ai.onnx": op.version for op in onnx_model.opset_import})
 ```
 
-### H2O
+The recorded opset can be lower than the requested target because the converter
+records the versions required by the operators it emits. See
+[ONNX versioning](https://github.com/onnx/onnx/blob/main/docs/Versioning.md#released-versions)
+for the relationship between ONNX releases, opsets, and IR versions.
 
-The only prerequisite is a MOJO model saved on the local file system.
+## Contributing
 
-```python
-import onnxmltools
-
-onnx_model = onnxmltools.convert_h2o("/path/to/h2o/gbm_mojo.zip")
-onnxmltools.utils.save_model(onnx_model, "h2o_gbm.onnx")
-```
-
-More examples, including libsvm, Spark ML and scikit-learn, are in
-[docs/examples](docs/examples).
-
-## Choosing the opset
-
-The converters support the default ONNX domain up to opset 15, and target
-opset 15 unless the installed `onnx` package only supports an older one. To
-produce a model for an older runtime, pass a lower `target_opset`, for example
-`convert_lightgbm(model, initial_types=..., target_opset=13)`; a value above 15
-raises an error. The [versioning documentation](https://github.com/onnx/onnx/blob/main/docs/Versioning.md#released-versions)
-maps opsets to ONNX releases.
-
-The opset recorded in the converted model can be lower than `target_opset`:
-
-```python
-print(onnx_model.opset_import)
-```
-
-Each operator is converted with the newest version available up to
-`target_opset`, and the model records the highest opset among the operators it
-uses. A LightGBM classifier, for example, records opset 9 even with
-`target_opset=15`. This is intended and keeps the model loadable by older
-runtimes.
-
-## Running the tests
-
-The tests convert models and compare the predictions of the original model
-with those of [onnxruntime](https://pypi.org/project/onnxruntime/).
+For a focused LightGBM and XGBoost development environment:
 
 ```bash
-pip install -r requirements.txt -r requirements-dev.txt
-pip install -e .
-python -m pytest tests/lightgbm tests/xgboost   # or any folder under tests/
+python -m pip install -e .
+python -m pip install pytest pandas lightgbm xgboost onnxruntime
+python -m pytest tests/lightgbm tests/xgboost
 ```
 
-Each folder under `tests/` needs the matching toolkit installed.
+The complete development dependency list is in `requirements-dev.txt`.
+Individual suites need their matching toolkit and sometimes platform
+dependencies such as Java for Spark ML and H2O. Use the
+[CI workflow](.github/workflows/ci.yml) as the reference for full environments.
 
-## Adding a converter
-
-A new converter comes with unit tests under `tests/<toolkit>/` that train a
-small model, convert it, and compare the original predictions with the
-onnxruntime predictions on the same inputs.
+A new converter should include tests under `tests/<toolkit>/` that train a small
+model, convert it, and compare its outputs with ONNX Runtime. For a bug report,
+include a minimal reproducer, package versions, `target_opset`, the full error,
+and expected versus actual outputs. Report issues on
+[GitHub](https://github.com/onnx/onnxmltools/issues).
 
 ## License
 
-[Apache License v2.0](LICENSE)
+ONNXMLTools is distributed under the [Apache License 2.0](LICENSE).
