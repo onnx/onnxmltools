@@ -81,6 +81,10 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
+      - name: Install macOS OpenMP runtime
+        if: matrix.os == 'macos-latest'
+        run: brew install libomp
+
       - name: Cache pip
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
         with:
@@ -157,9 +161,6 @@ jobs:
       - name: Run tests coreml
         if: matrix.os != 'windows-latest' && matrix.python_version != '3.13'
         run: |
-          if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            brew install libomp
-          fi
           pip install coremltools
           pytest tests/coreml
 
