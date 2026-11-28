@@ -39,7 +39,7 @@ class TestSparkmlCountVectorizer(SparkMlTestCase):
             [("text", StringTensorType([None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(model_onnx is not None)
+        self.assertIsNotNone(model_onnx)
 
         data_pd = data.toPandas()
         data_np = {
@@ -93,7 +93,7 @@ class TestSparkmlCountVectorizer(SparkMlTestCase):
             [("text", StringTensorType([None, None]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(model_onnx is not None)
+        self.assertIsNotNone(model_onnx)
 
         data_pd = data.toPandas()
         data_np = {

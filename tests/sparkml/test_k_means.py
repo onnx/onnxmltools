@@ -86,8 +86,8 @@ class TestSparkmlKMeansModel(SparkMlTestCase):
             target_opset=TARGET_OPSET,
         )
 
-        self.assertTrue(model_onnx is not None)
-        self.assertTrue(model_onnx.graph.node is not None)
+        self.assertIsNotNone(model_onnx)
+        self.assertIsNotNone(model_onnx.graph.node)
 
         # run the model
         predicted = model.transform(data).toPandas()
