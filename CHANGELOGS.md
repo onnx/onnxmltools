@@ -5,10 +5,18 @@
 * Deprecate xgboost 1.x and lightgbm 3.x; `convert_xgboost` and
   `convert_lightgbm` now emit a `FutureWarning` for them, and onnxmltools
   1.18.0 will require xgboost 2.0 and lightgbm 4.0 or later
+  [#835](https://github.com/onnx/onnxmltools/pull/835)
 * Require Python 3.11 or later; Python 3.9 and 3.10 are no longer supported
   [#829](https://github.com/onnx/onnxmltools/pull/829)
 * Require onnx 1.14.1 or later (previously 1.8.1) and skl2onnx 1.19.1 or later
   (previously 1.4.9), the oldest versions tested
+  [#833](https://github.com/onnx/onnxmltools/pull/833)
+* Escape model metadata and graph labels embedded in browser visualizations so
+  supplied model content cannot execute as browser script
+  [#841](https://github.com/onnx/onnxmltools/pull/841)
+* Clean up temporary files and file descriptors when converting H2O models from
+  bytes, including after conversion errors
+  [#842](https://github.com/onnx/onnxmltools/pull/842)
 * Fix LightGBM thresholds rounded to float32 above the float64 value,
   which sent one float32 input per threshold to the other branch
   [#806](https://github.com/onnx/onnxmltools/issues/806)
