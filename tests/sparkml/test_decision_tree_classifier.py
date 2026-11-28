@@ -78,7 +78,7 @@ class TestSparkmDecisionTreeClassifier(SparkMlTestCase):
             spark_session=self.spark,
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(model_onnx is not None)
+        self.assertIsNotNone(model_onnx)
         # run the model
         predicted = model.transform(data.limit(1))
         data_np = {
