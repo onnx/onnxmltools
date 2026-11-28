@@ -159,7 +159,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType())],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         dump_data_and_model(
             X[:5].astype(numpy.float32),
             SkAPIClProba2(libsvm_model),
@@ -193,7 +193,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType())],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         dump_data_and_model(
             X[:5].astype(numpy.float32),
             SkAPIClProba2(libsvm_model),
@@ -224,7 +224,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType())],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         dump_data_and_model(
             X[:5].astype(numpy.float32),
             SkAPIReg(libsvm_model),
@@ -256,7 +256,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType())],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         dump_data_and_model(
             X[:5].astype(numpy.float32),
             SkAPIReg(libsvm_model),
@@ -288,7 +288,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType())],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         dump_data_and_model(
             X[:5].astype(numpy.float32),
             SkAPIReg(libsvm_model),
@@ -322,7 +322,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType(shape=["None", "None"]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         dump_data_and_model(
             X[:5].astype(numpy.float32),
             SkAPIClProba2(libsvm_model),
@@ -356,7 +356,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType(shape=["None", "None"]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         # known svm runtime dimension error in ONNX Runtime
         dump_data_and_model(
             X[:5].astype(numpy.float32),
@@ -393,7 +393,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType(shape=["None", "None"]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         dump_data_and_model(
             X[:5].astype(numpy.float32),
             SkAPICl(libsvm_model),
@@ -428,7 +428,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType(shape=["None", "None"]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         X2 = numpy.vstack([X[:5], X[60:65]])  # 5x0, 5x1
         dump_data_and_model(
             X2.astype(numpy.float32),
@@ -464,7 +464,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType(shape=["None", "None"]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
         dump_data_and_model(
             X2.astype(numpy.float32),
@@ -500,7 +500,7 @@ class TestSvmLibSVM(unittest.TestCase):
             [("input", FloatTensorType(shape=["None", 2]))],
             target_opset=TARGET_OPSET,
         )
-        self.assertTrue(node is not None)
+        self.assertIsNotNone(node)
         X2 = numpy.vstack([X[:2], X[60:62], X[110:112], X[147:149]])  # 5x0, 5x1
         dump_data_and_model(
             X2.astype(numpy.float32),
